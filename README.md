@@ -33,6 +33,7 @@ The example workspace uses the fake brand "Acme Events Private Limited" and neut
 - Status moves forward only: Draft -> Sent | Signed | Superseded, Sent -> Signed | Paid | Superseded, Signed -> Paid | Superseded, Paid -> Superseded.
 - A document number repeated within its series is accepted but flagged (`numberConflict`) with an audit warning.
 - Sensitivity (Public < Internal < Confidential < Restricted) is checked against the user's clearance (`users` in `workspace.json`, default Confidential) on every read, list and write.
+- **Uploads are deduplicated and searchable.** Byte-identical uploads share one stored file (the response says `deduped`). Text is extracted from PDF, HTML, Markdown and plain-text uploads for search; other files are stored without text. A repeated document number in a series is accepted with a `NUMBER_CONFLICT` warning.
 - **No secrets in the vault.** Uploads named `*.pem`, `*.key`, `*.env`, `.env*`, or whose bytes or extracted text contain `-----BEGIN` or `PRIVATE KEY`, are refused with `SECRET_REJECTED`. Keep keys and passwords in a password manager; a `Restricted` document may record where they live.
 
 ## Documentation

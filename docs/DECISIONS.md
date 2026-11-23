@@ -60,3 +60,14 @@ Small decisions made while building Dossier. Each entry: decision, reason, cost 
 - **A version needs at least one rendition**; one per kind. Default MIME types per kind when none is given. Number conflicts are re-evaluated when `updateMetadata` changes the series or number; flags on other documents are left as they are.
 - **Display file names** drop empty segments and slug each segment: accents stripped, spaces removed, `/ \ _ : |` become `-`, other non-letter/digit characters dropped. The `original` rendition keeps its own file extension.
 - **Error codes added:** `DOCUMENT_NOT_FOUND`, `VERSION_NOT_FOUND`, `RENDITION_NOT_FOUND`, `BLOB_NOT_FOUND`, `BRAND_NOT_FOUND`, `FORBIDDEN`, `INVALID_STATUS_TRANSITION`, `SECRET_REJECTED`. Event `document:changed` carries `{ ids: string[] }`.
+
+## 2026-11-23 (upload and text extraction)
+
+- **`uploadFile` is async** (pdfjs is promise-based); `extractText` never throws: unknown types, encrypted and broken PDFs give empty text.
+- **An upload's renditions share one blob:** `original` always, plus `pdf`/`html`/`md` when the extension is `.pdf`, `.htm(l)`, `.md`/`.markdown`. Extracted text is stored once, against the `original` rendition, and only when non-empty. PDFs record `page_count` on both renditions.
+- **`deduped`** is true when a `blobs` row with the file's sha256 existed before the upload (checked inside the upload transaction).
+- **Document creation and the first version are one transaction**, so a failed version leaves no empty document. The blob file is written before it (rule above); `addVersion` then only finds the file present.
+- **With `meta.documentId` only `note` and `makeCurrent` are accepted**; metadata changes go through `updateMetadata`. Without it, `title` defaults to the file name minus its extension.
+- **The secret check runs twice on upload:** on name and bytes before extraction, then on the extracted text (catches markers hidden by HTML entities or PDF encoding).
+- **`warnings: ['NUMBER_CONFLICT']`** is returned whenever the resulting document carries the conflict flag. Client file names are cut to their last path segment.
+- **pdfjs runs with `verbosity: ERRORS`** and its fake worker (`GlobalWorkerOptions.workerSrc` set to the legacy worker module) so tests stay quiet.
