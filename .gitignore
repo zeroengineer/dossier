@@ -4,6 +4,7 @@ node_modules/
 # runtime data and private workspaces (organisation data never goes in git)
 /workspace/
 /data/
+workspace.example/data/
 *.sqlite
 *.sqlite-*
 dossier-workspace/

@@ -30,3 +30,15 @@ Small decisions made while building Dossier. Each entry: decision, reason, cost 
 - **`series.json` `scope` defaults to `brand+year`**, the scope of every pattern containing `{YYYY}`; `counter` defaults to the series' own id.
 - **`hierarchy.topLevel` must have exactly 10 names** when given, matching the ten top-level folders of the tree view.
 - **Placeholder images are drawn from SVG paths only** (no `<text>`), so rendering does not depend on system fonts and the committed PNGs are reproducible.
+
+## 2026-11-23 (database)
+
+- **Entity ids are integers; document ids are text `DOC-000001`** from the `sequences` row `doc-id` (6-digit zero padding, more digits after 999999). Reason: entities are internal rows, document ids are user-facing and stable.
+- **`documents` carries both `issuing_brand_id` (workspace brand) and `issuing_entity_id` (entity row).** The brand drives rendering; the entity drives the hierarchy and search.
+- **`document_relations.to_doc` has no foreign key** because `generated_from` points at a template (`template:<id>@<version>`, enforced by a CHECK). Triggers give document targets the same protection as a foreign key and delete incoming relations when a document is deleted.
+- **One rendition per kind per version** (`UNIQUE(version_id, kind)`); a stamped or watermarked file is a new version (rule B5.7).
+- **Money needs a currency and must be an integer** (`CHECK`), party needs a party type, new documents default to `Draft` / `Internal`.
+- **Extracted text lives only in `document_text`**, not on `renditions`; the FTS5 index (`documents_fts`) arrives with search in a later migration.
+- **Nested transactions join the outer one** (no savepoints): an error anywhere rolls back the whole unit. Transaction callbacks must be synchronous. Post-commit events wait for the outermost commit even when it was opened with `db.withTx` directly; per-table write versions are bumped when the transaction ends, on rollback too, so a memo built from uncommitted rows is never trusted.
+- **`canonicalKey(name)`** (`src/domain/canonical.js`) is NFKC + lower case + punctuation/space folding; used for `entities.canonical_key` and `entity_aliases.alias_key`.
+- **Brand rows are synced on every `openContext`**, written and audited only when the legal name or config hash changed; rows of removed brands are kept for the documents that reference them.
