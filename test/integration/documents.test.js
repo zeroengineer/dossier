@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpDir } from '../helpers/tmp.js';
 import { writeWorkspace } from '../helpers/workspace.js';
@@ -11,7 +11,7 @@ import * as documents from '../../src/services/documents.js';
 
 const {
   createDocument, addVersion, setCurrentVersion, updateStatus, updateMetadata, supersede,
-  linkDocuments, unlinkDocuments, getDocument, listDocuments, DOCUMENT_CHANGED,
+  linkDocuments, unlinkDocuments, getDocument, listDocuments, readRendition, DOCUMENT_CHANGED,
 } = documents;
 
 function withCtx(fn, { clearance = 'Confidential' } = {}) {
@@ -279,3 +279,63 @@ test('addVersion rejects files that look like secrets with SECRET_REJECTED and s
   const ok = addVersion(ctx, doc.id, { renditions: [{ kind: 'md', buffer: Buffer.from('Stored in the password manager.'), filename: 'note.md' }] });
   assert.equal(ok.versionNo, 1);
 }, { clearance: 'Restricted' }));
+
+test('readRendition returns bytes gated by the document sensitivity', () => withCtx((ctx) => {
+  ctx.user.clearance = 'Restricted';
+  const shared = pdf('same bytes');
+  const pub = createDocument(ctx, { type: 'Brochure', sensitivity: 'Public' });
+  const secret = createDocument(ctx, { type: 'Agreement', sensitivity: 'Restricted' });
+  addVersion(ctx, pub.id, { renditions: [{ kind: 'pdf', buffer: shared, filename: 'brochure.pdf' }] });
+  addVersion(ctx, pub.id, { renditions: [{ kind: 'pdf', buffer: pdf('v2'), filename: 'brochure-v2.pdf' }, { kind: 'md', buffer: Buffer.from('# B'), filename: 'b.md' }] });
+  addVersion(ctx, secret.id, { renditions: [{ kind: 'pdf', buffer: shared, filename: 'agreement.pdf' }] });
+
+  ctx.user.clearance = 'Public';
+  const cur = readRendition(ctx, pub.id, { kind: 'pdf' });
+  assert.deepEqual(cur.buffer, pdf('v2'));
+  assert.equal(cur.filename, 'brochure-v2.pdf');
+  assert.equal(cur.mime, 'application/pdf');
+  assert.equal(cur.sha256, sha256Of(pdf('v2')));
+  assert.equal(cur.bytes, pdf('v2').length);
+  const v1 = readRendition(ctx, pub.id, { versionNo: 1, kind: 'pdf' });
+  assert.deepEqual(v1.buffer, shared);
+  assert.throws(() => readRendition(ctx, secret.id, { kind: 'pdf' }), code('FORBIDDEN'), 'same blob, Restricted document');
+  assert.throws(() => readRendition(ctx, pub.id, { versionNo: 1, kind: 'md' }), code('RENDITION_NOT_FOUND'));
+  assert.throws(() => readRendition(ctx, pub.id, { kind: 'original' }), code('RENDITION_NOT_FOUND'));
+  assert.throws(() => readRendition(ctx, pub.id, { versionNo: 7, kind: 'pdf' }), code('VERSION_NOT_FOUND'));
+  assert.throws(() => readRendition(ctx, pub.id, { kind: 'docx' }), code('INVALID_INPUT'));
+  assert.throws(() => readRendition(ctx, 'DOC-999999', { kind: 'pdf' }), code('DOCUMENT_NOT_FOUND'));
+}, { clearance: 'Restricted' }));
+
+test('addVersion makes the first version current even with makeCurrent: false', () => withCtx((ctx) => {
+  const doc = createDocument(ctx, { type: 'Letter' });
+  const v1 = addVersion(ctx, doc.id, { makeCurrent: false, renditions: [{ kind: 'md', buffer: Buffer.from('# One'), filename: 'one.md' }] });
+  assert.equal(v1.isCurrent, true);
+  assert.equal(getDocument(ctx, doc.id).currentVersion, 1);
+  const v2 = addVersion(ctx, doc.id, { makeCurrent: false, renditions: [{ kind: 'md', buffer: Buffer.from('# Two'), filename: 'two.md' }] });
+  assert.equal(v2.isCurrent, false);
+  assert.equal(getDocument(ctx, doc.id).currentVersion, 1);
+  assert.equal(JSON.parse(audits(ctx, 'document.version.add')[0].after).current, true);
+}));
+
+test('addVersion writes blob files outside the transaction and heals a missing file', () => withCtx((ctx) => {
+  const doc = createDocument(ctx, { type: 'Letter' });
+  const buf = Buffer.from('# Body');
+  const sha = sha256Of(buf);
+  const realWithTx = ctx.db.withTx;
+  let fileSeenInTx = null;
+  ctx.db.withTx = (fn) => realWithTx(() => {
+    if (fileSeenInTx === null) fileSeenInTx = existsSync(blobPath(ctx, sha));
+    return fn();
+  });
+  try {
+    addVersion(ctx, doc.id, { renditions: [{ kind: 'md', buffer: buf, filename: 'body.md' }] });
+  } finally {
+    ctx.db.withTx = realWithTx;
+  }
+  assert.equal(fileSeenInTx, true, 'file already on disk when the transaction opens');
+
+  rmSync(blobPath(ctx, sha));
+  addVersion(ctx, doc.id, { renditions: [{ kind: 'md', buffer: buf, filename: 'body.md' }] });
+  assert.deepEqual(readBlob(ctx, sha), buf);
+  assert.equal(ctx.db.prepare('SELECT count(*) AS n FROM blobs').get().n, 1);
+}));

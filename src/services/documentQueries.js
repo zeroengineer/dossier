@@ -3,6 +3,7 @@ import { DossierError } from '../errors.js';
 import { STATUSES } from '../domain/status.js';
 import { LEVELS, accessibleLevels, assertAccess, canAccess } from '../domain/sensitivity.js';
 import { displayFileName } from '../domain/naming.js';
+import { readBlob } from './blobs.js';
 
 /** Rendition kinds (one per kind per version). */
 export const RENDITION_KINDS = Object.freeze(['pdf', 'html', 'md', 'original']);
@@ -244,4 +245,30 @@ export function listDocuments(ctx, filters = {}) {
     + 'ORDER BY d.doc_date IS NULL, d.doc_date DESC, d.id DESC LIMIT :limit OFFSET :offset',
   ).all(params);
   return rows.map((r) => summaryOf(ctx, r));
+}
+
+/**
+ * Read one rendition's bytes, gated by the document's sensitivity (the only file read for request handlers).
+ * @param {object} ctx
+ * @param {string} documentId
+ * @param {{ versionNo?: number, kind: 'pdf'|'html'|'md'|'original' }} opts versionNo defaults to the current version
+ * @returns {{ buffer: Buffer, filename: string, mime: string, sha256: string, bytes: number }}
+ *   throws DOCUMENT_NOT_FOUND, FORBIDDEN, VERSION_NOT_FOUND or RENDITION_NOT_FOUND
+ */
+export function readRendition(ctx, documentId, { versionNo, kind } = {}) {
+  if (!RENDITION_KINDS.includes(kind)) throw invalid(`Unknown rendition kind "${kind}" (expected one of ${RENDITION_KINDS.join(', ')})`, { kind });
+  if (versionNo !== undefined && versionNo !== null && (!Number.isSafeInteger(versionNo) || versionNo < 1)) {
+    throw invalid('versionNo must be a positive integer', { versionNo });
+  }
+  const row = requireDoc(ctx, documentId);
+  const v = versionNo === undefined || versionNo === null
+    ? (row.current_version_id === null ? null : ctx.db.prepare('SELECT id, version_no FROM versions WHERE id = ?').get(row.current_version_id))
+    : ctx.db.prepare('SELECT id, version_no FROM versions WHERE document_id = ? AND version_no = ?').get(row.id, versionNo);
+  if (!v) {
+    throw new DossierError('VERSION_NOT_FOUND', versionNo ? `${row.id} has no version ${versionNo}` : `${row.id} has no current version`,
+      { id: row.id, versionNo: versionNo ?? null });
+  }
+  const r = ctx.db.prepare('SELECT * FROM renditions WHERE version_id = ? AND kind = ?').get(v.id, kind);
+  if (!r) throw new DossierError('RENDITION_NOT_FOUND', `${row.id} version ${v.version_no} has no ${kind} rendition`, { id: row.id, versionNo: v.version_no, kind });
+  return { buffer: readBlob(ctx, r.blob_sha256), filename: r.filename, mime: r.mime, sha256: r.blob_sha256, bytes: r.bytes };
 }

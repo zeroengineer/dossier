@@ -3,13 +3,13 @@ import { nowIso } from '../db/index.js';
 import { STATUSES, assertTransition } from '../domain/status.js';
 import { LEVELS, canAccess } from '../domain/sensitivity.js';
 import { secretReason } from '../domain/secrets.js';
-import { putBlob } from './blobs.js';
+import { recordBlob, storeBlobFile } from './blobs.js';
 import {
   DOCUMENT_ENTITY_ROLES, DOCUMENT_RELATION_TYPES, PARTY_TYPES, RENDITION_KINDS,
   checkDocId, docRow, documentEntities, getDocument, invalid, requireDoc, rowSnapshot, versionView,
 } from './documentQueries.js';
 
-export { getDocument, listDocuments, RENDITION_KINDS, DOCUMENT_RELATION_TYPES, DOCUMENT_ENTITY_ROLES, PARTY_TYPES } from './documentQueries.js';
+export { getDocument, listDocuments, readRendition, RENDITION_KINDS, DOCUMENT_RELATION_TYPES, DOCUMENT_ENTITY_ROLES, PARTY_TYPES } from './documentQueries.js';
 
 /** Event emitted (after commit) whenever documents, versions, renditions or relations change. Payload: `{ ids: string[] }`. */
 export const DOCUMENT_CHANGED = 'document:changed';
@@ -292,9 +292,11 @@ function makeCurrent(ctx, documentId, versionId) {
 }
 
 /**
- * Add a version with its renditions. Each rendition's bytes are stored once by sha256 (putBlob). Files that look
+ * Add a version with its renditions. Each rendition's bytes are stored once by sha256 (storeBlobFile + recordBlob). Files that look
  * like secrets (`.pem`, `.key`, `.env`, PEM armour or "PRIVATE KEY" in the bytes or extracted text) are refused
- * with SECRET_REJECTED before anything is stored. Renditions are never modified afterwards: a changed file
+ * with SECRET_REJECTED before anything is stored. Blob files are written before the transaction; only rows are
+ * inserted inside it. When the document has no current version the new one becomes current regardless of
+ * `makeCurrent`. Renditions are never modified afterwards: a changed file
  * (e.g. a stamped `original`) is a new version (rule B5.7).
  * @param {object} ctx
  * @param {string} documentId
@@ -312,6 +314,8 @@ export function addVersion(ctx, documentId, spec) {
   requireDoc(ctx, documentId);
   const renditions = checkRenditions(spec.renditions);
   const input = inputJsonOf(inputJson);
+  // File IO happens before the transaction so the shared write lock is never held while writing bytes.
+  const files = renditions.map((r) => storeBlobFile(ctx, r.buffer));
 
   const versionId = ctx.repo.tx(() => {
     const row = requireDoc(ctx, documentId);
@@ -319,16 +323,18 @@ export function addVersion(ctx, documentId, spec) {
     const vid = Number(ctx.db.prepare('INSERT INTO versions (document_id, version_no, is_current, note, input_json, created_by) VALUES (?, ?, 0, ?, ?, ?)')
       .run(row.id, no, note, input, ctx.user.id).lastInsertRowid);
     const stored = [];
-    for (const r of renditions) {
-      const blob = putBlob(ctx, r.buffer, { mime: r.mime });
+    for (const [i, r] of renditions.entries()) {
+      const blob = recordBlob(ctx, { ...files[i], mime: r.mime });
       const rid = Number(ctx.db.prepare('INSERT INTO renditions (version_id, kind, blob_sha256, filename, mime, bytes, page_count) VALUES (?, ?, ?, ?, ?, ?, ?)')
         .run(vid, r.kind, blob.sha256, r.filename, r.mime, blob.bytes, r.pageCount ?? null).lastInsertRowid);
       if (typeof r.extractedText === 'string') ctx.db.prepare('INSERT INTO document_text (rendition_id, text) VALUES (?, ?)').run(rid, r.extractedText);
       stored.push({ kind: r.kind, sha256: blob.sha256, bytes: blob.bytes, filename: r.filename, reused: !blob.created });
     }
-    if (current) makeCurrent(ctx, row.id, vid);
+    // A document without a current version always takes the new one, whatever makeCurrent says.
+    if (current || row.current_version_id === null) makeCurrent(ctx, row.id, vid);
     else touch(ctx, row.id);
-    ctx.repo.audit('document.version.add', 'document', row.id, null, { versionNo: no, current, note, renditions: stored });
+    const isCurrent = current || row.current_version_id === null;
+    ctx.repo.audit('document.version.add', 'document', row.id, null, { versionNo: no, current: isCurrent, note, renditions: stored });
     changed(ctx, [row.id], ['documents', 'versions', 'renditions', 'document_text']);
     return vid;
   });

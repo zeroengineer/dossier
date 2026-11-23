@@ -49,7 +49,9 @@ Small decisions made while building Dossier. Each entry: decision, reason, cost 
 
 ## 2026-11-23 (vault core)
 
-- **Blob files are written before the database row** (temp file + rename, skipped when the file exists). A rolled-back transaction can leave an unreferenced blob file; it is harmless because files are content-addressed and reused by the next identical upload. A missing file for an existing row is rewritten on the next upload of the same bytes.
+- **Blob files are written before the transaction** (`storeBlobFile`: temp file + rename, skipped when the file exists, rewritten when missing); only the `blobs`/`renditions` rows are inserted inside it (`recordBlob`). File IO never holds the write lock shared by the HTTP server and the MCP process. A rolled-back transaction can leave an unreferenced blob file; it is harmless because files are content-addressed and reused by the next identical upload.
+- **Files are served only through `readRendition(ctx, documentId, { versionNo?, kind })`**, which checks the document's sensitivity. `readBlob` / `blobPath` are internal (no access check): one blob can back a Public and a Restricted document at once, so a sha-only check can never be right.
+- **A document without a current version always takes the new version as current**, even with `makeCurrent: false`.
 - **Originals are immutable by API shape:** no exported function updates or deletes a rendition; a stamped file is a new version. No database trigger was added (the services are the only writers).
 - **Status may be set freely at creation** (imports of historical documents can start as Paid); after that only the transition table applies. Setting the current status again is a no-op. `updateMetadata` refuses `status`.
 - **Users cannot create or move a document above their own clearance** (`FORBIDDEN`), so nobody files what they cannot read. `getDocument` of a document above clearance is `FORBIDDEN` (not `DOCUMENT_NOT_FOUND`); related documents above clearance are left out of `relations`.
@@ -57,4 +59,4 @@ Small decisions made while building Dossier. Each entry: decision, reason, cost 
 - **The secret scanner applies to every upload**, not just Restricted documents: extensions `.pem`, `.key`, `.env`, file names `.env` / `.env.*`, and the markers `-----BEGIN` / `PRIVATE KEY` in the bytes or extracted text (`SECRET_REJECTED`, nothing stored).
 - **A version needs at least one rendition**; one per kind. Default MIME types per kind when none is given. Number conflicts are re-evaluated when `updateMetadata` changes the series or number; flags on other documents are left as they are.
 - **Display file names** drop empty segments and slug each segment: accents stripped, spaces removed, `/ \ _ : |` become `-`, other non-letter/digit characters dropped. The `original` rendition keeps its own file extension.
-- **Error codes added:** `DOCUMENT_NOT_FOUND`, `VERSION_NOT_FOUND`, `BLOB_NOT_FOUND`, `BRAND_NOT_FOUND`, `FORBIDDEN`, `INVALID_STATUS_TRANSITION`, `SECRET_REJECTED`. Event `document:changed` carries `{ ids: string[] }`.
+- **Error codes added:** `DOCUMENT_NOT_FOUND`, `VERSION_NOT_FOUND`, `RENDITION_NOT_FOUND`, `BLOB_NOT_FOUND`, `BRAND_NOT_FOUND`, `FORBIDDEN`, `INVALID_STATUS_TRANSITION`, `SECRET_REJECTED`. Event `document:changed` carries `{ ids: string[] }`.
