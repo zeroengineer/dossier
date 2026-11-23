@@ -26,6 +26,15 @@ export DOSSIER_HOME=$PWD/workspace
 
 The example workspace uses the fake brand "Acme Events Private Limited" and neutral placeholder images. Customise it as described in `docs/WORKSPACE.md`.
 
+## Vault rules
+
+- Every document has one ID (`DOC-000001`). Each version holds up to one rendition per kind (`pdf`, `html`, `md`, `original`); exactly one version is current.
+- Files are stored once by sha256 under `<DOSSIER_HOME>/data/blobs/<first two hex>/<sha256>`. Stored renditions are never changed; a stamped or corrected file is a new version.
+- Status moves forward only: Draft -> Sent | Signed | Superseded, Sent -> Signed | Paid | Superseded, Signed -> Paid | Superseded, Paid -> Superseded.
+- A document number repeated within its series is accepted but flagged (`numberConflict`) with an audit warning.
+- Sensitivity (Public < Internal < Confidential < Restricted) is checked against the user's clearance (`users` in `workspace.json`, default Confidential) on every read, list and write.
+- **No secrets in the vault.** Uploads named `*.pem`, `*.key`, `*.env`, `.env*`, or whose bytes or extracted text contain `-----BEGIN` or `PRIVATE KEY`, are refused with `SECRET_REJECTED`. Keep keys and passwords in a password manager; a `Restricted` document may record where they live.
+
 ## Documentation
 
 - `docs/PLAN.md`: architecture, data model, rules, cache layers, testing and build order.

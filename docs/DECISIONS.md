@@ -46,3 +46,15 @@ Small decisions made while building Dossier. Each entry: decision, reason, cost 
 - **Seeding never overwrites** existing entities' names, attrs or brand; it only adds missing entities, aliases and relations, so it is safe to run repeatedly.
 - **Service errors are `DossierError(code, message, details)`** (`src/errors.js`) with UPPER_SNAKE codes: `INVALID_INPUT`, `ENTITY_NOT_FOUND`, `ENTITY_AMBIGUOUS` (a name matching several kinds; `details.candidates`), `ENTITY_DUPLICATE` (`details.existingId`).
 - **Brand rows are synced on every `openContext`**, written and audited only when the legal name or config hash changed; rows of removed brands are kept for the documents that reference them.
+
+## 2026-11-23 (vault core)
+
+- **Blob files are written before the database row** (temp file + rename, skipped when the file exists). A rolled-back transaction can leave an unreferenced blob file; it is harmless because files are content-addressed and reused by the next identical upload. A missing file for an existing row is rewritten on the next upload of the same bytes.
+- **Originals are immutable by API shape:** no exported function updates or deletes a rendition; a stamped file is a new version. No database trigger was added (the services are the only writers).
+- **Status may be set freely at creation** (imports of historical documents can start as Paid); after that only the transition table applies. Setting the current status again is a no-op. `updateMetadata` refuses `status`.
+- **Users cannot create or move a document above their own clearance** (`FORBIDDEN`), so nobody files what they cannot read. `getDocument` of a document above clearance is `FORBIDDEN` (not `DOCUMENT_NOT_FOUND`); related documents above clearance are left out of `relations`.
+- **`partyType` is inferred from the party entity's kind** (company -> Company, group_entity -> GroupEntity, person, client, vendor, product) when not given; changing the party without a type re-infers it. The party column is not copied into `document_entities`; `entities` holds the extra roles only.
+- **The secret scanner applies to every upload**, not just Restricted documents: extensions `.pem`, `.key`, `.env`, file names `.env` / `.env.*`, and the markers `-----BEGIN` / `PRIVATE KEY` in the bytes or extracted text (`SECRET_REJECTED`, nothing stored).
+- **A version needs at least one rendition**; one per kind. Default MIME types per kind when none is given. Number conflicts are re-evaluated when `updateMetadata` changes the series or number; flags on other documents are left as they are.
+- **Display file names** drop empty segments and slug each segment: accents stripped, spaces removed, `/ \ _ : |` become `-`, other non-letter/digit characters dropped. The `original` rendition keeps its own file extension.
+- **Error codes added:** `DOCUMENT_NOT_FOUND`, `VERSION_NOT_FOUND`, `BLOB_NOT_FOUND`, `BRAND_NOT_FOUND`, `FORBIDDEN`, `INVALID_STATUS_TRANSITION`, `SECRET_REJECTED`. Event `document:changed` carries `{ ids: string[] }`.
