@@ -36,6 +36,10 @@ The example workspace uses the fake brand "Acme Events Private Limited" and neut
 - **Uploads are deduplicated and searchable.** Byte-identical uploads share one stored file (the response says `deduped`). Text is extracted from PDF, HTML, Markdown and plain-text uploads for search; other files are stored without text. A repeated document number in a series is accepted with a `NUMBER_CONFLICT` warning.
 - **No secrets in the vault.** Uploads named `*.pem`, `*.key`, `*.env`, `.env*`, or whose bytes or extracted text contain `-----BEGIN` or `PRIVATE KEY`, are refused with `SECRET_REJECTED`. Keep keys and passwords in a password manager; a `Restricted` document may record where they live.
 
+## Folder tree
+
+The folder tree is generated from metadata, never stored: `node bin/dossier.js tree [node-id] [--folders] [--json]` prints it for the current user (`DOSSIER_USER`). Top level is who (`01 Company` ... `10 Restricted`), the leaf is what kind of document (from the type routing table in `src/domain/routing.js`). Clients are grouped business line -> client -> engagement (only when a client's documents span more than one engagement) -> leaf; finance documents by Indian financial year (`FY 2026-27`). Restricted documents appear only in `10 Restricted`, and only for users cleared for Restricted. Rename folders or reroute types with `hierarchy` in `workspace.json` (see `docs/WORKSPACE.md`).
+
 ## Documentation
 
 - `docs/PLAN.md`: architecture, data model, rules, cache layers, testing and build order.

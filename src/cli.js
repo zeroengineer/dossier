@@ -1,6 +1,8 @@
 import { resolve } from 'node:path';
 import { loadConfig } from './config.js';
 import { initWorkspace } from './workspace/index.js';
+import { openContext } from './context.js';
+import { getNode } from './services/hierarchy.js';
 
 /**
  * Command table. Each entry: `usage` (shown in help), `summary`, and `run(args, io) -> exit code`.
@@ -18,6 +20,23 @@ export const commands = {
       return 0;
     },
   },
+  tree: {
+    usage: 'tree [node-id] [--folders] [--json]',
+    summary: 'print the folder tree generated from document metadata (--folders: no documents)',
+    run(args, io) {
+      const flags = new Set(args.filter((a) => a.startsWith('--')));
+      for (const f of flags) if (!['--folders', '--json'].includes(f)) throw new Error(`unknown option ${f}`);
+      const [nodeId = ''] = args.filter((a) => !a.startsWith('--'));
+      const ctx = openContext({ home: loadConfig(io.env, io.cwd).home, env: io.env });
+      try {
+        const node = getNode(ctx, nodeId);
+        io.stdout.write(flags.has('--json') ? `${JSON.stringify(node, null, 2)}\n` : renderTree(node, { documents: !flags.has('--folders') }));
+      } finally {
+        ctx.close();
+      }
+      return 0;
+    },
+  },
   help: {
     usage: 'help',
     summary: 'show this help',
@@ -27,6 +46,31 @@ export const commands = {
     },
   },
 };
+
+const countDocs = (node) => node.documents.length + node.children.reduce((sum, c) => sum + countDocs(c), 0);
+
+/**
+ * Plain-text rendering of a tree node: one indented line per folder with its document count, documents listed
+ * under their folder as `- <display name>  [<id>, <status>]`.
+ * @param {import('./services/hierarchy.js').TreeNode} node
+ * @param {{ documents?: boolean }} [opts]
+ * @returns {string}
+ */
+export function renderTree(node, { documents = true } = {}) {
+  const lines = [];
+  const walk = (n, depth) => {
+    const pad = '  '.repeat(depth);
+    lines.push(`${pad}${n.name}  (${countDocs(n)})  [${n.id}]`);
+    for (const c of n.children) walk(c, depth + 1);
+    if (documents) for (const d of n.documents) lines.push(`${pad}  - ${d.displayName}  [${d.id}, ${d.status}]`);
+  };
+  if (node.id === '') {
+    for (const c of node.children) walk(c, 0);
+  } else {
+    walk(node, 0);
+  }
+  return `${lines.join('\n')}\n`;
+}
 
 function usage() {
   const width = Math.max(...Object.values(commands).map((c) => c.usage.length));

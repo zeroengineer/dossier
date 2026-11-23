@@ -53,7 +53,7 @@ brands/acme/brand.json: invalid:
 | `locale.dateFormats.short` / `.long` / `.us` | `DD/MM/YYYY` / `D MMMM YYYY` / `MMMM D, YYYY` | |
 | `users.<userId>.clearance` | `Confidential` | `Public`, `Internal`, `Confidential` or `Restricted`; users not listed get `Confidential` |
 | `hierarchy.topLevel` | built-in names | exactly 10 top-level folder names, in order |
-| `hierarchy.routing` | built-in table | `{ "<docType>": "<leaf folder name>" }` overrides |
+| `hierarchy.routing` | built-in table (`src/domain/routing.js`) | `{ "<docType>": "<route>" }` overrides, type matched case-insensitively. A plain leaf name (`"Agreements"`) files the type inside the party's folder; a value starting with a top-level name (`"06 Finance/Bank Statements"`, `"08 References"`) files it in that folder (finance folders add the financial year) |
 
 ## brands/&lt;id&gt;/brand.json
 
