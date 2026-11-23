@@ -135,3 +135,5 @@ Optional. Initial entities and their relations, validated with the workspace and
 ```
 
 Kinds: `company, group_entity, person, client, vendor, product, business_line, engagement, financial_year`. Roles: `employed_by, director_of, belongs_to_business_line, engagement_of, vendor_of, product_of, group_entity_of, signatory_of, contact_of`. A company or product that issues documents can name its `brand`. Relations must point at entities in the same file.
+
+Names are matched after normalisation (lower case, punctuation other than `&`, `'` and `-` removed, curly quotes and dash variants unified, whitespace collapsed), so `Acme Events, Pvt. Ltd.` and `acme events pvt ltd` are the same name. Within one kind, a name or alias belongs to exactly one entity. Loading seeds is idempotent: missing entities, aliases and relations are added; existing entities are found by name or alias and their names, attrs and brand are never overwritten, so edits made in Dossier survive a re-seed.

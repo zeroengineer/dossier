@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { normaliseName } from '../domain/canonical.js';
 
 export const CLEARANCES = ['Public', 'Internal', 'Confidential', 'Restricted'];
 export const ENTITY_KINDS = ['company', 'group_entity', 'person', 'client', 'vendor', 'product', 'business_line', 'engagement', 'financial_year'];
@@ -149,7 +150,7 @@ export const SeedsSchema = z.object({
   })).default([]),
   relations: z.array(z.object({ from: EntityRef, to: EntityRef, role: z.enum(ENTITY_RELATION_ROLES) })).default([]),
 }).superRefine((seeds, ctx) => {
-  const key = (r) => `${r.kind}\u0000${r.name.trim().toLowerCase()}`;
+  const key = (r) => `${r.kind}\u0000${normaliseName(r.name)}`;
   const known = new Set();
   seeds.entities.forEach((e, i) => {
     if (known.has(key(e))) ctx.addIssue({ code: 'custom', path: ['entities', i, 'name'], message: `duplicate ${e.kind} "${e.name}"` });
