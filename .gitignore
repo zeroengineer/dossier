@@ -1,0 +1,26 @@
+# dependencies
+node_modules/
+
+# runtime data and private workspaces (organisation data never goes in git)
+workspace/
+data/
+*.sqlite
+*.sqlite-*
+dossier-workspace/
+
+# secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+
+# generated output
+samples-out/
+coverage/
+test/.tmp/
+
+# tooling scratch
+.superpowers/
+.DS_Store
+*.log

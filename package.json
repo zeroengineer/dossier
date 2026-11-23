@@ -1,0 +1,37 @@
+{
+  "name": "dossier",
+  "version": "0.1.0",
+  "description": "Document vault and template-driven document generator with an MCP server.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "bin": {
+    "dossier": "bin/dossier.js",
+    "dossier-mcp": "bin/dossier-mcp.js"
+  },
+  "scripts": {
+    "start": "node --no-warnings=ExperimentalWarning src/server.js",
+    "mcp": "node --no-warnings=ExperimentalWarning src/mcp.js",
+    "test": "node --no-warnings=ExperimentalWarning --test --test-concurrency=1 \"test/**/*.test.js\"",
+    "test:unit": "node --no-warnings=ExperimentalWarning --test \"test/unit/**/*.test.js\"",
+    "test:integration": "node --no-warnings=ExperimentalWarning --test --test-concurrency=1 \"test/integration/**/*.test.js\"",
+    "test:snapshot": "node --no-warnings=ExperimentalWarning --test \"test/snapshot/**/*.test.js\"",
+    "coverage": "node --no-warnings=ExperimentalWarning --test --experimental-test-coverage \"test/**/*.test.js\""
+  },
+  "dependencies": {
+    "@fastify/multipart": "^10.1.9",
+    "@fastify/static": "^10.1.12",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "fastify": "^5.12.8",
+    "pdfjs-dist": "^6.5.438",
+    "pdfkit": "^0.18.0",
+    "sharp": "^0.34.5",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "pixelmatch": "^8.0.0",
+    "pngjs": "^7.0.0"
+  }
+}
