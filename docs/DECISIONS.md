@@ -22,3 +22,11 @@ Small decisions made while building Dossier. Each entry: decision, reason, cost 
 - **Pushes deferred** until GitHub auth is configured on this machine (user decision). Commits are made locally after each feature.
 - **Implementation by Opus 5.5 subagents**, one feature per agent, each reviewed before the next (user request).
 - **MIT licence** for code (public app); Manrope stays under OFL.
+
+## 2026-11-23 (workspace loader)
+
+- **Brand inheritance merges raw JSON, then validates.** A child `brand.json` may be partial; errors are reported against the child file. Arrays replace, objects merge. Asset paths resolve in the child folder first, then up the parent chain. Reason: an LLP or product brand usually differs only in name, ids and logo.
+- **Signatories get an optional `signatureLarge`** next to `signature`, and `brandAsset` a `signature-large:<id>` key, because the letter family draws a differently proportioned "authorised sign" image (5914×4873 placeholder) than the invoice family (1024×406). It falls back to `signature`, then to the large placeholder.
+- **`series.json` `scope` defaults to `brand+year`**, the scope of every pattern containing `{YYYY}`; `counter` defaults to the series' own id.
+- **`hierarchy.topLevel` must have exactly 10 names** when given, matching the ten top-level folders of the tree view.
+- **Placeholder images are drawn from SVG paths only** (no `<text>`), so rendering does not depend on system fonts and the committed PNGs are reproducible.

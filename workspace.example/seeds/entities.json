@@ -1,0 +1,38 @@
+{
+  "entities": [
+    { "kind": "company", "name": "Acme Events Private Limited", "aliases": ["Acme", "Acme Events"], "brand": "acme" },
+    { "kind": "business_line", "name": "Events" },
+    { "kind": "business_line", "name": "Software and Services" },
+    {
+      "kind": "client", "name": "Example Institute of Sample Studies", "aliases": ["EISS"],
+      "attrs": { "code": "EISS", "address": ["1 College Road", "Example City 000000"], "gstin": "00BBBBB0000B0Z0", "email": "accounts@example.com" }
+    },
+    {
+      "kind": "client", "name": "Sample Society of Placeholders", "aliases": ["SSP"],
+      "attrs": { "code": "SSP", "address": ["2 Society Street", "Example Town 000000"], "email": "office@example.com" }
+    },
+    {
+      "kind": "client", "name": "Demo Retail LLP", "aliases": ["Demo Retail"],
+      "attrs": { "code": "DEMO", "address": ["3 Market Lane", "Example City 000000"], "email": "purchase@example.com" }
+    },
+    { "kind": "engagement", "name": "Example Fest 2026 - Sample College", "attrs": { "code": "EXF26", "startDate": "2026-02-10", "endDate": "2026-02-12" } },
+    { "kind": "engagement", "name": "Example Conference 2026 - Sample College", "attrs": { "code": "EXC26", "startDate": "2026-09-05", "endDate": "2026-09-06" } },
+    { "kind": "engagement", "name": "Sample Annual Meet 2026", "attrs": { "code": "SAM26" } },
+    { "kind": "person", "name": "Jordan Placeholder", "attrs": { "email": "jordan@example.com", "phone": "+00 00000 00000", "designation": "Event Coordinator" } },
+    { "kind": "person", "name": "Riley Testcase", "attrs": { "email": "riley@example.com", "phone": "+00 00000 00000", "designation": "Software Intern" } },
+    { "kind": "vendor", "name": "Example Sound and Light Co", "attrs": { "gstin": "00CCCCC0000C0Z0", "email": "sales@example.com" } },
+    { "kind": "product", "name": "Acme Tickets", "attrs": { "description": "Example ticketing product" }, "brand": "acme" }
+  ],
+  "relations": [
+    { "from": { "kind": "client", "name": "Example Institute of Sample Studies" }, "to": { "kind": "business_line", "name": "Events" }, "role": "belongs_to_business_line" },
+    { "from": { "kind": "client", "name": "Sample Society of Placeholders" }, "to": { "kind": "business_line", "name": "Events" }, "role": "belongs_to_business_line" },
+    { "from": { "kind": "client", "name": "Demo Retail LLP" }, "to": { "kind": "business_line", "name": "Software and Services" }, "role": "belongs_to_business_line" },
+    { "from": { "kind": "engagement", "name": "Example Fest 2026 - Sample College" }, "to": { "kind": "client", "name": "Example Institute of Sample Studies" }, "role": "engagement_of" },
+    { "from": { "kind": "engagement", "name": "Example Conference 2026 - Sample College" }, "to": { "kind": "client", "name": "Example Institute of Sample Studies" }, "role": "engagement_of" },
+    { "from": { "kind": "engagement", "name": "Sample Annual Meet 2026" }, "to": { "kind": "client", "name": "Sample Society of Placeholders" }, "role": "engagement_of" },
+    { "from": { "kind": "person", "name": "Jordan Placeholder" }, "to": { "kind": "company", "name": "Acme Events Private Limited" }, "role": "employed_by" },
+    { "from": { "kind": "person", "name": "Riley Testcase" }, "to": { "kind": "company", "name": "Acme Events Private Limited" }, "role": "employed_by" },
+    { "from": { "kind": "vendor", "name": "Example Sound and Light Co" }, "to": { "kind": "company", "name": "Acme Events Private Limited" }, "role": "vendor_of" },
+    { "from": { "kind": "product", "name": "Acme Tickets" }, "to": { "kind": "company", "name": "Acme Events Private Limited" }, "role": "product_of" }
+  ]
+}

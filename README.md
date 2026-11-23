@@ -20,12 +20,17 @@ Dossier holds no organisation data in code. Names, registration ids, addresses, 
 ```sh
 npm install
 npm test
+node bin/dossier.js init  # create ./workspace from the fake example (or: init <dir>)
+export DOSSIER_HOME=$PWD/workspace
 ```
+
+The example workspace uses the fake brand "Acme Events Private Limited" and neutral placeholder images. Customise it as described in `docs/WORKSPACE.md`.
 
 ## Documentation
 
 - `docs/PLAN.md`: architecture, data model, rules, cache layers, testing and build order.
 - `docs/DISCOVERY.md`: findings from the legacy document scripts this app replaces (redacted).
+- `docs/WORKSPACE.md`: creating and customising a workspace (brands, assets, series, seeds).
 - `docs/DECISIONS.md`: small decisions and their reasons.
 
 ## License

@@ -1,0 +1,123 @@
+{
+  "id": "acme",
+  "legalName": "Acme Events Private Limited",
+  "shortName": "Acme Events",
+  "registrations": [
+    { "label": "CIN", "value": "U00000XX2000PTC000000" },
+    { "label": "GSTIN", "value": "00AAAAA0000A0Z0" },
+    { "label": "PAN", "value": "AAAAA0000A" }
+  ],
+  "addresses": {
+    "business": ["Unit 000, Example Business Park, 1 Sample Road", "Example City, Example State 000000, India"],
+    "registered": ["No. 0, Placeholder Lane", "Example City, Example State 000000, India"]
+  },
+  "contacts": {
+    "default": { "email": "hello@example.com", "phone": "+00 00000 00000", "website": "www.example.com" },
+    "hr": { "email": "hr@example.com", "phone": "+00 00000 00000" },
+    "billing": { "email": "billing@example.com", "phone": "+00 00000 00000" }
+  },
+  "bankAccounts": [
+    {
+      "accountName": "Acme Events Private Limited",
+      "bankName": "Example Bank",
+      "accountNumber": "000000000000",
+      "ifsc": "EXMP0000000",
+      "swift": "EXMPINXX",
+      "branch": "Example City Main Branch"
+    }
+  ],
+  "letterhead": {
+    "lines": [
+      "CIN: U00000XX2000PTC000000",
+      "Unit 000, Example Business Park, 1 Sample Road",
+      "Example City, Example State 000000, India",
+      "Email: {contact.email} | {contact.website}"
+    ]
+  },
+  "footer": {
+    "left": "{contact.email} | {contact.website}",
+    "center": "{strings.confidential}",
+    "right": "Page {page} of {pages}"
+  },
+  "palette": {},
+  "fonts": {
+    "regular": "builtin:Manrope-Regular",
+    "medium": "builtin:Manrope-Medium",
+    "semibold": "builtin:Manrope-SemiBold",
+    "bold": "builtin:Manrope-Bold",
+    "extrabold": "builtin:Manrope-ExtraBold",
+    "light": "builtin:Manrope-Light",
+    "extralight": "builtin:Manrope-ExtraLight"
+  },
+  "assets": {
+    "logo": "assets/logo.png",
+    "seal": "assets/seal.png"
+  },
+  "signatories": [
+    {
+      "id": "ops",
+      "name": "Alex Example",
+      "title": "Chief Operating Officer",
+      "titleLong": "Chief Operating Officer, Acme Events Private Limited",
+      "signature": "assets/sign-ops.png",
+      "email": "alex@example.com",
+      "phone": "+00 00000 00000"
+    },
+    {
+      "id": "md",
+      "name": "Sam Sample",
+      "title": "Managing Director",
+      "titleLong": "Managing Director, Acme Events Private Limited",
+      "signature": "assets/sign-md.png",
+      "email": "sam@example.com",
+      "phone": "+00 00000 00000"
+    }
+  ],
+  "defaultSignatory": {
+    "invoice": "ops",
+    "debit-note": "ops",
+    "receipt": "ops",
+    "hr": "md",
+    "offer-letter": "md",
+    "internship-offer": "md",
+    "internship-certificate": "md",
+    "experience-certificate": "md",
+    "relieving-letter": "md",
+    "mou": "md",
+    "board-resolution": "md"
+  },
+  "strings": {
+    "confidential": "Confidential",
+    "invoiceDeclaration": "We declare that this invoice shows the actual price of the services described and that all particulars are true and correct.",
+    "thankYou": "THANK YOU FOR YOUR BUSINESS",
+    "forCompany": "FOR {legalName}"
+  },
+  "tax": {
+    "modes": [
+      { "id": "none", "label": "No tax", "rates": [] },
+      { "id": "cgst_sgst", "label": "CGST + SGST", "rates": [{ "label": "CGST (9%)", "rate": 0.09 }, { "label": "SGST (9%)", "rate": 0.09 }] },
+      { "id": "igst", "label": "IGST", "rates": [{ "label": "IGST @ 18%", "rate": 0.18 }] }
+    ],
+    "defaultMode": "cgst_sgst",
+    "defaultHsn": "998596"
+  },
+  "series": {
+    "invoice": "invoice-main",
+    "debit-note": "debit-note",
+    "receipt": "receipt",
+    "offer-letter": "generic",
+    "internship-offer": "generic",
+    "internship-certificate": "hr-cert",
+    "experience-certificate": "hr-cert",
+    "relieving-letter": "generic",
+    "employee-final-settlement": "generic",
+    "ticketing-settlement-statement": "settlement",
+    "client-final-settlement": "settlement",
+    "remittance-statement": "report",
+    "expense-statement": "report",
+    "mou": "generic",
+    "board-resolution": "generic",
+    "proposal": "quotation",
+    "pricing-report": "report"
+  }
+}

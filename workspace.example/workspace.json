@@ -1,0 +1,14 @@
+{
+  "name": "Example Workspace",
+  "defaultBrand": "acme",
+  "locale": {
+    "currencySymbol": "₹",
+    "currencyCode": "INR",
+    "numberLocale": "en-IN",
+    "dateFormats": { "short": "DD/MM/YYYY", "long": "D MMMM YYYY", "us": "MMMM D, YYYY" }
+  },
+  "users": {
+    "demo": { "clearance": "Confidential" }
+  },
+  "hierarchy": {}
+}
