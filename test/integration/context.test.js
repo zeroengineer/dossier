@@ -24,7 +24,7 @@ test('openContext on the example workspace: db at <home>/data/dossier.sqlite, mi
       assert.equal(ctx.ws.config.defaultBrand, 'acme');
       assert.deepEqual(ctx.user, { id: 'demo', clearance: 'Confidential' });
       assert.equal(ctx.repo.actor, 'demo');
-      assert.equal(ctx.db.prepare('SELECT count(*) AS n FROM schema_migrations').get().n, 1);
+      assert.equal(ctx.db.prepare('SELECT count(*) AS n FROM schema_migrations').get().n, 2);
       const brand = ctx.db.prepare('SELECT * FROM brands').get();
       assert.equal(brand.id, 'acme');
       assert.equal(brand.name, 'Acme Events Private Limited');

@@ -1,6 +1,7 @@
 import { normaliseName } from '../domain/canonical.js';
 import { DossierError } from '../errors.js';
 import { nowIso } from '../db/index.js';
+import { reindexEntityDocuments } from './searchIndex.js';
 import { ENTITY_KINDS, ENTITY_RELATION_ROLES, SeedsSchema, formatIssues } from '../workspace/schemas.js';
 
 export { normaliseName };
@@ -146,12 +147,18 @@ function addAliases(ctx, id, names) {
   return added;
 }
 
-/** Audit, bump and emit when the entity's snapshot changed; returns true if it did. */
+/**
+ * Audit, bump and emit when the entity's snapshot changed; returns true if it did. A changed name or alias list
+ * reindexes the documents that show it (search index rows carry party names and aliases).
+ */
 function recordChange(ctx, id, before) {
   const after = snapshot(ctx, id);
   if (before && JSON.stringify(before) === JSON.stringify(after)) return false;
   ctx.db.prepare('UPDATE entities SET updated_at = ? WHERE id = ?').run(nowIso(), id);
   ctx.repo.audit(before ? 'entity.update' : 'entity.create', 'entity', id, before, after);
+  if (before && (before.name !== after.name || JSON.stringify(before.aliases) !== JSON.stringify(after.aliases))) {
+    if (reindexEntityDocuments(ctx, id) > 0) ctx.repo.bump('search_index');
+  }
   ctx.repo.bump('entities');
   ctx.repo.emitAfterCommit(ENTITY_CHANGED, { ids: [id] });
   return true;

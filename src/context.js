@@ -3,6 +3,10 @@ import { loadConfig } from './config.js';
 import { loadWorkspace, clearanceFor } from './workspace/index.js';
 import { openDb, migrate, nowIso } from './db/index.js';
 import { createRepo } from './db/repo.js';
+import { reindexAll } from './services/searchIndex.js';
+
+/** Migration that created `search_index`: documents filed before it are indexed once when it is applied. */
+const SEARCH_MIGRATION = 2;
 
 /**
  * Open everything a service needs: config, workspace, migrated database, repo and the acting user.
@@ -23,7 +27,7 @@ export function openContext({ home, user, dbFile, env = process.env } = {}) {
   const ws = loadWorkspace(config.home);
   const db = openDb(dbFile ?? join(config.dataDir, 'dossier.sqlite'));
   try {
-    migrate(db);
+    const applied = migrate(db);
     const repo = createRepo(db, { actor: config.user });
     syncBrands(repo, ws);
     const ctx = {
@@ -34,6 +38,7 @@ export function openContext({ home, user, dbFile, env = process.env } = {}) {
       user: { id: config.user, clearance: clearanceFor(ws, config.user) },
       close: () => db.close(),
     };
+    if (applied.includes(SEARCH_MIGRATION)) reindexAll(ctx);
     return ctx;
   } catch (err) {
     db.close();

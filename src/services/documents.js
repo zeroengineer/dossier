@@ -4,6 +4,7 @@ import { STATUSES, assertTransition } from '../domain/status.js';
 import { LEVELS, canAccess } from '../domain/sensitivity.js';
 import { secretReason } from '../domain/secrets.js';
 import { recordBlob, storeBlobFile } from './blobs.js';
+import { reindexDocument } from './searchIndex.js';
 import {
   DOCUMENT_ENTITY_ROLES, DOCUMENT_RELATION_TYPES, PARTY_TYPES, RENDITION_KINDS,
   checkDocId, docRow, documentEntities, getDocument, invalid, requireDoc, rowSnapshot, versionView,
@@ -157,9 +158,12 @@ function snapshot(ctx, id) {
   return { ...rowSnapshot(docRow(ctx, id)), entities: documentEntities(ctx, id).map((e) => ({ entityId: e.id, role: e.role })) };
 }
 
+/** Record a document write (inside its transaction): refresh the search rows, bump table versions, queue the event. */
 function changed(ctx, ids, tables = ['documents']) {
-  for (const t of tables) ctx.repo.bump(t);
-  ctx.repo.emitAfterCommit(DOCUMENT_CHANGED, { ids: [...new Set(ids)] });
+  const unique = [...new Set(ids)];
+  for (const id of unique) reindexDocument(ctx, id);
+  for (const t of [...tables, 'search_index']) ctx.repo.bump(t);
+  ctx.repo.emitAfterCommit(DOCUMENT_CHANGED, { ids: unique });
 }
 
 const touch = (ctx, id) => ctx.db.prepare('UPDATE documents SET updated_at = ? WHERE id = ?').run(nowIso(), id);

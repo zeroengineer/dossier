@@ -3,6 +3,7 @@ import { loadConfig } from './config.js';
 import { initWorkspace } from './workspace/index.js';
 import { openContext } from './context.js';
 import { getNode } from './services/hierarchy.js';
+import { reindexAll } from './services/searchIndex.js';
 
 /**
  * Command table. Each entry: `usage` (shown in help), `summary`, and `run(args, io) -> exit code`.
@@ -31,6 +32,21 @@ export const commands = {
       try {
         const node = getNode(ctx, nodeId);
         io.stdout.write(flags.has('--json') ? `${JSON.stringify(node, null, 2)}\n` : renderTree(node, { documents: !flags.has('--folders') }));
+      } finally {
+        ctx.close();
+      }
+      return 0;
+    },
+  },
+  reindex: {
+    usage: 'reindex',
+    summary: 'rebuild the full-text search index from the database',
+    run(args, io) {
+      if (args.length) throw new Error(`unexpected argument ${args[0]}`);
+      const ctx = openContext({ home: loadConfig(io.env, io.cwd).home, env: io.env });
+      try {
+        const { documents } = reindexAll(ctx);
+        io.stdout.write(`Reindexed ${documents} document${documents === 1 ? '' : 's'}\n`);
       } finally {
         ctx.close();
       }

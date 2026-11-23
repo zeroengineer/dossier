@@ -40,6 +40,10 @@ The example workspace uses the fake brand "Acme Events Private Limited" and neut
 
 The folder tree is generated from metadata, never stored: `node bin/dossier.js tree [node-id] [--folders] [--json]` prints it for the current user (`DOSSIER_USER`). Top level is who (`01 Company` ... `10 Restricted`), the leaf is what kind of document (from the type routing table in `src/domain/routing.js`). Clients are grouped business line -> client -> engagement (only when a client's documents span more than one engagement) -> leaf; finance documents by Indian financial year (`FY 2026-27`). Restricted documents appear only in `10 Restricted`, and only for users cleared for Restricted. Rename folders or reroute types with `hierarchy` in `workspace.json` (see `docs/WORKSPACE.md`).
 
+## Search
+
+`search(ctx, { q, types, status, partyId, from, to, limit, expand })` (`src/services/search.js`) looks a query up in document numbers, metadata (title, type, number, party names and aliases) and the extracted text of each document's current version. Results come in order: exact document number (or `DOC-` id) match, number prefix, metadata match, text match (text hits carry a snippet with matched words in `[` `]`). Every word of the query must match; FTS operators are treated as plain words. Entities whose name or alias contains the query are returned too, and one hop of related documents is added: documents linked to a hit by any relation (quotation, MoU, invoice, receipt, settlement…) and the documents where a matched entity is party, signatory or named. Results never include documents above the user's clearance. The index is kept up to date by every write; `node bin/dossier.js reindex` rebuilds it.
+
 ## Documentation
 
 - `docs/PLAN.md`: architecture, data model, rules, cache layers, testing and build order.

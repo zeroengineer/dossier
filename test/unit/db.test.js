@@ -159,9 +159,10 @@ test('a failing migration rolls back and is not recorded', () => {
 
 test('shipped migrations are idempotent', () => {
   const db = openDb(':memory:');
-  assert.deepEqual(migrate(db), [1]);
+  assert.deepEqual(migrate(db), [1, 2]);
   assert.deepEqual(migrate(db), []);
   assert.ok(existsSync(join(MIGRATIONS_DIR, '001_core.sql')));
+  assert.ok(existsSync(join(MIGRATIONS_DIR, '002_search.sql')));
   db.close();
 });
 
