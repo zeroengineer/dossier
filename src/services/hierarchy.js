@@ -2,7 +2,7 @@ import { extname } from 'node:path';
 import { DossierError } from '../errors.js';
 import { accessibleLevels, canAccess } from '../domain/sensitivity.js';
 import { displayFileName } from '../domain/naming.js';
-import { PARTY_TOP, TOP_KEYS, financialYear, idSegment, routeFor, routingConfig } from '../domain/routing.js';
+import { PARTY_TOP, TOP_KEYS, financialYear, idSegment, leafIn, routeFor, routingConfig } from '../domain/routing.js';
 
 /** Folder for client documents with no business line (neither on the document nor on the client). */
 export const UNASSIGNED = 'Unassigned';
@@ -33,12 +33,11 @@ function place(item, cfg) {
   if (item.sensitivity === 'Restricted') return { top: 'restricted', segments: [] };
   const route = routeFor(item.type, cfg);
   const party = item.party && PARTY_TOP[item.party.type] ? item.party : null;
-  const leaf = route.leaf ? [named(route.leaf)] : [];
-  if (route.top === 'finance') return { top: 'finance', segments: [named(financialYear(item.docDate) ?? UNDATED), ...leaf] };
-  if (route.top) return { top: route.top, segments: leaf };
-  if (!party) return { top: 'company', segments: leaf };
-  const top = PARTY_TOP[party.type];
-  if (top === 'company') return { top, segments: leaf };
+  const top = route.top ?? (party ? PARTY_TOP[party.type] : 'company');
+  const leafName = route.override ? route.leaf : leafIn(top, route.leaf);
+  const leaf = leafName ? [named(leafName)] : [];
+  if (top === 'finance') return { top, segments: [named(financialYear(item.docDate) ?? UNDATED), ...leaf] };
+  if (route.top || top === 'company') return { top, segments: leaf };
   if (top === 'clients') {
     const bl = item.businessLine ? entity(item.businessLine) : named(UNASSIGNED);
     return { top, segments: [bl, entity(party), ...leaf], clientId: party.id };
@@ -53,12 +52,19 @@ function newNode(name) {
 /** Sort children by name, give every node its path and a stable id (sibling slug clashes get the entity id). */
 function finish(node, parentId, parentPath) {
   const children = [...node.index.values()].sort((a, b) => a.name.localeCompare(b.name, 'en') || a.key.localeCompare(b.key));
-  const counts = new Map();
-  for (const c of children) counts.set(idSegment(c.name), (counts.get(idSegment(c.name)) ?? 0) + 1);
+  // The plain slug goes to a named (non-entity) folder if one has it, else to the lowest entity id; later entities
+  // with the same slug get `-<entity id>`, so creating an entity never renames an existing node.
+  const owner = new Map();
+  for (const c of children) {
+    const seg = idSegment(c.name);
+    const cur = owner.get(seg);
+    const rank = (x) => (x.entityId === undefined ? -1 : x.entityId);
+    if (!cur || rank(c) < rank(cur)) owner.set(seg, c);
+  }
   const used = new Set();
   node.children = children.map((c) => {
     let seg = idSegment(c.name);
-    if (counts.get(seg) > 1) seg = c.entityId !== undefined ? `${seg}-${c.entityId}` : seg;
+    if (owner.get(seg) !== c && c.entityId !== undefined) seg = `${seg}-${c.entityId}`;
     for (let n = 2; used.has(seg); n++) seg = `${idSegment(c.name)}-${n}`;
     used.add(seg);
     c.node.id = `${parentId}/${seg}`;

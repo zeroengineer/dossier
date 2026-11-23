@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { normaliseName } from '../domain/canonical.js';
+import { parseRouteValue } from '../domain/routing.js';
 
 export const CLEARANCES = ['Public', 'Internal', 'Confidential', 'Restricted'];
 export const ENTITY_KINDS = ['company', 'group_entity', 'person', 'client', 'vendor', 'product', 'business_line', 'engagement', 'financial_year'];
@@ -46,6 +47,12 @@ export const WorkspaceSchema = z.object({
   hierarchy: z.object({
     topLevel: z.array(nonEmpty).length(10, 'must list exactly 10 top-level folder names').optional(),
     routing: z.record(z.string(), nonEmpty).optional(),
+  }).superRefine((h, ctx) => {
+    for (const [type, value] of Object.entries(h.routing ?? {})) {
+      if (parseRouteValue(value, h.topLevel).top === 'restricted') {
+        ctx.addIssue({ code: 'custom', path: ['routing', type], message: 'cannot route to the Restricted folder: only Restricted sensitivity places a document there' });
+      }
+    }
   }).prefault({}),
 });
 

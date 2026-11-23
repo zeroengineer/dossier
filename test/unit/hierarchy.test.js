@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { TOP_LEVEL, DEFAULT_ROUTES, financialYear, idSegment, parseRouteValue, routeFor, routingConfig } from '../../src/domain/routing.js';
+import { TOP_LEVEL, DEFAULT_ROUTES, financialYear, idSegment, leafIn, parseRouteValue, routeFor, routingConfig } from '../../src/domain/routing.js';
+import { WorkspaceSchema, formatIssues } from '../../src/workspace/schemas.js';
 import { assembleTree, findNode } from '../../src/services/hierarchy.js';
 
 const client = (id, name) => ({ id, name, type: 'Client' });
@@ -43,8 +44,13 @@ test('routing defaults, FY labels and id segments', () => {
   assert.equal(TOP_LEVEL.length, 10);
   assert.deepEqual(DEFAULT_ROUTES.Receipt, { top: null, leaf: 'Invoices and Receipts' });
   const cfg = routingConfig({});
-  assert.deepEqual(routeFor('pitch  deck', cfg), { top: null, leaf: 'Marketing', known: true });
-  assert.deepEqual(routeFor('Mystery Memo', cfg), { top: null, leaf: 'Other', known: false });
+  assert.deepEqual(routeFor('pitch  deck', cfg), { top: null, leaf: 'Marketing', known: true, override: false });
+  assert.deepEqual(routeFor('Mystery Memo', cfg), { top: null, leaf: 'Other', known: false, override: false });
+  assert.equal(routeFor('Invoice', routingConfig({ routing: { Invoice: 'Billing' } })).override, true);
+  assert.equal(leafIn('products', 'Proposals and Pricing'), 'Pricing');
+  assert.equal(leafIn('vendors', 'Invoices and Receipts'), 'Invoices Received');
+  assert.equal(leafIn('people', 'Agreements'), 'Other');
+  assert.equal(leafIn('group', 'Agreements'), 'Agreements', 'open leaf set');
   assert.equal(financialYear('2026-04-01'), 'FY 2026-27');
   assert.equal(financialYear('2027-03-31'), 'FY 2026-27');
   assert.equal(financialYear('2099-12-01'), 'FY 2099-00');
@@ -148,9 +154,57 @@ test('sibling folders whose names slug alike get distinct stable ids', () => {
   ], { clearance: 'Confidential' });
   const kids = at(tree, '03/events-line').children.map((c) => c.id);
   assert.deepEqual(kids, ['03/events-line/a-b-events', '03/events-line/ab-events']);
-  const clash = assembleTree([
+  const before = assembleTree([
+    doc({ id: 'DOC-000303', party: client(12, 'Demo Co'), businessLine: events }),
+  ], { clearance: 'Confidential' });
+  assert.deepEqual(at(before, '03/events-line').children.map((c) => c.id), ['03/events-line/demo-co']);
+  const after = assembleTree([
     doc({ id: 'DOC-000303', party: client(12, 'Demo Co'), businessLine: events }),
     doc({ id: 'DOC-000304', party: client(13, 'Demo-Co'), businessLine: events }),
+    doc({ id: 'DOC-000305', party: client(14, 'Unassigned') }),
+    doc({ id: 'DOC-000306', party: client(15, 'Lone Client'), businessLine: { id: 16, name: 'Unassigned' } }),
   ], { clearance: 'Confidential' });
-  assert.deepEqual(at(clash, '03/events-line').children.map((c) => c.id), ['03/events-line/demo-co-12', '03/events-line/demo-co-13']);
+  assert.deepEqual(at(after, '03/events-line').children.map((c) => c.id), ['03/events-line/demo-co', '03/events-line/demo-co-13'],
+    'a later entity with a clashing slug never renames the existing node');
+  assert.deepEqual(at(after, '03').children.map((c) => c.id).sort(), ['03/events-line', '03/unassigned', '03/unassigned-16'],
+    'the named Unassigned folder keeps the plain slug over an entity of the same name');
+  assert.deepEqual(ids(at(after, '03/unassigned/unassigned')), [], 'client named Unassigned sits in the Unassigned folder');
+  assert.deepEqual(ids(at(after, '03/unassigned-16/lone-client/invoices-and-receipts')), ['DOC-000306']);
+});
+
+test('leaves are limited to each top-level folder\'s B3 set', () => {
+  const tree = assembleTree([
+    doc({ id: 'DOC-000401', type: 'Quotation', party: { id: 5, name: 'Widget App', type: 'Product' } }),
+    doc({ id: 'DOC-000402', type: 'Pricing Report', party: { id: 5, name: 'Widget App', type: 'Product' } }),
+    doc({ id: 'DOC-000403', type: 'Agreement', party: { id: 5, name: 'Widget App', type: 'Product' } }),
+    doc({ id: 'DOC-000404', type: 'Invoice', party: { id: 4, name: 'Example Hosting', type: 'Vendor' } }),
+    doc({ id: 'DOC-000405', type: 'NDA', party: { id: 2, name: 'Jane Example', type: 'Person' } }),
+    doc({ id: 'DOC-000406', type: 'Invoice', party: { id: 1, name: 'Acme Events Private Limited', type: 'Company' } }),
+    doc({ id: 'DOC-000407', type: 'Invoice' }),
+    doc({ id: 'DOC-000408', type: 'Vendor Invoice', party: client(3, 'Demo Retail LLP'), businessLine: events }),
+  ], { clearance: 'Confidential' });
+  assert.deepEqual(ids(at(tree, '05/widget-app/pricing')), ['DOC-000401', 'DOC-000402']);
+  assert.deepEqual(ids(at(tree, '05/widget-app/specifications')), ['DOC-000403']);
+  assert.deepEqual(ids(at(tree, '04/example-hosting/invoices-received')), ['DOC-000404']);
+  assert.deepEqual(ids(at(tree, '02/jane-example/other')), ['DOC-000405']);
+  assert.deepEqual(ids(at(tree, '01/other')), ['DOC-000406', 'DOC-000407']);
+  assert.deepEqual(names(at(tree, '01')), ['Other']);
+  assert.deepEqual(ids(at(tree, '03/events-line/demo-retail-llp/other')), ['DOC-000408']);
+});
+
+test('only sensitivity places documents in Restricted: restricted routing overrides are rejected or ignored', () => {
+  const r = WorkspaceSchema.safeParse({ name: 'W', defaultBrand: 'a', hierarchy: { routing: { NDA: '10 Restricted', Invoice: '10 Restricted/Keys' } } });
+  assert.equal(r.success, false);
+  assert.match(formatIssues(r.error), /hierarchy\.routing\.NDA/);
+  assert.match(formatIssues(r.error), /hierarchy\.routing\.Invoice/);
+  const renamed = TOP_LEVEL.map((t, i) => (i === 9 ? 'Vault' : t));
+  assert.equal(WorkspaceSchema.safeParse({ name: 'W', defaultBrand: 'a', hierarchy: { topLevel: renamed, routing: { NDA: 'Vault' } } }).success, false);
+  assert.equal(WorkspaceSchema.safeParse({ name: 'W', defaultBrand: 'a', hierarchy: { routing: { NDA: 'Agreements' } } }).success, true);
+
+  const items = [doc({ id: 'DOC-000501', type: 'NDA', party: client(3, 'Demo Retail LLP'), businessLine: events })];
+  const hierarchy = { routing: { NDA: '10 Restricted' } };
+  const staff = assembleTree(items, { clearance: 'Internal', hierarchy });
+  assert.deepEqual(ids(at(staff, '03/events-line/demo-retail-llp/agreements')), ['DOC-000501'], 'override ignored, no crash');
+  const boss = assembleTree(items, { clearance: 'Restricted', hierarchy });
+  assert.deepEqual(ids(at(boss, '10')), []);
 });

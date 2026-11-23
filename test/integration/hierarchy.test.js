@@ -45,6 +45,8 @@ function seed(home) {
     createDocument(ctx, { type: 'Offer Letter', partyId: person.id, docDate: '2026-01-10', sensitivity: 'Confidential' });
     createDocument(ctx, { type: 'Bank Statement', docDate: '2026-02-28' });
     createDocument(ctx, { type: 'Credentials Note', sensitivity: 'Restricted' });
+    const other = upsertEntity(ctx, { kind: 'business_line', name: 'Software Line' });
+    createDocument(ctx, { type: 'Agreement', partyId: demo.id, businessLineId: other.id, docDate: '2026-08-01' });
   } finally {
     ctx.close();
   }
@@ -65,6 +67,8 @@ test('buildTree routes stored documents using entity relations, engagements and 
     assert.deepEqual(ids(getNode(ctx, '02/jane-example/onboarding')), ['DOC-000005']);
     assert.deepEqual(ids(getNode(ctx, '06/fy-2025-26/bank-statements')), ['DOC-000006']);
     assert.deepEqual(ids(getNode(ctx, '10')), ['DOC-000007']);
+    assert.deepEqual(ids(getNode(ctx, '03/software-line/demo-retail-llp/general/agreements')), ['DOC-000008'],
+      'documents.business_line_id beats the client relation');
     assert.equal(getNode(ctx, '/').id, '');
     assert.throws(() => getNode(ctx, '03/nowhere'), code('NODE_NOT_FOUND'));
   } finally {
