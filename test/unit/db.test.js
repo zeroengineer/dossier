@@ -11,6 +11,12 @@ function mem() {
   return db;
 }
 
+/** No transaction is open on the raw connection: a fresh BEGIN succeeds. */
+function assertNoOpenTx(db) {
+  db.raw.exec('BEGIN');
+  db.raw.exec('ROLLBACK');
+}
+
 test('openDb creates the parent directory and sets WAL, busy_timeout, foreign_keys', () => {
   const { dir, cleanup } = tmpDir();
   try {
@@ -49,7 +55,7 @@ test('withTx rolls back on throw and rethrows', () => {
   }), /boom/);
   assert.equal(db.prepare('SELECT count(*) AS n FROM t').get().n, 0);
   assert.equal(db.inTx(), false);
-  assert.equal(db.raw.isTransaction, false);
+  assertNoOpenTx(db);
   db.close();
 });
 
@@ -73,7 +79,7 @@ test('nested withTx joins the outer transaction; an inner throw rolls back every
 test('withTx rejects async callbacks and rolls back', () => {
   const db = mem();
   assert.throws(() => db.withTx(async () => {}), /synchronous/);
-  assert.equal(db.raw.isTransaction, false);
+  assertNoOpenTx(db);
   db.close();
 });
 
@@ -156,5 +162,60 @@ test('shipped migrations are idempotent', () => {
   assert.deepEqual(migrate(db), [1]);
   assert.deepEqual(migrate(db), []);
   assert.ok(existsSync(join(MIGRATIONS_DIR, '001_core.sql')));
+  db.close();
+});
+
+test('a throwing after-commit callback never fails the committed write', () => {
+  const db = mem();
+  const errors = [];
+  db.onCallbackError = (err) => errors.push(err.message);
+  const ran = [];
+  const out = db.withTx(() => {
+    db.prepare('INSERT INTO t VALUES (1)').run();
+    db.afterCommit(() => { throw new Error('listener broke'); });
+    db.afterCommit(() => ran.push('second'));
+    return 'done';
+  });
+  assert.equal(out, 'done');
+  assert.equal(db.prepare('SELECT count(*) AS n FROM t').get().n, 1);
+  assert.deepEqual(ran, ['second']);
+  assert.deepEqual(errors, ['listener broke']);
+  assert.equal(db.inTx(), false);
+  assertNoOpenTx(db);
+
+  // Outside a transaction too, and a throwing sink cannot escape either.
+  db.onCallbackError = () => { throw new Error('sink broke'); };
+  const stderr = process.stderr.write;
+  const logged = [];
+  process.stderr.write = (chunk) => { logged.push(String(chunk)); return true; };
+  try {
+    db.afterCommit(() => { throw new Error('immediate'); });
+  } finally { process.stderr.write = stderr; }
+  assert.match(logged.join(''), /sink broke/);
+  db.close();
+});
+
+test('a throwing after-rollback callback does not replace the original error', () => {
+  const db = mem();
+  const errors = [];
+  db.onCallbackError = (err) => errors.push(err.message);
+  assert.throws(() => db.withTx(() => {
+    db.afterRollback(() => { throw new Error('cb'); });
+    throw new Error('original');
+  }), /original/);
+  assert.deepEqual(errors, ['cb']);
+  assertNoOpenTx(db);
+  db.close();
+});
+
+test('withTx recovers when SQLite already ended the transaction', () => {
+  const db = mem();
+  assert.throws(() => db.withTx(() => {
+    db.raw.exec('ROLLBACK'); // transaction gone before withTx tries to roll back
+    throw new Error('after manual rollback');
+  }), /after manual rollback/);
+  assert.equal(db.inTx(), false);
+  db.withTx(() => db.prepare('INSERT INTO t VALUES (5)').run());
+  assert.equal(db.prepare('SELECT count(*) AS n FROM t').get().n, 1);
   db.close();
 });

@@ -20,7 +20,8 @@ export const nowIso = () => new Date().toISOString();
  * @property {(cb: () => void) => void} afterCommit run cb after the outermost transaction commits (now, if none is open)
  * @property {(cb: () => void) => void} afterRollback run cb if the outermost transaction rolls back (dropped if none is open)
  * @property {() => number} dataVersion `PRAGMA data_version`; changes when another connection commits
- * @property {() => void} close
+ * @property {(err: unknown) => void} onCallbackError receives errors thrown by after-commit/after-rollback callbacks (default: stderr); never rethrown
+ * @property {() => void} close idempotent
  */
 
 /**
@@ -41,21 +42,26 @@ export function openDb(file) {
 
   const cache = new Map();
   let depth = 0;
+  let closed = false;
   let onCommit = [];
   let onRollback = [];
 
+  // Callbacks run after the transaction has ended: their errors must never reach the writer, whose write is
+  // already committed (or already rolled back). They go to db.onCallbackError instead.
   const runAll = (cbs) => {
-    let first;
     for (const cb of cbs) {
-      try { cb(); } catch (err) { first ??= err; }
+      try { cb(); } catch (err) { reportCallbackError(err); }
     }
-    if (first) throw first;
+  };
+  const reportCallbackError = (err) => {
+    try { db.onCallbackError(err); } catch (inner) { logCallbackError(inner); }
   };
 
   /** @type {Db} */
   const db = {
     raw,
     file,
+    onCallbackError: logCallbackError,
     prepare(sql) {
       let stmt = cache.get(sql);
       if (!stmt) {
@@ -74,39 +80,49 @@ export function openDb(file) {
       raw.exec('BEGIN IMMEDIATE');
       depth = 1;
       let result;
+      let cbs = [];
       try {
         result = checkSync(fn());
         raw.exec('COMMIT');
+        cbs = onCommit;
       } catch (err) {
-        if (raw.isTransaction) raw.exec('ROLLBACK');
-        const cbs = onRollback;
+        cbs = onRollback;
+        try {
+          raw.exec('ROLLBACK');
+        } catch (rbErr) {
+          // SQLite may already have rolled back (e.g. after some errors); anything else is worth surfacing.
+          if (!/no transaction is active/i.test(String(rbErr?.message))) logCallbackError(rbErr);
+        }
+        throw err;
+      } finally {
         onCommit = [];
         onRollback = [];
         depth = 0;
-        try { runAll(cbs); } catch { /* the original error wins */ }
-        throw err;
+        runAll(cbs);
       }
-      const cbs = onCommit;
-      onCommit = [];
-      onRollback = [];
-      depth = 0;
-      runAll(cbs);
       return result;
     },
     afterCommit(cb) {
       if (depth > 0) onCommit.push(cb);
-      else cb();
+      else runAll([cb]);
     },
     afterRollback(cb) {
       if (depth > 0) onRollback.push(cb);
     },
     dataVersion: () => raw.prepare('PRAGMA data_version').get().data_version,
     close() {
+      if (closed) return;
+      closed = true;
       cache.clear();
-      if (raw.isOpen) raw.close();
+      raw.close();
     },
   };
   return db;
+}
+
+/** Default sink for errors thrown by after-commit / after-rollback callbacks. */
+function logCallbackError(err) {
+  process.stderr.write(`dossier: post-transaction callback failed: ${err?.stack ?? err}\n`);
 }
 
 /** withTx callbacks must be synchronous: node:sqlite is sync and an awaited gap would leak the transaction. */

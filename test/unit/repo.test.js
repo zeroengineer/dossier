@@ -115,3 +115,26 @@ test('canonicalKey folds case, spacing and punctuation', () => {
   assert.equal(canonicalKey('Ｅxample'), 'example');
   assert.equal(canonicalKey('Example Fest 2026 - Sample College'), 'example fest 2026 - sample college');
 });
+
+test('a throwing event listener does not fail the write; its error is emitted as listenerError', () => {
+  const { db, repo } = setup();
+  const errors = [];
+  repo.events.on('listenerError', (err) => errors.push(err.message));
+  repo.events.on('document:changed', () => { throw new Error('listener broke'); });
+  const id = repo.tx(() => {
+    const docId = repo.nextDocumentId();
+    db.prepare("INSERT INTO documents (id, type) VALUES (?, 'invoice')").run(docId);
+    repo.audit('document.create', 'document', docId);
+    repo.emitAfterCommit('document:changed', { id: docId });
+    return docId;
+  });
+  assert.equal(id, 'DOC-000001');
+  assert.equal(count(db, 'documents'), 1);
+  assert.equal(count(db, 'audit_log'), 1);
+  assert.deepEqual(errors, ['listener broke']);
+  // Outside a tx as well.
+  repo.emitAfterCommit('document:changed', { id: 'x' });
+  assert.deepEqual(errors, ['listener broke', 'listener broke']);
+  assert.equal(repo.tx(() => repo.nextDocumentId()), 'DOC-000002');
+  db.close();
+});

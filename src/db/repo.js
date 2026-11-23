@@ -21,6 +21,14 @@ export function createRepo(db, { actor }) {
   const events = new EventEmitter();
   const versions = new Map();
 
+  // Post-commit listener errors never reach the writer (the write is committed). They are emitted as
+  // 'listenerError' when someone listens, otherwise passed to the db's previous sink (stderr by default).
+  const fallback = db.onCallbackError;
+  db.onCallbackError = (err) => {
+    if (events.listenerCount('listenerError') > 0) events.emit('listenerError', err);
+    else fallback(err);
+  };
+
   const repo = {
     db,
     actor,
@@ -77,7 +85,8 @@ export function createRepo(db, { actor }) {
 
     /**
      * Emit `event` on repo.events after the current transaction commits (immediately when none is open).
-     * Dropped if the transaction rolls back.
+     * Dropped if the transaction rolls back. A throwing listener never fails the write: its error is emitted as
+     * 'listenerError' (or logged to stderr when nobody listens).
      * @param {string} event
      * @param {unknown} payload
      */
