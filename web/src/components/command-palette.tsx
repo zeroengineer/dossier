@@ -84,10 +84,10 @@ function PaletteItem({ item, onSelect, group }: { item: NavItem; onSelect: (to: 
   )
 }
 
-function DocumentResult({ hit, onSelect }: { hit: SearchHit; onSelect: (to: string) => void }) {
+function DocumentResult({ hit, disabled, onSelect }: { hit: SearchHit; disabled: boolean; onSelect: (to: string) => void }) {
   const d = hit.document
   return (
-    <CommandItem value={docValue(d.id)} onSelect={() => onSelect(documentPath(d.id))}>
+    <CommandItem value={docValue(d.id)} disabled={disabled} onSelect={() => onSelect(documentPath(d.id))}>
       <FileTextIcon />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="flex min-w-0 gap-2">
@@ -103,9 +103,9 @@ function DocumentResult({ hit, onSelect }: { hit: SearchHit; onSelect: (to: stri
   )
 }
 
-function EntityResult({ entity, onSelect }: { entity: SearchEntity; onSelect: (to: string) => void }) {
+function EntityResult({ entity, disabled, onSelect }: { entity: SearchEntity; disabled: boolean; onSelect: (to: string) => void }) {
   return (
-    <CommandItem value={entityValue(entity.id)} onSelect={() => onSelect(entityPath(entity.id))}>
+    <CommandItem value={entityValue(entity.id)} disabled={disabled} onSelect={() => onSelect(entityPath(entity.id))}>
       <Building2Icon />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="truncate">{entity.name}</span>
@@ -134,40 +134,54 @@ function PaletteBody({ onNavigate }: { onNavigate: (to: string) => void }) {
   const results = query !== "" && debounced !== "" ? search.data : undefined
   const hits = results?.hits ?? []
   const entities = results?.entities ?? []
+  // The shown results belong to an earlier query (debounce pending, or the next request in flight): they are dimmed
+  // and disabled, and "Search for …" is selected, so Enter never opens a result of the previous query.
+  const stale = query !== "" && (debounced !== query || search.isPlaceholderData)
 
-  // New results: select the first one, so Enter opens it (cmdk keeps an existing selection when items are added).
-  const first = hits[0] ? docValue(hits[0].document.id) : entities[0] ? entityValue(entities[0].id) : null
+  const applied = React.useRef<unknown>(null)
   React.useEffect(() => {
-    if (search.data && !search.isPlaceholderData && first) setSelected(first)
-  }, [search.data, search.isPlaceholderData, first])
+    if (!stale) return
+    applied.current = null
+    setSelected(SEARCH_VALUE)
+  }, [stale, query])
+
+  // Fresh results: select the first one so Enter opens it, unless the user already moved to another item.
+  const first = hits[0] ? docValue(hits[0].document.id) : entities[0] ? entityValue(entities[0].id) : null
+  const live = new Set([...hits.map((h) => docValue(h.document.id)), ...entities.map((e) => entityValue(e.id))])
+  React.useEffect(() => {
+    if (stale || !first || applied.current === search.data) return
+    applied.current = search.data
+    const replaceable = selected === "" || selected === SEARCH_VALUE || (selected.startsWith(LIVE) && !live.has(selected))
+    if (replaceable) setSelected(first)
+  })
 
   return (
     <Command filter={paletteFilter} value={selected} onValueChange={setSelected}>
       <CommandInput placeholder="Search documents and entities, or jump to a page…" value={input} onValueChange={setInput} />
+      {query !== "" && (search.isFetching || debounced !== query) ? (
+        <div role="status" className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
+          <Spinner />
+          Searching…
+        </div>
+      ) : null}
+      {query !== "" && search.isError && !search.isFetching ? (
+        <div role="alert" className="px-3 py-2 text-xs text-muted-foreground">
+          Search failed. Press Enter on “Search for” to try the search page.
+        </div>
+      ) : null}
       <CommandList>
         <CommandEmpty>No matching pages.</CommandEmpty>
-        {query !== "" && (search.isFetching || debounced !== query) ? (
-          <div role="status" className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
-            <Spinner />
-            Searching…
-          </div>
-        ) : null}
-        {query !== "" && search.isError && !search.isFetching ? (
-          <div role="alert" className="px-3 py-2 text-xs text-muted-foreground">
-            Search failed. Press Enter on “Search for” to try the search page.
-          </div>
-        ) : null}
         {hits.length ? (
           <CommandGroup heading="Documents">
             {hits.map((hit) => (
-              <DocumentResult key={hit.document.id} hit={hit} onSelect={onNavigate} />
+              <DocumentResult key={hit.document.id} hit={hit} disabled={stale} onSelect={onNavigate} />
             ))}
           </CommandGroup>
         ) : null}
         {entities.length ? (
           <CommandGroup heading="Entities">
             {entities.map((entity) => (
-              <EntityResult key={entity.id} entity={entity} onSelect={onNavigate} />
+              <EntityResult key={entity.id} entity={entity} disabled={stale} onSelect={onNavigate} />
             ))}
           </CommandGroup>
         ) : null}

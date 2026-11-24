@@ -73,6 +73,35 @@ describe("CommandPalette", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
   })
 
+  it("never opens a previous query's result while the next one is pending", async () => {
+    recordSearches()
+    const { user, dialog, input, router } = await openPalette()
+    await user.type(input, "acme")
+    await waitFor(() =>
+      expect(within(dialog).getByRole("option", { name: /Event services invoice/ })).toHaveAttribute("aria-selected", "true"),
+    )
+    await user.type(input, "x")
+    expect(within(dialog).getByRole("option", { name: /Event services invoice/ })).toHaveAttribute("aria-disabled", "true")
+    expect(within(dialog).getByRole("option", { name: "Search for “acmex”" })).toHaveAttribute("aria-selected", "true")
+    await user.keyboard("{Enter}")
+    await waitFor(() => expect(router.state.location.pathname).toBe("/search"))
+    expect(router.state.location.search).toBe("?q=acmex")
+  })
+
+  it("keeps the user's arrow-key choice once results are in", async () => {
+    recordSearches()
+    const { user, dialog, input, router } = await openPalette()
+    await user.type(input, "acme")
+    await waitFor(() =>
+      expect(within(dialog).getByRole("option", { name: /Event services invoice/ })).toHaveAttribute("aria-selected", "true"),
+    )
+    await user.keyboard("{ArrowDown}")
+    await new Promise((r) => setTimeout(r, 300))
+    expect(within(dialog).getByRole("option", { name: /Venue confirmation/ })).toHaveAttribute("aria-selected", "true")
+    await user.keyboard("{Enter}")
+    await waitFor(() => expect(router.state.location.pathname).toBe("/documents/DOC-000004"))
+  })
+
   it("opens an entity", async () => {
     recordSearches()
     const { user, dialog, input, router } = await openPalette()

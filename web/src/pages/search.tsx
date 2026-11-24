@@ -59,7 +59,8 @@ export default function SearchPage() {
     )
   } else if (isError) {
     body = <ErrorState error={error} title="Search failed" onRetry={() => void refetch()} />
-  } else if (isPending) {
+  } else if (isPending || (empty && isPlaceholderData)) {
+    // First load, or the previous query found nothing and the next one is still loading.
     body = <SearchResultsSkeleton />
   } else if (empty) {
     body = <EmptyState icon={SearchXIcon} title={`No results for “${q}”`} description="Try fewer words or a document number." />

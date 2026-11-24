@@ -68,6 +68,27 @@ describe("SearchPage", () => {
     expect(screen.queryByRole("region", { name: /^Matched/ })).not.toBeInTheDocument()
   })
 
+  it("shows a skeleton, not the old empty state, while the next query loads", async () => {
+    let release: () => void = () => {}
+    const gate = new Promise<void>((r) => { release = r })
+    server.use(
+      http.get("*/api/search", async ({ request }) => {
+        if (new URL(request.url).searchParams.get("q") === "nothing") return HttpResponse.json(emptySearchResult)
+        await gate
+        return HttpResponse.json(searchResult)
+      }),
+    )
+    const { user } = renderApp("/search?q=nothing")
+    expect(await screen.findByText("No results for “nothing”")).toBeInTheDocument()
+    const box = screen.getByRole("searchbox", { name: "Search query" })
+    await user.clear(box)
+    await user.type(box, "venue{Enter}")
+    expect(await screen.findByLabelText("Loading results")).toBeInTheDocument()
+    expect(screen.queryByText(/No results for/)).not.toBeInTheDocument()
+    release()
+    expect(await screen.findByRole("heading", { level: 2, name: "Matched" })).toBeInTheDocument()
+  })
+
   it("shows the API error with a retry", async () => {
     let calls = 0
     server.use(
