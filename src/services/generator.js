@@ -105,6 +105,15 @@ export function bodyFor(template, values) {
 }
 
 /**
+ * Warnings for body placeholders that filled as empty text (missing values), one per path.
+ * @param {string[]} names
+ * @returns {Array<{ code: 'PLACEHOLDER_EMPTY', name: string, message: string }>}
+ */
+export function placeholderWarnings(names) {
+  return names.map((name) => ({ code: 'PLACEHOLDER_EMPTY', name, message: `{{${name}}} has no value and prints as empty text` }));
+}
+
+/**
  * Render a template's renditions (no database access). Templates see `values.number` (null for a draft) and `env`
  * `{ ctx, brand, meta, params, fmt, input, number, draft, markdown }` (`markdown`: the filled body, see bodyFor). PDF: the module's `renderPdf(pdfCtx, values, env)`, else
  * its blocks through letterhead + renderBlocksPdf + footers; a draft gets the vector watermark on every page. HTML:
@@ -114,7 +123,8 @@ export function bodyFor(template, values) {
  * @param {{ id: string, meta: object, module: object, body?: string, bodies?: Record<string, string> }} template
  * @param {Record<string, unknown>} values resolved field values
  * @param {{ brand: object|string, number?: string|null, draft?: boolean, creationDate: Date|string, input?: object }} opts
- * @returns {Promise<Array<{ kind: 'pdf'|'html'|'md', buffer: Buffer, mime: string }>>}
+ * @returns {Promise<Array<{ kind: 'pdf'|'html'|'md', buffer: Buffer, mime: string }> & { warnings: object[] }>}
+ *   `warnings`: body placeholders that had no value (PLACEHOLDER_EMPTY, see placeholderWarnings).
  */
 export async function renderRenditions(ctx, template, values, { brand, number = null, draft = false, creationDate, input = {} }) {
   const { meta, module } = template;
@@ -130,8 +140,13 @@ export async function renderRenditions(ctx, template, values, { brand, number = 
   const contact = meta.contact ?? 'default';
 
   let filledMd;
+  let placeholders = [];
   const body = bodyFor(template, v);
-  if (body !== undefined) filledMd = fillMarkdown(body, { ...v, number: draft ? DRAFT_NUMBER : (shownNumber ?? '') }).text;
+  if (body !== undefined) {
+    const filled = fillMarkdown(body, { ...v, number: draft ? DRAFT_NUMBER : (shownNumber ?? '') });
+    filledMd = filled.text;
+    placeholders = [...new Set(filled.missing)];
+  }
   env.markdown = filledMd;
   let blocks;
   const getBlocks = () => {
@@ -168,6 +183,7 @@ export async function renderRenditions(ctx, template, values, { brand, number = 
       out.push({ kind, buffer: Buffer.from(md, 'utf8'), mime: MIME.md });
     }
   }
+  out.warnings = placeholderWarnings(placeholders);
   return out;
 }
 
@@ -193,7 +209,8 @@ function writeAtomic(file, buffer) {
  * @param {Record<string, unknown>} [input]
  * @param {{ brandId?: string, dirs?: string[], today?: string }} [opts]
  * @returns {Promise<{ ok: false, missing: object[], errors: object[] } |
- *   { ok: true, token: string, renditions: Array<{ kind: string, path: string, bytes: number }> }>}
+ *   { ok: true, token: string, renditions: Array<{ kind: string, path: string, bytes: number }>,
+ *     warnings: Array<{ code: 'PLACEHOLDER_EMPTY', name: string, message: string }> }>}
  */
 export async function previewDocument(ctx, templateId, input = {}, { brandId, dirs, today } = {}) {
   checkInput(input);
@@ -214,7 +231,7 @@ export async function previewDocument(ctx, templateId, input = {}, { brandId, di
     writeAtomic(path, r.buffer);
     return { kind: r.kind, path, bytes: r.buffer.byteLength };
   });
-  return { ok: true, token, renditions };
+  return { ok: true, token, renditions, warnings: rendered.warnings };
 }
 
 // ---------- generate ----------
@@ -417,7 +434,9 @@ function checkRelationTargets(ctx, targets, selfId) {
  * @param {{ brandId?: string, status?: string, documentId?: string, force?: boolean, dirs?: string[], today?: string,
  *   note?: string }} [opts]
  * @returns {Promise<{ documentId: string, number: string|null, versionNo: number,
- *   renditions: Array<{ kind: string, sha256: string, filename: string, bytes: number }> }>}
+ *   renditions: Array<{ kind: string, sha256: string, filename: string, bytes: number }>,
+ *   warnings: Array<{ code: 'PLACEHOLDER_EMPTY', name: string, message: string }> }>}
+ *   `warnings` lists body placeholders that printed as empty text.
  */
 export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
   checkInput(input);
@@ -540,6 +559,7 @@ export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
         number,
         versionNo: version.versionNo,
         renditions: version.renditions.map((r) => ({ kind: r.kind, sha256: r.sha256, filename: r.filename, bytes: r.bytes })),
+        warnings: rendered.warnings,
       };
     });
   };

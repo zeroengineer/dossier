@@ -261,6 +261,13 @@ test('a broken override without index.js is reported and is not replaced by the 
     assert.match(err.message, /no template\.json and no built-in template "nothing-here" to inherit from/);
     await assert.rejects(getTemplate(ctx, 'nothing-here'), code('TEMPLATE_INVALID'));
   }));
+  await t.test('index.js without template.json over a built-in', () => withBase(async (ctx, home, base) => {
+    put(home, 'templates/sample-letter/index.js', 'export {};\n');
+    const [err] = listTemplateErrors(ctx, { dirs: [base] });
+    assert.equal(err.id, 'sample-letter');
+    assert.match(err.message, /index\.js without template\.json: .*remove index\.js to inherit the built-in "sample-letter"/);
+    assert.doesNotMatch(err.message, /no built-in template/);
+  }));
   await t.test('a broken built-in is inherited as broken', () => withBase(async (ctx, home, base) => {
     writeFileSync(join(base, 'sample-letter', 'template.json'), '{oops');
     put(home, 'templates/sample-letter/body.md', '# Body\n');

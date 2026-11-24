@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { getDocument, readRendition } from '../../src/services/documents.js';
-import { getEntity } from '../../src/services/entities.js';
+import { getEntity, upsertEntity } from '../../src/services/entities.js';
 import { generateDocument, previewDocument } from '../../src/services/generator.js';
 import { getTemplate, listTemplateErrors, listTemplates } from '../../src/services/templates.js';
 import { extractItems } from '../helpers/pdfText.js';
@@ -56,9 +56,10 @@ test('board resolution: generated with the brand series; previews list missing f
   const p = await previewDocument(ctx, 'board-resolution', {});
   assert.deepEqual(p.missing.map((m) => m.name).sort(), ['bank', 'directors']);
   const m = await previewDocument(ctx, 'mou', {});
-  assert.deepEqual(m.missing.map((x) => x.name).sort(), ['feePercent', 'partner', 'partnerName', 'service']);
+  assert.deepEqual(m.missing.map((x) => x.name).sort(), ['feePercent', 'partner', 'partnerAddress', 'partnerName', 'service']);
   const ok = await previewDocument(ctx, 'mou', fixtureInput('mou'));
   assert.equal(ok.ok, true);
+  assert.deepEqual(ok.warnings, []);
   assert.match(readFileSync(ok.renditions[2].path, 'utf8'), /Reference: DRAFT/);
 }));
 
@@ -85,4 +86,44 @@ test('a workspace override with only body.md keeps the built-in module and meta 
   // The event variant still uses the built-in event body (bodies fall back file by file).
   const ev = await generateDocument(ctx, 'mou', { ...fixtureInput('mou'), variant: 'event', engagement: 'Example Fest 2026 - Sample College' });
   assert.match(md(ctx, ev.documentId), /# EVENT DETAILS/);
+}));
+
+test('empty body placeholders are returned as PLACEHOLDER_EMPTY warnings by preview and generate', () => withExampleCtx(async (ctx, home) => {
+  const clean = await generateDocument(ctx, 'mou', fixtureInput('mou'));
+  assert.deepEqual(clean.warnings, [], 'optional values are guarded in the shipped bodies');
+  const ev = await generateDocument(ctx, 'mou', { ...fixtureInput('mou'), variant: 'event', engagement: 'Sample Annual Meet 2026' });
+  assert.deepEqual(ev.warnings, []);
+  assert.doesNotMatch(md(ctx, ev.documentId), /\| Venue \|/, 'empty event rows are left out');
+  const dir = join(home, 'templates', 'mou');
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, 'body.md'), '# MoU\n\nWith {{partnerName}} at {{partnerOffice}}, signed by {{partnerSignatory.name}} and {{partnerOffice}}.\n');
+  const p = await previewDocument(ctx, 'mou', fixtureInput('mou'));
+  assert.equal(p.ok, true);
+  const expected = [
+    { code: 'PLACEHOLDER_EMPTY', name: 'partnerOffice', message: '{{partnerOffice}} has no value and prints as empty text' },
+    { code: 'PLACEHOLDER_EMPTY', name: 'partnerSignatory.name', message: '{{partnerSignatory.name}} has no value and prints as empty text' },
+  ];
+  assert.deepEqual(p.warnings, expected);
+  const g = await generateDocument(ctx, 'mou', fixtureInput('mou'));
+  assert.deepEqual(g.warnings, expected);
+  const b = await generateDocument(ctx, 'board-resolution', fixtureInput('board-resolution'));
+  assert.deepEqual(b.warnings, [], 'templates without a body have no placeholder warnings');
+}));
+
+test('mou: a partner without an address is missing; a brand without an address fails print', () => withExampleCtx(async (ctx) => {
+  upsertEntity(ctx, { kind: 'client', name: 'Addressless Example Club' });
+  const p = await previewDocument(ctx, 'mou', { ...fixtureInput('mou'), partner: 'Addressless Example Club' });
+  assert.deepEqual(p.missing.map((m) => m.name), ['partnerAddress']);
+  const ok = await previewDocument(ctx, 'mou', { ...fixtureInput('mou'), partner: 'Addressless Example Club', partnerAddress: 'Club House, Example Town' });
+  assert.equal(ok.ok, true);
+  const brand = ctx.ws.brands.get('acme');
+  ctx.ws.brands.set('acme', { ...brand, addresses: { business: [' '] } });
+  try {
+    const r = await previewDocument(ctx, 'mou', fixtureInput('mou'));
+    assert.equal(r.ok, false);
+    assert.deepEqual(r.errors.map((e) => e.name), ['print']);
+    assert.match(r.errors[0].message, /no registered or business address/);
+  } finally {
+    ctx.ws.brands.set('acme', brand);
+  }
 }));

@@ -84,9 +84,15 @@ This MoU is governed by the laws of {{governingLaw}}{{#if jurisdiction}}, and th
 | Particular | Details |
 | :--- | :--- |
 | Event | {{event.name}} |
+{{#if event.type}}
 | Event type | {{event.type}} |
+{{/if}}
+{{#if event.dates}}
 | Dates | {{event.dates}} |
+{{/if}}
+{{#if event.venue}}
 | Venue | {{event.venue}} |
+{{/if}}
 | Event Organiser | {{partnerName}} |
 | Service | {{service}} — {{print.company}} |
 
@@ -102,7 +108,7 @@ Name: {{signatory.name}}
 
 Designation: {{signatory.title}}
 
-Contact: {{signatory.phone}}
+Contact: {{#if signatory.phone}}{{signatory.phone}}{{/if}}
 
 Date: {{print.date}}
 
@@ -112,11 +118,11 @@ Seal:
 
 Authorized Signatory
 
-Name: {{partnerSignatory.name}}
+Name: {{#if partnerSignatory.name}}{{partnerSignatory.name}}{{/if}}
 
-Designation: {{partnerSignatory.designation}}
+Designation: {{#if partnerSignatory.designation}}{{partnerSignatory.designation}}{{/if}}
 
-Contact: {{partnerSignatory.contact}}
+Contact: {{#if partnerSignatory.contact}}{{partnerSignatory.contact}}{{/if}}
 
 Date:
 

@@ -28,8 +28,10 @@ function registration(brand, label) {
  */
 function print(values, env) {
   const { brand, fmt, params } = env;
-  if (values.variant === 'event' && !present(values.event?.name)) throw new Error('the event variant needs event.name (or an engagement)');
-  const companyAddress = textLines(brand.addresses?.registered ?? brand.addresses?.business).join(', ');
+  const companyAddress = textLines(brand.addresses?.registered).join(', ') || textLines(brand.addresses?.business).join(', ');
+  if (!companyAddress) throw new Error(`brand "${brand.id}" has no registered or business address to print for the first party`);
+  const partnerAddress = textLines(values.partnerAddress).join(', ');
+  if (!partnerAddress) throw new Error('partnerAddress is empty');
   const out = {
     date: values.date ? fmt.date(values.date, 'long') : '',
     company: brand.legalName,
@@ -38,11 +40,13 @@ function print(values, env) {
     companyAddress,
     partner: values.partnerName ?? '',
     partnerUpper: String(values.partnerName ?? '').toUpperCase(),
-    partnerAddress: textLines(values.partnerAddress).join(', '),
+    partnerAddress,
     feePercent: present(values.feePercent) ? plain(values.feePercent) : '',
     gstPercent: present(values.gstPercent) ? plain(values.gstPercent) : '',
   };
-  if (Number.isSafeInteger(values.examplePrice) && typeof values.feePercent === 'number') {
+  if (!Number.isSafeInteger(values.examplePrice) || values.examplePrice < 0) throw new Error('examplePrice must be a non-negative amount');
+  if (typeof values.feePercent !== 'number') throw new Error('feePercent is required for the fee illustration');
+  {
     const price = values.examplePrice;
     const fee = percentOf(price, values.feePercent);
     const gst = percentOf(fee, values.gstPercent ?? 0);
@@ -53,7 +57,17 @@ function print(values, env) {
   return out;
 }
 
-export const computed = Object.freeze({ print });
+/**
+ * `event.name`: the engagement's name (input `event.name` wins); the event variant fails without one.
+ * @param {Record<string, any>} values
+ */
+function eventName(values) {
+  const name = values.engagement?.name;
+  if (values.variant === 'event' && !present(name)) throw new Error('the event variant needs an event name (event.name or an engagement)');
+  return present(name) ? name : undefined;
+}
+
+export const computed = Object.freeze({ print, eventName });
 
 /** The frame of a variant: MOU_FRAME, then `params.frame`, then `params.variants[<variant>].frame`. */
 export function mouFrame(params, variant) {

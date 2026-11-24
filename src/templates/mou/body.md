@@ -138,10 +138,18 @@ This MoU is governed by the laws of {{governingLaw}}. The Parties shall first tr
 
 - **Organisation:** {{partnerName}}
 - **Registered address:** {{print.partnerAddress}}
+{{#if partnerRegistration}}
 - **Registration no.:** {{partnerRegistration}}
+{{/if}}
+{{#if partnerContact}}
 - **Contact person:** {{partnerContact}}
+{{/if}}
+{{#if partnerPhone}}
 - **Phone:** {{partnerPhone}}
+{{/if}}
+{{#if partnerEmail}}
 - **Email:** {{partnerEmail}}
+{{/if}}
 
 # IN WITNESS WHEREOF
 
@@ -163,9 +171,9 @@ Seal:
 
 Authorized Signatory
 
-Name: {{partnerSignatory.name}}
+Name: {{#if partnerSignatory.name}}{{partnerSignatory.name}}{{/if}}
 
-Designation: {{partnerSignatory.designation}}
+Designation: {{#if partnerSignatory.designation}}{{partnerSignatory.designation}}{{/if}}
 
 Date:
 

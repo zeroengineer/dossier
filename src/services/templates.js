@@ -108,7 +108,11 @@ function readFolder(ctx, folder, name, source, base) {
   const { files, bodies, digest } = readFiles(dir);
   const inherit = source === 'workspace' && base && !files['index.js'];
   if (!inherit) {
-    if (!files['template.json']) throw invalid(rel, `no template.json and no built-in template "${name}" to inherit from`);
+    if (!files['template.json']) {
+      throw invalid(rel, base
+        ? `index.js without template.json: an override with its own index.js needs its own template.json (remove index.js to inherit the built-in "${name}")`
+        : `no template.json and no built-in template "${name}" to inherit from`);
+    }
     const meta = parseMeta(ctx, rel, name, files['template.json']);
     if (!files['index.js'] && !files['body.md']) throw invalid(rel, 'a template needs index.js or body.md');
     return entryOf(meta, {

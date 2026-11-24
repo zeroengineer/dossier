@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { extractItems } from '../../helpers/pdfText.js';
+import { isStrongRow, MOU_FRAME } from '../../../src/render/pdf/mouFrame.js';
 import { assertGeometrySnapshot, fixtureInput, renderFixture, withExampleCtx } from '../../helpers/templateRender.js';
 
 const ID = 'mou';
@@ -131,7 +132,11 @@ test('mou: the event variant needs an event name; a brand can change the frame p
   const { resolveTemplateFields } = await import('../../../src/services/fields.js');
   const t = await getTemplate(ctx, ID);
   const r = resolveTemplateFields(ctx, t, { ...fixtureInput(ID), variant: 'event' }, { brandId: 'acme' });
-  assert.deepEqual(r.errors.map((e) => e.name), ['print']);
+  assert.deepEqual(r.errors.map((e) => e.name), ['event.name']);
+  assert.match(r.errors[0].message, /event variant needs an event name/);
+  const named = resolveTemplateFields(ctx, t, { ...fixtureInput(ID), variant: 'event', event: { name: 'Example Gala' } }, { brandId: 'acme' });
+  assert.deepEqual(named.errors, []);
+  assert.equal(named.values.event.name, 'Example Gala');
   const brand = ctx.ws.brands.get('acme');
   ctx.ws.brands.set('acme', { ...brand, templateParams: { mou: { frame: { footer: { right: 'Seite {page}/{pages}' } } } } });
   try {
@@ -142,3 +147,13 @@ test('mou: the event variant needs an event name; a brand can change the frame p
     ctx.ws.brands.set('acme', brand);
   }
 }));
+
+test('mou: total/net rows match whole words only', () => {
+  const p = MOU_FRAME.table.strong.patterns;
+  for (const row of [['Net amount', '₹1'], ['Amount received by the Organisation', 'x'], ['**Amount (Net)**', '1'], ['Final Amount Paid', '2']]) {
+    assert.equal(isStrongRow(row, p), true, row[0]);
+  }
+  for (const row of [['Internet access', '₹1'], ['Network charges', '1'], ['Netaji Hall hire', '2'], ['Cabinet', 'Planet']]) {
+    assert.equal(isStrongRow(row, p), false, row[0]);
+  }
+});

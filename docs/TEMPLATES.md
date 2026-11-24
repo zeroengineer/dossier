@@ -38,7 +38,8 @@ override is reported like any other (bad JSON, schema error, a `computed:` field
 a built-in that does not load itself: "inherits from a built-in template that does not load: …") and its id fails. A
 workspace folder with `body.md`, a named body or `index.js` but no `template.json` and no built-in of the same id is
 reported as `no template.json and no built-in template "<id>" to inherit from`. A folder with an `index.js` is a full
-override, as before.
+override, as before, and needs its own `template.json` (without one it is reported as `index.js without
+template.json: …`; remove `index.js` to inherit instead).
 
 Every listed template is registered in the `templates` table (`id`, `version`, `source` = `builtin` | `workspace`,
 `path`, `hash`, `meta_json`). The hash is a SHA-256 over the bytes of `template.json`, `body.md`, the named bodies and
@@ -241,7 +242,7 @@ lines, `---` dividers and `<!-- page break -->`.
 
 - `previewDocument(ctx, templateId, input, { brandId })` resolves the fields; with anything missing or invalid it
   returns `{ ok: false, missing, errors }`. Otherwise it renders every rendition as a draft and writes them to
-  `<dataDir>/previews/<token>/preview.{pdf,html,md}`, returning `{ ok: true, token, renditions: [{ kind, path, bytes }] }`.
+  `<dataDir>/previews/<token>/preview.{pdf,html,md}`, returning `{ ok: true, token, renditions: [{ kind, path, bytes }], warnings }`.
   The token is a sha256 over the template hash, the canonical JSON of the input (keys sorted) and the brand's config
   hash. A preview writes no document, number, blob or audit row (loading a template still upserts its registry row).
 - `generateDocument(ctx, templateId, input, { brandId, status = 'Draft', documentId, force })` creates a numbered document
@@ -249,14 +250,18 @@ lines, `---` dividers and `<!-- page break -->`.
   Missing fields fail with `FIELDS_MISSING` (`details.missing`), bad values with `FIELDS_INVALID`; input values JSON
   cannot carry (BigInt, functions, NaN, Maps…) and relation fields naming a missing or hidden document are refused before
   anything is rendered. With `documentId` (a document generated from the same template and brand) it adds the next
-  version and keeps the number. Only a Draft document can be regenerated: a Sent, Signed or Paid one fails with
+  version and keeps the number (the result also carries `warnings`). Only a Draft document can be regenerated: a Sent, Signed or Paid one fails with
   `STATUS_LOCKED` (generate a new document and supersede the old one) unless `force: true` is passed, which resets it to
   Draft, or keeps its current status when `status` names it, and records the reset in the audit log. On regeneration
   `status` may only be Draft (or, with `force`, the current status).
   Generations of the same series in one process are queued, so they never race for a number; `NUMBER_CONTENDED`
   (after 3 re-renders) only happens when other processes keep taking the number.
 - `renderRenditions(ctx, template, values, { brand, number, draft, creationDate })` renders without touching the
-  database.
+  database; the returned array has a `warnings` property.
+- `warnings` (preview and generate): one `{ code: 'PLACEHOLDER_EMPTY', name, message }` per body placeholder that had
+  no value and printed as empty text (`name` is the placeholder path, e.g. `partnerSignatory.name`). Generation still
+  succeeds; the UI and the MCP agent show them. Guard optional values in a body with `{{#if path}}…{{/if}}` (an `#if`
+  test never warns).
 
 What the generator fills in:
 
@@ -408,7 +413,9 @@ A Markdown-bodied memorandum of understanding (layout profile `mou`, 45/50/50, n
 party a `client`, numbered by `brand.series.mou` when mapped, `Reference: {{number}}` in the cover). Two bodies ship,
 written fresh with neutral clauses: `body.md` (variant `organisation`, a framework for all of the partner's events)
 and `body.event.md` (variant `event`, one event), chosen by the `variant` field. A workspace replaces the text with its
-own `templates/mou/body.md` / `body.event.md` and keeps the layout (see "Workspace overrides that inherit"). The
+own `templates/mou/body.md` / `body.event.md` and keeps the layout (see "Workspace overrides that inherit").
+**Override both bodies:** an override with only `body.md` changes the organisation variant; documents generated with
+`variant: "event"` still use the shipped neutral `body.event.md`. The
 Markdown rendition is the filled body; the PDF (`src/render/pdf/mouFrame.js`) and HTML (`src/render/mouTemplate.js`)
 draw `parseMarkdownBlocks` of it. The PDF is the legacy v2 MoU (docs/DISCOVERY.md A8 §12), checked against the legacy
 organisation and event scripts fed the same filled body: identical text positions and pixel-identical pages (the
@@ -419,7 +426,8 @@ event script never printed signature values; this one does when the body gives t
 | cover (blocks before the first `---`) | h1 `ExtraBold 18` centred, h2 `Bold 13 #1e293b` centred, paragraphs 10.5 / lineGap 5.6: justified when they wrap or contain one of `cover.justifyContaining` (`Party`), else centred |
 | headings | h1 `ExtraBold 14.5 #0f172a` lineGap 2 (0.25 / 0.28 lines), h2 `Bold 12 #1e293b`, h3 `SemiBold 11 #334155`; an h1 starts a new page unless `keepTogether[<text it contains>]` points remain (ORGANISATION DETAILS / EVENT DETAILS 450, WITNESS 260, DATA & PLATFORM USE 160, else 65) |
 | paragraphs, lists | 10.2 `#334155` lineGap 5.6, justified (normal spacing when the gap exceeds 2.2 spaces or the line has `__`), bold `#0f172a`, words starting with the currency symbol `ExtraBold` +0.5; bullets `•` `SemiBold #475569` at ML+4, text at +14, lineGap 5.4, items kept whole; numbered items as bullets with `1.` |
-| tables | two columns: `[135, rest]` when the first header contains `particular`, else `[rest, 130]`; more columns share the width; header `Bold 9.8` white on `#1e293b`, rows `Regular 9.3` auto height (pad 8 / 6.5, min 22) on `#fff` / `#f8fafc`; rows containing `table.strong.patterns` (`amount received`, `net`, `final amount`) bold on `#f1f5f9` with a `#94a3b8` rule; closing rule `#cbd5e1` 0.75 |
+| tables | two columns: `[135, rest]` when the first header contains `particular`, else `[rest, 130]`; more columns share the width; header `Bold 9.8` white on `#1e293b`, rows `Regular 9.3` auto height (pad 8 / 6.5, min 22) on `#fff` / `#f8fafc`; rows containing one of `table.strong.patterns` (`amount received`, `net`, `final amount`) as whole words, any case
+(so `net` matches "Net amount" and "(Net)" but not "Internet" or "Network"), bold on `#f1f5f9` with a `#94a3b8` rule; closing rule `#cbd5e1` 0.75 |
 | signatures | every `## For …` section is a card; cards are drawn two per row after the body (`CW/2-10` wide, gap 20, h188 r5 `#f8fafc` / `#e2e8f0`; the event variant h205): title `Bold 10`, rule, `Authorized Signatory` `Bold 9.5 #475569`, sign line 128, then `signature.fields` (`Name`, `Designation`, `Date`, `Seal`; event adds `Contact`) — a `Label: value` line in the section prints the value (`SemiBold 8.5`), an empty or `___` value leaves a ruled line |
 | footer | rule `#e2e8f0` at `PH-34`, `Page {page} of {pages}` `Regular 7.5 #64748b` right (`footer.left/center/right`) |
 | watermark | the `watermark` field (default off) prints `params.watermark.text` (`DRAFT — DO NOT SIGN`) Bold 38, opacity 0.14, -30°, three rows per page (`params.watermark` also takes `size`, `opacity`, `angle`, `rows`, `color`) |
@@ -427,14 +435,18 @@ event script never printed signature values; this one does when the body gives t
 Fields: `partner` (client entity; name, `attrs.address`, `attrs.registration`, `attrs.email`, `attrs.phone` fill
 `partnerName`, `partnerAddress`, `partnerRegistration`, `partnerEmail`, `partnerPhone`), `partnerKind` (with its
 article), `partnerContact`, `partnerSignatory` (`{ name, designation, contact }`), `engagement` and `event.name` /
-`event.type` / `event.dates` / `event.venue` (the event variant needs a name), `service`, `date`, `feePercent`,
+`event.type` / `event.dates` / `event.venue` (`event.name` defaults to the engagement's name via `computed:eventName`;
+the event variant without one is an error on `event.name`), `service`, `date`, `feePercent`,
 `gstPercent` (18), `examplePrice` (1000, the fee illustration), `payoutDays` (7), `term`, `noticeDays` (30),
 `governingLaw`, `jurisdiction`, `signatory` (default `brand.defaultSignatory.mou`), `watermark`. `computed:print`
 gives the bodies printable strings: `print.date` (long), `print.company`, `print.companyUpper`,
 `print.companyRegistration` (the brand registration labelled `params.registrationLabel`, default `CIN`, else the first),
 `print.companyAddress` (registered address, else business, on one line), `print.partner`, `print.partnerUpper`,
 `print.partnerAddress`, `print.feePercent`, `print.gstPercent` and `print.example.{price,fee,gst,total,received}` (fee
-and GST rounded half up to a paisa).
+and GST rounded half up to a paisa). `partnerAddress` is required; `print` is a field error when the brand has neither
+a registered nor a business address, or the illustration inputs are invalid, so legal text never prints a blank
+address or empty fee cells. The shipped bodies guard every optional value (registration, contact, phone, email,
+event type/dates/venue rows, the partner's signature values) with `{{#if}}`.
 
 ### Resolutions: `board-resolution`
 

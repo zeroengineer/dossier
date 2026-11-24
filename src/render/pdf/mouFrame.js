@@ -134,6 +134,16 @@ function numbered(ctx, f, items) {
   ctx.doc.moveDown(b.moveDown);
 }
 
+/**
+ * True when a table row is a total/net row: some cell contains one of `patterns` as whole words (case-insensitive),
+ * so `net` matches "Net amount" and "(Net)" but not "Internet" or "Network".
+ * @param {string[]} row @param {string[]} patterns
+ */
+export function isStrongRow(row, patterns) {
+  const res = (patterns ?? []).map((p) => new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(p)}(?![\\p{L}\\p{N}])`, 'iu'));
+  return row.some((cell) => res.some((re) => re.test(String(cell).replace(/\*\*/g, ''))));
+}
+
 /** Auto-height table (legacy drawTable): two columns get a fixed label or value column, more share the width. */
 function table(ctx, t, block) {
   const { doc, profile } = ctx;
@@ -149,7 +159,7 @@ function table(ctx, t, block) {
   } else {
     widths = headers.map(() => CW / n);
   }
-  const isStrong = (row) => row.some((cell) => t.strong.patterns.some((p) => cell.toLowerCase().includes(p.toLowerCase())));
+  const isStrong = (row) => isStrongRow(row, t.strong.patterns);
   const cellH = (text, w, size, bold) => {
     doc.font(bold ? t.row.boldFont : t.row.font).fontSize(size);
     return Math.max(doc.heightOfString(text.replace(/\*\*/g, ''), { width: w - t.padX * 2 }) + t.padY * 2, t.minRowHeight);
