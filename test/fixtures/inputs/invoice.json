@@ -1,0 +1,9 @@
+{
+  "client": "Example Institute of Sample Studies",
+  "date": "2026-07-14",
+  "items": [
+    { "description": "Event registration, ticketing and check-in platform services for Example Fest 2026:\n• Online registration and form collection\n• Participant check-in management", "amount": "12,500.00" },
+    { "description": "On-site technical support", "amount": "2,694.05" }
+  ],
+  "taxMode": "cgst_sgst"
+}

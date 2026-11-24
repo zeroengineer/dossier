@@ -1,13 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpDir } from '../helpers/tmp.js';
 import { minimalBrand, writeWorkspace } from '../helpers/workspace.js';
 import { openContext } from '../../src/context.js';
-import { getTemplate, listTemplateErrors, listTemplates } from '../../src/services/templates.js';
+import { BUILTIN_TEMPLATES_DIR, getTemplate, listTemplateErrors, listTemplates } from '../../src/services/templates.js';
 
 const FIXTURES = join(import.meta.dirname, '..', 'fixtures', 'templates');
+/** Shipped built-in template ids (left out where a test lists only its own templates). */
+const BUILTINS = readdirSync(BUILTIN_TEMPLATES_DIR).filter((n) => existsSync(join(BUILTIN_TEMPLATES_DIR, n, 'template.json')));
 const FIXTURE_JSON = readFileSync(join(FIXTURES, 'sample-letter', 'template.json'), 'utf8');
 
 async function withCtx(fn, spec = {}, env = {}) {
@@ -120,7 +122,7 @@ test('an invalid template folder is reported, left out of the list, and only bre
   for (const [name, [json, re]] of Object.entries(cases)) {
     await t.test(name, () => withCtx(async (ctx) => {
       const list = listTemplates(ctx, { dirs: [FIXTURES] });
-      assert.deepEqual(list.map((x) => x.id).filter((id) => !id.startsWith('test-')), ['notes'], 'the broken override is left out, the fixture is not used in its place');
+      assert.deepEqual(list.map((x) => x.id).filter((id) => !id.startsWith('test-') && !BUILTINS.includes(id)), ['notes'], 'the broken override is left out, the fixture is not used in its place');
       const errors = listTemplateErrors(ctx, { dirs: [FIXTURES] });
       assert.equal(errors.length, 1);
       assert.equal(errors[0].id, 'sample-letter');
@@ -140,6 +142,8 @@ test('an invalid template folder is reported, left out of the list, and only bre
   }, { files: { 'templates/sample-letter/template.json': FIXTURE_JSON, 'templates/sample-letter/index.js': 'export const computed = {};\n' } }));
 });
 
+const sampleHash = (ctx) => listTemplates(ctx).find((t) => t.id === 'sample-letter').hash;
+
 test('every .js file in the template folder is part of the hash', () => withCtx((ctx, home) => {
   const files = {
     'template.json': FIXTURE_JSON,
@@ -150,11 +154,11 @@ test('every .js file in the template folder is part of the hash', () => withCtx(
     mkdirSync(join(home, 'templates', 'sample-letter', rel, '..'), { recursive: true });
     writeFileSync(join(home, 'templates', 'sample-letter', rel), body);
   }
-  const before = listTemplates(ctx)[0].hash;
+  const before = sampleHash(ctx);
   writeFileSync(join(home, 'templates', 'sample-letter', 'lib', 'helpers.js'), 'export const x = 2;\n');
-  assert.notEqual(listTemplates(ctx)[0].hash, before);
+  assert.notEqual(sampleHash(ctx), before);
   writeFileSync(join(home, 'templates', 'sample-letter', 'notes.txt'), 'not code');
-  const h = listTemplates(ctx)[0].hash;
+  const h = sampleHash(ctx);
   writeFileSync(join(home, 'templates', 'sample-letter', 'notes.txt'), 'still not code');
-  assert.equal(listTemplates(ctx)[0].hash, h, 'other files do not count');
+  assert.equal(sampleHash(ctx), h, 'other files do not count');
 }));

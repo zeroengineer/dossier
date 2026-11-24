@@ -13,3 +13,4 @@ export { drawTable, TABLE_DEFAULTS } from './tables.js';
 export { drawSignatureBlock, SIGNATURE_DEFAULTS } from './signature.js';
 export { drawWatermark } from './watermark.js';
 export { renderBlocksPdf } from './blocks.js';
+export { drawInvoiceFrame, invoiceModel, invoiceTotals, parseRowHeight, INVOICE_FRAME_DEFAULTS, DEFAULT_COLUMNS } from './invoiceFrame.js';

@@ -275,18 +275,23 @@ function numberVars(meta, values, bid) {
   return vars;
 }
 
-/** Document ids named by the template's declared relations (`[{ type, field, optional }]`). */
+/**
+ * Document ids named by the template's declared relations (`[{ type, field, optional }]`). The field holds one id
+ * (or an object with `id`) or a list of them (e.g. a receipt paying several invoices); duplicates are linked once.
+ */
 function relationTargets(meta, values) {
   const out = [];
   const missing = [];
+  const idOf = (x) => (isPlainObject(x) ? x.id : x);
+  const blank = (x) => x === undefined || x === null || String(x).trim() === '';
   for (const r of meta.relations ?? []) {
-    let v = getPath(values, r.field);
-    if (isPlainObject(v)) v = v.id;
-    if (v === undefined || v === null || v === '') {
+    const v = getPath(values, r.field);
+    const ids = (Array.isArray(v) ? v.map(idOf) : [idOf(v)]).filter((x) => !blank(x)).map((x) => String(x).trim());
+    if (!ids.length) {
       if (!r.optional) missing.push({ name: r.field, label: r.field, type: 'document' });
       continue;
     }
-    out.push({ type: r.type, to: String(v).trim() });
+    for (const to of new Set(ids)) out.push({ type: r.type, to });
   }
   return { targets: out, missing };
 }

@@ -90,6 +90,8 @@
   "strings": {
     "confidential": "Confidential",
     "invoiceDeclaration": "We declare that this invoice shows the actual price of the services described and that all particulars are true and correct.",
+    "debitNoteDeclaration": "We declare that this debit note shows the actual amounts of the charges described and that all particulars are true and correct.",
+    "receiptDeclaration": "We declare that this receipt shows the actual amount received as described and that all particulars are true and correct.",
     "thankYou": "THANK YOU FOR YOUR BUSINESS",
     "forCompany": "FOR {legalName}"
   },

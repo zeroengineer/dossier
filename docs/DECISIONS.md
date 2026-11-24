@@ -134,3 +134,13 @@ Small decisions made while building Dossier. Each entry: decision, reason, cost 
 - **Party, signatory, issuer.** The party is the first entity-valued field of kind `partyKind`. Brand signatories are configuration, not entities: the `signatory` link goes to a person entity with the signatory's name when one exists. The issuer is the `company` entity linked to the issuing brand. Numbering vars: `{CLIENT}` from the party's `attrs.code`, `{CODE}` from `values.numberCode` (else `values.code`).
 - **Extracted text** of every rendition (PDF via pdfjs, HTML stripped, Markdown as is) is stored with the version so search finds generated documents by their content.
 - **Error codes added:** `FIELDS_MISSING`, `FIELDS_INVALID`, `NUMBER_CONTENDED`, `STATUS_LOCKED`.
+
+## 2026-11-24 (invoice family templates)
+
+- **One frame, three configs.** `src/render/pdf/invoiceFrame.js` builds a model (every printed string resolved from values, params and brand) and draws it; HTML and Markdown render the same model. The templates differ only in `template.json` params (labels, columns, row height, bank or acknowledgement panel, `frame` style overrides). Reason: the legacy invoice, debit note and receipt scripts are one layout with small edits.
+- **Own table loop, not `drawTable`.** The legacy table has per-column quirks (header widths differ from cell widths, only the description has a line gap, the receipt starts descriptions over 40 characters at +6 instead of +12, one rule under the whole table). Reproducing them in `drawTable` would have needed options used nowhere else.
+- **Checked against the legacy scripts** run in a temp directory with fake strings substituted: invoice (CGST), no-tax 105 pt row, IGST, auto row height with Bold description, debit note and receipt all give identical text positions, sizes and fonts and pixel-identical pages at 100 dpi. The only difference is the brand's tax labels (`CGST (9%)` where the oldest script computed `CGST (9.00%)`).
+- **Tax rounding**: tax on the subtotal, total tax rounded half up, split over the rates with the odd paisa on the last line (legacy 17.46 / 17.47). Rejected: rounding each rate separately (two half-up roundings can disagree with the total tax by a paisa) and per-item tax.
+- **Upper-casing** of the from name, the "FOR …" line and the signatory name and title follows the legacy look; brands keep their names in normal case.
+- **Relation fields may hold a list of ids** (a receipt pays several documents); each id becomes one relation.
+- **Shared module outside the template folders** (`src/render/invoiceTemplate.js`): editing it does not change a template's registry hash; template versions must be bumped when the frame changes behaviour.

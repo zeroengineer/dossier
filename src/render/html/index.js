@@ -44,7 +44,8 @@ export function cssColour(v) {
 /** A styleVars value: no characters that could end the declaration, rule or style element, open a string or a comment. */
 const cssValue = (v) => String(v ?? '').replace(/\/\*|\*\//g, '').replace(/[<>{};\\"']/g, '');
 
-const pt = (n) => `${Math.round(n * 1000) / 1000}pt`;
+/** A length in points for CSS (rounded to 0.001). */
+export const pt = (n) => `${Math.round(n * 1000) / 1000}pt`;
 /** Inline `**bold**` to `<strong>`, newlines to `<br>`, everything escaped. */
 const inline = (text) => inlineRuns(text).map((r) => {
   const t = escapeHtml(r.text).replace(/\n/g, '<br>');
@@ -62,10 +63,14 @@ function fontUrl(file, { standalone, assetBase, brand }) {
 }
 
 /**
- * Asset URLs used when not standalone (the HTTP server serves these): `<assetBase>/brands/<id>/logo` and
- * `<assetBase>/brands/<id>/signatures/<signatoryId>`.
+ * URL of a brand image (`assets.logo`, `signature:<id>`, `signature-large:<id>`): a data URI with `standalone: true`,
+ * else the URLs the HTTP server serves, `<assetBase>/brands/<id>/logo` and `<assetBase>/brands/<id>/signatures/<signatoryId>`.
+ * Null when there is no workspace or no file.
+ * @param {object|undefined} ws @param {object} brand @param {string} key
+ * @param {{ standalone?: boolean, assetBase?: string }} opts
+ * @returns {string|null}
  */
-function imageUrl(ws, brand, key, { standalone, assetBase }) {
+export function imageUrl(ws, brand, key, { standalone, assetBase = '/assets' }) {
   if (!ws) return null;
   const file = brandAsset(ws, brand.id, key);
   if (!file || !existsSync(file)) return null;
@@ -75,7 +80,13 @@ function imageUrl(ws, brand, key, { standalone, assetBase }) {
   return `${assetBase}/brands/${encodeURIComponent(brand.id)}/signatures/${encodeURIComponent(arg)}`;
 }
 
-function fontFaces(ws, brand, opts) {
+/**
+ * `@font-face` rules for the brand fonts (family `DossierBody`, weights 400-800): embedded with `standalone: true`,
+ * else URLs under `assetBase`.
+ * @param {object|undefined} ws @param {object} brand @param {{ standalone?: boolean, assetBase?: string }} opts
+ * @returns {string}
+ */
+export function fontFaces(ws, brand, opts) {
   return Object.entries(WEIGHTS).map(([w, weight]) => {
     const file = ws ? brandAsset(ws, brand.id, `font:${w}`) : `${FONTS_DIR}${sep}Manrope${sep}Manrope-${w === 'semibold' ? 'SemiBold' : w === 'extrabold' ? 'ExtraBold' : w[0].toUpperCase() + w.slice(1)}.ttf`;
     return `@font-face { font-family: 'DossierBody'; font-weight: ${weight}; font-style: normal; src: url("${fontUrl(file, { ...opts, brand })}"); }`;

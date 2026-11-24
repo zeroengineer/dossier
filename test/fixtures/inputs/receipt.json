@@ -1,0 +1,9 @@
+{
+  "client": "Example Institute of Sample Studies",
+  "date": "2026-07-20",
+  "items": [
+    { "description": "Professional service fee – advance payment", "reference": "Invoice ACM-2026-0001", "amount": "10,500.00" },
+    { "description": "Professional service fee – balance", "reference": "Invoice ACM-2026-0002", "amount": "7,200.00" },
+    { "description": "Reimbursable expenses and messaging charges for the event", "reference": "Debit Note ACM-DN-2026-0003", "amount": "6,849.50" }
+  ]
+}

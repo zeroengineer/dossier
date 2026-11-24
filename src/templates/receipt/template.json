@@ -1,0 +1,73 @@
+{
+  "id": "receipt",
+  "version": 1,
+  "type": "Receipt",
+  "title": "Payment receipt",
+  "description": "Payment receipt for invoices and debit notes (relation pays), with an acknowledgement panel.",
+  "category": "invoice",
+  "layoutProfile": "invoice",
+  "partyType": "Client",
+  "partyKind": "client",
+  "sensitivity": "Internal",
+  "renditions": ["pdf", "html", "md"],
+  "numbering": { "series": "brand", "required": true },
+  "contact": "billing",
+  "params": {
+    "title": "PAYMENT RECEIPT",
+    "numberLabel": "RECEIPT NO",
+    "dateLabel": "DATE",
+    "partyLabel": "RECEIVED FROM",
+    "fromLabel": "RECEIVED BY",
+    "columns": [
+      { "key": "index", "label": "S.NO", "width": 32, "padX": 6 },
+      { "key": "description", "label": "DESCRIPTION", "width": 243 },
+      { "key": "reference", "label": "REFERENCE", "width": 120, "align": "center", "default": "—" },
+      { "key": "amount", "label": "AMOUNT", "width": 120.28, "align": "right", "padX": 6 }
+    ],
+    "rowHeight": 34,
+    "taxable": false,
+    "subtotalLabel": "Subtotal Received",
+    "totalLabel": "Total Received",
+    "showBank": false,
+    "acknowledgement": {
+      "title": "ACKNOWLEDGEMENT OF PAYMENT",
+      "text": "We acknowledge receipt of {amount} ({amountWords}) from {party} against the documents listed above."
+    },
+    "taxIdLabel": "GSTIN",
+    "declarationTitle": "Declaration",
+    "declarationString": "receiptDeclaration",
+    "declaration": "We declare that this receipt shows the actual amount received as described and that all particulars are true and correct.",
+    "thankYouString": "thankYou",
+    "frame": {
+      "meta": { "labelInset": 100 },
+      "table": {
+        "header": { "size": 8 },
+        "row": { "size": 8, "descriptionPadRight": 10, "descriptionLineGap": null, "descriptionLongDy": 6, "descriptionLongChars": 40 },
+        "ruleColor": "#cbd5e1"
+      },
+      "summary": { "gap": 25, "panelReserve": 105 }
+    }
+  },
+  "fields": [
+    { "name": "brand", "source": "brand", "required": true },
+    { "name": "client", "label": "Client", "source": "entity:client", "required": true },
+    { "name": "billTo.name", "label": "Received from (name)", "source": "client.name", "type": "string", "required": true },
+    { "name": "billTo.address", "label": "Received from (address)", "source": "client.attrs.address", "help": "Address lines (a list or text with line breaks)" },
+    { "name": "date", "label": "Date", "source": "today", "type": "date", "required": true },
+    { "name": "items", "label": "Payments", "source": "ask", "type": "array", "required": true,
+      "item": { "description": "text", "reference": "string", "amount": "money" },
+      "help": "[{ description, reference?, amount }]; reference is the paid document's number" },
+    { "name": "references", "label": "Documents paid", "source": "ask", "type": "array", "help": "Document ids of the invoices and debit notes this receipt pays" },
+    { "name": "totals", "source": "computed:totals" },
+    { "name": "total", "source": "computed:total", "type": "money" },
+    { "name": "acknowledgement.title", "label": "Acknowledgement title", "source": "ask", "type": "string" },
+    { "name": "acknowledgement.text", "label": "Acknowledgement text", "source": "ask", "type": "text", "help": "Placeholders: {amount}, {amountWords}, {party}" },
+    { "name": "rowHeight", "label": "Item row height", "source": "ask", "help": "Points, or \"auto\" to fit the description" },
+    { "name": "descriptionWeight", "label": "Description weight", "source": "ask", "type": "enum", "enum": ["Medium", "Bold"] },
+    { "name": "layout", "source": "computed:layout" },
+    { "name": "signatory", "source": "signatory", "required": true },
+    { "name": "seal", "label": "Company seal", "source": "ask", "type": "boolean", "default": false }
+  ],
+  "relations": [{ "type": "pays", "field": "references", "optional": true }],
+  "leaf": "Invoices and Receipts"
+}

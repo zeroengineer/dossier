@@ -1,0 +1,11 @@
+{
+  "client": "Example Institute of Sample Studies",
+  "date": "2026-07-16",
+  "items": [
+    { "description": "Travel – Example City to Sample Town", "amount": "3,066.50" },
+    { "description": "Meal reimbursement – 08 July 2026", "amount": "200.00" },
+    { "description": "Meal reimbursement – 09 July 2026", "amount": "160.00" },
+    { "description": "Travel – Sample Town to Example City", "amount": "3,119.00" },
+    { "description": "Messaging charges (304 messages)", "amount": "304.00" }
+  ]
+}

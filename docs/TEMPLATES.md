@@ -65,7 +65,7 @@ hash changes (helper modules it imports stay cached by Node until the process re
 | `contact` | `default` | brand contact used for `{contact.*}` in letterhead and footer |
 | `params` | `{}` | free data for the renderer (labels, column layout, toggles, clause text) |
 | `fields` | required | see below |
-| `relations` | `[]` | `[{ type, field, optional }]`: a document relation type and the field holding the related document |
+| `relations` | `[]` | `[{ type, field, optional }]`: a document relation type and the field holding the related document id, or a list of ids (one relation each; duplicates linked once) |
 | `leaf` | none | folder leaf override |
 
 Unknown keys are errors (typos do not pass silently).
@@ -247,3 +247,49 @@ filled with `number` = `DRAFT` in previews and `''` when a final document has no
 `DRAFT — NOT NUMBERED` on every page. Final renditions use `creationDate` = now. Blocks templates are drawn with the
 letterhead, the blocks and the footers; a `renderPdf` template draws everything itself (the generator only adds the
 draft watermark and finalises the file). HTML renditions are standalone (fonts and images embedded).
+
+## Built-in templates
+
+### Invoice family: `invoice`, `debit-note`, `receipt`
+
+Three thin configs over one frame (`src/render/pdf/invoiceFrame.js`, shared module exports in
+`src/render/invoiceTemplate.js`): the legacy invoice page (docs/DISCOVERY.md A8 §1, layout profile `invoice`), checked
+against the legacy invoice, IGST, auto-height, debit-note and receipt scripts (same text positions, pixel-identical
+pages when given the same strings). The frame builds one model from the values, params and brand and draws it as PDF
+(`renderPdf`), standalone HTML (`renderHtml`, CSS in pt with the frame's sizes and colours) and Markdown (`blocks`,
+used only for the Markdown rendition).
+
+What is printed, and from where:
+
+| Part | Source |
+|---|---|
+| title, number and date labels, party and from headings, column labels, subtotal and total labels | `params` (`title`, `numberLabel`, `dateLabel`, `partyLabel`, `fromLabel`, `columns`, `subtotalLabel`, `totalLabel`) |
+| number | `values.number` (`DRAFT` in previews) |
+| bill-to | `billTo.name` (default `client.name`), `billTo.address` (default `client.attrs.address`; list of lines or text) |
+| from | brand `legalName` (upper-cased unless `params.uppercaseFromName: false`), `addresses.business`; contact lines GSTIN (the brand registration labelled `params.taxIdLabel`), Phone, Email, Website from the template contact (`billing`) falling back per key to `default`; a line is left out when the brand has no value |
+| item table | `items[]`; the `index` column numbers rows, `amount` is formatted `₹ 1,234.00`, other columns read the item key and fall back to the column `default` (interpolated with the brand: the invoice HSN column uses `{tax.defaultHsn}`, debit note and receipt print `—`) |
+| calc rows | subtotal, then one row per rate of the chosen `taxMode` (`brand.tax.modes`, labels from the brand) |
+| left panel | bank details (`params.showBank`, account chosen by `bankAccount`: account number or index, default the first; `params.bankFields`, `bankLabels`) or, for the receipt, the acknowledgement panel (`params.acknowledgement.{title,text}`, overridable by the `acknowledgement.title` / `acknowledgement.text` fields; `{amount}`, `{amountWords}`, `{party}` are filled in) |
+| signatory | `signatory` field (default `brand.defaultSignatory[<templateId>]`): compact signature image h45, "FOR …" from `brand.strings.forCompany`, name and title upper-cased; `seal: true` adds the brand seal |
+| declaration, thank-you | `brand.strings[params.declarationString]` (`invoiceDeclaration`, `debitNoteDeclaration`, `receiptDeclaration`), else `params.declaration`; `brand.strings.thankYou` |
+
+Variants: `rowHeight` (field or param): a number of points (legacy 44, 70, 105; debit note 24, receipt 34) or `"auto"`
+(invoice default: `max(44, description height + 24)`); `descriptionWeight` `Medium` or `Bold`; `params.frame`
+deep-merges over `INVOICE_FRAME_DEFAULTS` (every offset, size and colour; the debit note and receipt use it for the
+CW-100 meta inset, row text offsets, the `#cbd5e1` table rule, the receipt's 8 pt table and its +6 start for
+descriptions over 40 characters). A bad `rowHeight` or `bankAccount` is a field error (computed field `layout` /
+`bank`).
+
+Amounts are minor units throughout. `computed:totals` (`invoiceTotals`): tax is charged on the subtotal, total tax =
+round half up (subtotal × sum of the mode's rates); it is split over the rates in proportion, each share but the last
+rounded half down and the last taking the remainder, so the lines add up to the total tax and an odd paisa goes on the
+last line (CGST 17.46 / SGST 17.47 for 34.93, as in the legacy invoices). `total` (the document amount) is
+`totals.total`. Debit note and receipt set `params.taxable: false` (no tax lines).
+
+Relations: `debit-note` field `invoice` (a document id) -> `adjusts`; `receipt` field `references` (a list of document
+ids) -> one `pays` relation per invoice or debit note. Numbering uses the brand `series` map (`invoice`, `debit-note`,
+`receipt`), which in the example brand all count on `invoice-main`.
+
+Rows that do not fit above the signatory and declaration zone continue on a new page with the table header repeated,
+and the summary or signatory move to a new page when they would overlap the declaration; the legacy scripts were
+single-page only.
