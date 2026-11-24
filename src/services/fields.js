@@ -8,15 +8,24 @@ import { getTemplate } from './templates.js';
 const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date);
 
 /**
- * Read a dotted path (`a.b.0.c`, `a[0].c`) from an object; undefined when any step is missing.
+ * Read a dotted path (`a.b.0.c`, `a[0].c`) from an object, following own properties only; undefined when any step
+ * is missing.
  * @param {any} obj @param {string} path
  * @returns {any}
  */
 export function getPath(obj, path) {
   let v = obj;
   for (const part of path.replace(/\[(\d+)\]/g, '.$1').split('.')) {
-    if (v == null || typeof v !== 'object') return undefined;
+    if (v == null || typeof v !== 'object' || !Object.hasOwn(v, part)) return undefined;
     v = v[part];
+  }
+  return v;
+}
+
+function deepFreeze(v) {
+  if (v !== null && typeof v === 'object' && !Object.isFrozen(v)) {
+    Object.freeze(v);
+    for (const x of Object.values(v)) deepFreeze(x);
   }
   return v;
 }
@@ -59,28 +68,44 @@ export function coerceDate(v) {
   return iso ? { value: iso } : { error: `"${s}" is not a date (use YYYY-MM-DD or DD/MM/YYYY)` };
 }
 
+/** Thousands grouping: `120,000` or Indian `1,20,000` (first group 1-3 digits, last 3, middle 2 or 3). */
+function validGrouping(int) {
+  if (!int.includes(',')) return /^\d+$/.test(int);
+  const g = int.split(',');
+  return /^\d{1,3}$/.test(g[0]) && /^\d{3}$/.test(g.at(-1)) && g.slice(1, -1).every((x) => /^\d{2,3}$/.test(x));
+}
+
 /**
- * Coerce an amount in major units (number, or a string like `"₹1,20,000.50"`) to integer minor units, rounding half up
- * at the third decimal.
+ * Coerce an amount in major units to integer minor units, rounding half up at the third decimal. Accepts numbers and
+ * strings with an optional currency prefix (`₹`, `Rs.`, `INR`), a sign before or after it, and `,` grouping
+ * (`120,000` or `1,20,000`; `1,2,3` is rejected). An empty or whitespace-only string is an error ("empty").
  * @param {unknown} v
  * @returns {{ value: number } | { error: string }}
  */
 export function coerceMoney(v) {
-  let s;
+  let sign;
+  let int;
+  let frac;
   if (typeof v === 'number') {
     if (!Number.isFinite(v)) return { error: `${v} is not an amount` };
-    s = Math.abs(v) < 1e21 ? v.toFixed(6) : String(v);
+    const m = /^(-?)(\d+)(?:\.(\d*))?$/.exec(Math.abs(v) < 1e21 ? v.toFixed(6) : String(v));
+    if (!m) return { error: `${v} is too large` };
+    [, sign, int, frac] = m;
   } else if (typeof v === 'string') {
-    s = v.replace(/[\s,]/g, '').replace(/^(-?)[^\d.-]+/, '$1');
+    const t = v.trim();
+    if (t === '') return { error: 'amount is empty' };
+    const m = /^(-?)\s*(?:[^\d\s.,-]+\.?\s*)?(-?)\s*([\d,]+)(?:\.(\d*))?$/.exec(t);
+    if (!m || (m[1] && m[2]) || !validGrouping(m[3])) return { error: `"${v}" is not an amount` };
+    sign = m[1] || m[2];
+    int = m[3].replace(/,/g, '');
+    frac = m[4];
   } else {
     return { error: 'expected an amount' };
   }
-  const m = /^(-?)(\d+)(?:\.(\d*))?$/.exec(s);
-  if (!m) return { error: `"${v}" is not an amount` };
-  const frac = (m[3] ?? '').padEnd(3, '0');
-  let minor = Number(m[2]) * 100 + Number(frac.slice(0, 2)) + (Number(frac[2]) >= 5 ? 1 : 0);
+  const f = (frac ?? '').padEnd(3, '0');
+  let minor = Number(int) * 100 + Number(f.slice(0, 2)) + (Number(f[2]) >= 5 ? 1 : 0);
   if (!Number.isSafeInteger(minor)) return { error: `"${v}" is too large` };
-  if (m[1] && minor) minor = -minor;
+  if (sign && minor) minor = -minor;
   return { value: minor };
 }
 
@@ -88,7 +113,8 @@ const TRUE = ['true', 'yes', '1', 'on'];
 const FALSE = ['false', 'no', '0', 'off', ''];
 
 /**
- * Coerce one value to a field type. Money from `computed` sources is already in minor units (`minor: true`).
+ * Coerce one value to a field type. Money from `computed` sources and from paths into earlier (resolved) fields is
+ * already in minor units (`minor: true`).
  * @param {string|undefined} type
  * @param {unknown} v
  * @param {{ minor?: boolean }} [opts]
@@ -110,7 +136,7 @@ export function coerceValue(type, v, { minor = false } = {}) {
       return typeof n === 'number' && Number.isFinite(n) && !(typeof v === 'string' && v.trim() === '') ? { value: n } : { error: `"${v}" is not a number` };
     }
     case 'money':
-      if (minor) return Number.isSafeInteger(v) ? { value: v } : { error: 'computed amount must be an integer number of minor units' };
+      if (minor) return Number.isSafeInteger(v) ? { value: v } : { error: 'amount must already be an integer number of minor units' };
       return coerceMoney(v);
     case 'date':
       return coerceDate(v);
@@ -130,7 +156,8 @@ export function coerceValue(type, v, { minor = false } = {}) {
   }
 }
 
-const isEmpty = (v) => v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0);
+const isBlank = (v) => typeof v === 'string' && v.trim() === '';
+const isEmpty = (v) => v === undefined || v === null || isBlank(v) || (Array.isArray(v) && v.length === 0);
 
 /** Default strings that are read as a source instead of a literal. */
 const isSourceDefault = (d) => typeof d === 'string' && (d === 'today' || d === 'brand' || /^(brand\.|const:|computed:)/.test(d));
@@ -162,8 +189,9 @@ export async function resolveFields(ctx, templateId, input = {}, opts = {}) {
 export function resolveTemplateFields(ctx, template, input = {}, { brandId, today } = {}) {
   if (!isPlainObject(input)) throw new DossierError('INVALID_INPUT', 'Field input must be an object');
   const bid = brandId ?? ctx.ws.config.defaultBrand;
-  const brand = ctx.ws.brands.get(bid);
-  if (!brand) throw new DossierError('BRAND_NOT_FOUND', `No brand "${bid}" in the workspace`, { brandId: bid });
+  const wsBrand = ctx.ws.brands.get(bid);
+  if (!wsBrand) throw new DossierError('BRAND_NOT_FOUND', `No brand "${bid}" in the workspace`, { brandId: bid });
+  const brand = deepFreeze(structuredClone(wsBrand)); // templates get a copy they cannot change
   const { meta, module } = template;
   const env = { ctx, brand, meta, params: meta.params, fmt: createFormatter(ctx.ws.config.locale), input };
 
@@ -200,17 +228,23 @@ export function resolveTemplateFields(ctx, template, input = {}, { brandId, toda
     return list.map((x) => (isPlainObject(x) ? String(x.id) : String(x)));
   };
 
+  const entityRoots = new Set(meta.fields.filter((f) => f.type === 'entity' || parseSource(f.source).kind === 'entity').map((f) => f.name.split('.')[0]));
   for (const f of meta.fields) {
     const src = parseSource(f.source);
     const fail = (message) => errors.push({ name: f.name, message });
     let provided = getPath(input, f.name);
     if (provided === undefined && Object.hasOwn(input, f.name)) provided = input[f.name];
+    // Blank input (HTML forms post '') counts as not provided: sources and defaults apply, and a required field
+    // that is still empty is reported as missing.
+    if (isBlank(provided)) provided = undefined;
     let origin = 'input';
     let raw = provided;
     try {
       if (raw === undefined || raw === null) {
         raw = src.kind === 'ask' ? undefined : fromSource(src, f);
         origin = src.kind;
+        // A path into an earlier field reads resolved (already coerced) values, except inside an entity record.
+        if (src.kind === 'fieldPath' && !entityRoots.has(src.root)) origin = 'resolved';
       }
       if ((raw === undefined || raw === null) && f.default !== undefined) {
         const dsrc = isSourceDefault(f.default) ? parseSource(f.default) : null;
@@ -237,13 +271,14 @@ export function resolveTemplateFields(ctx, template, input = {}, { brandId, toda
         }
         value = { ...s };
       } else {
-        const r = coerceValue(f.type, value, { minor: origin === 'computed' });
+        const minor = origin === 'computed' || origin === 'resolved';
+        const r = coerceValue(f.type, value, { minor });
         if (r.error) {
           fail(r.error);
           continue;
         }
         value = r.value;
-        if (f.type === 'array' && f.item) value = coerceItems(f, value, origin === 'computed', errors);
+        if (f.type === 'array' && f.item) value = coerceItems(f, value, minor, errors);
       }
     }
     if (isEmpty(value)) {
@@ -253,7 +288,7 @@ export function resolveTemplateFields(ctx, template, input = {}, { brandId, toda
         if (f.help) m.help = f.help;
         missing.push(m);
       }
-      if (value === undefined || value === null) continue;
+      if (value === undefined || value === null || isBlank(value)) continue;
     }
     if (choices && !isEmpty(value) && !choices.includes(String(value))) {
       fail(`"${value}" is not one of ${choices.join(', ')}`);

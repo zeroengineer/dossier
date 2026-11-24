@@ -29,6 +29,21 @@ export function fontWeight(name = 'Regular') {
   return { extrabold: 800, bold: 700, semibold: 600, medium: 500, regular: 400, light: 300, extralight: 200 }[n] ?? 400;
 }
 
+/** Hex, rgb()/rgba()/hsl()/hsla() or a CSS colour keyword; anything else is not put into the stylesheet. */
+const CSS_COLOUR = /^(?:#[0-9a-fA-F]{3,8}|(?:rgb|rgba|hsl|hsla)\(\s*[\d.%\s,/+-]+\)|[a-zA-Z]+)$/;
+
+/**
+ * A value safe to place in the stylesheet as a colour: valid CSS colours pass, anything else becomes `inherit`.
+ * @param {unknown} v
+ * @returns {string}
+ */
+export function cssColour(v) {
+  return typeof v === 'string' && CSS_COLOUR.test(v.trim()) ? v.trim() : 'inherit';
+}
+
+/** A styleVars value: no characters that could end the declaration, rule or style element. */
+const cssValue = (v) => String(v ?? '').replace(/[<>{};\\]/g, '');
+
 const pt = (n) => `${Math.round(n * 1000) / 1000}pt`;
 /** Inline `**bold**` to `<strong>`, newlines to `<br>`, everything escaped. */
 const inline = (text) => inlineRuns(text).map((r) => {
@@ -70,14 +85,15 @@ function fontFaces(ws, brand, opts) {
 function css(s, profile, palette, styleVars) {
   const lh = (size, gap = 0) => pt(size * LINE_HEIGHT_RATIO + gap);
   const lines = (n, size) => pt(n * size * LINE_HEIGHT_RATIO);
-  const c = (v) => paletteColour(palette, v);
-  const vars = { ...Object.fromEntries(Object.entries(palette).map(([k, v]) => [`--${k}`, v])) };
-  for (const [k, v] of Object.entries(styleVars ?? {})) vars[k.startsWith('--') ? k : `--${k}`] = v;
+  const c = (v) => cssColour(paletteColour(palette, v));
+  const name = (k) => `--${String(k).replace(/^--/, '').replace(/[^A-Za-z0-9_-]/g, '')}`;
+  const vars = Object.fromEntries(Object.entries(palette).map(([k, v]) => [name(k), cssColour(v)]));
+  for (const [k, v] of Object.entries(styleVars ?? {})) vars[name(k)] = cssValue(v);
   const p = s.paragraph;
   const heading = (lvl) => {
     const h = s.heading[lvl];
     return `.doc h${lvl} { font-size: ${pt(h.size)}; font-weight: ${fontWeight(h.font)}; line-height: ${lh(h.size, h.lineGap)}; color: ${c(h.color)};`
-      + ` margin: ${lines(h.before, h.size)} 0 ${lines(h.after, h.size)};${h.uppercase ? ' text-transform: uppercase;' : ''}${h.align ? ` text-align: ${h.align};` : ''} break-after: avoid; }`;
+      + ` margin: ${lines(h.before, h.size)} 0 ${lines(h.after, h.size)};${h.uppercase ? ' text-transform: uppercase;' : ''}${h.align ? ` text-align: ${cssValue(h.align)};` : ''} break-after: avoid; }`;
   };
   const list = (l, tag) => `.doc ${tag} { margin: 0 0 ${lines(l.moveDown, p.fontSize)}; padding-left: ${pt(l.bulletX + l.indent)}; }\n`
     + `.doc ${tag} li { margin: 0 0 ${lines(l.itemMoveDown, p.fontSize)}; padding-left: 0; }`;
@@ -99,15 +115,15 @@ body { font-family: 'DossierBody', sans-serif; color: ${c(p.color)}; font-size: 
 ${heading(1)}
 ${heading(2)}
 ${heading(3)}
-.doc p { font-size: ${pt(p.fontSize)}; line-height: ${lh(p.fontSize, p.lineGap)}; text-align: ${p.align}; margin: 0 0 ${lines(p.moveDown, p.fontSize)}; color: ${c(p.color)}; }
+.doc p { font-size: ${pt(p.fontSize)}; line-height: ${lh(p.fontSize, p.lineGap)}; text-align: ${cssValue(p.align)}; margin: 0 0 ${lines(p.moveDown, p.fontSize)}; color: ${c(p.color)}; }
 .doc strong { font-weight: ${fontWeight(p.boldFont)}; }
 .doc .cover { text-align: center; }
 ${list(s.bullets, 'ul')}
 .doc ul { list-style: none; }
 .doc ul li { position: relative; }
-.doc ul li::before { content: ${JSON.stringify(s.bullets.bullet)}; position: absolute; left: ${pt(-s.bullets.indent)}; }
+.doc ul li::before { content: ${JSON.stringify(String(s.bullets.bullet)).replace(/</g, '\\3c ')}; position: absolute; left: ${pt(-s.bullets.indent)}; }
 ${list(s.numbered, 'ol')}
-.doc li { font-size: ${pt(p.fontSize)}; line-height: ${lh(p.fontSize, p.lineGap)}; text-align: ${p.align}; }
+.doc li { font-size: ${pt(p.fontSize)}; line-height: ${lh(p.fontSize, p.lineGap)}; text-align: ${cssValue(p.align)}; }
 .doc table.data { width: 100%; border-collapse: collapse; margin: ${lines(t.before, p.fontSize)} 0 ${lines(t.after, t.row.size)}; break-inside: auto; }
 .doc table.data th { background: ${c(t.header.fill)}; color: ${c(t.header.color)}; font-size: ${pt(t.header.size)}; font-weight: ${fontWeight(t.header.font)}; height: ${pt(t.header.height)}; padding: ${pt(t.header.padY)} ${pt(t.row.padX)}; text-align: left; }
 .doc table.data td { font-size: ${pt(t.row.size)}; font-weight: ${fontWeight(t.row.font)}; color: ${c(t.row.color)}; height: ${pt(t.row.height === 'auto' ? t.row.minHeight ?? 0 : t.row.height)}; padding: ${pt(t.row.padY)} ${pt(t.row.padX)}; vertical-align: top; }

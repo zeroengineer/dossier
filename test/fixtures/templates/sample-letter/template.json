@@ -27,7 +27,9 @@
     { "name": "probationMonths", "source": "const:6", "type": "number" },
     { "name": "remote", "source": "ask", "type": "boolean", "default": false },
     { "name": "perks", "source": "ask", "type": "array", "item": { "label": "string", "amount": "money" } },
-    { "name": "team", "source": "ask", "enum": ["design", "operations"] }
+    { "name": "team", "source": "ask", "enum": ["design", "operations"] },
+    { "name": "firstPerk", "source": "perks.0.amount", "type": "money" },
+    { "name": "listedSalary", "source": "person.attrs.salary", "type": "money" }
   ],
   "relations": [{ "type": "based_on", "field": "person", "optional": true }],
   "leaf": "Offer Letters"

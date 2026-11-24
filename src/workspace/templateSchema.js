@@ -1,13 +1,15 @@
 // Schema of a template folder's `template.json` (docs/TEMPLATES.md).
 import { z } from 'zod';
-import { ENTITY_KINDS, formatIssues } from './schemas.js';
-import { LEVELS } from '../domain/sensitivity.js';
-import { DOCUMENT_RELATION_TYPES, PARTY_TYPES } from '../services/documentQueries.js';
+import { formatIssues } from './schemas.js';
+import {
+  CLEARANCES, DOCUMENT_RELATION_TYPES, ENTITY_KINDS, FIELD_TYPES, PARTY_TYPES, TEMPLATE_CATEGORIES, TEMPLATE_RENDITIONS,
+} from '../domain/enums.js';
 import { PROFILES } from '../render/pdf/profiles.js';
 
-export const TEMPLATE_CATEGORIES = Object.freeze(['invoice', 'letter', 'statement', 'agreement', 'proposal', 'report', 'resolution']);
-export const TEMPLATE_RENDITIONS = Object.freeze(['pdf', 'html', 'md']);
-export const FIELD_TYPES = Object.freeze(['string', 'text', 'date', 'money', 'number', 'enum', 'entity', 'array', 'object', 'boolean']);
+export { FIELD_TYPES, TEMPLATE_CATEGORIES, TEMPLATE_RENDITIONS };
+
+/** Path segments that would reach Object.prototype; never allowed in field names. */
+export const FORBIDDEN_SEGMENTS = Object.freeze(['__proto__', 'constructor', 'prototype']);
 
 /** Field sources that need no argument. */
 const PLAIN_SOURCES = ['ask', 'today', 'brand', 'signatory'];
@@ -52,7 +54,8 @@ const nonEmpty = z.string().min(1, 'must not be empty');
 const fieldType = z.enum(FIELD_TYPES);
 
 const FieldSchema = z.strictObject({
-  name: z.string().regex(FIELD_NAME, 'must be an identifier or a dotted path of identifiers'),
+  name: z.string().regex(FIELD_NAME, 'must be an identifier or a dotted path of identifiers')
+    .refine((n) => !n.split('.').some((seg) => FORBIDDEN_SEGMENTS.includes(seg)), { message: `must not use ${FORBIDDEN_SEGMENTS.join(', ')}` }),
   label: z.string().optional(),
   source: nonEmpty,
   type: fieldType.optional(),
@@ -74,7 +77,7 @@ export const TemplateSchema = z.strictObject({
   layoutProfile: z.enum(Object.keys(PROFILES)),
   partyType: z.enum(PARTY_TYPES),
   partyKind: z.enum(ENTITY_KINDS),
-  sensitivity: z.enum(LEVELS),
+  sensitivity: z.enum(CLEARANCES),
   renditions: z.array(z.enum(TEMPLATE_RENDITIONS)).min(1).default([...TEMPLATE_RENDITIONS]),
   numbering: z.strictObject({ series: nonEmpty, required: z.boolean().default(true) }).nullable().default(null),
   contact: nonEmpty.default('default'),

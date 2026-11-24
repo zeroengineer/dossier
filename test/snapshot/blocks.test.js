@@ -4,7 +4,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXAMPLE_WORKSPACE } from '../../src/paths.js';
 import { loadWorkspace } from '../../src/workspace/index.js';
-import { blocksToHtml, escapeHtml } from '../../src/render/html/index.js';
+import { blocksToHtml, cssColour, escapeHtml } from '../../src/render/html/index.js';
 import { blocksToMarkdown } from '../../src/render/md/index.js';
 import { BlockError, validateBlocks } from '../../src/render/blocks.js';
 import { parseMarkdownBlocks } from '../../src/render/md/parse.js';
@@ -37,6 +37,20 @@ test('HTML escapes every interpolated text', () => {
   assert.doesNotMatch(evil, /<script>alert/);
   assert.match(evil, /&lt;Evil &amp; Co&gt;/);
   assert.equal(escapeHtml(`<a href="x">'&'</a>`), '&lt;a href=&quot;x&quot;&gt;&#39;&amp;&#39;&lt;/a&gt;');
+});
+
+test('palette values and styleVars cannot break out of the stylesheet', () => {
+  const evil = { ...brand, palette: { ...brand.palette, ink: 'red</style><script>alert(1)</script>', body: 'rgb(1, 2, 3)', rule: 'tomato' } };
+  const html = blocksToHtml(BLOCK_DOC, { brand: evil, styleVars: { 'x;}</style>': '1px</style><script>', accent: 'blue; } body { x' } });
+  assert.doesNotMatch(html, /<script>|<\/style><script/);
+  assert.match(html, /--ink: inherit;/);
+  assert.match(html, /--body: rgb\(1, 2, 3\);/);
+  assert.match(html, /--rule: tomato;/);
+  assert.match(html, /--xstyle: 1px\/stylescript;/);
+  assert.match(html, /--accent: blue  body  x;/);
+  assert.equal(cssColour('#1a1a1a'), '#1a1a1a');
+  assert.equal(cssColour('hsla(10, 20%, 30%, 0.5)'), 'hsla(10, 20%, 30%, 0.5)');
+  assert.equal(cssColour('url(x)'), 'inherit');
 });
 
 test('HTML uses pt metrics from the layout profile and block style', () => {

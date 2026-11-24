@@ -47,7 +47,7 @@ function parse(src) {
 function getPath(obj, parts) {
   let v = obj;
   for (const p of parts) {
-    if (v == null || typeof v !== 'object') return undefined;
+    if (v == null || typeof v !== 'object' || !Object.hasOwn(v, p)) return undefined;
     v = v[p];
   }
   return v;

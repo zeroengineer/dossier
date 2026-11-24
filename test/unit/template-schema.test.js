@@ -103,3 +103,11 @@ test('parseSource classifies every source kind', () => {
   assert.deepEqual(parseSource('const:{"a":[1]}'), { kind: 'const', arg: { a: [1] } });
   assert.deepEqual(parseSource('client.attrs.address'), { kind: 'fieldPath', arg: 'client.attrs.address', root: 'client' });
 });
+
+test('field names may not use __proto__, constructor or prototype segments', () => {
+  for (const name of ['__proto__', 'a.constructor', 'prototype.x']) {
+    const meta = base();
+    meta.fields.push({ name, source: 'ask' });
+    assert.match(errorOf(meta), /must not use __proto__, constructor, prototype/, name);
+  }
+});

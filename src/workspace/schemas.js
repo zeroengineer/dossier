@@ -2,10 +2,11 @@ import { z } from 'zod';
 import { normaliseName } from '../domain/canonical.js';
 import { parseRouteValue } from '../domain/routing.js';
 import { patternTokens, yearBasis } from '../domain/numbering.js';
+import { CLEARANCES, ENTITY_KINDS, ENTITY_RELATION_ROLES } from '../domain/enums.js';
 
-export const CLEARANCES = ['Public', 'Internal', 'Confidential', 'Restricted'];
-export const ENTITY_KINDS = ['company', 'group_entity', 'person', 'client', 'vendor', 'product', 'business_line', 'engagement', 'financial_year'];
-export const ENTITY_RELATION_ROLES = ['employed_by', 'director_of', 'belongs_to_business_line', 'engagement_of', 'vendor_of', 'product_of', 'group_entity_of', 'signatory_of', 'contact_of'];
+
+// Re-exported for existing importers; defined in src/domain/enums.js.
+export { CLEARANCES, ENTITY_KINDS, ENTITY_RELATION_ROLES };
 export const SERIES_SCOPES = ['global', 'brand', 'brand+year', 'brand+year+client'];
 export const FONT_WEIGHTS = ['regular', 'medium', 'semibold', 'bold', 'extrabold', 'light', 'extralight'];
 

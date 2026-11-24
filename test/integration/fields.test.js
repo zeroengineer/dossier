@@ -6,7 +6,7 @@ import { tmpDir } from '../helpers/tmp.js';
 import { initWorkspace } from '../../src/workspace/index.js';
 import { openContext } from '../../src/context.js';
 import { upsertEntity } from '../../src/services/entities.js';
-import { coerceDate, coerceMoney, coerceValue, resolveFields } from '../../src/services/fields.js';
+import { coerceDate, coerceMoney, coerceValue, getPath, resolveFields } from '../../src/services/fields.js';
 
 const FIXTURES = join(import.meta.dirname, '..', 'fixtures', 'templates');
 const opts = { dirs: [FIXTURES], today: '2026-03-15' };
@@ -17,7 +17,7 @@ async function withCtx(fn) {
   try {
     initWorkspace(join(dir, 'ws'));
     ctx = openContext({ home: join(dir, 'ws'), user: 'tester', dbFile: ':memory:', env: {} });
-    ctx.person = upsertEntity(ctx, { kind: 'person', name: 'Jordan Example', attrs: { address: '1 Sample Road\nExample City' } });
+    ctx.person = upsertEntity(ctx, { kind: 'person', name: 'Jordan Example', attrs: { address: '1 Sample Road\nExample City', salary: 45000 } });
     ctx.client = upsertEntity(ctx, { kind: 'client', name: 'Example Client Org' });
     return await fn(ctx);
   } finally {
@@ -49,7 +49,45 @@ test('every field source resolves; nothing missing when the asks are answered', 
   assert.equal(values.remote, false, 'literal default');
   assert.deepEqual(values.perks, [{ label: 'Laptop', amount: 120000 }], 'array items coerced by item type');
   assert.equal(values.team, 'design');
+  assert.equal(values.firstPerk, 120000, 'a path into an earlier money value is not scaled again');
+  assert.equal(values.listedSalary, 4500000, 'a path into entity attrs is raw input (major units)');
 }));
+
+test('a money path into an earlier field keeps the minor units of that field (string input coerced once)', () => withCtx(async (ctx) => {
+  const { values, errors } = await resolveFields(ctx, 'sample-letter', { perks: [{ label: 'x', amount: 'Rs. 1,500' }] }, opts);
+  assert.deepEqual(errors, []);
+  assert.equal(values.perks[0].amount, 150000);
+  assert.equal(values.firstPerk, 150000);
+}));
+
+test('blank input (empty or whitespace) counts as not provided; required blanks are missing', () => withCtx(async (ctx) => {
+  const { values, missing, errors } = await resolveFields(ctx, 'sample-letter', {
+    person: '  ', joining: '', salary: ' ', date: '', taxMode: '', probationMonths: '   ', address: '', remote: '', team: '',
+  }, opts);
+  assert.deepEqual(errors, []);
+  assert.deepEqual(missing.map((m) => m.name), ['person', 'joining', 'salary']);
+  assert.equal(values.date, '2026-03-15', 'today still applies');
+  assert.equal(values.taxMode, 'cgst_sgst', 'default still applies');
+  assert.equal(values.probationMonths, 6, 'const still applies');
+  assert.equal(values.remote, false);
+  assert.ok(!('team' in values) && !('joining' in values));
+}));
+
+test('the brand value is a frozen copy: templates cannot change the workspace brand', () => withCtx(async (ctx) => {
+  const { values } = await resolveFields(ctx, 'sample-letter', {}, opts);
+  assert.ok(Object.isFrozen(values.brand) && Object.isFrozen(values.brand.bankAccounts[0]));
+  assert.notEqual(values.brand, ctx.ws.brands.get('acme'));
+  assert.throws(() => { values.brand.legalName = 'x'; }, TypeError);
+  assert.equal(ctx.ws.brands.get('acme').legalName, 'Acme Events Private Limited');
+}));
+
+test('getPath follows own properties only', () => {
+  assert.equal(getPath({ a: { b: 1 } }, 'a.b'), 1);
+  assert.equal(getPath({ a: [{ b: 2 }] }, 'a[0].b'), 2);
+  assert.equal(getPath({}, 'constructor'), undefined);
+  assert.equal(getPath({ a: {} }, 'a.__proto__'), undefined);
+  assert.equal(getPath({ a: 'str' }, 'a.length'), undefined);
+});
 
 test('required fields left empty are listed in missing with label, type, enum and help', () => withCtx(async (ctx) => {
   const { values, missing, errors } = await resolveFields(ctx, 'sample-letter', {}, opts);
@@ -123,6 +161,16 @@ test('money coercion: numbers and strings in major units to integer minor units'
   assert.deepEqual(coerceMoney('₹ 1,20,000.5'), { value: 12000050 });
   assert.deepEqual(coerceMoney('-25.255'), { value: -2526 });
   assert.deepEqual(coerceMoney('12.'), { value: 1200 });
+  assert.deepEqual(coerceMoney('Rs. 500'), { value: 50000 });
+  assert.deepEqual(coerceMoney('Rs.1,250.75'), { value: 125075 });
+  assert.deepEqual(coerceMoney('INR 120,000'), { value: 12000000 });
+  assert.deepEqual(coerceMoney('-₹ 1,00,000'), { value: -10000000 });
+  assert.deepEqual(coerceMoney('₹-5'), { value: -500 });
+  assert.ok(coerceMoney('1,2,3').error);
+  assert.ok(coerceMoney('12,34').error);
+  assert.ok(coerceMoney('1,2345').error);
+  assert.ok(coerceMoney('--5').error);
+  assert.match(coerceMoney('   ').error, /empty/);
   assert.ok(coerceMoney('12abc').error);
   assert.ok(coerceMoney(Number.NaN).error);
   assert.ok(coerceMoney({}).error);

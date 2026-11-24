@@ -13,13 +13,17 @@ the same id:
    separated like `PATH`; used by tests and for sharing templates between workspaces)
 3. the workspace: `<workspace>/templates/<id>/`
 
-The folder name must equal `id`. A template that does not validate makes `listTemplates` / `getTemplate` throw
-`TEMPLATE_INVALID` with the file and the field (`templates/offer/template.json: invalid:\n  category: …`).
+The folder name must equal `id`. A folder that does not load (bad JSON, schema error, unknown series, no
+`index.js`/`body.md`) is left out of `listTemplates` and reported by `listTemplateErrors(ctx)` as
+`{ id, source, path, code, message, details }`; it never affects other templates. `getTemplate(ctx, id)` for that id
+throws `TEMPLATE_INVALID` with the file and the field (`templates/offer/template.json: invalid:\n  category: …`). A
+broken workspace override is not replaced by the built-in it overrides: its id fails until it is fixed.
 
 Every listed template is registered in the `templates` table (`id`, `version`, `source` = `builtin` | `workspace`,
-`path`, `hash`, `meta_json`). The hash is a SHA-256 over the bytes of `template.json`, `index.js` and `body.md`, so
-editing any of them registers a new hash (audited as `template.update`). `getTemplate(ctx, id)` returns
-`{ id, meta, module, body?, hash, source, path }`; the module is re-imported when the hash changes.
+`path`, `hash`, `meta_json`). The hash is a SHA-256 over the bytes of `template.json`, `body.md` and every `.js` file
+in the folder (sub-folders included), so editing any of them registers a new hash (audited as `template.update`).
+`getTemplate(ctx, id)` returns `{ id, meta, module, body?, hash, source, path }`; `index.js` is re-imported when the
+hash changes (helper modules it imports stay cached by Node until the process restarts).
 
 ## template.json
 
@@ -70,14 +74,15 @@ Unknown keys are errors (typos do not pass silently).
 
 `{ name, label?, source, type?, required (false), enum?, default?, item?, help? }`
 
-`name` is an identifier or a dotted path (`billTo.name` resolves into `values.billTo.name`). Fields resolve in order,
-so a field can read the ones before it.
+`name` is an identifier or a dotted path (`billTo.name` resolves into `values.billTo.name`); the segments
+`__proto__`, `constructor` and `prototype` are not allowed, and paths only follow own properties. Fields resolve in
+order, so a field can read the ones before it.
 
 | `source` | Value |
 |---|---|
 | `ask` | from the input only |
 | `today` | today's date, `YYYY-MM-DD` |
-| `brand` | the resolved brand object |
+| `brand` | the resolved brand (a frozen copy) |
 | `brand.<path>` | a path into the brand: `brand.legalName`, `brand.bankAccounts.0` (or `[0]`) |
 | `entity:<kind>` | the input is an entity id or name (aliases work); resolves to the entity record (`id`, `kind`, `name`, `attrs`, `aliases`, `relations`…); unknown names are errors |
 | `<field>.<path>` | a path into an earlier field, e.g. `client.attrs.address` |
@@ -85,7 +90,9 @@ so a field can read the ones before it.
 | `computed:<name>` | `module.computed[name](values, env)` with the values resolved so far |
 | `const:<json>` | a literal JSON value |
 
-Input always wins over a non-`ask` source when it is provided (input keys may be nested or dotted). When the value is
+Input always wins over a non-`ask` source when it is provided (input keys may be nested or dotted). Blank input
+(`''` or whitespace only, as HTML forms post) counts as not provided: sources and defaults apply, and a required
+field that stays empty is listed in `missing`. When the value is
 still empty, `default` applies: a literal, or a source when it is a string `today`, `brand`, `brand.<path>`,
 `const:<json>` or `computed:<name>`. `enum` is a list, or a source resolving to a list (objects contribute their
 `id`, e.g. `"enum": "brand.tax.modes"`).
@@ -95,7 +102,7 @@ Types coerce input values:
 | `type` | Coercion |
 |---|---|
 | `string` / `text` | text (`string` is trimmed) |
-| `money` | integer minor units (paise). Input numbers and strings are major units: `1500`, `"₹1,20,000.50"`, rounded half up at the third decimal. `computed` functions return minor units already |
+| `money` | integer minor units (paise). Input numbers and strings are major units: `1500`, `"₹1,20,000.50"`, `"Rs. 500"`, `"INR 120,000"` (grouping `120,000` or `1,20,000`; `1,2,3` is rejected), rounded half up at the third decimal. Values from `computed` functions and from `<field>.<path>` into an earlier resolved field are minor units already and are not scaled (they must be integers); a path into an entity record (`client.attrs.fee`) is raw data and is scaled |
 | `date` | ISO `YYYY-MM-DD` from `YYYY-MM-DD[T…]`, `DD/MM/YYYY` (`-` or `.` also), or a Date |
 | `number`, `boolean` | `"1,234.5"`; `yes/no/true/false/1/0` |
 | `enum` | text that must be in `enum` |

@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpDir } from '../helpers/tmp.js';
 import { minimalBrand, writeWorkspace } from '../helpers/workspace.js';
 import { openContext } from '../../src/context.js';
-import { getTemplate, listTemplates } from '../../src/services/templates.js';
+import { getTemplate, listTemplateErrors, listTemplates } from '../../src/services/templates.js';
 
 const FIXTURES = join(import.meta.dirname, '..', 'fixtures', 'templates');
 const FIXTURE_JSON = readFileSync(join(FIXTURES, 'sample-letter', 'template.json'), 'utf8');
@@ -105,8 +105,10 @@ test('a template with only body.md loads with an empty module', () => withCtx(as
   },
 }));
 
-test('invalid workspace templates throw TEMPLATE_INVALID naming the file', async (t) => {
+test('an invalid template folder is reported, left out of the list, and only breaks its own id', async (t) => {
   const meta = JSON.parse(FIXTURE_JSON);
+  const notes = JSON.stringify({ ...meta, id: 'notes', numbering: null, relations: [], fields: [{ name: 'name', source: 'ask' }] });
+  const good = { 'templates/notes/template.json': notes, 'templates/notes/body.md': 'Hi {{name}}\n' };
   const cases = {
     'bad JSON': ['{oops', /invalid JSON/],
     'schema error': [JSON.stringify({ ...meta, category: 'memo' }), /templates\/sample-letter\/template\.json: invalid:\n {2}category/],
@@ -114,14 +116,43 @@ test('invalid workspace templates throw TEMPLATE_INVALID naming the file', async
     'unknown series': [JSON.stringify({ ...meta, numbering: { series: 'missing' } }), /unknown series "missing"/],
   };
   for (const [name, [json, re]] of Object.entries(cases)) {
-    await t.test(name, () => withCtx((ctx) => {
-      assert.throws(() => listTemplates(ctx), (err) => code('TEMPLATE_INVALID')(err) && re.test(err.message));
-    }, { files: { 'templates/sample-letter/template.json': json, 'templates/sample-letter/index.js': 'export {};\n' } }));
+    await t.test(name, () => withCtx(async (ctx) => {
+      const list = listTemplates(ctx, { dirs: [FIXTURES] });
+      assert.deepEqual(list.map((x) => x.id), ['notes'], 'the broken override is left out, the fixture is not used in its place');
+      const errors = listTemplateErrors(ctx, { dirs: [FIXTURES] });
+      assert.equal(errors.length, 1);
+      assert.equal(errors[0].id, 'sample-letter');
+      assert.equal(errors[0].source, 'workspace');
+      assert.equal(errors[0].code, 'TEMPLATE_INVALID');
+      assert.match(errors[0].message, re);
+      await assert.rejects(getTemplate(ctx, 'sample-letter', { dirs: [FIXTURES] }), (err) => code('TEMPLATE_INVALID')(err) && re.test(err.message));
+      assert.equal((await getTemplate(ctx, 'notes', { dirs: [FIXTURES] })).body, 'Hi {{name}}\n', 'other templates still load');
+    }, { files: { ...good, 'templates/sample-letter/template.json': json, 'templates/sample-letter/index.js': 'export {};\n' } }));
   }
-  await t.test('no index.js and no body.md', () => withCtx((ctx) => {
-    assert.throws(() => listTemplates(ctx), /needs index\.js or body\.md/);
+  await t.test('no index.js and no body.md', () => withCtx(async (ctx) => {
+    assert.match(listTemplateErrors(ctx)[0].message, /needs index\.js or body\.md/);
+    await assert.rejects(getTemplate(ctx, 'sample-letter'), /needs index\.js or body\.md/);
   }, { files: { 'templates/sample-letter/template.json': FIXTURE_JSON } }));
   await t.test('computed field without an exported function', () => withCtx(async (ctx) => {
     await assert.rejects(getTemplate(ctx, 'sample-letter'), (err) => code('TEMPLATE_INVALID')(err) && /computed\.annual/.test(err.message));
   }, { files: { 'templates/sample-letter/template.json': FIXTURE_JSON, 'templates/sample-letter/index.js': 'export const computed = {};\n' } }));
 });
+
+test('every .js file in the template folder is part of the hash', () => withCtx((ctx, home) => {
+  const files = {
+    'template.json': FIXTURE_JSON,
+    'index.js': readFileSync(join(FIXTURES, 'sample-letter', 'index.js'), 'utf8'),
+    'lib/helpers.js': 'export const x = 1;\n',
+  };
+  for (const [rel, body] of Object.entries(files)) {
+    mkdirSync(join(home, 'templates', 'sample-letter', rel, '..'), { recursive: true });
+    writeFileSync(join(home, 'templates', 'sample-letter', rel), body);
+  }
+  const before = listTemplates(ctx)[0].hash;
+  writeFileSync(join(home, 'templates', 'sample-letter', 'lib', 'helpers.js'), 'export const x = 2;\n');
+  assert.notEqual(listTemplates(ctx)[0].hash, before);
+  writeFileSync(join(home, 'templates', 'sample-letter', 'notes.txt'), 'not code');
+  const h = listTemplates(ctx)[0].hash;
+  writeFileSync(join(home, 'templates', 'sample-letter', 'notes.txt'), 'still not code');
+  assert.equal(listTemplates(ctx)[0].hash, h, 'other files do not count');
+}));

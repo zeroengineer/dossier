@@ -4,15 +4,10 @@ import { STATUSES } from '../domain/status.js';
 import { LEVELS, accessibleLevels, assertAccess, canAccess } from '../domain/sensitivity.js';
 import { displayFileName } from '../domain/naming.js';
 import { readBlob } from './blobs.js';
+import { DOCUMENT_ENTITY_ROLES, DOCUMENT_RELATION_TYPES, PARTY_TYPES, RENDITION_KINDS } from '../domain/enums.js';
 
-/** Rendition kinds (one per kind per version). */
-export const RENDITION_KINDS = Object.freeze(['pdf', 'html', 'md', 'original']);
-/** Document relation types. */
-export const DOCUMENT_RELATION_TYPES = Object.freeze(['based_on', 'pays', 'settles', 'adjusts', 'follows', 'generated_from', 'supersedes', 'rendition_of']);
-/** Roles an entity can play on a document. */
-export const DOCUMENT_ENTITY_ROLES = Object.freeze(['party', 'signatory', 'named', 'contact', 'issuer']);
-/** Party types (documents.party_type). */
-export const PARTY_TYPES = Object.freeze(['Company', 'GroupEntity', 'Person', 'Client', 'Vendor', 'Product']);
+// Re-exported for existing importers; defined in src/domain/enums.js.
+export { DOCUMENT_ENTITY_ROLES, DOCUMENT_RELATION_TYPES, PARTY_TYPES, RENDITION_KINDS };
 
 const MAX_LIMIT = 500;
 const TEMPLATE_REF = /^template:([^@\s]+)@(\d+)$/;
