@@ -14,7 +14,7 @@ Small decisions made while building Dossier. Each entry: decision, reason, cost 
 - **HTML rendition is a web rendition**, same fonts and metrics, not a line-for-line facsimile of the PDF.
 - **Numbering = pattern engine + series config.** Shared counters (invoice / debit note / receipt) are configuration. Legacy number conflicts are flagged, not rejected.
 - **Shipped assets are only OFL fonts (Manrope) and generated neutral placeholders** at the pixel sizes the layouts expect. Real logos, seals and signatures are workspace files.
-- **Figtree is missing** from the legacy folder, so portfolio and IEEE-header layouts are out of the initial scope.
+- **Figtree is missing** from the legacy folder, so portfolio and society-branded header layouts are out of the initial scope.
 - **Dates stored ISO**; display formats come from the workspace locale, with per-template overrides.
 - **PDF determinism:** document info dates are pinned (fixed epoch in tests, version timestamp in production) so pdfkit output is byte-stable.
 - **Text extraction with `pdfjs-dist` legacy build**, not `pdf-parse` (a heavier wrapper around an older pdfjs).

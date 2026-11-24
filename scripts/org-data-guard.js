@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Organisation-data guard: scans the shipped tree for values that look like real identifiers (Indian GSTIN, CIN, PAN,
-// IFSC, bank account numbers, +91 phone numbers) and for the patterns of a private denylist.
+// IFSC, bank account numbers, +91 phone numbers), for e-mail addresses outside the reserved example domains, and for
+// the patterns of a private denylist.
 //
 // Usage: node scripts/org-data-guard.js            (exit 1 and a list of hits when anything is found)
 //        DOSSIER_DENYLIST=/path/to/denylist.txt node scripts/org-data-guard.js
@@ -14,14 +15,22 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(import.meta.dirname, '..');
 
-/**
- * What is scanned. docs/DISCOVERY.md and docs/PLAN.md are left out on purpose: they describe the legacy system this
- * app replaces (redacted) and name legacy file and folder conventions.
- */
+/** What is scanned: everything shipped, including every doc (DISCOVERY.md and PLAN.md use neutral labels). */
 export const SCAN_PATHS = [
-  'src', 'assets', 'workspace.example', 'test', 'scripts', 'README.md',
-  'docs/WORKSPACE.md', 'docs/TEMPLATES.md', 'docs/MCP.md', 'docs/DECISIONS.md',
+  'src', 'assets', 'workspace.example', 'test', 'scripts', 'bin', 'docs', 'README.md', 'package.json', '.gitignore',
 ];
+
+/**
+ * E-mail domains that may appear in the tree: the reserved example domains (RFC 2606) and their subdomains.
+ * Any other address is reported, so real contact addresses never ship.
+ */
+export const EMAIL_DOMAIN_ALLOW = ['example.com', 'example.org', 'example.net'];
+
+/** True when the address's domain is an allowed example domain (or a subdomain of one). */
+export function isExampleEmail(m) {
+  const domain = m.slice(m.lastIndexOf('@') + 1).toLowerCase();
+  return EMAIL_DOMAIN_ALLOW.some((d) => domain === d || domain.endsWith(`.${d}`));
+}
 
 const BINARY_EXT = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.pdf', '.ttf', '.otf', '.woff', '.woff2',
   '.sqlite', '.db', '.zip', '.gz', '.p12']);
@@ -71,6 +80,7 @@ export const BUILTIN_PATTERNS = [
   // or a longer run. A `.`, `-` or `_` after a letter still counts as a separator (`A/c No.<digits>`, `acct-<digits>`).
   { id: 'bank-account', re: /(?<!\d[.,_-])(?<![\dA-Za-z/])\d{11,18}(?![\w]|[.,]\d)/g, fake: isFakeValue },
   { id: 'phone-in', re: /\+91[\s-]*\d(?:[\s-]*\d){9}/g, fake: isFakeValue },
+  { id: 'email', re: /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}\b/g, fake: isExampleEmail },
 ];
 
 /**

@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { formatHits, isFakeId, isFakeValue, loadDenylist, scanTree, SCAN_PATHS } from '../../scripts/org-data-guard.js';
+import { EMAIL_DOMAIN_ALLOW, formatHits, isExampleEmail, isFakeId, isFakeValue, loadDenylist, scanTree, SCAN_PATHS } from '../../scripts/org-data-guard.js';
 import { tmpDir } from '../helpers/tmp.js';
 
 test('the repository holds no organisation data', () => {
@@ -14,12 +14,34 @@ test('the repository holds no organisation data', () => {
   assert.equal(hits.length, 0, `possible organisation data:\n${formatHits(hits)}`);
 });
 
-test('the scan covers the shipped code, example workspace, tests, scripts and user docs, not the legacy notes', () => {
-  for (const p of ['src', 'assets', 'workspace.example', 'test', 'scripts', 'README.md', 'docs/TEMPLATES.md', 'docs/WORKSPACE.md', 'docs/MCP.md', 'docs/DECISIONS.md']) {
+test('the scan covers the shipped code, example workspace, tests, scripts, bin, package.json and every doc', () => {
+  for (const p of ['src', 'assets', 'workspace.example', 'test', 'scripts', 'bin', 'docs', 'README.md', 'package.json']) {
     assert.ok(SCAN_PATHS.includes(p), p);
   }
-  assert.equal(SCAN_PATHS.includes('docs/DISCOVERY.md'), false);
-  assert.equal(SCAN_PATHS.includes('docs/PLAN.md'), false);
+});
+
+test('e-mail addresses are reported unless their domain is a reserved example domain', () => {
+  const { dir, cleanup } = tmpDir();
+  try {
+    mkdirSync(join(dir, 'bin'), { recursive: true });
+    const real = ['hr', 'globex.co.in'].join('@');
+    writeFileSync(join(dir, 'bin', 'tool.js'), [
+      `// contact ${real}`,
+      '// ok: a@example.com, b.c@mail.example.org, d@example.net, "@fastify/static", user@localhost',
+    ].join('\n'));
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ author: ['dev', 'globex.com'].join('@') }));
+    const got = scanTree({ root: dir, paths: ['bin', 'package.json'], denylist: null }).hits
+      .map((h) => `${h.file}:${h.line} ${h.pattern} ${h.match}`).sort();
+    assert.deepEqual(got, [
+      `${join('bin', 'tool.js')}:1 email ${real}`,
+      `package.json:1 email ${['dev', 'globex.com'].join('@')}`,
+    ]);
+    for (const ok of ['a@example.com', 'x@sub.example.net', 'Y@EXAMPLE.ORG']) assert.ok(isExampleEmail(ok), ok);
+    for (const bad of [['a', 'example.co'], ['a', 'notexample.com'], ['a', 'example.com.evil.in']].map((p) => p.join('@'))) assert.equal(isExampleEmail(bad), false, bad);
+    assert.deepEqual(EMAIL_DOMAIN_ALLOW, ['example.com', 'example.org', 'example.net']);
+  } finally {
+    cleanup();
+  }
 });
 
 // Real-looking values are assembled at run time so this file itself never matches.

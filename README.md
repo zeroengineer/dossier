@@ -210,12 +210,15 @@ npm run visual -- --update  # rewrite the baselines (always from the example wor
   samples from the example workspace in a temporary folder before writing baselines, so baselines never hold private
   data. Run `npm run samples` first.
 - **Organisation-data guard** (`test/unit/no-org-data.test.js`, also `node scripts/org-data-guard.js`) scans `src/`,
-  `assets/`, `workspace.example/`, `test/`, `scripts/`, this README and the user docs for values shaped like real
-  Indian GSTIN, CIN, PAN and IFSC codes, 11-18 digit account numbers and `+91` phone numbers (only the listed fake example
-  values are allowed). Numbers written with grouping (`5020 0012 3456`) and lowercase identifiers are not detected, so
+  `assets/`, `workspace.example/`, `test/`, `scripts/`, `bin/`, `docs/` (all of it), this README, `package.json` and
+  `.gitignore` for values shaped like real Indian GSTIN, CIN, PAN and IFSC codes, 11-18 digit account numbers and `+91`
+  phone numbers (only the listed fake example values are allowed), and for e-mail addresses whose domain is not one of
+  the reserved example domains `example.com`, `example.org`, `example.net` or a subdomain of them (the allow-list is
+  `EMAIL_DOMAIN_ALLOW` in the script). Numbers written with grouping (`5020 0012 3456`) and lowercase identifiers are not detected, so
   put those in the denylist too. Point `DOSSIER_DENYLIST` at a file outside the repo with one regular expression per line
   (case-insensitive), such as your organisation, client and people names, to check those too:
-  `DOSSIER_DENYLIST=~/dossier-denylist.txt npm test`.
+  `DOSSIER_DENYLIST=~/dossier-denylist.txt npm test`. Maintainers should run the guard with their denylist before every
+  push.
 
 ## Architecture
 
@@ -271,7 +274,7 @@ and the importer are complete and covered by tests. Known limitations:
 - Single workspace and single acting user per process; no login or per-user sessions.
 - The HTML rendition is a web rendition with the same fonts and metrics, not a line-for-line facsimile of the PDF.
 - Text is extracted for search only from PDF, HTML, Markdown and plain-text files (no OCR).
-- Templates that used the Figtree font (portfolio, IEEE-style header) are not included.
+- Templates that used the Figtree font (portfolio, a society-branded header) are not included.
 - Body placeholders insert values raw, so a field value can add Markdown structure (see `docs/TEMPLATES.md`).
 
 ## Documentation
