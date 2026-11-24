@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query"
 import { request } from "@/lib/api"
 import { keys } from "@/lib/keys"
+import { treeKeys } from "./vault"
 import type {
   DocumentDetail,
   DocumentLink,
@@ -19,13 +20,14 @@ export const linkSearchKey = (q: string) => [...keys.search(q), "link-picker"] a
 
 /**
  * Drop everything a document change can show up in: every document query (lists, both ends of a link, renditions),
- * search results and the dashboard.
+ * search results, the dashboard and the vault tree (folders list documents with their status and file names).
  */
 function invalidateDocuments(client: QueryClient) {
   return Promise.all([
     client.invalidateQueries({ queryKey: keys.documents.all }),
     client.invalidateQueries({ queryKey: ["search"] }),
     client.invalidateQueries({ queryKey: ["dashboard"] }),
+    client.invalidateQueries({ queryKey: treeKeys.all }),
   ])
 }
 

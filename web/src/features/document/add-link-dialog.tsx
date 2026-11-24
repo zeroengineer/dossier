@@ -87,7 +87,9 @@ export function DocumentPicker({ id, excludeId, value, onChange, invalid }: Docu
                 Searching
               </div>
             ) : (
-              <CommandEmpty>{q.trim() ? "No documents found." : "Type to search documents."}</CommandEmpty>
+              <CommandEmpty>
+                {!q.trim() ? "Type to search documents." : search.isError ? "Could not search documents." : "No documents found."}
+              </CommandEmpty>
             )}
             {!typing && hits.length ? (
               <CommandGroup heading="Documents">

@@ -3,7 +3,9 @@ import userEvent from "@testing-library/user-event"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { http, HttpResponse } from "msw"
 import { createMemoryRouter, RouterProvider } from "react-router"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
+import { treeKeys } from "@/api/vault"
+import { keys } from "@/lib/keys"
 import type { DocumentDetail, DocumentSummary } from "@/api/types"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { createQueryClient } from "@/lib/query-client"
@@ -15,14 +17,15 @@ import { server } from "@/test/server"
 function renderPage(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] })
   const user = userEvent.setup()
+  const client = createQueryClient()
   render(
-    <QueryClientProvider client={createQueryClient()}>
+    <QueryClientProvider client={client}>
       <TooltipProvider delayDuration={0}>
         <RouterProvider router={router} />
       </TooltipProvider>
     </QueryClientProvider>,
   )
-  return { user, router }
+  return { user, router, client }
 }
 
 /** Serve `doc` from `GET /api/documents/:id` and let `update` change what later reads return. */
@@ -49,7 +52,7 @@ const header = async () => {
 }
 
 describe("Document actions: status", () => {
-  it("offers only the transitions meta allows and applies one", async () => {
+  it("offers only the transitions meta allows and applies one after confirmation", async () => {
     const state = serveDoc(invoiceDoc)
     const bodies: unknown[] = []
     server.use(
@@ -66,7 +69,16 @@ describe("Document actions: status", () => {
     expect(within(menu).getAllByRole("menuitem").map((i) => i.textContent)).toEqual(["Signed", "Paid", "Superseded"])
     await user.click(within(menu).getByRole("menuitem", { name: "Paid" }))
 
+    const dialog = within(await screen.findByRole("alertdialog"))
+    expect(dialog.getByText("Mark ACM-2026-0007 as Paid?")).toBeInTheDocument()
+    expect(dialog.getByText(`${invoiceDoc.title} moves from Sent to Paid. This cannot be undone from the document page.`)).toBeInTheDocument()
+    expect(bodies).toEqual([])
+    const confirm = dialog.getByRole("button", { name: "Mark as Paid" })
+    expect(confirm).toHaveAttribute("data-variant", "default")
+    await user.click(confirm)
+
     await waitFor(() => expect(bodies).toEqual([{ status: "Paid" }]))
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument())
     expect(await screen.findByText("Status changed to Paid")).toBeInTheDocument()
     const title = screen.getByRole("heading", { level: 1 }).parentElement as HTMLElement
     await waitFor(() => expect(within(title).getByText("Paid")).toBeInTheDocument())
@@ -85,7 +97,8 @@ describe("Document actions: status", () => {
     await user.click(await screen.findByRole("menuitem", { name: "Superseded" }))
 
     let dialog = await screen.findByRole("alertdialog")
-    expect(within(dialog).getByText("Mark as Superseded?")).toBeInTheDocument()
+    expect(within(dialog).getByText("Mark ACM-2026-0007 as Superseded?")).toBeInTheDocument()
+    expect(within(dialog).getByRole("button", { name: "Mark as Superseded" })).toHaveAttribute("data-variant", "destructive")
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }))
     await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument())
     expect(bodies).toEqual([])
@@ -98,7 +111,7 @@ describe("Document actions: status", () => {
     await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument())
   })
 
-  it("toasts a refused transition (409)", async () => {
+  it("toasts a refused transition (409) and keeps the confirm dialog open", async () => {
     server.use(
       http.post("*/api/documents/DOC-000001/status", () =>
         HttpResponse.json(
@@ -110,7 +123,9 @@ describe("Document actions: status", () => {
     const { user } = renderPage("/documents/DOC-000001")
     await user.click((await header()).getByRole("button", { name: "Change status" }))
     await user.click(await screen.findByRole("menuitem", { name: "Signed" }))
+    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Mark as Signed" }))
     expect(await screen.findByText("INVALID_STATUS_TRANSITION: Cannot change status from Paid to Signed (allowed: Superseded)")).toBeInTheDocument()
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument()
   })
 
   it("disables the menu for a final status", async () => {
@@ -259,7 +274,8 @@ describe("Document actions: links", () => {
         return HttpResponse.json({ id: 9, from: "DOC-000001", to: body.toId, type: body.type, attrs: {} }, { status: 201 })
       }),
     )
-    const { user } = renderPage("/documents/DOC-000001")
+    const { user, client } = renderPage("/documents/DOC-000001")
+    const invalidate = vi.spyOn(client, "invalidateQueries")
     await screen.findByRole("list", { name: "Relations" })
     await user.click(screen.getByRole("button", { name: "Add link" }))
     const dialog = within(await screen.findByRole("dialog"))
@@ -281,6 +297,21 @@ describe("Document actions: links", () => {
     await waitFor(() => expect(bodies).toEqual([{ toId: "DOC-000004", type: "follows" }]))
     expect(await screen.findByText("Linked: follows ACM-P-2026-0002")).toBeInTheDocument()
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+    const invalidated = invalidate.mock.calls.map(([filters]) => filters?.queryKey)
+    expect(invalidated).toEqual(expect.arrayContaining([keys.documents.all, ["search"], ["dashboard"], treeKeys.all]))
+  })
+
+  it("says so when the document search fails", async () => {
+    server.use(http.get("*/api/search", () =>
+      HttpResponse.json({ code: "INVALID_INPUT", message: "Bad query", details: {} }, { status: 400 })))
+    const { user } = renderPage("/documents/DOC-000001")
+    await screen.findByRole("list", { name: "Relations" })
+    await user.click(screen.getByRole("button", { name: "Add link" }))
+    const dialog = within(await screen.findByRole("dialog"))
+    await user.click(dialog.getByRole("combobox", { name: "Document" }))
+    await user.type(await screen.findByRole("combobox", { name: "Search documents" }), "acme")
+    expect(await screen.findByText("Could not search documents.")).toBeInTheDocument()
+    expect(screen.queryByText("No documents found.")).not.toBeInTheDocument()
   })
 
   it("needs a relation and a document before it sends anything", async () => {

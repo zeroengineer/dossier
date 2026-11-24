@@ -19,25 +19,32 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { KIND_LABEL, VIEWER_KINDS } from "./renditions"
 
-/** Statuses that end the document's lifecycle: asked for behind a confirm dialog. */
+/** Statuses that end the document's lifecycle: shown and confirmed as destructive. */
 const FINAL: ReadonlySet<Status> = new Set(["Superseded"])
 
-/** "Change status" menu listing only the steps `meta.transitions[status]` allows (the server re-checks). */
+/**
+ * "Change status" menu listing only the steps `meta.transitions[status]` allows (the server re-checks). Every step
+ * is confirmed first: the lifecycle only moves forward, so a wrong choice cannot be undone from the document page.
+ */
 export function StatusMenu({ doc }: { doc: DocumentDetail }) {
   const meta = useMeta()
   const mutation = useUpdateStatus(doc.id)
-  const [confirming, setConfirming] = React.useState<Status | null>(null)
+  // `target` outlives `open` so the dialog keeps its text while it animates out.
+  const [target, setTarget] = React.useState<Status | null>(null)
+  const [open, setOpen] = React.useState(false)
   const next = meta.data?.transitions[doc.status] ?? []
-
-  function apply(status: Status) {
-    return mutation.mutateAsync(status).then(() => {
-      toast.success(`Status changed to ${status}`)
-    })
-  }
+  const name = doc.docNumber ?? doc.title
+  const final = target !== null && FINAL.has(target)
 
   function choose(status: Status) {
-    if (FINAL.has(status)) setConfirming(status)
-    else void apply(status).catch(() => {})
+    setTarget(status)
+    setOpen(true)
+  }
+
+  async function apply() {
+    if (!target) return
+    await mutation.mutateAsync(target)
+    toast.success(`Status changed to ${target}`)
   }
 
   return (
@@ -61,14 +68,17 @@ export function StatusMenu({ doc }: { doc: DocumentDetail }) {
         </DropdownMenuContent>
       </DropdownMenu>
       <ConfirmDialog
-        open={confirming !== null}
-        onOpenChange={(open) => {
-          if (!open) setConfirming(null)
-        }}
-        title={`Mark as ${confirming ?? ""}?`}
-        description={`${doc.title} becomes ${confirming ?? ""}. This is the end of its lifecycle; its status cannot change afterwards.`}
-        confirmLabel={`Mark as ${confirming ?? ""}`}
-        onConfirm={() => (confirming ? apply(confirming) : undefined)}
+        open={open}
+        onOpenChange={setOpen}
+        destructive={final}
+        title={`Mark ${name} as ${target ?? ""}?`}
+        description={
+          final
+            ? `${doc.title} becomes ${target ?? ""}. This ends its lifecycle; its status cannot change afterwards.`
+            : `${doc.title} moves from ${doc.status} to ${target ?? ""}. This cannot be undone from the document page.`
+        }
+        confirmLabel={`Mark as ${target ?? ""}`}
+        onConfirm={apply}
       />
     </>
   )
