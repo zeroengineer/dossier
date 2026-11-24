@@ -1,0 +1,11 @@
+{
+  "partner": "Example Institute of Sample Studies",
+  "partnerKind": "an educational institution",
+  "partnerRegistration": "REG/0000/0000",
+  "partnerContact": "Jordan Placeholder",
+  "partnerPhone": "+00 00000 00000",
+  "service": "Acme Tickets",
+  "date": "2026-09-25",
+  "feePercent": 2,
+  "jurisdiction": "Example City"
+}

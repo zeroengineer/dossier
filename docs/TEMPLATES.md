@@ -1,7 +1,8 @@
 # Templates
 
 A template is a folder `<templateId>/` holding `template.json` (metadata and field schema) and `index.js` (the
-renderer module), `body.md` (a Markdown body), or both. This is the first version of the format; later tasks extend it.
+renderer module), `body.md` (a Markdown body), or both; `body.<name>.md` files add named bodies (see body.md). This is
+the first version of the format; later tasks extend it.
 
 ## Where templates come from
 
@@ -19,11 +20,34 @@ The folder name must equal `id`. A folder that does not load (bad JSON, schema e
 throws `TEMPLATE_INVALID` with the file and the field (`templates/offer/template.json: invalid:\n  category: …`). A
 broken workspace override is not replaced by the built-in it overrides: its id fails until it is fixed.
 
+### Workspace overrides that inherit
+
+A workspace folder whose id a built-in (or extra) folder already provides and that has **no `index.js`** inherits from
+that template instead of replacing it:
+
+| Part | Used |
+|---|---|
+| module | the built-in `index.js` (its `computed`, `renderPdf`, `renderHtml`, `blocks`…) |
+| meta | the workspace `template.json` when present (it replaces the built-in meta whole and must keep the same `id`, i.e. the folder name); otherwise the built-in `template.json` |
+| bodies | the workspace `body.md` / `body.<name>.md` when present, file by file; otherwise the built-in's |
+
+So a private workspace can supply its own MoU text with only `templates/mou/body.md` (and `body.event.md`), or change
+labels and defaults with only `templates/<id>/template.json`, while the layout code stays the shipped one. The entry is
+listed with `source: "workspace"`, `path` = the workspace folder and `inherits` = the built-in folder. A broken
+override is reported like any other (bad JSON, schema error, a `computed:` field the built-in module does not export,
+a built-in that does not load itself: "inherits from a built-in template that does not load: …") and its id fails. A
+workspace folder with `body.md`, a named body or `index.js` but no `template.json` and no built-in of the same id is
+reported as `no template.json and no built-in template "<id>" to inherit from`. A folder with an `index.js` is a full
+override, as before.
+
 Every listed template is registered in the `templates` table (`id`, `version`, `source` = `builtin` | `workspace`,
-`path`, `hash`, `meta_json`). The hash is a SHA-256 over the bytes of `template.json`, `body.md` and every `.js` file
-in the folder (sub-folders included), so editing any of them registers a new hash (audited as `template.update`).
-`getTemplate(ctx, id)` returns `{ id, meta, module, body?, hash, source, path }`; `index.js` is re-imported when the
-hash changes (helper modules it imports stay cached by Node until the process restarts).
+`path`, `hash`, `meta_json`). The hash is a SHA-256 over the bytes of `template.json`, `body.md`, the named bodies and
+every `.js` file in the folder (sub-folders included), so editing any of them registers a new hash (audited as
+`template.update`). An inheriting override's hash is a SHA-256 over its own files' hash and the built-in template's
+hash, so a change to either folder (the workspace body or meta, or the built-in module) registers a new hash.
+`getTemplate(ctx, id)` returns `{ id, meta, module, body?, bodies?, hash, source, path, inherits? }`; `index.js` is
+re-imported when the module folder's hash changes (helper modules it imports stay cached by Node until the process
+restarts).
 
 ## template.json
 
@@ -129,7 +153,7 @@ All exports are optional:
 | `renderHtml(values, env)` | hand-written HTML (a full document string) for templates without blocks |
 
 `env` is `{ ctx, brand, meta, params, fmt, input }` (`fmt` is the locale formatter: `money`, `number`, `date`,
-`amountInWords`). `params` is `template.json` `params` with the brand's `templateParams[<templateId>]` replacing whole
+`amountInWords`); when rendering it also has `number`, `draft` and `markdown` (the filled body, if the template has one). `params` is `template.json` `params` with the brand's `templateParams[<templateId>]` replacing whole
 top-level keys (`effectiveParams` in `src/services/fields.js`), so a workspace can change a template's wording without
 copying the template; `computed` functions see the same params. Everything printed must come from the brand, `params` or the values: no literal organisation data.
 
@@ -140,6 +164,11 @@ A Markdown body filled with `fillMarkdown(body, values)` (`src/render/md/fill.js
 `{{#if path}}…{{else}}…{{/if}}` (empty lists/objects, `''`, `0` are false). Names inside `each` resolve against the item
 first. A section tag alone on its line removes that line. Nothing is escaped. Missing values print as empty text and
 are returned in `missing`; unbalanced tags throw `TEMPLATE_SYNTAX` with the line number.
+
+Named bodies: `body.<name>.md` (name: lowercase letters, digits, `-`, `_`) next to `body.md`. When the resolved values
+have a string field `variant` naming one, that body is filled instead of `body.md` (`bodyFor` in
+`src/services/generator.js`); any other value, or none, uses `body.md`. The filled body is also passed to the module as
+`env.markdown`, so a `renderPdf` / `renderHtml` template can draw it its own way (the MoU does).
 
 The filled Markdown is stored as the Markdown rendition and parsed with `parseMarkdownBlocks(md)`
 (`src/render/md/parse.js`) for PDF and HTML, following the legacy MoU parser: `#`–`###` headings (deeper levels become
@@ -372,3 +401,57 @@ fields formatted for print, `{number}`), plus the computed values named below.
 The `engagement` field (optional, `entity:engagement`) of the client-facing statements fills the event name and is
 stored as the document's engagement.
 
+
+### Agreements: `mou`
+
+A Markdown-bodied memorandum of understanding (layout profile `mou`, 45/50/50, no letterhead; category `agreement`,
+party a `client`, numbered by `brand.series.mou` when mapped, `Reference: {{number}}` in the cover). Two bodies ship,
+written fresh with neutral clauses: `body.md` (variant `organisation`, a framework for all of the partner's events)
+and `body.event.md` (variant `event`, one event), chosen by the `variant` field. A workspace replaces the text with its
+own `templates/mou/body.md` / `body.event.md` and keeps the layout (see "Workspace overrides that inherit"). The
+Markdown rendition is the filled body; the PDF (`src/render/pdf/mouFrame.js`) and HTML (`src/render/mouTemplate.js`)
+draw `parseMarkdownBlocks` of it. The PDF is the legacy v2 MoU (docs/DISCOVERY.md A8 §12), checked against the legacy
+organisation and event scripts fed the same filled body: identical text positions and pixel-identical pages (the
+event script never printed signature values; this one does when the body gives them).
+
+| Part | Layout (`MOU_FRAME`, deep-merged with `params.frame`, then `params.variants.<variant>.frame`) |
+|---|---|
+| cover (blocks before the first `---`) | h1 `ExtraBold 18` centred, h2 `Bold 13 #1e293b` centred, paragraphs 10.5 / lineGap 5.6: justified when they wrap or contain one of `cover.justifyContaining` (`Party`), else centred |
+| headings | h1 `ExtraBold 14.5 #0f172a` lineGap 2 (0.25 / 0.28 lines), h2 `Bold 12 #1e293b`, h3 `SemiBold 11 #334155`; an h1 starts a new page unless `keepTogether[<text it contains>]` points remain (ORGANISATION DETAILS / EVENT DETAILS 450, WITNESS 260, DATA & PLATFORM USE 160, else 65) |
+| paragraphs, lists | 10.2 `#334155` lineGap 5.6, justified (normal spacing when the gap exceeds 2.2 spaces or the line has `__`), bold `#0f172a`, words starting with the currency symbol `ExtraBold` +0.5; bullets `•` `SemiBold #475569` at ML+4, text at +14, lineGap 5.4, items kept whole; numbered items as bullets with `1.` |
+| tables | two columns: `[135, rest]` when the first header contains `particular`, else `[rest, 130]`; more columns share the width; header `Bold 9.8` white on `#1e293b`, rows `Regular 9.3` auto height (pad 8 / 6.5, min 22) on `#fff` / `#f8fafc`; rows containing `table.strong.patterns` (`amount received`, `net`, `final amount`) bold on `#f1f5f9` with a `#94a3b8` rule; closing rule `#cbd5e1` 0.75 |
+| signatures | every `## For …` section is a card; cards are drawn two per row after the body (`CW/2-10` wide, gap 20, h188 r5 `#f8fafc` / `#e2e8f0`; the event variant h205): title `Bold 10`, rule, `Authorized Signatory` `Bold 9.5 #475569`, sign line 128, then `signature.fields` (`Name`, `Designation`, `Date`, `Seal`; event adds `Contact`) — a `Label: value` line in the section prints the value (`SemiBold 8.5`), an empty or `___` value leaves a ruled line |
+| footer | rule `#e2e8f0` at `PH-34`, `Page {page} of {pages}` `Regular 7.5 #64748b` right (`footer.left/center/right`) |
+| watermark | the `watermark` field (default off) prints `params.watermark.text` (`DRAFT — DO NOT SIGN`) Bold 38, opacity 0.14, -30°, three rows per page (`params.watermark` also takes `size`, `opacity`, `angle`, `rows`, `color`) |
+
+Fields: `partner` (client entity; name, `attrs.address`, `attrs.registration`, `attrs.email`, `attrs.phone` fill
+`partnerName`, `partnerAddress`, `partnerRegistration`, `partnerEmail`, `partnerPhone`), `partnerKind` (with its
+article), `partnerContact`, `partnerSignatory` (`{ name, designation, contact }`), `engagement` and `event.name` /
+`event.type` / `event.dates` / `event.venue` (the event variant needs a name), `service`, `date`, `feePercent`,
+`gstPercent` (18), `examplePrice` (1000, the fee illustration), `payoutDays` (7), `term`, `noticeDays` (30),
+`governingLaw`, `jurisdiction`, `signatory` (default `brand.defaultSignatory.mou`), `watermark`. `computed:print`
+gives the bodies printable strings: `print.date` (long), `print.company`, `print.companyUpper`,
+`print.companyRegistration` (the brand registration labelled `params.registrationLabel`, default `CIN`, else the first),
+`print.companyAddress` (registered address, else business, on one line), `print.partner`, `print.partnerUpper`,
+`print.partnerAddress`, `print.feePercent`, `print.gstPercent` and `print.example.{price,fee,gst,total,received}` (fee
+and GST rounded half up to a paisa).
+
+### Resolutions: `board-resolution`
+
+The legacy board resolution (docs/DISCOVERY.md A8 §11; `src/render/boardResolutionTemplate.js`, layout profile
+`letter`, letterhead, category `resolution`, no party), checked against the legacy script fed the same wording:
+identical text positions and pixel-identical page. Title `ExtraBold 15` centred with letter spacing 1 at `MT`; date
+`SemiBold 9.5` right (`Ref: {number}` left on the same line when the brand maps a series); preamble `Bold 9.5`
+justified lineGap 5; `RESOLVED:` `ExtraBold 10.5` underlined; resolution paragraphs `Regular 9.5` lineGap 5 (1.1 lines
+apart); a director list after a paragraph with `directors: true` (bullet at ML+12, name `SemiBold` at ML+26, signature
+rule from ML+340 to the margin, rows 40 apart); the certification block (kept whole: 125 pt) with the title, the "For"
+line and columns `(CW - 2·24) / 3` wide: the certifying directors (name `SemiBold 9.5`, role `Regular 8.5`) and the
+company seal column last; footer with only the centre slot (the brand's `footer.center`, `params.footer` sets `left` /
+`right` to empty).
+
+Params (interpolated with the brand plus `{company}`, `{companyUpper}`, `{address}`, `{addressUpper}`, `{date}` in
+`params.dateStyle` (`short`, DD/MM/YYYY), `{bank}`, `{number}`): `title`, `dateLabel`, `refLabel`, `preamble`,
+`resolvedLabel`, `resolutions` (`[{ text, directors? }]`, default: open and operate a current and a merchant account),
+`certification` (`title`, `forLine`, `sealTitle`, `sealSub`), `footer`, `frame` (`BOARD_RESOLUTION_FRAME`). Fields:
+`date`, `address` (default the brand's registered address), `bank`, `directors` (`[{ name, role }]`, required),
+`certifiers` (director names; default the first two), `resolutions` (replaces the params list for one document).

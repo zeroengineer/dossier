@@ -1,0 +1,1385 @@
+{
+ "items": [
+  {
+   "page": 1,
+   "text": "MEMORANDUM OF UNDERSTANDING",
+   "x": 138.5,
+   "y": 52,
+   "baseline": 71.5,
+   "size": 18,
+   "font": "Manrope-ExtraBold",
+   "width": 318.5
+  },
+  {
+   "page": 1,
+   "text": "This Memorandum of Understanding (the \"MoU\") is entered into on 25 September 2026.",
+   "x": 86.5,
+   "y": 88.5,
+   "baseline": 99.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 422
+  },
+  {
+   "page": 1,
+   "text": "BETWEEN",
+   "x": 267,
+   "y": 116,
+   "baseline": 129.5,
+   "size": 13,
+   "font": "Manrope-Bold",
+   "width": 61
+  },
+  {
+   "page": 1,
+   "text": "ACME EVENTS PRIVATE LIMITED",
+   "x": 45,
+   "y": 140.5,
+   "baseline": 151.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 161
+  },
+  {
+   "page": 1,
+   "text": ", bearing CIN: U00000XX2000PTC000000, with its registered office at",
+   "x": 206,
+   "y": 140.5,
+   "baseline": 151.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 344.5
+  },
+  {
+   "page": 1,
+   "text": "No. 0, Placeholder Lane, Example City, Example State 000000, India, hereinafter referred to as the",
+   "x": 45,
+   "y": 160.5,
+   "baseline": 171.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 475
+  },
+  {
+   "page": 1,
+   "text": "\"First",
+   "x": 522.5,
+   "y": 160.5,
+   "baseline": 171.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 27.5
+  },
+  {
+   "page": 1,
+   "text": "Party\"",
+   "x": 45,
+   "y": 180.5,
+   "baseline": 191.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 32
+  },
+  {
+   "page": 1,
+   "text": ", which expression shall include its successors and permitted assigns;",
+   "x": 77,
+   "y": 180.5,
+   "baseline": 191.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 336
+  },
+  {
+   "page": 1,
+   "text": "AND",
+   "x": 284,
+   "y": 208,
+   "baseline": 222,
+   "size": 13,
+   "font": "Manrope-Bold",
+   "width": 27
+  },
+  {
+   "page": 1,
+   "text": "EXAMPLE INSTITUTE OF SAMPLE STUDIES",
+   "x": 45,
+   "y": 232.5,
+   "baseline": 244,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 217
+  },
+  {
+   "page": 1,
+   "text": ", with its office at 1 College Road, Example City 000000,",
+   "x": 262,
+   "y": 232.5,
+   "baseline": 244,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 288
+  },
+  {
+   "page": 1,
+   "text": "hereinafter referred to as the",
+   "x": 45,
+   "y": 252.5,
+   "baseline": 264,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 140
+  },
+  {
+   "page": 1,
+   "text": "\"Second Party\"",
+   "x": 187.5,
+   "y": 252.5,
+   "baseline": 264,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 77.5
+  },
+  {
+   "page": 1,
+   "text": "or the",
+   "x": 267,
+   "y": 252.5,
+   "baseline": 264,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 28.5
+  },
+  {
+   "page": 1,
+   "text": "\"Event Organiser\"",
+   "x": 297.5,
+   "y": 252.5,
+   "baseline": 264,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 91
+  },
+  {
+   "page": 1,
+   "text": ".",
+   "x": 388.5,
+   "y": 252.5,
+   "baseline": 264,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 1,
+   "text": "The First Party and the Second Party are each referred to as a",
+   "x": 45,
+   "y": 277.5,
+   "baseline": 289,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 293.5
+  },
+  {
+   "page": 1,
+   "text": "\"Party\"",
+   "x": 340.5,
+   "y": 277.5,
+   "baseline": 289,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 37
+  },
+  {
+   "page": 1,
+   "text": "and together as the",
+   "x": 379.5,
+   "y": 277.5,
+   "baseline": 289,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 95.5
+  },
+  {
+   "page": 1,
+   "text": "\"Parties\"",
+   "x": 477,
+   "y": 277.5,
+   "baseline": 289,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 46
+  },
+  {
+   "page": 1,
+   "text": ".",
+   "x": 523,
+   "y": 277.5,
+   "baseline": 289,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 1,
+   "text": "1. PURPOSE",
+   "x": 45,
+   "y": 311.5,
+   "baseline": 327,
+   "size": 14.5,
+   "font": "Manrope-ExtraBold",
+   "width": 82
+  },
+  {
+   "page": 1,
+   "text": "This MoU sets out the terms on which the First Party will provide",
+   "x": 45,
+   "y": 339,
+   "baseline": 349.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 303
+  },
+  {
+   "page": 1,
+   "text": "Acme Tickets",
+   "x": 350.5,
+   "y": 339,
+   "baseline": 349.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 67
+  },
+  {
+   "page": 1,
+   "text": "(the \"Service\") to the Event",
+   "x": 420,
+   "y": 339,
+   "baseline": 349.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 130.5
+  },
+  {
+   "page": 1,
+   "text": "Organiser for",
+   "x": 45,
+   "y": 358.5,
+   "baseline": 369,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 62.5
+  },
+  {
+   "page": 1,
+   "text": "Example Fest 2026 - Sample College",
+   "x": 111,
+   "y": 358.5,
+   "baseline": 369,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 185.5
+  },
+  {
+   "page": 1,
+   "text": "(the \"Event\"), scheduled for 10–12 February 2026 at",
+   "x": 300,
+   "y": 358.5,
+   "baseline": 369,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 250
+  },
+  {
+   "page": 1,
+   "text": "Sample College Campus.",
+   "x": 45,
+   "y": 378,
+   "baseline": 389,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 117
+  },
+  {
+   "page": 1,
+   "text": "The engagement covers both free and paid registrations for the Event. This MoU applies to the Event only",
+   "x": 45,
+   "y": 402,
+   "baseline": 413,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 505.5
+  },
+  {
+   "page": 1,
+   "text": "and does not create a partnership, joint venture, employment or agency relationship between the Parties.",
+   "x": 45,
+   "y": 421.5,
+   "baseline": 432.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 491.5
+  },
+  {
+   "page": 1,
+   "text": "2. SCOPE OF SERVICES",
+   "x": 45,
+   "y": 449,
+   "baseline": 464.5,
+   "size": 14.5,
+   "font": "Manrope-ExtraBold",
+   "width": 161
+  },
+  {
+   "page": 1,
+   "text": "•",
+   "x": 49,
+   "y": 476,
+   "baseline": 487,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 7
+  },
+  {
+   "page": 1,
+   "text": "Event set-up",
+   "x": 63,
+   "y": 476,
+   "baseline": 487,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 63.5
+  },
+  {
+   "page": 1,
+   "text": "— event page, registration form and ticket categories for the Event.",
+   "x": 128.5,
+   "y": 476,
+   "baseline": 487,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 312
+  },
+  {
+   "page": 1,
+   "text": "•",
+   "x": 49,
+   "y": 498,
+   "baseline": 509,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 7
+  },
+  {
+   "page": 1,
+   "text": "Registrations and ticketing",
+   "x": 63,
+   "y": 498,
+   "baseline": 509,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 134.5
+  },
+  {
+   "page": 1,
+   "text": "— collection of registrations and payments, and confirmations to",
+   "x": 199.5,
+   "y": 498,
+   "baseline": 509,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 301.5
+  },
+  {
+   "page": 1,
+   "text": "attendees.",
+   "x": 63,
+   "y": 517.5,
+   "baseline": 528.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 51
+  },
+  {
+   "page": 1,
+   "text": "•",
+   "x": 49,
+   "y": 539.5,
+   "baseline": 550,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 7
+  },
+  {
+   "page": 1,
+   "text": "Entry management",
+   "x": 63,
+   "y": 539.5,
+   "baseline": 550,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 94
+  },
+  {
+   "page": 1,
+   "text": "— tools for checking attendees in at the venue.",
+   "x": 159,
+   "y": 539.5,
+   "baseline": 550,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 218
+  },
+  {
+   "page": 1,
+   "text": "•",
+   "x": 49,
+   "y": 561,
+   "baseline": 572,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 7
+  },
+  {
+   "page": 1,
+   "text": "Reports",
+   "x": 63,
+   "y": 561,
+   "baseline": 572,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 39.5
+  },
+  {
+   "page": 1,
+   "text": "— registration, attendance and collection reports for the Event Organiser.",
+   "x": 104.5,
+   "y": 561,
+   "baseline": 572,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 341
+  },
+  {
+   "page": 1,
+   "text": "3. FEES & COMMERCIAL TERMS",
+   "x": 45,
+   "y": 590,
+   "baseline": 605,
+   "size": 14.5,
+   "font": "Manrope-ExtraBold",
+   "width": 215
+  },
+  {
+   "page": 1,
+   "text": "3.1 Free Registrations",
+   "x": 45,
+   "y": 620.5,
+   "baseline": 633.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 124
+  },
+  {
+   "page": 1,
+   "text": "Free registrations are processed without a service fee.",
+   "x": 45,
+   "y": 642,
+   "baseline": 653,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 254.5
+  },
+  {
+   "page": 1,
+   "text": "3.2 Paid Registrations",
+   "x": 45,
+   "y": 668.5,
+   "baseline": 681.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 127
+  },
+  {
+   "page": 1,
+   "text": "A service fee of",
+   "x": 45,
+   "y": 690,
+   "baseline": 701,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 73
+  },
+  {
+   "page": 1,
+   "text": "2%",
+   "x": 120,
+   "y": 690,
+   "baseline": 701,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 15.5
+  },
+  {
+   "page": 1,
+   "text": "of the ticket price applies to every paid registration, with GST at",
+   "x": 138,
+   "y": 690,
+   "baseline": 701,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 300.5
+  },
+  {
+   "page": 1,
+   "text": "18%",
+   "x": 440.5,
+   "y": 690,
+   "baseline": 701,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 20
+  },
+  {
+   "page": 1,
+   "text": "on the service fee,",
+   "x": 463,
+   "y": 690,
+   "baseline": 701,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 87.5
+  },
+  {
+   "page": 1,
+   "text": "paid by the attendee in addition to the ticket price.",
+   "x": 45,
+   "y": 709.5,
+   "baseline": 720.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 235
+  },
+  {
+   "page": 1,
+   "text": "Page 1 of 3",
+   "x": 514.5,
+   "y": 814,
+   "baseline": 822,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 36
+  },
+  {
+   "page": 2,
+   "text": "Description",
+   "x": 53,
+   "y": 58,
+   "baseline": 68.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 55.5
+  },
+  {
+   "page": 2,
+   "text": "Amount",
+   "x": 428.5,
+   "y": 58,
+   "baseline": 68.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 38
+  },
+  {
+   "page": 2,
+   "text": "Ticket price",
+   "x": 53,
+   "y": 84.5,
+   "baseline": 94.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 50
+  },
+  {
+   "page": 2,
+   "text": "₹1,000.00",
+   "x": 428.5,
+   "y": 84.5,
+   "baseline": 94.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 42
+  },
+  {
+   "page": 2,
+   "text": "Service fee (2%)",
+   "x": 53,
+   "y": 110,
+   "baseline": 120,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 71
+  },
+  {
+   "page": 2,
+   "text": "₹20.00",
+   "x": 428.5,
+   "y": 110,
+   "baseline": 120,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 30.5
+  },
+  {
+   "page": 2,
+   "text": "GST on service fee (18%)",
+   "x": 53,
+   "y": 136,
+   "baseline": 145.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 106.5
+  },
+  {
+   "page": 2,
+   "text": "₹3.60",
+   "x": 428.5,
+   "y": 136,
+   "baseline": 145.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 24.5
+  },
+  {
+   "page": 2,
+   "text": "Final amount paid by the attendee",
+   "x": 53,
+   "y": 161.5,
+   "baseline": 171.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 152
+  },
+  {
+   "page": 2,
+   "text": "₹1,023.60",
+   "x": 428.5,
+   "y": 161.5,
+   "baseline": 171.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 44
+  },
+  {
+   "page": 2,
+   "text": "Amount received by the Event Organiser",
+   "x": 53,
+   "y": 187,
+   "baseline": 197,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 180
+  },
+  {
+   "page": 2,
+   "text": "₹1,000.00",
+   "x": 428.5,
+   "y": 187,
+   "baseline": 197,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 45.5
+  },
+  {
+   "page": 2,
+   "text": "4. SETTLEMENT & PAYOUT",
+   "x": 45,
+   "y": 217.5,
+   "baseline": 233,
+   "size": 14.5,
+   "font": "Manrope-ExtraBold",
+   "width": 181.5
+  },
+  {
+   "page": 2,
+   "text": "Amounts collected for the Event, less the service fee, GST and gateway charges, shall be paid to the Event",
+   "x": 45,
+   "y": 245,
+   "baseline": 256,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 505.5
+  },
+  {
+   "page": 2,
+   "text": "Organiser's designated bank account within",
+   "x": 45,
+   "y": 264.5,
+   "baseline": 275.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 205
+  },
+  {
+   "page": 2,
+   "text": "7 working days",
+   "x": 252,
+   "y": 264.5,
+   "baseline": 275.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 72
+  },
+  {
+   "page": 2,
+   "text": "after the Event ends, together with a",
+   "x": 326,
+   "y": 264.5,
+   "baseline": 275.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 171.5
+  },
+  {
+   "page": 2,
+   "text": "settlement statement.",
+   "x": 45,
+   "y": 284,
+   "baseline": 295,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 105.5
+  },
+  {
+   "page": 2,
+   "text": "5. RESPONSIBILITIES",
+   "x": 45,
+   "y": 311.5,
+   "baseline": 327,
+   "size": 14.5,
+   "font": "Manrope-ExtraBold",
+   "width": 146
+  },
+  {
+   "page": 2,
+   "text": "•",
+   "x": 49,
+   "y": 339,
+   "baseline": 349.5,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 7
+  },
+  {
+   "page": 2,
+   "text": "The Event Organiser is responsible for the Event itself: venue, programme, permissions, safety, refunds",
+   "x": 63,
+   "y": 339,
+   "baseline": 349.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 487.5
+  },
+  {
+   "page": 2,
+   "text": "policy and communication with attendees.",
+   "x": 63,
+   "y": 358,
+   "baseline": 369,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 198
+  },
+  {
+   "page": 2,
+   "text": "•",
+   "x": 49,
+   "y": 380,
+   "baseline": 391,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 7
+  },
+  {
+   "page": 2,
+   "text": "The First Party is responsible for the availability and correct operation of the Service.",
+   "x": 63,
+   "y": 380,
+   "baseline": 391,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 391.5
+  },
+  {
+   "page": 2,
+   "text": "•",
+   "x": 49,
+   "y": 402,
+   "baseline": 412.5,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 7
+  },
+  {
+   "page": 2,
+   "text": "The Event Organiser shall acknowledge the Service on the event page and promotional material in the",
+   "x": 63,
+   "y": 402,
+   "baseline": 412.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 487.5
+  },
+  {
+   "page": 2,
+   "text": "form agreed between the Parties.",
+   "x": 63,
+   "y": 421,
+   "baseline": 432,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 156.5
+  },
+  {
+   "page": 2,
+   "text": "6. DATA & PLATFORM USE",
+   "x": 45,
+   "y": 450,
+   "baseline": 465.5,
+   "size": 14.5,
+   "font": "Manrope-ExtraBold",
+   "width": 177
+  },
+  {
+   "page": 2,
+   "text": "Attendee information collected through the Service is processed only to deliver the Service and the Event, in",
+   "x": 45,
+   "y": 477,
+   "baseline": 488,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 505.5
+  },
+  {
+   "page": 2,
+   "text": "accordance with applicable data protection law, and shall not be sold or disclosed to third parties except as",
+   "x": 45,
+   "y": 497,
+   "baseline": 507.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 505.5
+  },
+  {
+   "page": 2,
+   "text": "required by law.",
+   "x": 45,
+   "y": 516.5,
+   "baseline": 527,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 72.5
+  },
+  {
+   "page": 2,
+   "text": "7. CONFIDENTIALITY & INTELLECTUAL PROPERTY",
+   "x": 45,
+   "y": 544,
+   "baseline": 559,
+   "size": 14.5,
+   "font": "Manrope-ExtraBold",
+   "width": 340
+  },
+  {
+   "page": 2,
+   "text": "Each Party keeps all rights in its own names, logos, content and technology, and shall keep confidential any",
+   "x": 45,
+   "y": 571,
+   "baseline": 582,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 505.5
+  },
+  {
+   "page": 2,
+   "text": "non-public information received from the other Party under this MoU.",
+   "x": 45,
+   "y": 590.5,
+   "baseline": 601.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 322.5
+  },
+  {
+   "page": 2,
+   "text": "8. LIABILITY",
+   "x": 45,
+   "y": 618,
+   "baseline": 633.5,
+   "size": 14.5,
+   "font": "Manrope-ExtraBold",
+   "width": 82.5
+  },
+  {
+   "page": 2,
+   "text": "Neither Party is liable for indirect or consequential loss, or for delays caused by events beyond its",
+   "x": 45,
+   "y": 645.5,
+   "baseline": 656.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 451
+  },
+  {
+   "page": 2,
+   "text": "reasonable control. The First Party is not responsible for the conduct, cancellation or postponement of the",
+   "x": 45,
+   "y": 665,
+   "baseline": 676,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 505.5
+  },
+  {
+   "page": 2,
+   "text": "Event.",
+   "x": 45,
+   "y": 684.5,
+   "baseline": 695.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 29.5
+  },
+  {
+   "page": 2,
+   "text": "9. TERM & TERMINATION",
+   "x": 45,
+   "y": 712,
+   "baseline": 727.5,
+   "size": 14.5,
+   "font": "Manrope-ExtraBold",
+   "width": 170
+  },
+  {
+   "page": 2,
+   "text": "This MoU takes effect on the date above and ends when the settlement for the Event is complete. Either",
+   "x": 45,
+   "y": 739.5,
+   "baseline": 750,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 505.5
+  },
+  {
+   "page": 2,
+   "text": "Party may terminate it earlier by 30 days' written notice; amounts already due remain payable.",
+   "x": 45,
+   "y": 759,
+   "baseline": 770,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 434
+  },
+  {
+   "page": 2,
+   "text": "Page 2 of 3",
+   "x": 513,
+   "y": 814,
+   "baseline": 822,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 3,
+   "text": "10. GOVERNING LAW",
+   "x": 45,
+   "y": 53.5,
+   "baseline": 69,
+   "size": 14.5,
+   "font": "Manrope-ExtraBold",
+   "width": 143
+  },
+  {
+   "page": 3,
+   "text": "This MoU is governed by the laws of India, and the courts at Example City shall have exclusive jurisdiction.",
+   "x": 45,
+   "y": 81,
+   "baseline": 91.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 489.5
+  },
+  {
+   "page": 3,
+   "text": "EVENT DETAILS",
+   "x": 45,
+   "y": 108.5,
+   "baseline": 124,
+   "size": 14.5,
+   "font": "Manrope-ExtraBold",
+   "width": 107.5
+  },
+  {
+   "page": 3,
+   "text": "Particular",
+   "x": 53,
+   "y": 143.5,
+   "baseline": 154,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 46.5
+  },
+  {
+   "page": 3,
+   "text": "Details",
+   "x": 188,
+   "y": 143.5,
+   "baseline": 154,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 33.5
+  },
+  {
+   "page": 3,
+   "text": "Event",
+   "x": 53,
+   "y": 170,
+   "baseline": 180,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 24.5
+  },
+  {
+   "page": 3,
+   "text": "Example Fest 2026 - Sample College",
+   "x": 188,
+   "y": 170,
+   "baseline": 180,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 155
+  },
+  {
+   "page": 3,
+   "text": "Event type",
+   "x": 53,
+   "y": 196,
+   "baseline": 205.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 45.5
+  },
+  {
+   "page": 3,
+   "text": "Cultural festival",
+   "x": 188,
+   "y": 196,
+   "baseline": 205.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 67
+  },
+  {
+   "page": 3,
+   "text": "Dates",
+   "x": 53,
+   "y": 221.5,
+   "baseline": 231.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 25.5
+  },
+  {
+   "page": 3,
+   "text": "10–12 February 2026",
+   "x": 188,
+   "y": 221.5,
+   "baseline": 231.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 86.5
+  },
+  {
+   "page": 3,
+   "text": "Venue",
+   "x": 53,
+   "y": 247,
+   "baseline": 257,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 27
+  },
+  {
+   "page": 3,
+   "text": "Sample College Campus",
+   "x": 188,
+   "y": 247,
+   "baseline": 257,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 104
+  },
+  {
+   "page": 3,
+   "text": "Event Organiser",
+   "x": 53,
+   "y": 273,
+   "baseline": 283,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 68
+  },
+  {
+   "page": 3,
+   "text": "Example Institute of Sample Studies",
+   "x": 188,
+   "y": 273,
+   "baseline": 283,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 154
+  },
+  {
+   "page": 3,
+   "text": "Service",
+   "x": 53,
+   "y": 298.5,
+   "baseline": 308.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 32
+  },
+  {
+   "page": 3,
+   "text": "Acme Tickets — Acme Events Private Limited",
+   "x": 188,
+   "y": 298.5,
+   "baseline": 308.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 189
+  },
+  {
+   "page": 3,
+   "text": "IN WITNESS WHEREOF",
+   "x": 45,
+   "y": 329,
+   "baseline": 344.5,
+   "size": 14.5,
+   "font": "Manrope-ExtraBold",
+   "width": 157
+  },
+  {
+   "page": 3,
+   "text": "The Parties have signed this Memorandum of Understanding through their authorised representatives on",
+   "x": 45,
+   "y": 356.5,
+   "baseline": 367,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 505.5
+  },
+  {
+   "page": 3,
+   "text": "the date first written above.",
+   "x": 45,
+   "y": 376,
+   "baseline": 386.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 3,
+   "text": "For ACME EVENTS PRIVATE LIMITED",
+   "x": 57,
+   "y": 419.5,
+   "baseline": 430,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 167.5
+  },
+  {
+   "page": 3,
+   "text": "For EXAMPLE INSTITUTE OF SAMPLE STUDIES",
+   "x": 319.5,
+   "y": 419.5,
+   "baseline": 430,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 215
+  },
+  {
+   "page": 3,
+   "text": "Authorized Signatory",
+   "x": 57,
+   "y": 447,
+   "baseline": 457.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 97.5
+  },
+  {
+   "page": 3,
+   "text": "Authorized Signatory",
+   "x": 319.5,
+   "y": 447,
+   "baseline": 457.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 97.5
+  },
+  {
+   "page": 3,
+   "text": "Name:",
+   "x": 57,
+   "y": 485,
+   "baseline": 495,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 27
+  },
+  {
+   "page": 3,
+   "text": "Sam Sample",
+   "x": 89,
+   "y": 485.5,
+   "baseline": 494.5,
+   "size": 8.5,
+   "font": "Manrope-SemiBold",
+   "width": 50
+  },
+  {
+   "page": 3,
+   "text": "Name:",
+   "x": 319.5,
+   "y": 485,
+   "baseline": 495,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 27
+  },
+  {
+   "page": 3,
+   "text": "Designation:",
+   "x": 57,
+   "y": 501,
+   "baseline": 511,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 54
+  },
+  {
+   "page": 3,
+   "text": "Managing Director",
+   "x": 116,
+   "y": 501.5,
+   "baseline": 510.5,
+   "size": 8.5,
+   "font": "Manrope-SemiBold",
+   "width": 74.5
+  },
+  {
+   "page": 3,
+   "text": "Designation:",
+   "x": 319.5,
+   "y": 501,
+   "baseline": 511,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 54
+  },
+  {
+   "page": 3,
+   "text": "Contact:",
+   "x": 57,
+   "y": 517,
+   "baseline": 527,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 37.5
+  },
+  {
+   "page": 3,
+   "text": "+00 00000 00000",
+   "x": 99.5,
+   "y": 517.5,
+   "baseline": 526.5,
+   "size": 8.5,
+   "font": "Manrope-SemiBold",
+   "width": 74
+  },
+  {
+   "page": 3,
+   "text": "Contact:",
+   "x": 319.5,
+   "y": 517,
+   "baseline": 527,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 37.5
+  },
+  {
+   "page": 3,
+   "text": "Date:",
+   "x": 57,
+   "y": 533,
+   "baseline": 543,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 23
+  },
+  {
+   "page": 3,
+   "text": "25 September 2026",
+   "x": 85,
+   "y": 533.5,
+   "baseline": 542.5,
+   "size": 8.5,
+   "font": "Manrope-SemiBold",
+   "width": 79
+  },
+  {
+   "page": 3,
+   "text": "Date:",
+   "x": 319.5,
+   "y": 533,
+   "baseline": 543,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 23
+  },
+  {
+   "page": 3,
+   "text": "Seal:",
+   "x": 57,
+   "y": 549,
+   "baseline": 559,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 21
+  },
+  {
+   "page": 3,
+   "text": "Seal:",
+   "x": 319.5,
+   "y": 549,
+   "baseline": 559,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 21
+  },
+  {
+   "page": 3,
+   "text": "Page 3 of 3",
+   "x": 513,
+   "y": 814,
+   "baseline": 822,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37
+  }
+ ],
+ "images": []
+}

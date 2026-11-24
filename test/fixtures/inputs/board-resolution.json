@@ -1,0 +1,8 @@
+{
+  "date": "2026-10-23",
+  "bank": "Example Bank Limited",
+  "directors": [
+    { "name": "Sam Sample", "role": "Managing Director" },
+    { "name": "Alex Example", "role": "Director" }
+  ]
+}

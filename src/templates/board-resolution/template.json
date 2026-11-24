@@ -1,0 +1,51 @@
+{
+  "id": "board-resolution",
+  "version": 1,
+  "type": "Board Resolution",
+  "title": "Board resolution",
+  "description": "Certified true copy of a resolution of the board of directors (default wording: opening and operating bank accounts), with the authorised directors and the certification block.",
+  "category": "resolution",
+  "layoutProfile": "letter",
+  "partyType": "Company",
+  "partyKind": "company",
+  "sensitivity": "Confidential",
+  "renditions": ["pdf", "html", "md"],
+  "numbering": { "series": "brand", "required": false },
+  "contact": "default",
+  "params": {
+    "title": "BOARD RESOLUTION",
+    "dateStyle": "short",
+    "dateLabel": "Date: {date}",
+    "refLabel": "Ref: {number}",
+    "preamble": "CERTIFIED TRUE COPY OF THE EXTRACT FROM THE MINUTES OF THE MEETING OF THE BOARD OF DIRECTORS OF {companyUpper} HELD AT {addressUpper} ON {date}",
+    "resolvedLabel": "RESOLVED:",
+    "resolutions": [
+      { "text": "THAT a current account and a merchant account (for card and online payments) be opened in the name of {companyUpper}, {address}, with {bank}." },
+      { "text": "THAT the following directors of the Company be and are hereby authorised, singly or jointly, to sign the documents required to open the said accounts and to operate the said accounts:", "directors": true },
+      { "text": "THAT the following directors of the Company be and are hereby authorised, singly or jointly, to execute on behalf of the Company all documents required by {bank} in connection with the said current account and merchant account:", "directors": true },
+      { "text": "THAT a certified true copy of this resolution be furnished to {bank}, which may act on it until it receives written notice of any change from the Company." }
+    ],
+    "certification": {
+      "title": "CERTIFIED TRUE COPY",
+      "forLine": "For {companyUpper}",
+      "sealTitle": "Company Seal",
+      "sealSub": "{companyUpper}"
+    },
+    "footer": { "left": "", "right": "" }
+  },
+  "fields": [
+    { "name": "brand", "source": "brand", "required": true },
+    { "name": "date", "label": "Date of the meeting", "source": "today", "type": "date", "required": true },
+    { "name": "address", "label": "Place of the meeting", "source": "brand.addresses.registered",
+      "help": "Address printed in the preamble and the resolution (default: the brand's registered address)" },
+    { "name": "bank", "label": "Bank", "source": "ask", "type": "string", "required": true },
+    { "name": "directors", "label": "Directors", "source": "ask", "type": "array", "required": true,
+      "help": "[{ name, role }]: the directors authorised by the resolution" },
+    { "name": "directorList", "source": "computed:directorList" },
+    { "name": "certifiers", "label": "Certifying directors", "source": "ask", "type": "array",
+      "help": "Names of the directors who sign the certification (default: the first two)" },
+    { "name": "certifierList", "source": "computed:certifierList" },
+    { "name": "resolutions", "label": "Resolutions", "source": "ask", "type": "array",
+      "help": "Replaces params.resolutions: [{ text, directors? }]; directors: true lists the directors after the paragraph" }
+  ]
+}
