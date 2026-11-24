@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { DossierError } from '../errors.js';
 import { normaliseName } from '../domain/canonical.js';
@@ -30,8 +30,21 @@ export const DEFAULT_IMPORT_SENSITIVITY = Object.freeze({ default: 'Internal', p
 /** Folder names that hold identity documents (passports, ID cards, KYC); override with `opts.identityPattern`. */
 export const IDENTITY_FOLDER_RE = /\bidentity\b|\bkyc\b/i;
 
-/** Folder names (after the number prefix) that hold the legacy generator's source code. */
-const GENERATOR_SOURCE_RE = /\bgenerator\s+(source|code|scripts?)\b|\bsource\s+code\b|^(generator|src|scripts)$/i;
+/** Folder names (after the number prefix) that always hold the legacy generator's source code. */
+const GENERATOR_SOURCE_RE = /\bgenerator\s+(source|code|scripts?)\b|\bsource\s+code\b|^generator$/i;
+
+/** Folder names that hold code only when they contain code files (a "Scripts" folder may hold documents). */
+const MAYBE_CODE_RE = /^(src|scripts)$/i;
+const CODE_FILE_RE = /\.(js|mjs|cjs|py)$/i;
+
+/** Root-level files of a legacy vault that describe it rather than belong in it (folder mode). */
+const ROOT_SPEC_RE = /^_.*\.csv$|HIERARCHY.*\.md$/i;
+
+/** A folder name that marks restricted content at any depth: "Restricted", "10 Restricted", "Restricted - Security". */
+const isRestrictedName = (name) => {
+  const k = key(stripNumber(name));
+  return k === 'restricted' || k.startsWith('restricted - ');
+};
 
 /** Generic alternative names of the top-level slots, besides the configured and default folder names. */
 const TOP_ALIASES = Object.freeze({
@@ -61,14 +74,14 @@ const key = (s) => normaliseName(s);
 /**
  * @typedef {{
  *   dryRun: boolean, folder: string, index: string|null, brandId: string,
- *   files: number, imported: number, existing: number, deduped: number,
+ *   files: number, imported: number, existing: number, deduped: number, ignoredDsStore: number,
  *   newEntities: { kind: string, name: string }[],
  *   byType: Record<string, number>,
  *   numbers: { path: string, number: string, series: string, from: 'filename'|'text' }[],
  *   conflicts: { path: string, number: string, series: string, conflictsWith: string[] }[],
  *   duplicates: { path: string, of: string|null, reason: string }[],
  *   skipped: { path: string, reason: string }[],
- *   warnings: { path: string, message: string }[],
+ *   warnings: { path: string, message: string, code?: 'SOURCE_CHANGED' }[],
  *   documents: { path: string, id: string|null, type: string, party: string|null, partyKind: string|null,
  *     sensitivity: string, number: string|null, series: string|null }[],
  * }} ImportSummary
@@ -83,8 +96,12 @@ const key = (s) => normaliseName(s);
  * - Folder mode walks `folder`, skipping dotfiles, `node_modules`, symbolic links, generator source folders (a name
  *   like "Generator Source" or a folder holding `package.json`) and the Restricted top-level folder.
  * - Index mode (`index`) reads a CSV with the columns {@link INDEX_COLUMNS}; `vault_path` is relative to the CSV's
- *   folder unless absolute, rows with an empty `vault_path` (identical copies the index did not copy) are reported as
- *   duplicates, and the same skip rules apply to each path.
+ *   folder (the import root in this mode) unless absolute, rows with an empty `vault_path` (identical copies the index
+ *   did not copy) are reported as duplicates, and the same skip rules apply to each path. Paths with `..`, absolute
+ *   paths outside the root, symbolic links and files whose folder resolves outside the root are refused
+ *   ("outside import root" / "symbolic link").
+ * - A folder named "Restricted" (optionally numbered, or "Restricted - …") is skipped at any depth. Root-level
+ *   `_*.csv` and `*HIERARCHY*.md` files are skipped as index/spec files; `.DS_Store` files are only counted.
  * - Each file is hashed: bytes already in the vault are left alone (re-running imports nothing new), a second copy
  *   within the run is a duplicate. Files the secret scanner flags are skipped. Every workspace series pattern is
  *   tried against the file name, then the extracted text; a hit sets the number and series and seeds the counter
@@ -113,7 +130,7 @@ export async function importFolder(ctx, opts = {}) {
 
   const dryRun = opts.dryRun === true;
   const summary = {
-    dryRun, folder, index, brandId, files: 0, imported: 0, existing: 0, deduped: 0, newEntities: [], byType: {},
+    dryRun, folder, index, brandId, files: 0, imported: 0, existing: 0, deduped: 0, ignoredDsStore: 0, newEntities: [], byType: {},
     numbers: [], conflicts: [], duplicates: [], skipped: [], warnings: [], documents: [],
   };
   const env = {
@@ -147,10 +164,32 @@ function dirSkipReason(env, rel, abs) {
   const name = rel.split('/').pop();
   if (name.startsWith('.')) return 'hidden folder';
   if (name === 'node_modules') return 'node_modules';
-  if (GENERATOR_SOURCE_RE.test(stripNumber(name))) return 'generator source code';
-  if (abs && existsSync(`${abs}/package.json`)) return 'generator source code (package.json)';
+  if (isRestrictedName(name)) return 'restricted folder (never imported)';
   if (!rel.includes('/') && matchTop(env, name)?.slot === 'restricted') return 'restricted folder (never imported)';
+  const bare = stripNumber(name);
+  if (GENERATOR_SOURCE_RE.test(bare)) return 'generator source code';
+  if (abs && existsSync(`${abs}/package.json`)) return 'generator source code (package.json)';
+  if (MAYBE_CODE_RE.test(bare) && abs && hasCodeFiles(abs)) return 'generator source code';
   return null;
+}
+
+function hasCodeFiles(abs) {
+  try {
+    return readdirSync(abs).some((f) => CODE_FILE_RE.test(f));
+  } catch {
+    return false;
+  }
+}
+
+/** Skip reason of the first folder on `rel` (a file path below the root) that is skipped, or null. */
+function pathSkipReason(env, rel, root) {
+  const segs = rel.split('/');
+  for (let i = 1; i < segs.length; i++) {
+    const dirRel = segs.slice(0, i).join('/');
+    const reason = dirSkipReason(env, dirRel, root ? `${root}/${dirRel}` : null);
+    if (reason) return reason;
+  }
+  return segs.at(-1).startsWith('.') ? 'hidden file' : null;
 }
 
 function walkFolder(env) {
@@ -168,7 +207,9 @@ function walkFolder(env) {
         continue;
       }
       if (!st.isFile()) continue;
+      if (name === '.DS_Store') { env.summary.ignoredDsStore++; continue; }
       if (name.startsWith('.')) { env.summary.skipped.push({ path: childRel, reason: 'hidden file' }); continue; }
+      if (!rel && ROOT_SPEC_RE.test(name)) { env.summary.skipped.push({ path: childRel, reason: 'index/spec file' }); continue; }
       out.push({ rel: childRel, abs: childAbs });
     }
   };
@@ -213,6 +254,7 @@ function readIndex(env, index) {
     throw invalid(`${index}: the index needs a vault_path column (columns: ${INDEX_COLUMNS.join(', ')})`, { index });
   }
   const base = dirname(index);
+  const realRoot = realpathSync(base);
   const out = [];
   for (const r of rows) {
     const get = (c) => (col[c] === undefined ? '' : (r[col[c]] ?? '').trim());
@@ -224,22 +266,38 @@ function readIndex(env, index) {
       env.summary.duplicates.push({ path: get('original_path') || '(no path)', of: null, reason: note || 'not copied by the index (no vault_path)' });
       continue;
     }
-    const abs = isAbsolute(vaultPath) ? vaultPath : resolve(base, vaultPath);
-    const inside = relative(env.folder, abs);
-    const rel = inside && !inside.startsWith('..') && !isAbsolute(inside) ? toPosix(inside) : toPosix(vaultPath).replace(/^\/+/, '');
-    // The same skip rules as a folder walk, applied to every folder on the path.
-    const segs = rel.split('/');
-    let reason = null;
-    for (let i = 1; i < segs.length && !reason; i++) {
-      const dirRel = segs.slice(0, i).join('/');
-      reason = dirSkipReason(env, dirRel, inside.startsWith('..') ? null : resolve(env.folder, dirRel));
-    }
-    if (!reason && segs.at(-1).startsWith('.')) reason = 'hidden file';
-    if (reason) {
+    const skip = (path, reason) => {
       env.summary.files++;
-      env.summary.skipped.push({ path: rel, reason });
+      env.summary.skipped.push({ path, reason });
+    };
+    // Every path must stay inside the import root (the CSV's folder): no `..`, no absolute path elsewhere, no
+    // symbolic link, and no parent folder that resolves outside it.
+    if (vaultPath.split(/[\\/]/).includes('..')) { skip(vaultPath, 'outside import root'); continue; }
+    const abs = isAbsolute(vaultPath) ? resolve(vaultPath) : resolve(base, vaultPath);
+    const lexical = relative(base, abs);
+    if (lexical === '' || lexical.startsWith('..') || isAbsolute(lexical)) { skip(vaultPath, 'outside import root'); continue; }
+    const rel = toPosix(lexical);
+    let st;
+    try {
+      st = lstatSync(abs);
+    } catch {
+      skip(rel, 'file not found');
       continue;
     }
+    if (st.isSymbolicLink()) { skip(rel, 'symbolic link'); continue; }
+    if (!st.isFile()) { skip(rel, 'not a file'); continue; }
+    let realRel;
+    try {
+      realRel = relative(realRoot, realpathSync(dirname(abs)));
+    } catch {
+      skip(rel, 'file not found');
+      continue;
+    }
+    if (realRel.startsWith('..') || isAbsolute(realRel)) { skip(rel, 'outside import root'); continue; }
+    // The same skip rules as a folder walk, on the path as written and on the path as it resolves.
+    const resolvedRel = [toPosix(realRel), rel.split('/').pop()].filter(Boolean).join('/');
+    const reason = pathSkipReason(env, rel, base) ?? pathSkipReason(env, resolvedRel, realRoot);
+    if (reason) { skip(rel, reason); continue; }
     out.push({ rel, abs, md5: get('md5').toLowerCase(), note });
   }
   return out;
@@ -250,10 +308,10 @@ function readIndex(env, index) {
 async function importOne(env, entry) {
   const { ctx, summary } = env;
   const { rel, abs } = entry;
-  if (!existsSync(abs) || !statSync(abs).isFile()) {
-    summary.skipped.push({ path: rel, reason: 'file not found' });
-    return;
-  }
+  const st = existsSync(abs) ? lstatSync(abs) : null;
+  if (!st) { summary.skipped.push({ path: rel, reason: 'file not found' }); return; }
+  if (st.isSymbolicLink()) { summary.skipped.push({ path: rel, reason: 'symbolic link' }); return; }
+  if (!st.isFile()) { summary.skipped.push({ path: rel, reason: 'not a file' }); return; }
   const filename = rel.split('/').pop();
   const buffer = readFileSync(abs);
   if (entry.md5 && createHash('md5').update(buffer).digest('hex') !== entry.md5) {
@@ -274,6 +332,13 @@ async function importOne(env, entry) {
     return;
   }
   if (inVault) { summary.existing++; return; }
+  // The same source path imported before with other bytes: the file changed since (it is filed as a new document).
+  const earlier = ctx.db.prepare(
+    "SELECT DISTINCT document_id AS id FROM versions WHERE json_extract(input_json, '$.import.source_path') = ? ORDER BY document_id",
+  ).all(rel).map((r) => r.id);
+  if (earlier.length) {
+    summary.warnings.push({ path: rel, code: 'SOURCE_CHANGED', message: `SOURCE_CHANGED: imported before as ${earlier.join(', ')} with different bytes` });
+  }
 
   const extracted = await extractText(buffer, { filename });
   const late = secretReason({ filename, buffer, text: extracted.text });

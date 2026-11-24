@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { appendFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -81,14 +81,15 @@ test('folder import classifies, dedupes, parses numbers, flags conflicts, create
 
   // Skips: dotfiles, node_modules, generator source (by name and by package.json), restricted, secrets.
   const skipped = Object.fromEntries(s.skipped.map((x) => [x.path, x.reason]));
-  assert.equal(skipped['.DS_Store'], 'hidden file');
+  assert.equal(skipped['.DS_Store'], undefined, '.DS_Store files are counted, not listed');
+  assert.equal(s.ignoredDsStore, 1);
   assert.equal(skipped['node_modules/'], 'node_modules');
   assert.equal(skipped['09 Generator Source/'], 'generator source code');
   assert.match(skipped['01 Company/tools/'], /package\.json/);
   assert.match(skipped['10 Restricted - Security/'], /restricted/);
   assert.match(skipped[`${EISS_INV}/signing.key`], /^secret \(file extension \.key\)/);
   assert.match(skipped['01 Company/notes.txt'], /^secret \(content contains/);
-  assert.equal(s.skipped.length, 7);
+  assert.equal(s.skipped.length, 6);
 
   // Dedupe: the identical MoU copy is not a second document.
   assert.equal(s.deduped, 1);
@@ -263,3 +264,114 @@ test('parseCsv and folderEntityName', () => {
   assert.deepEqual(folderEntityName('Example Institute (EI)'), { name: 'Example Institute', aliases: ['EI'] });
   assert.deepEqual(folderEntityName('  Plain   Name '), { name: 'Plain Name', aliases: [] });
 });
+
+// ---------- fix round 1: no way past the skip rules ----------
+
+/** Write an index CSV (rows of vault_path, note) into `dir`. */
+function writeIndex(dir, rows) {
+  const lines = ['original_path,vault_path,vault_folder,md5,size_bytes,note', ...rows.map(([p, note = '']) => `x,"${p}",,,,${note}`)];
+  writeFileSync(join(dir, '_index.csv'), `${lines.join('\n')}\n`);
+  return join(dir, '_index.csv');
+}
+
+test('CSV paths outside the import root (absolute or with ..) are refused', () => setup(async ({ ctx, vault }) => {
+  const outside = join(vault, '..', 'outside');
+  mkdirSync(outside);
+  writeFileSync(join(outside, 'secret-plan.md'), '# outside the root (fixture)');
+  const index = writeIndex(vault, [
+    [join(outside, 'secret-plan.md')],
+    ['../outside/secret-plan.md'],
+    ['03 Clients/../../outside/secret-plan.md'],
+    ['05 Templates/letter-template.md'],
+  ]);
+  const s = await importFolder(ctx, { folder: vault, index });
+  assert.deepEqual(s.skipped.map((x) => x.reason), ['outside import root', 'outside import root', 'outside import root']);
+  assert.equal(s.imported, 1);
+  assert.equal(count(ctx, 'documents'), 1);
+}));
+
+test('CSV rows that are symbolic links, or whose folder links outside the root, are refused', () => setup(async ({ ctx, vault }) => {
+  const outside = join(vault, '..', 'outside');
+  mkdirSync(outside);
+  writeFileSync(join(outside, 'elsewhere.md'), '# outside the root (fixture)');
+  symlinkSync(join(outside, 'elsewhere.md'), join(vault, '05 Templates', 'linked.md'));
+  symlinkSync(outside, join(vault, '08 References', 'linked-folder'));
+  symlinkSync(join(vault, '10 Restricted - Security'), join(vault, '08 References', 'inner-link'));
+  const index = writeIndex(vault, [
+    ['05 Templates/linked.md'],
+    ['08 References/linked-folder/elsewhere.md'],
+    ['08 References/inner-link/vault-notes.txt'],
+  ]);
+  const s = await importFolder(ctx, { folder: vault, index });
+  assert.deepEqual(s.skipped.map((x) => x.reason), ['symbolic link', 'outside import root', 'restricted folder (never imported)']);
+  assert.equal(s.imported, 0);
+  assert.equal(count(ctx, 'documents'), 0);
+}));
+
+test('a Restricted folder below the top level is never imported (folder and CSV mode)', () => setup(async ({ ctx, vault }) => {
+  const nested = [
+    '03 Clients/Events/Sample Society of Placeholders/10 Restricted/payroll.txt',
+    '02 People/Restricted \u2013 Payroll/salary.txt',
+    '01 Company/Restricted - Security/Security/token-notes.txt',
+  ];
+  for (const p of nested) {
+    mkdirSync(join(vault, p, '..'), { recursive: true });
+    writeFileSync(join(vault, p), `restricted fixture ${p}`);
+  }
+  const s = await importFolder(ctx, { folder: vault, dryRun: true });
+  for (const p of nested) assert.ok(!s.documents.some((d) => d.path === p), p);
+  const reasons = Object.fromEntries(s.skipped.map((x) => [x.path, x.reason]));
+  assert.equal(reasons['03 Clients/Events/Sample Society of Placeholders/10 Restricted/'], 'restricted folder (never imported)');
+  assert.equal(reasons['02 People/Restricted \u2013 Payroll/'], 'restricted folder (never imported)');
+  assert.equal(reasons['01 Company/Restricted - Security/'], 'restricted folder (never imported)');
+
+  const csv = await importFolder(ctx, { folder: vault, index: writeIndex(vault, nested.map((p) => [p])) });
+  assert.deepEqual(csv.skipped.map((x) => x.reason), nested.map(() => 'restricted folder (never imported)'));
+  assert.equal(count(ctx, 'documents'), 0);
+}));
+
+test('a "Scripts" folder of documents imports; src/scripts folders with code are skipped', () => setup(async ({ ctx, vault }) => {
+  mkdirSync(join(vault, '08 References', 'Scripts'));
+  writeFileSync(join(vault, '08 References', 'Scripts', 'event-host-script.md'), '# Host script (fixture)');
+  mkdirSync(join(vault, '01 Company', 'scripts'));
+  writeFileSync(join(vault, '01 Company', 'scripts', 'run.py'), '# fixture');
+  mkdirSync(join(vault, '01 Company', 'src'));
+  writeFileSync(join(vault, '01 Company', 'src', 'make.mjs'), '// fixture');
+  const s = await importFolder(ctx, { folder: vault, dryRun: true });
+  assert.ok(docByPath(s, 'Scripts/event-host-script.md'));
+  const reasons = Object.fromEntries(s.skipped.map((x) => [x.path, x.reason]));
+  assert.equal(reasons['01 Company/scripts/'], 'generator source code');
+  assert.equal(reasons['01 Company/src/'], 'generator source code');
+}));
+
+test('a source path imported before with other bytes is reported as SOURCE_CHANGED', () => setup(async ({ ctx, vault }) => {
+  await importFolder(ctx, { folder: vault });
+  const rel = '08 References/style-guide.md';
+  appendFileSync(join(vault, rel), 'edited after the first import (fixture)\n');
+  const s = await importFolder(ctx, { folder: vault });
+  assert.equal(s.imported, 1);
+  const w = s.warnings.find((x) => x.path === rel);
+  assert.equal(w.code, 'SOURCE_CHANGED');
+  assert.match(w.message, /^SOURCE_CHANGED: imported before as DOC-\d{6}/);
+}));
+
+test('folder mode skips root index/spec files and counts .DS_Store files', () => setup(async ({ ctx, vault }) => {
+  writeFileSync(join(vault, '_index.csv'), 'original_path,vault_path\n');
+  writeFileSync(join(vault, 'VAULT_HIERARCHY.md'), '# spec (fixture)');
+  writeFileSync(join(vault, '05 Templates', '.DS_Store'), 'x');
+  writeFileSync(join(vault, '05 Templates', '_notes.csv'), 'a,b\n');
+  const s = await importFolder(ctx, { folder: vault, dryRun: true });
+  const reasons = Object.fromEntries(s.skipped.map((x) => [x.path, x.reason]));
+  assert.equal(reasons['_index.csv'], 'index/spec file');
+  assert.equal(reasons['VAULT_HIERARCHY.md'], 'index/spec file');
+  assert.ok(docByPath(s, '05 Templates/_notes.csv'), 'only root-level files are index/spec files');
+  assert.equal(s.ignoredDsStore, 2);
+}));
+
+test('renditions.blob_sha256 is indexed (the importer looks files up by hash)', () => setup(async ({ ctx }) => {
+  const indexes = ctx.db.prepare("SELECT name FROM pragma_index_list('renditions')").all().map((r) => r.name);
+  assert.ok(indexes.includes('renditions_blob'));
+  const cols = ctx.db.prepare("SELECT name FROM pragma_index_info('renditions_blob')").all().map((r) => r.name);
+  assert.deepEqual(cols, ['blob_sha256']);
+}));
+

@@ -211,6 +211,7 @@ export function renderImportSummary(s) {
     ['Numbers parsed', s.numbers.length],
     ['Number conflicts', s.conflicts.length],
     ['Skipped', s.skipped.length],
+    ['Ignored .DS_Store', s.ignoredDsStore ?? 0],
     ['Warnings', s.warnings.length],
   ];
   const table = (list) => {
