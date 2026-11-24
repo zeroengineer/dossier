@@ -207,6 +207,17 @@ describe('MCP server (in-memory transport)', () => {
     assert.equal((await err('list_templates', { extra: 1 })).code, 'INVALID_INPUT');
   });
 
+  test('a negative salary is a tool error that names the row; render failures keep their message', async () => {
+    const input = { ...fixtureInput('offer-letter'), earnings: [{ label: 'Basic Salary', monthly: '-10,000' }] };
+    const bad = await err('generate_document', { template_id: 'offer-letter', input });
+    assert.equal(bad.code, 'FIELDS_INVALID');
+    assert.match(bad.message, /earnings\.0: salary amounts must not be negative/);
+    const render = errorPayload(new DossierError('TEMPLATE_RENDER_FAILED', 'Template "x" could not render this input: boom', { templateId: 'x' }));
+    assert.equal(render.code, 'TEMPLATE_RENDER_FAILED');
+    assert.match(render.message, /boom/);
+    assert.ok(render.hint.length > 0);
+  });
+
   test('lifecycle wording comes from domain/status.js', async () => {
     const tool = (await client.listTools()).tools.find((t) => t.name === 'update_status');
     assert.ok(tool.description.includes(LIFECYCLE));

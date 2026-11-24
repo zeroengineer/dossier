@@ -127,8 +127,22 @@ export function placeholderWarnings(names) {
  * @param {{ brand: object|string, number?: string|null, draft?: boolean, creationDate: Date|string, input?: object }} opts
  * @returns {Promise<Array<{ kind: 'pdf'|'html'|'md', buffer: Buffer, mime: string }> & { warnings: object[] }>}
  *   `warnings`: body placeholders that had no value (PLACEHOLDER_EMPTY, see placeholderWarnings).
+ *   A non-DossierError thrown by template or frame code becomes TEMPLATE_RENDER_FAILED (message only, HTTP 422).
  */
-export async function renderRenditions(ctx, template, values, { brand, number = null, draft = false, creationDate, input = {} }) {
+export async function renderRenditions(ctx, template, values, opts) {
+  try {
+    return await renderAll(ctx, template, values, opts);
+  } catch (err) {
+    if (err instanceof DossierError) throw err;
+    // Template and frame code throws plain errors for input it cannot print (a negative salary row, an amount out of
+    // range): report the message, never the stack, as a client error the user or agent can act on.
+    const templateId = template?.meta?.id ?? null;
+    throw new DossierError('TEMPLATE_RENDER_FAILED', `Template "${templateId}" could not render this input: ${err?.message ?? String(err)}`,
+      { templateId, hint: 'Check the field values the message names (e.g. negative or out-of-range amounts) and try again.' });
+  }
+}
+
+async function renderAll(ctx, template, values, { brand, number = null, draft = false, creationDate, input = {} }) {
   const { meta, module } = template;
   const brandObj = typeof brand === 'string' ? ctx.ws.brands.get(brand) : brand;
   if (!brandObj) throw new DossierError('BRAND_NOT_FOUND', `No brand "${brand}" in the workspace`, { brandId: brand });

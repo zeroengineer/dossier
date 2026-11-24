@@ -19,6 +19,7 @@ export function salary(values) {
     if (!Number.isInteger(e.monthly)) throw new Error(`earnings.${i}.monthly is required`);
     const annual = e.annual ?? e.monthly * 12;
     if (!Number.isInteger(annual)) throw new Error(`earnings.${i}.annual must be an amount`);
+    if (e.monthly < 0 || annual < 0) throw new Error(`earnings.${i}: salary amounts must not be negative`);
     return { label: e.label.trim(), monthly: e.monthly, annual };
   });
   let monthly = 0;

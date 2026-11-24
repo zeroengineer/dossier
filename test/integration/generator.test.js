@@ -4,6 +4,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { tmpDir } from '../helpers/tmp.js';
+import { DossierError } from '../../src/errors.js';
 import { extractItems } from '../helpers/pdfText.js';
 import { initWorkspace } from '../../src/workspace/index.js';
 import { openContext } from '../../src/context.js';
@@ -299,6 +300,24 @@ test('another connection taking the peeked number forces a re-render; rolled-bac
     other.close();
   }
 }, { file: true }));
+
+test('a plain error thrown by template code is TEMPLATE_RENDER_FAILED with its message; DossierErrors keep their code', () => withCtx(async (ctx) => {
+  const docs = () => count(ctx, 'SELECT COUNT(*) AS n FROM documents');
+  const seqs = () => JSON.stringify(ctx.db.prepare("SELECT * FROM sequences WHERE scope_key LIKE 'num:%'").all());
+  const before = [docs(), seqs()];
+  try {
+    globalThis.__dossierRenderHook = () => { throw new RangeError('amount must not be negative'); };
+    for (const run of [() => previewDocument(ctx, 'test-note', INPUT), () => generateDocument(ctx, 'test-note', INPUT)]) {
+      await assert.rejects(run(), (e) => e?.code === 'TEMPLATE_RENDER_FAILED' && /test-note/.test(e.message)
+        && /amount must not be negative/.test(e.message) && e.details.templateId === 'test-note' && !/at /.test(e.message));
+    }
+    globalThis.__dossierRenderHook = () => { throw new DossierError('FIELDS_INVALID', 'own check'); };
+    await assert.rejects(generateDocument(ctx, 'test-note', INPUT), code('FIELDS_INVALID'));
+  } finally {
+    delete globalThis.__dossierRenderHook;
+  }
+  assert.deepEqual([docs(), seqs()], before, 'nothing filed and no number used');
+}));
 
 test('canonicalJson sorts keys and rejects values JSON cannot carry', () => {
   assert.equal(canonicalJson({ b: 1, a: [true, null, { d: 'x', c: undefined }] }), '{"a":[true,null,{"d":"x"}],"b":1}');

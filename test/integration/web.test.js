@@ -217,6 +217,30 @@ describe('JSON API', () => {
     assert.equal(fail.statusCode, 400);
     assert.equal(fail.json().code, 'FIELDS_MISSING');
   });
+
+  test('a negative salary on an offer letter is a 400 naming the row, not a 500', async () => {
+    const input = { ...fixtureInput('offer-letter'), earnings: [{ label: 'Basic Salary', monthly: '-10,000' }] };
+    for (const step of ['preview', 'generate']) {
+      const r = await api('POST', `/api/templates/offer-letter/${step}`, { input });
+      assert.equal(r.statusCode, 400, r.body);
+      const body = r.json();
+      const messages = step === 'preview' ? body.errors.map((e) => e.message).join(' ') : body.message;
+      assert.match(messages, /earnings\.0: salary amounts must not be negative/);
+      if (step === 'generate') assert.equal(body.code, 'FIELDS_INVALID');
+    }
+  });
+
+  test('an impossible date on the metadata API is a 400', async () => {
+    const d = createDocument(ctx, { type: 'Letter', title: 'Date check' });
+    for (const bad of ['2026-13-45', '2026-02-30']) {
+      const r = await api('POST', `/api/documents/${d.id}/metadata`, { docDate: bad });
+      assert.equal(r.statusCode, 400, r.body);
+      assert.equal(r.json().code, 'INVALID_INPUT');
+      assert.match(r.json().message, /docDate must be a date YYYY-MM-DD/);
+    }
+    const form = await post(`/documents/${d.id}/metadata`, { title: 'Date check', docDate: '2026-13-45' });
+    assert.equal(form.statusCode, 400);
+  });
 });
 
 describe('upload', () => {

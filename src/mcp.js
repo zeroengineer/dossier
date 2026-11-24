@@ -44,6 +44,7 @@ const HINTS = {
   NUMBER_CONTENDED: 'Another process kept taking the next number; call generate_document again.',
   TEMPLATE_INVALID: 'The template folder is broken; list_templates reports load errors under "errors".',
   TEMPLATE_SYNTAX: 'The template body has a syntax error; fix the template folder.',
+  TEMPLATE_RENDER_FAILED: 'The template could not print this input (see the message); fix the named values and retry.',
   SECRET_REJECTED: 'Keys and credentials never belong in the vault; remove them.',
   WORKSPACE_INVALID: 'A workspace file does not load (details.file names it); fix it, then retry. Nothing runs until it loads.',
   TOOL_NOT_FOUND: 'Call tools/list for the available tools.',
