@@ -212,7 +212,9 @@ export function upsertEntity(ctx, input) {
   return ctx.repo.tx(() => {
     // -- aliasOf: everything becomes an alias of the target
     if (hasAliasOf) {
-      const target = resolveRow(ctx, aliasOf);
+      // A name is looked up within the entity's kind (the same name may belong to entities of other kinds); a numeric
+      // id is resolved as is so a wrong kind is reported as such.
+      const target = resolveRow(ctx, aliasOf, typeof aliasOf === 'number' ? undefined : kind);
       if (target.kind !== kind) throw invalid(`aliasOf names a ${target.kind}, not a ${kind}`, { aliasOf, kind });
       for (const n of [main, ...extra]) {
         const owner = ownerOf(ctx, kind, n.key);

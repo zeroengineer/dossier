@@ -124,6 +124,17 @@ test('aliasOf adds the name and aliases as aliases of the named entity instead o
   assert.throws(() => upsertEntity(ctx, { kind: 'company', name: 'Acme X', aliasOf: 'no such company' }), code('ENTITY_NOT_FOUND'));
 }));
 
+test('aliasOf by name resolves within the entity kind (a name shared across kinds is not ambiguous)', () => withCtx((ctx) => {
+  upsertEntity(ctx, { kind: 'company', name: 'Shared Example Name' });
+  const client = upsertEntity(ctx, { kind: 'client', name: 'Shared Example Name' });
+  const r = upsertEntity(ctx, { kind: 'client', name: 'SEN', aliasOf: 'shared example name' });
+  assert.equal(r.id, client.id);
+  assert.deepEqual(r.aliases, ['SEN']);
+  // a name that only another kind owns is not found for this kind
+  upsertEntity(ctx, { kind: 'vendor', name: 'Vendor Only Example' });
+  assert.throws(() => upsertEntity(ctx, { kind: 'client', name: 'VOE', aliasOf: 'Vendor Only Example' }), code('ENTITY_NOT_FOUND'));
+}));
+
 test('invalid input is rejected with INVALID_INPUT', () => withCtx((ctx) => {
   assert.throws(() => upsertEntity(ctx, { kind: 'planet', name: 'Mars' }), code('INVALID_INPUT'));
   assert.throws(() => upsertEntity(ctx, { kind: 'client', name: ' ... ' }), code('INVALID_INPUT'));
