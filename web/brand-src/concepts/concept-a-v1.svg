@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title">
+  <title id="title">Dossier concept A: Bound D</title>
+  <path id="bowl" fill="#000" fill-rule="evenodd" d="M100 24H120A104 104 0 0 1 120 232H100V188H120A60 60 0 0 0 120 68H100Z"/>
+  <path id="accent" fill="#000" fill-rule="evenodd" d="M32 24H76V232H32Z"/>
+</svg>

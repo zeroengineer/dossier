@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title">
+  <title id="title">Dossier concept B on dark</title>
+  <rect width="256" height="256" fill="#141416"/>
+  <path id="slab" fill="#fff" fill-rule="evenodd" d="M48 40H208A16 16 0 0 1 224 56V100A16 16 0 0 1 208 116H170.33A44 44 0 0 0 85.67 116H48A16 16 0 0 1 32 100V56A16 16 0 0 1 48 40Z"/>
+  <path id="slab" fill="#fff" fill-rule="evenodd" d="M48 140H85.67A44 44 0 0 0 170.33 140H208A16 16 0 0 1 224 156V200A16 16 0 0 1 208 216H48A16 16 0 0 1 32 200V156A16 16 0 0 1 48 140Z"/>
+  <path id="accent" fill="#e5484d" fill-rule="evenodd" d="M100 128A28 28 0 1 0 156 128A28 28 0 1 0 100 128Z"/>
+</svg>

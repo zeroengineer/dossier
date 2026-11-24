@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title">
+  <title id="title">Dossier concept C: Tabbed monogram</title>
+  <path id="jacket" fill="#000" fill-rule="evenodd" d="M60 28H172A32 32 0 0 1 204 60V196A32 32 0 0 1 172 228H60A32 32 0 0 1 28 196V60A32 32 0 0 1 60 28ZM72 76V180H108A52 52 0 0 0 108 76Z"/>
+  <path id="accent" fill="#000" fill-rule="evenodd" d="M204 40H228A8 8 0 0 1 236 48V88A8 8 0 0 1 228 96H204Z"/>
+</svg>

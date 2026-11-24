@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title">
+  <title id="title">Dossier concept C on dark</title>
+  <rect width="256" height="256" fill="#141416"/>
+  <path id="jacket" fill="#fff" fill-rule="evenodd" d="M56 28H168A32 32 0 0 1 200 60V196A32 32 0 0 1 168 228H56A32 32 0 0 1 24 196V60A32 32 0 0 1 56 28ZM68 76V180H104A52 52 0 0 0 104 76Z"/>
+  <path id="accent" fill="#e5484d" fill-rule="evenodd" d="M200 60H222A10 10 0 0 1 232 70V114A10 10 0 0 1 222 124H200Z"/>
+</svg>
