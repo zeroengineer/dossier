@@ -7,7 +7,8 @@ import { Money } from "@/components/money"
 import { SensitivityBadge } from "@/components/sensitivity-badge"
 import { StatusBadge } from "@/components/status-badge"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { EditMetadataDialog } from "./edit-metadata-dialog"
 
 const NONE = <span className="text-muted-foreground">—</span>
 
@@ -30,12 +31,15 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   )
 }
 
-/** Read-only document metadata: number, dates, amount, party, issuer, template and audit dates. */
+/** Document metadata (title, number, dates and sensitivity editable through the Edit dialog): number, dates, amount, party, issuer, template and audit dates. */
 export function DocumentMetadata({ doc }: { doc: DocumentDetail }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Details</CardTitle>
+        <CardAction>
+          <EditMetadataDialog doc={doc} />
+        </CardAction>
       </CardHeader>
       <CardContent>
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2" aria-label="Document details">

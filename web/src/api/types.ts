@@ -315,3 +315,49 @@ export interface DocumentPartyOption {
   kind: string
   name: string
 }
+
+// document actions
+
+/**
+ * Body of `POST /api/documents/:id/metadata` (src/services/documents.js updateMetadata): the fields the document page
+ * edits. Omitted fields stay as they are; null clears a date or the number. Status changes go through `/status`.
+ */
+export interface DocumentMetadataPatch {
+  title?: string
+  docNumber?: string | null
+  docDate?: string | null
+  dueDate?: string | null
+  sensitivity?: SensitivityLevel
+}
+
+/** Answer of `POST /api/documents/:id/metadata`: the document plus warnings (`NUMBER_CONFLICT`). */
+export interface DocumentMetadataResult extends DocumentDetail {
+  warnings: string[]
+}
+
+/** Body of `POST /api/documents/:id/links`: relate this document `--type-->` `toId`. */
+export interface DocumentLinkInput {
+  toId: string
+  type: string
+  attrs?: Record<string, unknown>
+}
+
+/** `201` answer of `POST /api/documents/:id/links` (src/services/documents.js relationView). */
+export interface DocumentLink {
+  id: number
+  from: string
+  /** A document id, or `template:<id>@<version>` for `generated_from`. */
+  to: string
+  type: string
+  attrs: Record<string, unknown>
+}
+
+/** Answer of `DELETE /api/documents/:id/links?toId&type`: false when the link did not exist. */
+export interface DocumentUnlinkResult {
+  removed: boolean
+}
+
+/** The part of `GET /api/search` the link picker reads (src/services/search.js SearchHit). */
+export interface DocumentLinkSearch {
+  hits: Array<{ document: DocumentSummary; score: number; match: "number" | "metadata" | "text"; snippet: string | null }>
+}

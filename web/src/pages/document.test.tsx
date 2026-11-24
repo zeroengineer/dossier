@@ -7,7 +7,7 @@ import { server } from "@/test/server"
 const viewer = async () => within(await screen.findByTestId("document-viewer"))
 
 describe("Document page", () => {
-  it("shows the title, number, status and sensitivity in the header, with an empty action area", async () => {
+  it("shows the title, number, status and sensitivity in the header, with the action bar", async () => {
     renderApp("/documents/DOC-000001")
     expect(await screen.findByRole("heading", { level: 1, name: "Event services invoice" })).toBeInTheDocument()
     expect(screen.getByText("DOC-000001 · invoice")).toBeInTheDocument()
@@ -15,7 +15,10 @@ describe("Document page", () => {
     expect(within(header).getByText("ACM-2026-0007")).toBeInTheDocument()
     expect(within(header).getByText("Sent")).toBeInTheDocument()
     expect(within(header).getByText("Internal")).toBeInTheDocument()
-    expect(screen.getByTestId("document-actions")).toBeEmptyDOMElement()
+    const actions = within(screen.getByTestId("document-actions"))
+    expect(actions.getByRole("button", { name: "Change status" })).toBeInTheDocument()
+    expect(actions.getByRole("link", { name: "Regenerate" })).toBeInTheDocument()
+    expect(actions.getByRole("button", { name: "Download" })).toBeInTheDocument()
   })
 
   it("previews the current version's PDF in an iframe and offers its other renditions as tabs", async () => {

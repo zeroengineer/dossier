@@ -1,20 +1,71 @@
-import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react"
+import { ArrowLeftIcon, ArrowRightIcon, Link2OffIcon } from "lucide-react"
 import { Link } from "react-router"
-import type { DocumentRelation } from "@/api/types"
+import { toast } from "sonner"
+import { useUnlinkDocument } from "@/api/document-actions"
+import type { DocumentDetail, DocumentRelation } from "@/api/types"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { StatusBadge } from "@/components/status-badge"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { AddLinkDialog, relationLabel } from "./add-link-dialog"
 
-/** `based_on` → `based on`. */
-const relationLabel = (type: string) => type.replaceAll("_", " ")
+/**
+ * The `DELETE /api/documents/:from/links?toId&type` call that removes `r`: outgoing links start at this document,
+ * incoming ones at the other document; a template end is `template:<id>@<version>`.
+ */
+export function unlinkTarget(docId: string, r: DocumentRelation): { fromId: string; toId: string; type: string } | null {
+  if (r.direction === "out") {
+    if (r.document) return { fromId: docId, toId: r.document.id, type: r.type }
+    if (r.template) return { fromId: docId, toId: `template:${r.template.id}@${r.template.version}`, type: r.type }
+    return null
+  }
+  return r.document ? { fromId: r.document.id, toId: docId, type: r.type } : null
+}
 
-/** Related documents in both directions (and template origins), each linking to the other end. */
-export function DocumentRelations({ relations }: { relations: DocumentRelation[] }) {
+function otherEnd(r: DocumentRelation): string {
+  if (r.document) return r.document.docNumber ?? r.document.title
+  if (r.template) return `template ${r.template.id} v${r.template.version}`
+  return "the other end"
+}
+
+function RemoveLink({ doc, relation }: { doc: DocumentDetail; relation: DocumentRelation }) {
+  const mutation = useUnlinkDocument()
+  const target = unlinkTarget(doc.id, relation)
+  if (!target) return null
+  const label = relation.direction === "out" ? relationLabel(relation.type) : `${relationLabel(relation.type)} (incoming)`
+  return (
+    <ConfirmDialog
+      title="Remove this link?"
+      description={`The "${label}" link between ${doc.docNumber ?? doc.title} and ${otherEnd(relation)} is removed. Both documents stay as they are.`}
+      confirmLabel="Remove link"
+      pending={mutation.isPending}
+      onConfirm={() =>
+        mutation.mutateAsync(target).then(({ removed }) => {
+          if (removed) toast.success("Link removed")
+          else toast.info("That link was already gone")
+        })
+      }
+      trigger={
+        <Button variant="ghost" size="icon-sm" aria-label={`Remove link ${label} ${otherEnd(relation)}`}>
+          <Link2OffIcon />
+        </Button>
+      }
+    />
+  )
+}
+
+/** Related documents in both directions (and template origins), each linking to the other end, with add/remove. */
+export function DocumentRelations({ doc }: { doc: DocumentDetail }) {
+  const relations = doc.relations
   return (
     <Card>
       <CardHeader>
         <CardTitle>Related documents</CardTitle>
         <CardDescription>Links from this document and to it.</CardDescription>
+        <CardAction>
+          <AddLinkDialog doc={doc} />
+        </CardAction>
       </CardHeader>
       <CardContent>
         {relations.length ? (
@@ -39,7 +90,10 @@ export function DocumentRelations({ relations }: { relations: DocumentRelation[]
                     <span className="font-medium">Template {r.template.id}</span>
                     <Badge variant="secondary">v{r.template.version}</Badge>
                   </span>
-                ) : null}
+                ) : (
+                  <span className="flex-1" />
+                )}
+                <RemoveLink doc={doc} relation={r} />
               </li>
             ))}
           </ul>

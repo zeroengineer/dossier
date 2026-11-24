@@ -82,7 +82,7 @@ export default function DocumentPage() {
         <div className="flex min-w-0 flex-col gap-6">
           <DocumentMetadata doc={doc} />
           <DocumentEntities entities={doc.entities} />
-          <DocumentRelations relations={doc.relations} />
+          <DocumentRelations doc={doc} />
         </div>
       </div>
     </div>
