@@ -1,0 +1,17 @@
+{
+  "id": "test-memo",
+  "version": 1,
+  "type": "Memo",
+  "title": "Test memo",
+  "category": "letter",
+  "layoutProfile": "letter",
+  "partyType": "Person",
+  "partyKind": "person",
+  "sensitivity": "Internal",
+  "renditions": ["pdf", "md"],
+  "fields": [
+    { "name": "person", "label": "Recipient", "source": "entity:person", "required": true },
+    { "name": "date", "source": "today", "type": "date" },
+    { "name": "text", "label": "Text", "source": "ask", "type": "text", "required": true }
+  ]
+}

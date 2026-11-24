@@ -35,15 +35,28 @@ const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArr
  * @param {unknown} v
  * @returns {string}
  */
-export function canonicalJson(v) {
-  if (v instanceof Date) return JSON.stringify(v.toISOString());
-  if (Array.isArray(v)) return `[${v.map((x) => (x === undefined ? 'null' : canonicalJson(x))).join(',')}]`;
-  if (isPlainObject(v)) {
-    const keys = Object.keys(v).filter((k) => v[k] !== undefined).sort();
-    return `{${keys.map((k) => `${JSON.stringify(k)}:${canonicalJson(v[k])}`).join(',')}}`;
+export function canonicalJson(v, path = 'input') {
+  if (v === null || typeof v === 'string' || typeof v === 'boolean') return JSON.stringify(v);
+  if (typeof v === 'number') {
+    if (!Number.isFinite(v)) throw unsupported(path, String(v));
+    return JSON.stringify(v);
   }
-  return JSON.stringify(v ?? null);
+  if (v instanceof Date) {
+    if (Number.isNaN(v.getTime())) throw unsupported(path, 'an invalid Date');
+    return JSON.stringify(v.toISOString());
+  }
+  if (Array.isArray(v)) {
+    return `[${v.map((x, i) => (x === undefined ? 'null' : canonicalJson(x, `${path}.${i}`))).join(',')}]`;
+  }
+  if (isPlainObject(v) && [Object.prototype, null].includes(Object.getPrototypeOf(v))) {
+    const keys = Object.keys(v).filter((k) => v[k] !== undefined).sort();
+    return `{${keys.map((k) => `${JSON.stringify(k)}:${canonicalJson(v[k], `${path}.${k}`)}`).join(',')}}`;
+  }
+  throw unsupported(path, typeof v === 'object' ? (v.constructor?.name ?? 'object') : typeof v);
 }
+
+const unsupported = (path, what) => new DossierError('INVALID_INPUT',
+  `${path}: ${what} is not supported in input (use strings, numbers, booleans, null, lists and plain objects)`, { path });
 
 function brandIdOf(ctx, brandId) {
   const id = brandId ?? ctx.ws.config.defaultBrand;
@@ -96,7 +109,7 @@ export async function renderRenditions(ctx, template, values, { brand, number = 
   const { meta, module } = template;
   const brandObj = typeof brand === 'string' ? ctx.ws.brands.get(brand) : brand;
   if (!brandObj) throw new DossierError('BRAND_NOT_FOUND', `No brand "${brand}" in the workspace`, { brandId: brand });
-  const shownNumber = draft ? null : number;
+  const shownNumber = draft ? null : (number ?? null);
   const v = { ...values, number: shownNumber };
   const env = {
     ctx, brand: brandObj, meta, params: meta.params, fmt: createFormatter(ctx.ws.config.locale), input,
@@ -106,7 +119,7 @@ export async function renderRenditions(ctx, template, values, { brand, number = 
   const contact = meta.contact ?? 'default';
 
   let filledMd;
-  if (template.body !== undefined) filledMd = fillMarkdown(template.body, { ...v, number: shownNumber ?? DRAFT_NUMBER }).text;
+  if (template.body !== undefined) filledMd = fillMarkdown(template.body, { ...v, number: draft ? DRAFT_NUMBER : (shownNumber ?? '') }).text;
   let blocks;
   const getBlocks = () => {
     if (blocks) return blocks;
@@ -222,7 +235,7 @@ function signatoryEntity(ctx, meta, values) {
       try {
         return getEntity(ctx, v.name, { kind: 'person' });
       } catch (err) {
-        if (isDossierError(err)) return null;
+        if (isDossierError(err, 'ENTITY_NOT_FOUND')) return null;
         throw err;
       }
     }
@@ -280,30 +293,85 @@ function relationTargets(meta, values) {
 
 class NumberTaken extends Error {}
 
+/** Per-database, per-series tails of the in-process generation queue (peek, render and allocate run one at a time). */
+const seriesQueues = new WeakMap();
+
 /**
- * Generate a numbered document from a template (PLAN B7). Steps: resolve fields (FIELDS_MISSING / FIELDS_INVALID);
- * peek the next number; render every rendition with that number and `creationDate` = now; write the blob files; then
- * in ONE transaction allocate the number (re-rendering, up to 3 attempts, when another writer took the peeked number
- * meanwhile), create the document (party, amount from `values.total`, date from `values.date`, template sensitivity,
- * issuing brand and company), add version 1 with the canonical input, link `generated_from` and declared relations,
- * and record `document_entities` (party, signatory, issuer). No number is ever allocated without a stored version and
- * no async work runs inside the transaction.
- * With `documentId`: regenerate as the next version of that document, keeping its number; status resets to Draft
- * unless `status` is given.
+ * Run `fn` after every earlier queued generation for the same database and series has settled, so generations in one
+ * process never race for a number (NUMBER_CONTENDED then only comes from other processes).
+ */
+function inSeriesQueue(ctx, seriesId, fn) {
+  if (!seriesId) return fn();
+  let queues = seriesQueues.get(ctx.db);
+  if (!queues) seriesQueues.set(ctx.db, (queues = new Map()));
+  const prev = queues.get(seriesId) ?? Promise.resolve();
+  const run = prev.then(fn, fn);
+  const tail = run.then(() => {}, () => {});
+  queues.set(seriesId, tail);
+  tail.then(() => { if (queues.get(seriesId) === tail) queues.delete(seriesId); });
+  return run;
+}
+
+/** Statuses a document may be created with (generateDocument without documentId). */
+const CREATE_STATUSES = STATUSES.filter((s) => s !== 'Superseded');
+
+/** Check the requested status: on create any non-Superseded status; on regenerate Draft, or the current status with force. */
+function statusFor(existing, requested, force) {
+  if (!existing) {
+    if (requested !== undefined && !CREATE_STATUSES.includes(requested)) {
+      throw new DossierError('INVALID_INPUT', `status must be one of ${CREATE_STATUSES.join(', ')}`, { status: requested });
+    }
+    return requested ?? 'Draft';
+  }
+  if (existing.status === 'Superseded') {
+    throw new DossierError('INVALID_STATUS_TRANSITION', `${existing.id} is Superseded and cannot be regenerated`, { documentId: existing.id });
+  }
+  if (existing.status !== 'Draft' && !force) {
+    throw new DossierError('STATUS_LOCKED',
+      `${existing.id} is ${existing.status}; regenerating would put it back to Draft. Generate a new document and supersede this one, or pass force: true`,
+      { documentId: existing.id, status: existing.status, hint: 'Generate a new document and call supersede(old, new), or regenerate with force: true' });
+  }
+  const allowed = force ? [...new Set(['Draft', existing.status])] : ['Draft'];
+  const status = requested ?? 'Draft';
+  if (!allowed.includes(status)) {
+    throw new DossierError('INVALID_INPUT', `On regeneration status must be ${allowed.join(' or ')}`, { status, allowed });
+  }
+  return status;
+}
+
+/** Check declared relation targets: well-formed ids of existing documents the user may see, never the document itself. */
+function checkRelationTargets(ctx, targets, selfId) {
+  for (const t of targets) {
+    const row = requireDoc(ctx, t.to);
+    if (row.id === selfId) throw new DossierError('INVALID_INPUT', `A document cannot relate to itself (${t.type})`, { id: selfId, type: t.type });
+  }
+}
+
+/**
+ * Generate a numbered document from a template (PLAN B7). Steps: resolve fields (FIELDS_MISSING / FIELDS_INVALID) and
+ * check declared relation targets; then, queued behind other generations of the same series in this process: peek the
+ * next number; render every rendition with that number and `creationDate` = now; write the blob files; then in ONE
+ * transaction allocate the number (re-rendering, up to 3 attempts, when another process took the peeked number
+ * meanwhile, else NUMBER_CONTENDED), create the document (party, amount from `values.total`, date from `values.date`,
+ * template sensitivity, issuing brand and company), add version 1 with the canonical input, link `generated_from` and
+ * declared relations, and record `document_entities` (party, signatory, issuer). No number is ever allocated without a
+ * stored version and no async work runs inside the transaction.
+ * With `documentId`: regenerate as the next version of that document (same template and brand), keeping its number.
+ * Only a Draft document can be regenerated; a Sent, Signed or Paid one is STATUS_LOCKED (supersede it instead) unless
+ * `force: true`, which resets it to Draft (or keeps its current status when `status` names it) and audits the reset.
  * @param {object} ctx
  * @param {string} templateId
  * @param {Record<string, unknown>} [input]
- * @param {{ brandId?: string, status?: string, documentId?: string, dirs?: string[], today?: string, note?: string }} [opts]
+ * @param {{ brandId?: string, status?: string, documentId?: string, force?: boolean, dirs?: string[], today?: string,
+ *   note?: string }} [opts]
  * @returns {Promise<{ documentId: string, number: string|null, versionNo: number,
  *   renditions: Array<{ kind: string, sha256: string, filename: string, bytes: number }> }>}
  */
 export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
   checkInput(input);
-  const { documentId, dirs, today, note } = opts;
-  if (opts.status !== undefined && (!STATUSES.includes(opts.status) || opts.status === 'Superseded')) {
-    throw new DossierError('INVALID_INPUT', `status must be one of ${STATUSES.filter((s) => s !== 'Superseded').join(', ')}`, { status: opts.status });
-  }
-  const status = opts.status ?? 'Draft';
+  const { documentId, dirs, today, note, force = false } = opts;
+  if (typeof force !== 'boolean') throw new DossierError('INVALID_INPUT', 'force must be a boolean', { force });
+  const inputJson = canonicalJson(input);
   const template = await getTemplate(ctx, templateId, { dirs });
   const { meta } = template;
   checkClearance(ctx, meta);
@@ -315,10 +383,12 @@ export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
       throw new DossierError('INVALID_INPUT', `${existing.id} was not generated from template "${meta.id}"`,
         { documentId: existing.id, templateId: existing.template_id ?? null });
     }
-    if (existing.status === 'Superseded') {
-      throw new DossierError('INVALID_STATUS_TRANSITION', `${existing.id} is Superseded and cannot be regenerated`, { documentId: existing.id });
+    if (opts.brandId !== undefined && existing.issuing_brand_id && opts.brandId !== existing.issuing_brand_id) {
+      throw new DossierError('INVALID_INPUT', `${existing.id} was issued by brand "${existing.issuing_brand_id}"; it cannot be regenerated for "${opts.brandId}"`,
+        { documentId: existing.id, brandId: opts.brandId, issuingBrandId: existing.issuing_brand_id });
     }
   }
+  const status = statusFor(existing, opts.status, force);
   const bid = brandIdOf(ctx, opts.brandId ?? existing?.issuing_brand_id ?? undefined);
 
   const { values, missing, errors } = resolveTemplateFields(ctx, template, input, { brandId: bid, today });
@@ -330,13 +400,13 @@ export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
   if (errors.length) {
     throw new DossierError('FIELDS_INVALID', `Invalid fields: ${errors.map((e) => `${e.name} (${e.message})`).join('; ')}`, { errors });
   }
+  checkRelationTargets(ctx, rel.targets, existing?.id);
 
   const party = partyOf(meta, values);
   const signer = signatoryEntity(ctx, meta, values);
   const issuer = issuerOf(ctx, bid);
   const docDate = typeof values.date === 'string' ? values.date : null;
   const amountMinor = Number.isSafeInteger(values.total) ? values.total : null;
-  const inputJson = canonicalJson(input);
   const templateRef = `template:${meta.id}@${meta.version}`;
   const generatedAttrs = { templateId: meta.id, templateVersion: meta.version, templateHash: template.hash, source: template.source };
   const metadata = {
@@ -362,7 +432,7 @@ export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
   const seriesId = existing ? existing.number_series : seriesFor(ctx, meta, bid);
   const vars = seriesId && !existing ? numberVars(meta, values, bid) : null;
 
-  for (let attempt = 1; ; attempt++) {
+  const attemptOnce = async () => {
     const number = existing ? existing.doc_number : seriesId ? peekNumber(ctx, seriesId, vars).number : null;
     const nextVersion = existing
       ? ctx.db.prepare('SELECT COALESCE(MAX(version_no), 0) + 1 AS n FROM versions WHERE document_id = ?').get(existing.id).n
@@ -382,49 +452,52 @@ export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
     // Blob files are written before the transaction (addVersion then finds them and only inserts rows).
     for (const r of renditions) storeBlobFile(ctx, r.buffer);
 
-    try {
-      const result = ctx.repo.tx(() => {
-        let id;
-        if (existing) {
-          const row = requireDoc(ctx, existing.id);
-          if (row.status === 'Superseded') {
-            throw new DossierError('INVALID_STATUS_TRANSITION', `${row.id} is Superseded and cannot be regenerated`, { documentId: row.id });
-          }
-          id = row.id;
-          updateMetadata(ctx, id, { ...metadata, entities });
-        } else {
-          let allocated = null;
-          if (seriesId) {
-            allocated = allocateNumber(ctx, seriesId, vars).number;
-            if (allocated !== number) throw new NumberTaken(allocated);
-          }
-          id = createDocument(ctx, {
-            ...metadata, status, entities,
-            ...(allocated ? { numberSeries: seriesId, docNumber: allocated } : {}),
-          }).id;
+    return ctx.repo.tx(() => {
+      let id;
+      if (existing) {
+        const row = requireDoc(ctx, existing.id);
+        statusFor(row, status === 'Draft' ? undefined : status, force); // the status may have moved since the check
+        id = row.id;
+        updateMetadata(ctx, id, { ...metadata, entities });
+      } else {
+        let allocated = null;
+        if (seriesId) {
+          allocated = allocateNumber(ctx, seriesId, vars).number;
+          if (allocated !== number) throw new NumberTaken(allocated);
         }
-        const version = addVersion(ctx, id, { inputJson, note: note ?? null, renditions });
-        if (existing) resetStatus(ctx, id, status, { reason: 'regenerate', versionNo: version.versionNo });
-        linkDocuments(ctx, id, templateRef, 'generated_from', generatedAttrs);
-        for (const t of rel.targets) linkDocuments(ctx, id, t.to, t.type);
-        ctx.repo.audit('document.generate', 'document', id, null, {
-          templateId: meta.id, templateVersion: meta.version, templateHash: template.hash, brandId: bid,
-          number, versionNo: version.versionNo, regenerated: Boolean(existing),
-        });
-        return {
-          documentId: id,
-          number,
-          versionNo: version.versionNo,
-          renditions: version.renditions.map((r) => ({ kind: r.kind, sha256: r.sha256, filename: r.filename, bytes: r.bytes })),
-        };
+        id = createDocument(ctx, {
+          ...metadata, status, entities,
+          ...(allocated ? { numberSeries: seriesId, docNumber: allocated } : {}),
+        }).id;
+      }
+      const version = addVersion(ctx, id, { inputJson, note: note ?? null, renditions });
+      if (existing) resetStatus(ctx, id, status, { reason: 'regenerate', force, versionNo: version.versionNo });
+      linkDocuments(ctx, id, templateRef, 'generated_from', generatedAttrs);
+      for (const t of rel.targets) linkDocuments(ctx, id, t.to, t.type);
+      ctx.repo.audit('document.generate', 'document', id, existing ? { status: existing.status } : null, {
+        templateId: meta.id, templateVersion: meta.version, templateHash: template.hash, brandId: bid,
+        number, versionNo: version.versionNo, regenerated: Boolean(existing), status, ...(existing ? { force } : {}),
       });
-      return result;
-    } catch (err) {
-      if (!(err instanceof NumberTaken)) throw err;
-      if (attempt >= MAX_NUMBER_ATTEMPTS) {
-        throw new DossierError('NUMBER_CONTENDED', `Another writer kept taking the next number of series "${seriesId}"; try again`,
-          { seriesId, attempts: attempt });
+      return {
+        documentId: id,
+        number,
+        versionNo: version.versionNo,
+        renditions: version.renditions.map((r) => ({ kind: r.kind, sha256: r.sha256, filename: r.filename, bytes: r.bytes })),
+      };
+    });
+  };
+
+  return inSeriesQueue(ctx, existing ? null : seriesId, async () => {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await attemptOnce();
+      } catch (err) {
+        if (!(err instanceof NumberTaken)) throw err;
+        if (attempt >= MAX_NUMBER_ATTEMPTS) {
+          throw new DossierError('NUMBER_CONTENDED', `Another process kept taking the next number of series "${seriesId}"; try again`,
+            { seriesId, attempts: attempt });
+        }
       }
     }
-  }
+  });
 }

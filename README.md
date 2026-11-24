@@ -48,7 +48,7 @@ The folder tree is generated from metadata, never stored: `node bin/dossier.js t
 
 ## Generating documents
 
-`previewDocument` and `generateDocument` (`src/services/generator.js`) turn a template and an input into documents. A preview renders every rendition with the number shown as `DRAFT` and a `DRAFT — NOT NUMBERED` watermark on each PDF page, under `data/previews/<token>/`, and writes nothing to the vault. Generating allocates the next number of the template's series, renders PDF, HTML and Markdown with it, and files one document (party, date, amount, sensitivity, issuing brand) with version 1, the `generated_from` template link, declared relations and party/signatory/issuer entities. Regenerating an existing document adds a version with the same number. See `docs/TEMPLATES.md`.
+`previewDocument` and `generateDocument` (`src/services/generator.js`) turn a template and an input into documents. A preview renders every rendition with the number shown as `DRAFT` and a `DRAFT — NOT NUMBERED` watermark on each PDF page, under `data/previews/<token>/`, and writes nothing to the vault. Generating allocates the next number of the template's series, renders PDF, HTML and Markdown with it, and files one document (party, date, amount, sensitivity, issuing brand) with version 1, the `generated_from` template link, declared relations and party/signatory/issuer entities. Regenerating a Draft document adds a version with the same number; Sent, Signed or Paid documents are superseded instead (or regenerated with `force`). See `docs/TEMPLATES.md`.
 
 ## Documentation
 

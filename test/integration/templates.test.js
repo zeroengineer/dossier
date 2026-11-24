@@ -120,7 +120,7 @@ test('an invalid template folder is reported, left out of the list, and only bre
   for (const [name, [json, re]] of Object.entries(cases)) {
     await t.test(name, () => withCtx(async (ctx) => {
       const list = listTemplates(ctx, { dirs: [FIXTURES] });
-      assert.deepEqual(list.map((x) => x.id).filter((id) => id !== 'test-note'), ['notes'], 'the broken override is left out, the fixture is not used in its place');
+      assert.deepEqual(list.map((x) => x.id).filter((id) => !id.startsWith('test-')), ['notes'], 'the broken override is left out, the fixture is not used in its place');
       const errors = listTemplateErrors(ctx, { dirs: [FIXTURES] });
       assert.equal(errors.length, 1);
       assert.equal(errors[0].id, 'sample-letter');

@@ -211,11 +211,17 @@ lines, `---` dividers and `<!-- page break -->`.
   `<dataDir>/previews/<token>/preview.{pdf,html,md}`, returning `{ ok: true, token, renditions: [{ kind, path, bytes }] }`.
   The token is a sha256 over the template hash, the canonical JSON of the input (keys sorted) and the brand's config
   hash. A preview writes no document, number, blob or audit row (loading a template still upserts its registry row).
-- `generateDocument(ctx, templateId, input, { brandId, status = 'Draft', documentId })` creates a numbered document
+- `generateDocument(ctx, templateId, input, { brandId, status = 'Draft', documentId, force })` creates a numbered document
   with version 1 and returns `{ documentId, number, versionNo, renditions: [{ kind, sha256, filename, bytes }] }`.
-  Missing fields fail with `FIELDS_MISSING` (`details.missing`), bad values with `FIELDS_INVALID`. With `documentId`
-  (a document generated from the same template) it adds the next version, keeps the number and puts the status back to
-  Draft (or `status`).
+  Missing fields fail with `FIELDS_MISSING` (`details.missing`), bad values with `FIELDS_INVALID`; input values JSON
+  cannot carry (BigInt, functions, NaN, Maps…) and relation fields naming a missing or hidden document are refused before
+  anything is rendered. With `documentId` (a document generated from the same template and brand) it adds the next
+  version and keeps the number. Only a Draft document can be regenerated: a Sent, Signed or Paid one fails with
+  `STATUS_LOCKED` (generate a new document and supersede the old one) unless `force: true` is passed, which resets it to
+  Draft, or keeps its current status when `status` names it, and records the reset in the audit log. On regeneration
+  `status` may only be Draft (or, with `force`, the current status).
+  Generations of the same series in one process are queued, so they never race for a number; `NUMBER_CONTENDED`
+  (after 3 re-renders) only happens when other processes keep taking the number.
 - `renderRenditions(ctx, template, values, { brand, number, draft, creationDate })` renders without touching the
   database.
 
@@ -234,8 +240,10 @@ What the generator fills in:
 | relations | `generated_from` -> `template:<id>@<version>` (attrs: template id, version, hash, source); each `relations` entry links to the document id held in its field (`optional: false` makes the field required) |
 | version input | the canonical JSON of the input |
 
-Templates see `values.number` (null in a preview: print `values.number ?? 'DRAFT'`) and `env.number` / `env.draft`.
-A `body.md` is filled with `number` = `DRAFT` in previews. Preview PDFs carry the vector watermark
+Templates see `values.number` and `env.number` (null in a preview and for unnumbered templates) and `env.draft`
+(true only in a preview). `env.draft` is the switch for printing DRAFT: print `env.draft ? 'DRAFT' : values.number ?? ''`,
+never `values.number ?? 'DRAFT'`, so a final document of an unnumbered template does not say DRAFT. A `body.md` is
+filled with `number` = `DRAFT` in previews and `''` when a final document has no number (use `{{#if number}}`). Preview PDFs carry the vector watermark
 `DRAFT — NOT NUMBERED` on every page. Final renditions use `creationDate` = now. Blocks templates are drawn with the
 letterhead, the blocks and the footers; a `renderPdf` template draws everything itself (the generator only adds the
 draft watermark and finalises the file). HTML renditions are standalone (fonts and images embedded).
