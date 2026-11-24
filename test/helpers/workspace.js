@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** A minimal valid brand.json body (fake values only). */
@@ -37,4 +37,9 @@ export function writeWorkspace(dir, spec = {}) {
     writeFileSync(p, content);
   }
   return dir;
+}
+
+/** The numbering series of the shipped example workspace (`workspace.example/series.json`). */
+export function exampleSeries() {
+  return JSON.parse(readFileSync(new URL('../../workspace.example/series.json', import.meta.url), 'utf8'));
 }

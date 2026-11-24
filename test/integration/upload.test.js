@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { tmpDir } from '../helpers/tmp.js';
-import { writeWorkspace } from '../helpers/workspace.js';
+import { exampleSeries, writeWorkspace } from '../helpers/workspace.js';
 import { makePdf } from '../helpers/pdf.js';
 import { openContext } from '../../src/context.js';
 import { uploadFile } from '../../src/services/upload.js';
@@ -11,7 +11,7 @@ async function withCtx(fn, { clearance = 'Confidential' } = {}) {
   const { dir, cleanup } = tmpDir();
   let ctx;
   try {
-    writeWorkspace(dir, { workspace: { name: 'Test Workspace', defaultBrand: 'acme', users: { tester: { clearance } } } });
+    writeWorkspace(dir, { workspace: { name: 'Test Workspace', defaultBrand: 'acme', users: { tester: { clearance } } }, series: exampleSeries() });
     ctx = openContext({ home: dir, user: 'tester', dbFile: ':memory:', env: {} });
     return await fn(ctx, dir);
   } finally {
@@ -77,7 +77,7 @@ test('HTML upload extracts stripped text; unknown types keep only the original',
 }));
 
 test('a repeated number in a series is accepted with a NUMBER_CONFLICT warning', () => withCtx(async (ctx) => {
-  const meta = { type: 'invoice', numberSeries: 'INV', docNumber: 'INV-0131' };
+  const meta = { type: 'invoice', numberSeries: 'invoice-main', docNumber: 'INV-0131' };
   const a = await uploadFile(ctx, { buffer: Buffer.from('first'), filename: 'a.txt', meta });
   const b = await uploadFile(ctx, { buffer: Buffer.from('second'), filename: 'b.txt', meta });
   assert.deepEqual(a.warnings, []);

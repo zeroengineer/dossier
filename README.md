@@ -115,8 +115,11 @@ Series live in `series.json`: a pattern of literal text and tokens (`{YYYY}`, `{
 `{CLIENT}`, `{CODE}` and one counter such as `{####}`), a `scope` that says where the counter restarts (`global`,
 `brand`, `brand+year`, `brand+year+client`, `brand+year+code`), a `start`, and `counter` to share another series'
 counter. A template names a series directly or uses the brand's `series` map. Previews never take a number; generating
-takes the next one in a transaction; regenerating keeps it. Imported numbers move the counter past them, and a number
-repeated in its series is accepted but flagged as a conflict.
+takes the next one in a transaction; regenerating keeps it. The generator never issues a number that a document of the
+series already holds (it moves the counter past it), so a scope or pattern change cannot restart into used numbers.
+Numbers set by hand (import, upload, metadata edit) move the counter past them too, and a number repeated in its series
+is accepted but flagged as a conflict (`NUMBER_CONFLICT` warning). A `numberSeries` that is not in `series.json` is
+refused with `SERIES_UNKNOWN`.
 
 ## Using the vault
 

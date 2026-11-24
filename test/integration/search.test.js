@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { tmpDir } from '../helpers/tmp.js';
-import { writeWorkspace } from '../helpers/workspace.js';
+import { exampleSeries, writeWorkspace } from '../helpers/workspace.js';
 import { openContext } from '../../src/context.js';
 import { upsertEntity } from '../../src/services/entities.js';
 import {
@@ -19,7 +19,7 @@ async function withHome(fn) {
   const { dir, cleanup } = tmpDir();
   const opened = [];
   try {
-    writeWorkspace(dir, { workspace: { name: 'Test Workspace', defaultBrand: 'acme', users: USERS } });
+    writeWorkspace(dir, { workspace: { name: 'Test Workspace', defaultBrand: 'acme', users: USERS }, series: exampleSeries() });
     const open = (user = 'tester') => {
       const ctx = openContext({ home: dir, user, dbFile: join(dir, 'data', 'test.sqlite'), env: {} });
       opened.push(ctx);
@@ -42,12 +42,12 @@ const md = (text) => ({ kind: 'md', buffer: Buffer.from(text), filename: 'body.m
 function paperTrail(ctx) {
   const client = upsertEntity(ctx, { kind: 'client', name: 'Demo Retail LLP' });
   const doc = (type, extra = {}) => createDocument(ctx, { type, partyId: client.id, docDate: '2026-07-01', ...extra }).id;
-  const quotation = doc('Quotation', { title: 'Stage build quotation', docNumber: 'QT-2026-014', numberSeries: 'qt' });
+  const quotation = doc('Quotation', { title: 'Stage build quotation', docNumber: 'QT-2026-014', numberSeries: 'quotation' });
   const mou = doc('MoU', { title: 'Memorandum of understanding' });
-  const invoice = doc('Invoice', { title: 'Stage build', docNumber: 'INV-2026-001', numberSeries: 'inv', docDate: '2026-07-14' });
-  const receipt = doc('Receipt', { title: 'Payment received', docNumber: 'RC-2026-003', numberSeries: 'rc', docDate: '2026-08-01' });
+  const invoice = doc('Invoice', { title: 'Stage build', docNumber: 'INV-2026-001', numberSeries: 'invoice-main', docDate: '2026-07-14' });
+  const receipt = doc('Receipt', { title: 'Payment received', docNumber: 'RC-2026-003', numberSeries: 'receipt', docDate: '2026-08-01' });
   const settlement = doc('Settlement', { title: 'Final settlement' });
-  const other = doc('Invoice', { title: 'Unrelated', docNumber: 'INV-2026-0019', numberSeries: 'inv' });
+  const other = doc('Invoice', { title: 'Unrelated', docNumber: 'INV-2026-0019', numberSeries: 'invoice-main' });
   linkDocuments(ctx, mou, quotation, 'based_on');
   linkDocuments(ctx, invoice, mou, 'based_on');
   linkDocuments(ctx, invoice, quotation, 'based_on');
@@ -177,7 +177,7 @@ test('reindexAll rebuilds the index and dossier reindex runs it', () => withHome
 test('search never shows documents above the user\'s clearance, as hits or related', () => withHome((open) => {
   const ctx = open('boss');
   const t = paperTrail(ctx);
-  const secret = createDocument(ctx, { type: 'Settlement', title: 'Confidential side letter', sensitivity: 'Restricted', docNumber: 'SL-2026-001', numberSeries: 'sl' }).id;
+  const secret = createDocument(ctx, { type: 'Settlement', title: 'Confidential side letter', sensitivity: 'Restricted', docNumber: 'SL-2026-001', numberSeries: 'settlement' }).id;
   linkDocuments(ctx, secret, t.invoice, 'adjusts');
   const person = upsertEntity(ctx, { kind: 'person', name: 'Jordan Placeholder' });
   createDocument(ctx, { type: 'Agreement', title: 'Hidden', sensitivity: 'Restricted', entities: [{ entityId: person.id, role: 'signatory' }] });
@@ -221,7 +221,7 @@ test('filters narrow hits and related documents', () => withCtx((ctx) => {
 }));
 
 test('FTS syntax in the query never throws', () => withCtx((ctx) => {
-  createDocument(ctx, { type: 'Note', title: 'Stage "A" (main) OR backstage', docNumber: 'N-1*', numberSeries: 'n' });
+  createDocument(ctx, { type: 'Note', title: 'Stage "A" (main) OR backstage', docNumber: 'N-1*', numberSeries: 'generic' });
   const nasty = ['"', '""', "'", '(', ')', '*', 'a*', 'NEAR(a b)', 'a OR', 'AND', 'NOT x', 'title:stage', '{title}: x', '^stage',
     '-x', '+', 'a + b', '%', '_', '\\', 'stage"', 'N-1*', '   ', '', '...', 'col:"x" AND (y OR', 'a\u0000b'];
   for (const q of nasty) {
@@ -258,7 +258,7 @@ test('a punctuation-only query matches no entities and expands nothing', () => w
 
 test('related documents stop at the limit', () => withCtx((ctx) => {
   const client = upsertEntity(ctx, { kind: 'client', name: 'Demo Retail LLP' });
-  const invoice = createDocument(ctx, { type: 'Invoice', docNumber: 'INV-9', numberSeries: 'inv' }).id;
+  const invoice = createDocument(ctx, { type: 'Invoice', docNumber: 'INV-9', numberSeries: 'invoice-main' }).id;
   const receipts = [];
   for (let i = 0; i < 5; i++) {
     const r = createDocument(ctx, { type: 'Receipt', partyId: client.id, docDate: `2026-08-0${i + 1}` }).id;

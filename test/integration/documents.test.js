@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpDir } from '../helpers/tmp.js';
-import { writeWorkspace } from '../helpers/workspace.js';
+import { exampleSeries, writeWorkspace } from '../helpers/workspace.js';
 import { openContext } from '../../src/context.js';
 import { upsertEntity } from '../../src/services/entities.js';
 import { putBlob, readBlob, blobPath, sha256Of } from '../../src/services/blobs.js';
@@ -18,7 +18,7 @@ function withCtx(fn, { clearance = 'Confidential' } = {}) {
   const { dir, cleanup } = tmpDir();
   let ctx;
   try {
-    writeWorkspace(dir, { workspace: { name: 'Test Workspace', defaultBrand: 'acme', users: { tester: { clearance } } } });
+    writeWorkspace(dir, { workspace: { name: 'Test Workspace', defaultBrand: 'acme', users: { tester: { clearance } } }, series: exampleSeries() });
     ctx = openContext({ home: dir, user: 'tester', dbFile: ':memory:', env: {} });
     return fn(ctx, dir);
   } finally {
@@ -60,7 +60,7 @@ test('createDocument allocates ids, infers party type, links entities, audits an
   const c = client(ctx);
   const person = upsertEntity(ctx, { kind: 'person', name: 'Jane Example' });
   const doc = createDocument(ctx, {
-    type: 'Invoice', title: 'Event services', partyId: c.id, issuingBrandId: 'acme', numberSeries: 'invoice',
+    type: 'Invoice', title: 'Event services', partyId: c.id, issuingBrandId: 'acme', numberSeries: 'invoice-main',
     docNumber: 'ACME-2026-0001', docDate: '2026-07-14', dueDate: '2026-07-28', amountMinor: 1250000, currency: 'INR',
     templateId: 'invoice', templateVersion: 1, entities: [{ entityId: person.id, role: 'contact' }],
   });
@@ -91,8 +91,8 @@ test('createDocument allocates ids, infers party type, links entities, audits an
 }));
 
 test('a repeated number in a series is stored with numberConflict and an audit warning', () => withCtx((ctx) => {
-  const a = createDocument(ctx, { type: 'Invoice', numberSeries: 'invoice', docNumber: 'ACME-2026-0131' });
-  const b = createDocument(ctx, { type: 'Invoice', numberSeries: 'invoice', docNumber: 'ACME-2026-0131' });
+  const a = createDocument(ctx, { type: 'Invoice', numberSeries: 'invoice-main', docNumber: 'ACME-2026-0131' });
+  const b = createDocument(ctx, { type: 'Invoice', numberSeries: 'invoice-main', docNumber: 'ACME-2026-0131' });
   const other = createDocument(ctx, { type: 'Receipt', numberSeries: 'receipt', docNumber: 'ACME-2026-0131' });
   assert.equal(a.numberConflict, false);
   assert.equal(b.numberConflict, true);
@@ -104,9 +104,35 @@ test('a repeated number in a series is stored with numberConflict and an audit w
 
   const fixed = updateMetadata(ctx, b.id, { docNumber: 'ACME-2026-0132' });
   assert.equal(fixed.numberConflict, false);
-  const again = updateMetadata(ctx, other.id, { numberSeries: 'invoice' });
+  assert.deepEqual(fixed.warnings, []);
+  const again = updateMetadata(ctx, other.id, { numberSeries: 'invoice-main' });
   assert.equal(again.numberConflict, true);
+  assert.deepEqual(again.warnings, ['NUMBER_CONFLICT']);
   assert.equal(audits(ctx, 'document.number_conflict').length, 2);
+}));
+
+test('an unknown numberSeries is SERIES_UNKNOWN on create and on edit; impossible dates are INVALID_INPUT', () => withCtx((ctx) => {
+  assert.throws(() => createDocument(ctx, { type: 'Invoice', numberSeries: 'nope', docNumber: 'X-1' }), code('SERIES_UNKNOWN'));
+  const d = createDocument(ctx, { type: 'Invoice' });
+  assert.throws(() => updateMetadata(ctx, d.id, { numberSeries: 'nope', docNumber: 'X-1' }), code('SERIES_UNKNOWN'));
+  for (const bad of ['2026-13-45', '2026-00-10', '2026-02-30', '0000-99-99']) {
+    assert.throws(() => updateMetadata(ctx, d.id, { docDate: bad }), code('INVALID_INPUT'), bad);
+    assert.throws(() => createDocument(ctx, { type: 'Invoice', dueDate: bad }), code('INVALID_INPUT'), bad);
+  }
+}));
+
+test('a hand-set number in a known series seeds its counter forward only', () => withCtx((ctx) => {
+  const next = () => ctx.db.prepare("SELECT next FROM sequences WHERE scope_key LIKE 'num:%' ORDER BY scope_key").all().map((r) => r.next);
+  createDocument(ctx, { type: 'Invoice', numberSeries: 'invoice-main', docNumber: 'ACM-2026-0007', issuingBrandId: 'acme' });
+  assert.deepEqual(next(), [8]);
+  const d = createDocument(ctx, { type: 'Invoice', numberSeries: 'invoice-main', docNumber: 'ACM-2026-0003' });
+  assert.deepEqual(next(), [8], 'never moves back');
+  updateMetadata(ctx, d.id, { docNumber: 'ACM-2026-0042' });
+  assert.deepEqual(next(), [43]);
+  // A number that does not follow the pattern is stored as given and seeds nothing.
+  const free = createDocument(ctx, { type: 'Invoice', numberSeries: 'invoice-main', docNumber: 'OLD/17' });
+  assert.equal(free.docNumber, 'OLD/17');
+  assert.deepEqual(next(), [43]);
 }));
 
 test('addVersion stores renditions once by sha256 and keeps exactly one current version', () => withCtx((ctx) => {

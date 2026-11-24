@@ -12,7 +12,7 @@ import { blocksToHtml } from '../render/html/index.js';
 import { blocksToMarkdown, fillMarkdown, parseMarkdownBlocks } from '../render/md/index.js';
 import { parseSource } from '../workspace/templateSchema.js';
 import { storeBlobFile } from './blobs.js';
-import { addVersion, createDocument, linkDocuments, resetStatus, updateMetadata } from './documents.js';
+import { addVersion, createDocument, linkDocuments, resetStatus, unlinkDocuments, updateMetadata } from './documents.js';
 import { requireDoc } from './documentQueries.js';
 import { getEntity } from './entities.js';
 import { effectiveParams, resolveTemplateFields, todayIso } from './fields.js';
@@ -406,24 +406,45 @@ function relationTargets(meta, values) {
   return { targets: out, missing };
 }
 
+/**
+ * On regeneration, remove this document's relations of the types the template declares (e.g. a receipt's `pays`)
+ * that the new input no longer names, so a corrected receipt stops paying the old invoice. Relations of other types
+ * (links made by hand, `supersedes`, `generated_from`) are left alone. Runs inside the generation transaction.
+ */
+function dropStaleRelations(ctx, id, meta, targets) {
+  const declared = [...new Set((meta.relations ?? []).map((r) => r.type))];
+  if (!declared.length) return;
+  const keep = new Set(targets.map((t) => `${t.type}\u0000${t.to}`));
+  const rows = ctx.db.prepare(`SELECT to_doc, type FROM document_relations WHERE from_doc = ? AND type IN (${declared.map(() => '?').join(', ')})`)
+    .all(id, ...declared);
+  for (const r of rows) {
+    if (!keep.has(`${r.type}\u0000${r.to_doc}`)) unlinkDocuments(ctx, id, r.to_doc, r.type);
+  }
+}
+
 class NumberTaken extends Error {}
 
-/** Per-database, per-series tails of the in-process generation queue (peek, render and allocate run one at a time). */
-const seriesQueues = new WeakMap();
+/** Per-database, per-counter tails of the in-process generation queue (peek, render and allocate run one at a time). */
+const counterQueues = new WeakMap();
+
+/** The counter a series draws from: its `counter` (shared, e.g. invoice/debit-note/receipt), else its own id. */
+const counterOf = (ctx, seriesId) => ctx.ws.series.get(seriesId)?.counter ?? seriesId;
 
 /**
- * Run `fn` after every earlier queued generation for the same database and series has settled, so generations in one
- * process never race for a number (NUMBER_CONTENDED then only comes from other processes).
+ * Run `fn` after every earlier queued generation for the same database and counter has settled, so generations in one
+ * process never race for a number, even across series that share a counter (NUMBER_CONTENDED then only comes from
+ * other processes).
  */
-function inSeriesQueue(ctx, seriesId, fn) {
+function inCounterQueue(ctx, seriesId, fn) {
   if (!seriesId) return fn();
-  let queues = seriesQueues.get(ctx.db);
-  if (!queues) seriesQueues.set(ctx.db, (queues = new Map()));
-  const prev = queues.get(seriesId) ?? Promise.resolve();
+  const key = counterOf(ctx, seriesId);
+  let queues = counterQueues.get(ctx.db);
+  if (!queues) counterQueues.set(ctx.db, (queues = new Map()));
+  const prev = queues.get(key) ?? Promise.resolve();
   const run = prev.then(fn, fn);
   const tail = run.then(() => {}, () => {});
-  queues.set(seriesId, tail);
-  tail.then(() => { if (queues.get(seriesId) === tail) queues.delete(seriesId); });
+  queues.set(key, tail);
+  tail.then(() => { if (queues.get(key) === tail) queues.delete(key); });
   return run;
 }
 
@@ -471,7 +492,8 @@ function checkRelationTargets(ctx, targets, selfId) {
  * template sensitivity, issuing brand and company), add version 1 with the canonical input, link `generated_from` and
  * declared relations, and record `document_entities` (party, signatory, issuer). No number is ever allocated without a
  * stored version and no async work runs inside the transaction.
- * With `documentId`: regenerate as the next version of that document (same template and brand), keeping its number.
+ * With `documentId`: regenerate as the next version of that document (same template and brand), keeping its number;
+ * its relations of the template's declared types are replaced by the new input's targets (other links stay).
  * Only a Draft document can be regenerated; a Sent, Signed or Paid one is STATUS_LOCKED (supersede it instead) unless
  * `force: true`, which resets it to Draft (or keeps its current status when `status` names it) and audits the reset.
  * @param {object} ctx
@@ -601,6 +623,7 @@ export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
       const version = addVersion(ctx, id, { inputJson, note: note ?? null, renditions });
       if (existing) resetStatus(ctx, id, status, { reason: 'regenerate', force, versionNo: version.versionNo });
       linkDocuments(ctx, id, templateRef, 'generated_from', generatedAttrs);
+      if (existing) dropStaleRelations(ctx, id, meta, rel.targets);
       for (const t of rel.targets) linkDocuments(ctx, id, t.to, t.type);
       ctx.repo.audit('document.generate', 'document', id, existing ? { status: existing.status } : null, {
         templateId: meta.id, templateVersion: meta.version, templateHash: template.hash, brandId: bid,
@@ -616,7 +639,7 @@ export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
     });
   };
 
-  return inSeriesQueue(ctx, existing ? null : seriesId, async () => {
+  return inCounterQueue(ctx, existing ? null : seriesId, async () => {
     for (let attempt = 1; ; attempt++) {
       try {
         return await attemptOnce();

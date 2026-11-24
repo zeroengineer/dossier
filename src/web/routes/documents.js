@@ -51,7 +51,7 @@ export default async function documentRoutes(app, { ctx }) {
     const generated = req.query.generated ? { warnings: String(req.query.warn ?? '').split(',').filter(Boolean) } : null;
     let message = null;
     if (req.query.uploaded) message = `File uploaded${req.query.deduped ? ' (identical bytes were already stored; the file is shared)' : ''}${req.query.warn ? ` — warning: ${req.query.warn}` : ''}.`;
-    if (req.query.saved) message = 'Saved.';
+    if (req.query.saved) message = `Saved${req.query.warn ? ` — warning: ${req.query.warn} (another document of the series has this number)` : ''}.`;
     return sendPage(reply, documentPage({
       doc, shell: shellOf(ctx), statuses: STATUSES, relationTypes: DOCUMENT_RELATION_TYPES, levels: LEVELS, generated, message,
     }));
@@ -77,8 +77,9 @@ export default async function documentRoutes(app, { ctx }) {
   });
 
   app.post('/documents/:id/metadata', (req, reply) => {
-    updateMetadata(ctx, req.params.id, metadataPatch(req.body ?? {}));
-    return seeOther(reply, `${docPath(req.params.id)}?saved=1`);
+    const doc = updateMetadata(ctx, req.params.id, metadataPatch(req.body ?? {}));
+    const warn = doc.warnings.length ? `&warn=${encodeURIComponent(doc.warnings.join(','))}` : '';
+    return seeOther(reply, `${docPath(req.params.id)}?saved=1${warn}`);
   });
 
   // Rendition bytes, gated by the document's sensitivity (readRendition) before any 304. The URL follows the current

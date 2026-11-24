@@ -5,6 +5,7 @@ import { LEVELS, canAccess } from '../domain/sensitivity.js';
 import { secretReason } from '../domain/secrets.js';
 import { recordBlob, storeBlobFile } from './blobs.js';
 import { reindexDocument } from './searchIndex.js';
+import { assertSeries, registerExisting } from './numbering.js';
 import {
   DOCUMENT_ENTITY_ROLES, DOCUMENT_RELATION_TYPES, PARTY_TYPES, RENDITION_KINDS,
   checkDocId, docRow, documentEntities, getDocument, invalid, requireDoc, rowSnapshot, versionView,
@@ -43,7 +44,8 @@ function optString(v, what) {
 
 function optDate(v, what) {
   if (v === undefined || v === null) return null;
-  const ok = typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && new Date(`${v}T00:00:00Z`).toISOString().startsWith(v);
+  const d = typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T00:00:00Z`) : null;
+  const ok = d !== null && !Number.isNaN(d.getTime()) && d.toISOString().startsWith(v);
   if (!ok) throw invalid(`${what} must be a date YYYY-MM-DD`, { [what]: v });
   return v;
 }
@@ -154,6 +156,22 @@ function warnConflict(ctx, id, series, number, conflictsWith) {
     { warning: `Number ${number} is already used in series ${series}`, numberSeries: series, docNumber: number, conflictsWith });
 }
 
+/**
+ * Seed the series counter past a number set by hand (upload, import, metadata edit) so the generator never issues it
+ * again (forward only). A number that does not follow the series pattern, or whose scope cannot be worked out, is
+ * stored as given and seeds nothing. Runs inside the caller's transaction.
+ */
+function seedFromNumber(ctx, cols) {
+  if (!cols.number_series || !cols.doc_number) return;
+  try {
+    registerExisting(ctx, cols.number_series, cols.doc_number, {
+      ...(cols.issuing_brand_id ? { brandId: cols.issuing_brand_id } : {}), ...(cols.doc_date ? { date: cols.doc_date } : {}),
+    });
+  } catch (err) {
+    if (!(err instanceof DossierError)) throw err;
+  }
+}
+
 function snapshot(ctx, id) {
   return { ...rowSnapshot(docRow(ctx, id)), entities: documentEntities(ctx, id).map((e) => ({ entityId: e.id, role: e.role })) };
 }
@@ -181,7 +199,8 @@ const CREATE_FIELDS = [...Object.keys(COLUMNS), 'status', 'entities'];
 /**
  * Create a document (metadata only; files arrive with addVersion). Allocates `DOC-000001`-style ids.
  * A `docNumber` already used in the same `numberSeries` is stored with `numberConflict: true` and a
- * `document.number_conflict` audit warning instead of failing (legacy reuse, rule B5.3).
+ * `document.number_conflict` audit warning instead of failing (legacy reuse, rule B5.3). `numberSeries` must exist in
+ * series.json (SERIES_UNKNOWN); a number that follows its pattern seeds the counter past it, so it is never generated.
  * `partyType` is inferred from the party entity's kind when left out.
  * @param {object} ctx
  * @param {{ type: string, title?: string, partyId?: number, partyType?: string, businessLineId?: number,
@@ -198,6 +217,7 @@ export function createDocument(ctx, meta) {
   const status = meta.status ?? 'Draft';
   if (!STATUSES.includes(status)) throw invalid(`Unknown status "${status}" (expected one of ${STATUSES.join(', ')})`, { status });
   const links = checkEntityLinks(ctx, meta.entities ?? []);
+  if (cols.number_series) assertSeries(ctx, cols.number_series);
 
   const id = ctx.repo.tx(() => {
     const newId = ctx.repo.nextDocumentId();
@@ -208,6 +228,7 @@ export function createDocument(ctx, meta) {
     writeEntities(ctx, newId, links);
     ctx.repo.audit('document.create', 'document', newId, null, snapshot(ctx, newId));
     if (conflicts.length) warnConflict(ctx, newId, cols.number_series, cols.doc_number, conflicts);
+    seedFromNumber(ctx, cols);
     changed(ctx, [newId], ['documents', 'document_entities']);
     return newId;
   });
@@ -217,16 +238,19 @@ export function createDocument(ctx, meta) {
 /**
  * Change metadata fields (any createDocument field except `status`; use updateStatus). `entities`, when given,
  * replaces the document's entity links. Fields set to null are cleared. Audited with before/after; a no-op patch
- * writes nothing. Changing the series or number re-evaluates the conflict flag.
+ * writes nothing. Changing the series or number re-evaluates the conflict flag (a series must exist in series.json,
+ * else SERIES_UNKNOWN) and seeds the series counter past the new number. The result carries
+ * `warnings: ['NUMBER_CONFLICT']` when this edit gave the document a number another document of the series holds.
  * @param {object} ctx
  * @param {string} id
  * @param {Record<string, unknown>} patch
- * @returns {object} the document as returned by getDocument
+ * @returns {object} the document as returned by getDocument, plus `warnings: string[]`
  */
 export function updateMetadata(ctx, id, patch) {
   if (!isPlainObject(patch)) throw invalid('updateMetadata needs a patch object');
   if (Object.hasOwn(patch, 'status')) throw invalid('Use updateStatus (or supersede) to change status', { field: 'status' });
   checkUnknownKeys(patch, [...Object.keys(COLUMNS), 'entities'], 'document');
+  let conflicted = false;
   ctx.repo.tx(() => {
     const row = requireDoc(ctx, id);
     const before = snapshot(ctx, row.id);
@@ -237,6 +261,7 @@ export function updateMetadata(ctx, id, patch) {
     const cols = toColumns(ctx, merged);
 
     const numberChanged = cols.number_series !== row.number_series || cols.doc_number !== row.doc_number;
+    if (cols.number_series && cols.number_series !== row.number_series) assertSeries(ctx, cols.number_series);
     const conflicts = numberChanged ? numberConflicts(ctx, cols.number_series, cols.doc_number, row.id) : [];
     const sets = { ...cols, ...(numberChanged ? { number_conflict: conflicts.length ? 1 : 0 } : {}) };
     const diff = Object.entries(sets).filter(([k, v]) => row[k] !== v);
@@ -250,9 +275,11 @@ export function updateMetadata(ctx, id, patch) {
     if (!diff.length) touch(ctx, row.id);
     ctx.repo.audit('document.update', 'document', row.id, before, after);
     if (conflicts.length) warnConflict(ctx, row.id, cols.number_series, cols.doc_number, conflicts);
+    if (numberChanged) seedFromNumber(ctx, cols);
     changed(ctx, [row.id], ['documents', 'document_entities']);
+    conflicted = conflicts.length > 0;
   });
-  return getDocument(ctx, id);
+  return { ...getDocument(ctx, id), warnings: conflicted ? ['NUMBER_CONFLICT'] : [] };
 }
 
 // ---------- versions ----------

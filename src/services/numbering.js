@@ -36,8 +36,37 @@ function numberVars(ctx, opts = {}) {
 
 const readNext = (ctx, key) => ctx.db.prepare('SELECT next FROM sequences WHERE scope_key = ?').get(key)?.next;
 
+/** How many numbers already in use a single allocation or peek skips before giving up. */
+export const MAX_NUMBER_SKIP = 10000;
+
+/**
+ * True when a document of the series already holds this number (whatever its conflict flag).
+ * @param {object} ctx
+ * @param {string} seriesId
+ * @param {string} number
+ * @returns {boolean}
+ */
+export function numberInUse(ctx, seriesId, number) {
+  return Boolean(ctx.db.prepare('SELECT 1 FROM documents WHERE number_series = ? AND doc_number = ? LIMIT 1').get(seriesId, number));
+}
+
+const exhausted = (seriesId, key) => new DossierError('NUMBER_CONTENDED',
+  `More than ${MAX_NUMBER_SKIP} consecutive numbers of series "${seriesId}" are already in use; seed the counter past them`,
+  { seriesId, scopeKey: key });
+
+/**
+ * Throw SERIES_UNKNOWN unless the series exists in series.json.
+ * @param {object} ctx
+ * @param {string} seriesId
+ */
+export function assertSeries(ctx, seriesId) {
+  getSeries(ctx, seriesId);
+}
+
 /**
  * Allocate the next number of a series. Runs in the caller's transaction (`ctx.repo.tx` joins it), or in its own.
+ * A number some document of the series already holds (an upload, an edit, a counter reset by a scope change) is never
+ * handed out: the counter moves past it (at most MAX_NUMBER_SKIP numbers, else NUMBER_CONTENDED).
  * @param {object} ctx
  * @param {string} seriesId
  * @param {NumberOptions} [opts] date defaults to today (local), brandId to the workspace default brand
@@ -49,13 +78,17 @@ export function allocateNumber(ctx, seriesId, opts = {}) {
   const key = scopeKey(series, vars);
   formatNumber(series.pattern, { ...vars, seq: 0 }); // reports a missing {CLIENT}/{CODE} before a value is taken
   return ctx.repo.tx((repo) => {
-    const seq = repo.nextSequence(key, counterStart(ctx, series));
-    return { number: formatNumber(series.pattern, { ...vars, seq }), seq, scopeKey: key };
+    for (let skipped = 0; skipped <= MAX_NUMBER_SKIP; skipped++) {
+      const seq = repo.nextSequence(key, counterStart(ctx, series));
+      const number = formatNumber(series.pattern, { ...vars, seq });
+      if (!numberInUse(ctx, seriesId, number)) return { number, seq, scopeKey: key };
+    }
+    throw exhausted(seriesId, key);
   });
 }
 
 /**
- * The number `allocateNumber` would hand out now, without taking it.
+ * The number `allocateNumber` would hand out now, without taking it (numbers already in use are skipped).
  * @param {object} ctx
  * @param {string} seriesId
  * @param {NumberOptions} [opts]
@@ -65,8 +98,12 @@ export function peekNumber(ctx, seriesId, opts = {}) {
   const series = getSeries(ctx, seriesId);
   const vars = numberVars(ctx, opts);
   const key = scopeKey(series, vars);
-  const seq = readNext(ctx, key) ?? counterStart(ctx, series);
-  return { number: formatNumber(series.pattern, { ...vars, seq }), seq, scopeKey: key };
+  const first = readNext(ctx, key) ?? counterStart(ctx, series);
+  for (let seq = first; seq <= first + MAX_NUMBER_SKIP; seq++) {
+    const number = formatNumber(series.pattern, { ...vars, seq });
+    if (!numberInUse(ctx, seriesId, number)) return { number, seq, scopeKey: key };
+  }
+  throw exhausted(seriesId, key);
 }
 
 /**
