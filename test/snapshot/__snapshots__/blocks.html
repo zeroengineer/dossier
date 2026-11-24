@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sample &lt;letter&gt;</title>
+<style>
+@font-face { font-family: 'DossierBody'; font-weight: 400; font-style: normal; src: url("/assets/fonts/Manrope/Manrope-Regular.ttf"); }
+@font-face { font-family: 'DossierBody'; font-weight: 500; font-style: normal; src: url("/assets/fonts/Manrope/Manrope-Medium.ttf"); }
+@font-face { font-family: 'DossierBody'; font-weight: 600; font-style: normal; src: url("/assets/fonts/Manrope/Manrope-SemiBold.ttf"); }
+@font-face { font-family: 'DossierBody'; font-weight: 700; font-style: normal; src: url("/assets/fonts/Manrope/Manrope-Bold.ttf"); }
+@font-face { font-family: 'DossierBody'; font-weight: 800; font-style: normal; src: url("/assets/fonts/Manrope/Manrope-ExtraBold.ttf"); }
+@page { size: A4; margin: 0; }
+:root { --ink: #1a1a1a; --body: #333333; --label: #555555; --muted: #666666; --faint: #888888; --subtle: #999999; --rule: #e8e8e8; --ruleStrong: #d0d0d0; --ruleFaint: #f0f0f0; --fill: #fbfbfb; --fillAlt: #f8f8f8; --fillTotal: #f1f1f1; --fillPanel: #f9f9f9; --section: #606f7b; --accent: #1a1a1a; --white: #ffffff; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #ffffff; }
+body { font-family: 'DossierBody', sans-serif; color: #333333; font-size: 10.5pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.page { position: relative; width: 595.28pt; min-height: 841.89pt; margin: 0 auto; padding: 110pt 37.5pt 39pt 37.5pt; background: #ffffff; }
+.letterhead { position: absolute; top: 0; left: 37.5pt; right: 37.5pt; height: 85pt; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.3pt solid #e8e8e8; }
+.letterhead img { height: 32pt; width: auto; }
+.letterhead .lh-text { text-align: right; font-size: 8pt; line-height: 11.428pt; color: #555555; }
+.letterhead .lh-name { font-size: 8.5pt; font-weight: 700; color: #1a1a1a; }
+.doc h1, .doc h2, .doc h3, .doc p { font-family: inherit; }
+.doc h1 { font-size: 17pt; font-weight: 700; line-height: 25.222pt; color: #1a1a1a; margin: 11.611pt 0 15.094pt; text-transform: uppercase; break-after: avoid; }
+.doc h2 { font-size: 12pt; font-weight: 700; line-height: 17.892pt; color: #1a1a1a; margin: 5.737pt 0 7.376pt; break-after: avoid; }
+.doc h3 { font-size: 10.5pt; font-weight: 700; line-height: 15.843pt; color: #1a1a1a; margin: 4.303pt 0 5.02pt; break-after: avoid; }
+.doc p { font-size: 10.5pt; line-height: 18.843pt; text-align: justify; margin: 0 0 9.323pt; color: #333333; }
+.doc strong { font-weight: 700; }
+.doc .cover { text-align: center; }
+.doc ul { margin: 0 0 6.454pt; padding-left: 19pt; }
+.doc ul li { margin: 0 0 5.02pt; padding-left: 0; }
+.doc ul { list-style: none; }
+.doc ul li { position: relative; }
+.doc ul li::before { content: "•"; position: absolute; left: -14pt; }
+.doc ol { margin: 0 0 6.454pt; padding-left: 18pt; }
+.doc ol li { margin: 0 0 5.02pt; padding-left: 0; }
+.doc li { font-size: 10.5pt; line-height: 18.843pt; text-align: justify; }
+.doc table.data { width: 100%; border-collapse: collapse; margin: 5.02pt 0 11.679pt; break-inside: auto; }
+.doc table.data th { background: #1a1a1a; color: #ffffff; font-size: 9.5pt; font-weight: 700; height: 22pt; padding: 5pt 10pt; text-align: left; }
+.doc table.data td { font-size: 9.5pt; font-weight: 400; color: #333333; height: 22pt; padding: 5pt 10pt; vertical-align: top; }
+.doc table.data tbody tr:nth-child(2n+1) { background: #f8f8f8; }
+.doc table.data tbody tr:nth-child(2n+2) { background: #ffffff; }
+.doc table.data tr.total td { background: #f1f1f1; color: #1a1a1a; font-weight: 700; }
+.doc .left { text-align: left !important; }
+.doc .right { text-align: right !important; }
+.doc .center { text-align: center !important; }
+.doc table.kv { border-collapse: collapse; margin: 0pt 0 8.879pt 0pt; font-size: 10pt; }
+.doc table.kv td { padding: 0; height: 19pt; vertical-align: top; }
+.doc table.kv td.k { width: 130pt; font-weight: 400; color: #555555; }
+.doc table.kv td.v { font-weight: 600; color: #1a1a1a; }
+.doc .signature { margin: 20pt 0 12.294pt; break-inside: avoid; }
+.doc .signature .for { font-size: 9.5pt; font-weight: 700; color: #1a1a1a; }
+.doc .signature img { display: block; height: 55pt; width: auto; margin: 10pt 0 8pt; }
+.doc .signature .sign-line { width: 160pt; height: 40pt; border-bottom: 0.5pt solid #999999; margin-bottom: 6pt; }
+.doc .signature .name { font-size: 10pt; font-weight: 700; color: #1a1a1a; }
+.doc .signature .title, .doc .signature .line { font-size: 9pt; color: #666666; }
+.doc .signature .title { font-weight: 500; }
+.doc hr.divider { border: 0; border-top: 0.4pt solid #e8e8e8; margin: 7.172pt 0 9.323pt; }
+.doc .page-break { break-after: page; height: 0; }
+.footer { display: flex; justify-content: space-between; gap: 12pt; margin-top: 24pt; padding-top: 7pt; border-top: 0.5pt solid #d0d0d0; font-size: 7.5pt; color: #666666; }
+.footer .center { color: #999999; }
+@media print { .page { margin: 0; } }
+</style>
+</head>
+<body>
+<div class="page">
+<header class="letterhead"><img src="/assets/brands/acme/logo" alt="Acme Events"><div class="lh-text"><div class="lh-name">Acme Events Private Limited</div><div>CIN: U00000XX2000PTC000000</div><div>Unit 000, Example Business Park, 1 Sample Road</div><div>Example City, Example State 000000, India</div><div>Email: hr@example.com | </div></div></header>
+<main class="doc">
+<h1>Terms of engagement</h1>
+<h2>1. Scope &amp; &lt;duties&gt;</h2>
+<p>This letter sets out the <strong>terms of engagement</strong>, the schedule of deliverables, the fees payable and the obligations of each party for the duration of the engagement. Each party confirms that it has read and understood these terms &lt;and&gt; agrees to be bound by them in full &amp; without reservation.</p>
+<ul><li>First item with <strong>bold</strong> words</li><li>Second item</li></ul>
+<ol><li>Step one</li><li>Step two</li></ol>
+<table class="data"><thead><tr><th style="width: 200pt">Earnings</th><th class="right" style="width: 150pt">Monthly</th><th class="right">Annual</th></tr></thead><tbody><tr><td>Basic</td><td class="right">10,000</td><td class="right">1,20,000</td></tr><tr><td>Allowance | other</td><td class="right">2,000</td><td class="right">24,000</td></tr><tr class="total"><td>Gross</td><td class="right">12,000</td><td class="right">1,44,000</td></tr></tbody></table>
+<table class="kv"><tbody><tr><td class="k">Event</td><td class="v">:  Example Annual Meet</td></tr><tr><td class="k">Issued to</td><td class="v">:  Example Client Org</td></tr></tbody></table>
+<hr class="divider">
+<div class="spacer" style="height: 12pt"></div>
+<h3>Acceptance</h3>
+<p class="center">Centred line</p>
+<div class="page-break"></div>
+<div class="signature"><div class="for">FOR Acme Events Private Limited</div><img src="/assets/brands/acme/signatures/md" alt="Signature of Sam Sample"><div class="name">Sam Sample</div><div class="title">Managing Director</div><div class="line">Authorized Signatory</div></div>
+<div class="signature"><div class="for">For Example Client Org</div><div class="sign-line"></div><div class="line">Name:</div><div class="line">Date:</div></div>
+<div class="box">custom</div>
+</main>
+<footer class="footer"><span class="left">hr@example.com | </span><span class="center">Confidential</span><span class="right"></span></footer>
+</div>
+</body>
+</html>

@@ -19,6 +19,7 @@ Environment:
 | `DOSSIER_HOME` | `./workspace` | workspace root (relative paths resolve against the current directory) |
 | `DOSSIER_USER` | OS user name | local user id; its clearance comes from `workspace.json` `users` |
 | `PORT` | `4400` | HTTP port |
+| `DOSSIER_TEMPLATE_DIRS` | none | extra template folders (separated like `PATH`), loaded after the built-ins and before the workspace's `templates/` |
 
 ## Layout
 
@@ -29,7 +30,7 @@ Environment:
 │   ├── brand.json            one issuing entity (company, LLP, product brand…)
 │   └── assets/               logo.png, seal.png, sign-<signatoryId>.png, fonts/*.ttf
 ├── series.json               numbering series
-├── templates/<templateId>/   your templates and overrides of built-ins (same id overrides)
+├── templates/<templateId>/   your templates and overrides of built-ins (same id overrides; see docs/TEMPLATES.md)
 ├── seeds/entities.json       optional initial parties, people, clients, vendors, products
 └── data/                     created by the app: database, blobs, cache (never edit by hand)
 ```

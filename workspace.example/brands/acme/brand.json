@@ -78,6 +78,7 @@
     "debit-note": "ops",
     "receipt": "ops",
     "hr": "md",
+    "letter": "md",
     "offer-letter": "md",
     "internship-offer": "md",
     "internship-certificate": "md",

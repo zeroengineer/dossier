@@ -12,3 +12,4 @@ export {
 export { drawTable, TABLE_DEFAULTS } from './tables.js';
 export { drawSignatureBlock, SIGNATURE_DEFAULTS } from './signature.js';
 export { drawWatermark } from './watermark.js';
+export { renderBlocksPdf } from './blocks.js';

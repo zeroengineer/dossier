@@ -51,6 +51,7 @@ The folder tree is generated from metadata, never stored: `node bin/dossier.js t
 - `docs/PLAN.md`: architecture, data model, rules, cache layers, testing and build order.
 - `docs/DISCOVERY.md`: findings from the legacy document scripts this app replaces (redacted).
 - `docs/WORKSPACE.md`: creating and customising a workspace (brands, assets, series, seeds).
+- `docs/TEMPLATES.md`: template folders, `template.json` fields and sources, the block model and the PDF/HTML/Markdown renderers.
 - `docs/DECISIONS.md`: small decisions and their reasons.
 
 ## License

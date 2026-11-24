@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { userInfo } from 'node:os';
-import { join, resolve } from 'node:path';
+import { delimiter, join, resolve } from 'node:path';
 import { loadConfig } from '../../src/config.js';
 
 test('loadConfig defaults: <cwd>/workspace, OS user, port 4400', () => {
@@ -24,4 +24,10 @@ test('loadConfig keeps an absolute DOSSIER_HOME and ignores a bad PORT', () => {
   const cfg = loadConfig({ DOSSIER_HOME: '/data/dossier', PORT: 'abc' }, '/srv/app');
   assert.equal(cfg.home, resolve('/data/dossier'));
   assert.equal(cfg.port, 4400);
+});
+
+test('loadConfig reads DOSSIER_TEMPLATE_DIRS as a PATH-style list resolved against cwd', () => {
+  assert.deepEqual(loadConfig({}, '/srv/app').templateDirs, []);
+  const cfg = loadConfig({ DOSSIER_TEMPLATE_DIRS: `extra${delimiter}/abs/templates${delimiter}` }, '/srv/app');
+  assert.deepEqual(cfg.templateDirs, [resolve('/srv/app/extra'), resolve('/abs/templates')]);
 });
