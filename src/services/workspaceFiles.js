@@ -15,7 +15,7 @@ import { syncBrands } from '../context.js';
 import { clearanceFor, loadWorkspace, WorkspaceError } from '../workspace/index.js';
 import { CLEARANCES, FONT_WEIGHTS } from '../workspace/schemas.js';
 import { clearImageCache } from '../render/pdf/images.js';
-import { listTemplateErrors } from './templates.js';
+import { listTemplateErrors, listTemplates } from './templates.js';
 import { memoOf, WS } from '../cache/memo.js';
 
 const PDFDocument = createRequire(import.meta.url)('pdfkit');
@@ -394,6 +394,20 @@ export function writeSeries(ctx, list) {
       .map((e) => ({ path: '(root)', message: `template "${e.id}" would no longer load: ${e.message}` })),
   });
   return getSeriesFile(ctx);
+}
+
+/**
+ * Where each series is used: `<brandId>: <documentType>` for every brand series-map entry and `template <id>` for a
+ * template whose `numbering.series` names a series directly (not `brand`).
+ * @param {object} ctx
+ * @returns {Record<string, string[]>} series id -> uses, in workspace order
+ */
+export function seriesUsage(ctx) {
+  const usage = {};
+  const add = (sid, what) => { (usage[sid] ??= []).push(what); };
+  for (const [bid, b] of ctx.ws.brands) for (const [tid, sid] of Object.entries(b.series)) add(sid, `${bid}: ${tid}`);
+  for (const t of listTemplates(ctx)) if (t.meta.numbering?.series && t.meta.numbering.series !== 'brand') add(t.meta.numbering.series, `template ${t.id}`);
+  return usage;
 }
 
 // ---------- workspace.json ----------

@@ -1,11 +1,12 @@
 // Settings: overview, brand editor (sections, asset uploads, preview, download), series and workspace editors, and
 // the JSON API for the same files. Writes go through src/services/workspaceFiles.js.
 import { DossierError, isDossierError } from '../../errors.js';
-import { listTemplates } from '../../services/templates.js';
 import {
-  ASSET_MAX_BYTES, brandRel, builtinFonts, getBrandFile, getSeriesFile, getWorkspaceFile, storeBrandAsset, writeBrand, writeSeries, writeWorkspaceConfig,
+  ASSET_MAX_BYTES, brandRel, builtinFonts, getBrandFile, getSeriesFile, getWorkspaceFile, seriesUsage, storeBrandAsset, writeBrand, writeSeries, writeWorkspaceConfig,
 } from '../../services/workspaceFiles.js';
 import { renderBrandPreview } from '../../render/brandPreview.js';
+import { missingBrandAssets } from '../../workspace/index.js';
+import { FONT_WEIGHTS } from '../../workspace/schemas.js';
 import { applyBrandSection, BRAND_SECTIONS, newBrandBody, seriesFromForm, workspaceFromForm } from '../settingsForms.js';
 import { brandPage, brandsPage, seriesPage, settingsPage, workspacePage } from '../views/settings.js';
 import { errorReply, readMultipart, seeOther, sendFile, sendPage, shellOf } from '../http.js';
@@ -21,6 +22,43 @@ async function readAssetUpload(req) {
     }
     throw err;
   }
+}
+
+/** Served URL of a brand asset slot, or null for slots no route serves (seal, watermark, large signatures). */
+function assetPath(brandId, key) {
+  const b = `/assets/brands/${encodeURIComponent(brandId)}`;
+  const [kind, arg] = key.split(':');
+  if (key === 'assets.logo') return `${b}/logo`;
+  if (kind === 'signature') return `${b}/signatures/${encodeURIComponent(arg)}`;
+  if (kind === 'font') return `${b}/fonts/${arg}`;
+  return null;
+}
+
+/**
+ * Every asset slot of a brand (logo, seal, watermark, each signatory's signature and large signature, each font
+ * weight): the configured path (null when unset), whether it resolves to the brand's own file (not a placeholder or
+ * the built-in fallback font; a valid `builtin:` font counts), its version (first 12 hex digits of the sha256, null
+ * when not present) and its URL, pinned with `?v=` when present.
+ * @param {object} ctx
+ * @param {string} brandId a known brand
+ * @returns {Array<{ key: string, path: string|null, present: boolean, version: string|null, url: string|null }>}
+ */
+function brandAssetList(ctx, brandId) {
+  const brand = ctx.ws.brands.get(brandId);
+  const missing = new Set(missingBrandAssets(ctx.ws, brandId).map((m) => m.key));
+  const slots = [
+    ['assets.logo', brand.assets.logo], ['assets.seal', brand.assets.seal], ['assets.watermark', brand.assets.watermark],
+    ...brand.signatories.flatMap((s) => [[`signature:${s.id}`, s.signature], [`signature-large:${s.id}`, s.signatureLarge]]),
+    ...FONT_WEIGHTS.map((w) => [`font:${w}`, brand.fonts[w]]),
+  ];
+  return slots.map(([key, configured]) => {
+    const path = configured ?? null;
+    const present = Boolean(path) && !missing.has(key);
+    const version = present ? assetVersion(ctx, brandId, key) : null;
+    const base = assetPath(brandId, key);
+    const url = base && version ? `${base}?v=${version}` : base;
+    return { key, path, present: present && version !== null, version, url };
+  });
 }
 
 const fieldErrors = (err) => (isDossierError(err, 'WORKSPACE_INVALID') ? err.details.errors : null);
@@ -115,27 +153,22 @@ export default async function settingsRoutes(app, { ctx }) {
     }
   });
 
-  app.get('/settings/brands/:id/brand.json', (req, reply) => {
+  // Old page routes and their /api/ replacements share these handlers (the /settings/ ones go with the old UI).
+  const downloadBrandFile = (req, reply) => {
     const { file } = getBrandFile(ctx, req.params.id);
     return sendFile(reply, { buffer: Buffer.from(`${JSON.stringify(file, null, 2)}\n`), filename: 'brand.json', mime: 'application/json' }, { download: true });
-  });
-
-  app.get('/settings/brands/:id/preview.pdf', async (req, reply) => {
+  };
+  const sendBrandPreview = async (req, reply) => {
     const { id } = getBrandFile(ctx, req.params.id);
     const buffer = await renderBrandPreview(ctx.ws, id);
     return sendFile(reply, { buffer, filename: `${id}-preview.pdf`, mime: 'application/pdf' });
-  });
+  };
+  app.get('/settings/brands/:id/brand.json', downloadBrandFile);
+  app.get('/settings/brands/:id/preview.pdf', sendBrandPreview);
 
   // ----- series
 
-  const seriesUsage = () => {
-    const usage = {};
-    const add = (sid, what) => { (usage[sid] ??= []).push(what); };
-    for (const [bid, b] of ctx.ws.brands) for (const [tid, sid] of Object.entries(b.series)) add(sid, `${bid}: ${tid}`);
-    for (const t of listTemplates(ctx)) if (t.meta.numbering?.series && t.meta.numbering.series !== 'brand') add(t.meta.numbering.series, `template ${t.id}`);
-    return usage;
-  };
-  const seriesView = (reply, extra = {}, status = 200) => sendPage(reply, seriesPage({ shell: shellOf(ctx), list: getSeriesFile(ctx), usage: seriesUsage(), ...extra }), status);
+  const seriesView = (reply, extra = {}, status = 200) => sendPage(reply, seriesPage({ shell: shellOf(ctx), list: getSeriesFile(ctx), usage: seriesUsage(ctx), ...extra }), status);
 
   app.get('/settings/series', (req, reply) => seriesView(reply, { saved: req.query.saved !== undefined }));
 
@@ -183,6 +216,12 @@ export default async function settingsRoutes(app, { ctx }) {
     const r = writeBrand(ctx, req.params.id, req.body);
     return reply.code(r.created ? 201 : 200).send(brandJson(r));
   });
+  app.get('/api/brands/:id/assets', (req) => {
+    const { id } = getBrandFile(ctx, req.params.id);
+    return { assets: brandAssetList(ctx, id) };
+  });
+  app.get('/api/brands/:id/file', downloadBrandFile);
+  app.get('/api/brands/:id/preview.pdf', sendBrandPreview);
   app.post('/api/brands/:id/assets/:key', async (req) => {
     const { id, key } = req.params;
     getBrandFile(ctx, id);
@@ -193,6 +232,7 @@ export default async function settingsRoutes(app, { ctx }) {
   });
 
   app.get('/api/series', () => ({ series: getSeriesFile(ctx) }));
+  app.get('/api/series/usage', () => ({ usage: seriesUsage(ctx) }));
   app.put('/api/series', (req) => {
     const body = req.body;
     return { series: writeSeries(ctx, Array.isArray(body) ? body : body?.series) };

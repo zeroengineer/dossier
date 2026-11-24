@@ -607,3 +607,75 @@ describe('same-origin checks on settings writes', () => {
     }
   });
 });
+
+describe('settings API for the web app', () => {
+  test('GET /api/series/usage lists brand series maps and templates per series', async () => {
+    const r = await api('GET', '/api/series/usage');
+    assert.equal(r.statusCode, 200);
+    const { usage } = r.json();
+    let n = 0;
+    for (const [bid, b] of ctx.ws.brands) {
+      for (const [tid, sid] of Object.entries(b.series)) {
+        assert.ok(usage[sid]?.includes(`${bid}: ${tid}`), `${sid} used by ${bid}: ${tid}`);
+        n += 1;
+      }
+    }
+    assert.ok(n > 0, 'the example workspace maps some series');
+  });
+
+  test('GET /api/brands/:id/assets lists every slot with presence, version and a pinned url', async () => {
+    const created = await api('PUT', '/api/brands/delta', {
+      legalName: 'Delta Example', shortName: 'Delta', addresses: { business: ['L'] }, contacts: { default: {} },
+      signatories: [{ id: 'md', name: 'Sam Sample', title: 'Director' }],
+      fonts: { regular: 'builtin:Manrope-Regular' },
+    });
+    assert.equal(created.statusCode, 201, created.body);
+
+    const first = await api('GET', '/api/brands/delta/assets');
+    assert.equal(first.statusCode, 200, first.body);
+    const byKey = Object.fromEntries(first.json().assets.map((a) => [a.key, a]));
+    assert.deepEqual(Object.keys(byKey).slice(0, 5), ['assets.logo', 'assets.seal', 'assets.watermark', 'signature:md', 'signature-large:md']);
+    assert.ok(Object.keys(byKey).some((k) => k.startsWith('font:')));
+    assert.deepEqual(byKey['assets.logo'], { key: 'assets.logo', path: 'assets/logo.png', present: false, version: null, url: '/assets/brands/delta/logo' });
+    assert.deepEqual(byKey['assets.seal'], { key: 'assets.seal', path: null, present: false, version: null, url: null });
+    assert.deepEqual(byKey['signature:md'], { key: 'signature:md', path: null, present: false, version: null, url: '/assets/brands/delta/signatures/md' });
+    const builtin = byKey['font:regular'];
+    assert.equal(builtin.present, true, JSON.stringify(builtin));
+    assert.match(builtin.version, /^[0-9a-f]{12}$/);
+    assert.equal(builtin.url, `/assets/brands/delta/fonts/regular?v=${builtin.version}`);
+
+    const buffer = await png(40, 20);
+    const up = await upload('/api/brands/delta/assets/logo', {}, { filename: 'l.png', mime: 'image/png', buffer }, { origin: ORIGIN });
+    assert.equal(up.statusCode, 200, up.body);
+    const after = (await api('GET', '/api/brands/delta/assets')).json().assets.find((a) => a.key === 'assets.logo');
+    assert.equal(after.path, up.json().path);
+    assert.equal(after.present, true);
+    assert.equal(after.version, up.json().sha256.slice(0, 12));
+    assert.equal(after.url, `/assets/brands/delta/logo?v=${after.version}`);
+    const served = await app.inject({ url: after.url });
+    assert.equal(served.statusCode, 200);
+    assert.match(served.headers['cache-control'], /immutable/);
+    assert.deepEqual(served.rawPayload, buffer);
+  });
+
+  test('GET /api/brands/:id/file downloads brand.json; preview.pdf is no-store', async () => {
+    const dl = await api('GET', '/api/brands/acme/file');
+    assert.equal(dl.statusCode, 200);
+    assert.match(dl.headers['content-disposition'], /^attachment; filename="brand.json"/);
+    assert.match(dl.headers['content-type'], /^application\/json/);
+    assert.deepEqual(JSON.parse(dl.body), brandJson('acme'));
+    const pv = await api('GET', '/api/brands/acme/preview.pdf');
+    assert.equal(pv.statusCode, 200);
+    assert.equal(pv.headers['content-type'], 'application/pdf');
+    assert.match(pv.headers['cache-control'], /no-store/);
+    assert.equal(pv.rawPayload.subarray(0, 5).toString('latin1'), '%PDF-');
+  });
+
+  test('unknown and unsafe brand ids are JSON 404s', async () => {
+    for (const url of ['/api/brands/nope/assets', '/api/brands/nope/file', '/api/brands/nope/preview.pdf', '/api/brands/%2E%2E/assets', '/api/brands/a%2Fb/file']) {
+      const r = await api('GET', url);
+      assert.equal(r.statusCode, 404, `${url}: ${r.body}`);
+      assert.ok(r.json().code, url);
+    }
+  });
+});
