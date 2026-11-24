@@ -1,5 +1,5 @@
 import { DossierError } from '../errors.js';
-import { formatNumber, parseNumber, scopeKey } from '../domain/numbering.js';
+import { SCOPE_KEY_PREFIX, formatNumber, parseNumber, scopeKey } from '../domain/numbering.js';
 
 /**
  * Numbering service: allocates document numbers from the series in `series.json`, with counters in `sequences`.
@@ -158,4 +158,27 @@ export function registerExisting(ctx, seriesId, number, opts = {}) {
   if (!parsed.brand) vars.brandId = opts.brandId;
   const seeded = seedCounter(ctx, seriesId, vars, parsed.seq + 1);
   return { ...seeded, seq: parsed.seq, vars: parsed };
+}
+
+/**
+ * Every numbering counter in `sequences` (the `doc-id` counter is left out), mapped back to series: `seriesId` is the
+ * series that owns the counter (the first part of the key; series sharing it through `counter` use the owner's rows),
+ * `seriesIds` every series of series.json that draws from it (empty when the owner was removed from series.json).
+ * `value` is the stored `next`: the next sequence number the counter hands out (numbers in use are still skipped).
+ * @param {object} ctx
+ * @returns {Array<{ seriesId: string, seriesIds: string[], key: string, value: number }>} sorted by key
+ */
+export function listCounters(ctx) {
+  const users = new Map();
+  for (const s of ctx.ws.series.values()) {
+    const owner = s.counter ?? s.id;
+    if (!users.has(owner)) users.set(owner, []);
+    users.get(owner).push(s.id);
+  }
+  return ctx.db.prepare('SELECT scope_key, next FROM sequences ORDER BY scope_key').all()
+    .filter((r) => r.scope_key.startsWith(SCOPE_KEY_PREFIX))
+    .map((r) => {
+      const seriesId = r.scope_key.slice(SCOPE_KEY_PREFIX.length).split(':')[0];
+      return { seriesId, seriesIds: [...(users.get(seriesId) ?? [])].sort(), key: r.scope_key, value: r.next };
+    });
 }

@@ -21,6 +21,12 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 - Typed API client (`ApiError` from the `{ code, message, details }` body, JSON and multipart with
   `X-Dossier-Client: web`), TanStack Query with mutation errors shown as toasts, money and date formatting in minor
   units and the workspace locale.
+- `GET /api/dashboard?days=7|30|90` (default 30): documents in the range, drafts, amount invoiced per currency (integer
+  minor units; Invoice documents that are not Superseded), number conflicts, the same totals for the preceding window
+  (`previous`), a zero-filled per-day timeline, the 10 most recently updated documents, series counters and warnings
+  (templates that fail to load, number conflicts, missing brand asset files). Everything is limited to documents within
+  the user's clearance. New `listCounters(ctx)` in the numbering service and `missingBrandAssets(ws, brandId)` in the
+  workspace loader.
 - Root `package.json` `homepage` and `repository` fields; the web app's help and docs links are read from them at
   build time.
 - Scripts: `npm run build` (builds `web/dist`), `npm run dev:web` (Vite with a proxy to the server),

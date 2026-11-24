@@ -22,6 +22,7 @@ import templateRoutes from './web/routes/templates.js';
 import entityRoutes from './web/routes/entities.js';
 import settingsRoutes from './web/routes/settings.js';
 import metaRoutes from './web/routes/meta.js';
+import dashboardRoutes from './web/routes/dashboard.js';
 import { SPA_CSP, spaRoutes } from './web/spa.js';
 
 /** Host names accepted when the server listens on a loopback address. */
@@ -99,7 +100,7 @@ export function buildServer(ctx, { allowedHosts = LOOPBACK_HOSTS, logger = false
     return sendPage(reply, errorPage(out, shellOf(ctx)), 404);
   };
 
-  for (const routes of [assetRoutes, vaultRoutes, documentRoutes, uploadRoutes, searchRoutes, templateRoutes, entityRoutes, settingsRoutes, metaRoutes]) {
+  for (const routes of [assetRoutes, vaultRoutes, documentRoutes, uploadRoutes, searchRoutes, templateRoutes, entityRoutes, settingsRoutes, metaRoutes, dashboardRoutes]) {
     app.register(routes, { ctx, fileSizeLimit });
   }
   // Last: the web app's static files and its index.html for unmatched GET/HEAD page routes (other misses: notFound).

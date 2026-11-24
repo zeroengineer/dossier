@@ -215,6 +215,35 @@ export function brandAsset(ws, brandId, key) {
   throw new Error(`brandAsset: unknown asset key "${key}"`);
 }
 
+/**
+ * Asset files a brand names that do not resolve (brandAsset then falls back to a placeholder, the built-in font or,
+ * for the watermark, nothing). Only paths the brand sets are checked: the logo (defaulted by the schema), the seal and
+ * watermark when set, each signatory's signature / signatureLarge, and every font that is not a valid `builtin:` one.
+ * @param {ReturnType<typeof loadWorkspace>} ws
+ * @param {string} brandId
+ * @returns {Array<{ key: string, path: string }>} brandAsset keys with the configured path, in a stable order
+ */
+export function missingBrandAssets(ws, brandId) {
+  const brand = ws.brands.get(brandId);
+  if (!brand) throw new Error(`missingBrandAssets: unknown brand "${brandId}"`);
+  const out = [];
+  const check = (key, path) => { if (path && !findInBrandDirs(ws, brandId, path)) out.push({ key, path }); };
+  check('assets.logo', brand.assets.logo);
+  check('assets.seal', brand.assets.seal);
+  check('assets.watermark', brand.assets.watermark);
+  for (const s of brand.signatories) {
+    check(`signature:${s.id}`, s.signature);
+    check(`signature-large:${s.id}`, s.signatureLarge);
+  }
+  for (const w of FONT_WEIGHTS) {
+    const spec = brand.fonts[w];
+    if (!spec) continue;
+    const builtin = builtinFontPath(spec);
+    if (builtin) { if (!existsSync(builtin)) out.push({ key: `font:${w}`, path: spec }); } else check(`font:${w}`, spec);
+  }
+  return out;
+}
+
 /** A placeholder name kept as written by interpolate() when it does not resolve (numbering tokens). */
 const UPPERCASE_TOKEN = /^[A-Z][A-Z0-9_]*$/;
 

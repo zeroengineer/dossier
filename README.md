@@ -156,7 +156,7 @@ refused with `SERIES_UNKNOWN`.
   asset uploads and a live letterhead preview, number series, the workspace and its users).
 - **JSON API**: the same services under `/api/…` (`/api/tree`, `/api/documents[/:id]`, `/api/search?q=`,
   `/api/templates/:id/resolve|preview|generate`, `/api/entities`, `/api/brands`, `/api/series`, `/api/workspace`,
-  `/api/upload`, `/api/me`, `/api/meta`…). Errors are `{ code, message, details }`: `*_NOT_FOUND` 404, `FORBIDDEN` 403, duplicates, locked or
+  `/api/upload`, `/api/me`, `/api/meta`, `/api/dashboard?days=7|30|90`…). Errors are `{ code, message, details }`: `*_NOT_FOUND` 404, `FORBIDDEN` 403, duplicates, locked or
   contended states 409, validation errors 400.
 - **Rules**: status moves forward only (Draft -> Sent | Signed | Superseded, Sent -> Signed | Paid | Superseded,
   Signed -> Paid | Superseded, Paid -> Superseded). Stored renditions never change; a corrected or stamped file is a new
