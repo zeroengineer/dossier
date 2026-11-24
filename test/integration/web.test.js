@@ -168,6 +168,7 @@ describe('JSON API', () => {
   test('GET/POST /api/entities and relations', async () => {
     const found = await api('GET', '/api/entities?q=demo&kind=client');
     assert.equal(found.json().entities[0].name, 'Demo Retail LLP');
+    assert.equal(typeof found.json().entities[0].documentCount, 'number', 'list rows carry a document count');
     const created = await api('POST', '/api/entities', { kind: 'vendor', name: 'Sample Catering Co', aliases: ['SCC'] });
     assert.equal(created.statusCode, 201);
     const dup = await api('POST', '/api/entities', { kind: 'vendor', name: 'Another', aliases: ['SCC'] });

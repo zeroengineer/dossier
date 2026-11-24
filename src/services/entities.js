@@ -121,7 +121,14 @@ function relationsOf(ctx, id) {
   }));
 }
 
-function documentCount(ctx, id) {
+/**
+ * Number of documents referencing an entity: as party, business line, engagement, issuing entity or any
+ * document–entity role (not filtered by clearance; the same figure as `getEntity().documentCount`).
+ * @param {object} ctx
+ * @param {number} id
+ * @returns {number}
+ */
+export function entityDocumentCount(ctx, id) {
   return ctx.db.prepare(
     'SELECT count(*) AS n FROM (SELECT document_id FROM document_entities WHERE entity_id = :id '
     + 'UNION SELECT id FROM documents WHERE :id IN (party_id, business_line_id, engagement_id, issuing_entity_id))',
@@ -132,7 +139,7 @@ function fullEntity(ctx, row) {
   return {
     ...snapshot(ctx, row.id),
     relations: relationsOf(ctx, row.id),
-    documentCount: documentCount(ctx, row.id),
+    documentCount: entityDocumentCount(ctx, row.id),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

@@ -196,6 +196,12 @@ const FILTERS = {
   partyId: (v) => ({ sql: 'd.party_id = :partyId', v: int(v, 'partyId') }),
   businessLineId: (v) => ({ sql: 'd.business_line_id = :businessLineId', v: int(v, 'businessLineId') }),
   engagementId: (v) => ({ sql: 'd.engagement_id = :engagementId', v: int(v, 'engagementId') }),
+  // Any reference to the entity: party, business line, engagement, issuing entity or a document–entity role.
+  entityId: (v) => ({
+    sql: '(:entityId IN (d.party_id, d.business_line_id, d.engagement_id, d.issuing_entity_id) '
+      + 'OR d.id IN (SELECT document_id FROM document_entities WHERE entity_id = :entityId))',
+    v: int(v, 'entityId'),
+  }),
   issuingBrandId: (v) => ({ sql: 'd.issuing_brand_id = :issuingBrandId', v: str(v, 'issuingBrandId') }),
   numberSeries: (v) => ({ sql: 'd.number_series = :numberSeries', v: str(v, 'numberSeries') }),
   docNumber: (v) => ({ sql: 'd.doc_number = :docNumber', v: str(v, 'docNumber') }),
@@ -217,7 +223,7 @@ function int(v, what) {
  * List documents the user may see (sensitivity at or below their clearance), newest document date first.
  * @param {object} ctx
  * @param {{ type?: string, status?: string, sensitivity?: string, partyId?: number, businessLineId?: number,
- *   engagementId?: number, issuingBrandId?: string, numberSeries?: string, docNumber?: string,
+ *   engagementId?: number, entityId?: number, issuingBrandId?: string, numberSeries?: string, docNumber?: string,
  *   from?: string, to?: string, limit?: number, offset?: number }} [filters] `from`/`to` bound `docDate` (inclusive);
  *   undefined/null filters are ignored; limit 1..500 (default 50)
  * @returns {DocumentSummary[]}

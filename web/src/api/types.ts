@@ -511,3 +511,71 @@ export interface EntityMatch {
 export interface EntityMatchList {
   entities: EntityMatch[]
 }
+
+// entities
+
+/** One row of `GET /api/entities` (src/services/entities.js findEntities + the route's `documentCount`). */
+export interface EntitySummary {
+  id: number
+  kind: string
+  name: string
+  /** Brand id the entity is linked to, or null. */
+  brand: string | null
+  aliases: string[]
+  /** With `q`: the alias that matched when the name itself did not match exactly. */
+  matched: string | null
+  /** Documents referencing the entity in any role (not filtered by clearance). */
+  documentCount: number
+}
+
+/** `GET /api/entities?q=&kind=&limit=` (limit 1..500, default 50). */
+export interface EntityList {
+  entities: EntitySummary[]
+}
+
+/** A relation in either direction (src/services/entities.js relationsOf). `out`: this entity --role--> `entity`. */
+export interface EntityRelationView {
+  id: number
+  role: string
+  direction: "out" | "in"
+  entity: { id: number; kind: string; name: string }
+  attrs: Record<string, unknown>
+}
+
+/** `GET /api/entities/:id` and the body `POST /api/entities` answers with (src/services/entities.js fullEntity). */
+export interface EntityDetail {
+  id: number
+  kind: string
+  name: string
+  /** Normalised canonical key. */
+  key: string
+  brand: string | null
+  attrs: Record<string, unknown>
+  aliases: string[]
+  relations: EntityRelationView[]
+  documentCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+/**
+ * `POST /api/entities` body (src/services/entities.js upsertEntity). With `id` it updates that entity: aliases are
+ * added (never removed), attrs shallow-merged (a null value deletes the key), `brand: null` clears the link.
+ */
+export interface EntityInput {
+  id?: number
+  kind?: string
+  name: string
+  aliases?: string[]
+  attrs?: Record<string, unknown>
+  brand?: string | null
+}
+
+/** `POST /api/entities/:id/relations` answer (src/services/entities.js relationView). */
+export interface EntityRelation {
+  id: number
+  from: number
+  to: number
+  role: string
+  attrs: Record<string, unknown>
+}

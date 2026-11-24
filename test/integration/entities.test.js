@@ -6,8 +6,9 @@ import { writeWorkspace } from '../helpers/workspace.js';
 import { initWorkspace } from '../../src/workspace/index.js';
 import { openContext } from '../../src/context.js';
 import {
-  upsertEntity, getEntity, findEntities, relateEntities, unrelateEntities, seedEntities,
+  upsertEntity, getEntity, findEntities, relateEntities, unrelateEntities, seedEntities, entityDocumentCount,
 } from '../../src/services/entities.js';
+import { listDocuments } from '../../src/services/documentQueries.js';
 
 function withCtx(fn, spec = {}) {
   const { dir, cleanup } = tmpDir();
@@ -173,6 +174,14 @@ test('getEntity by id or name/alias, with relations in both directions and docum
   ctx.repo.bump('documents'); // raw SQL bypasses the repo: mark the write so memoised entity views are rebuilt
   assert.equal(getEntity(ctx, acme.id).documentCount, 2);
   assert.equal(getEntity(ctx, acmeClient.id).documentCount, 1);
+  assert.equal(entityDocumentCount(ctx, acme.id), 2);
+  assert.equal(entityDocumentCount(ctx, jordan.id), 0);
+
+  // listDocuments({ entityId }) finds every document the count covers (any reference), and nothing else.
+  assert.deepEqual(listDocuments(ctx, { entityId: acme.id }).map((d) => d.id).sort(), ['DOC-000001', 'DOC-000002']);
+  assert.deepEqual(listDocuments(ctx, { entityId: String(acmeClient.id) }).map((d) => d.id), ['DOC-000001']);
+  assert.deepEqual(listDocuments(ctx, { entityId: jordan.id }), []);
+  assert.throws(() => listDocuments(ctx, { entityId: 'x' }), code('INVALID_INPUT'));
 }));
 
 test('findEntities matches canonical names and aliases, filters by kind and limits', () => withCtx((ctx) => {
