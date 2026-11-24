@@ -27,17 +27,82 @@ describe("request", () => {
     expect(errorMessage(apiErr)).toBe("DOCUMENT_NOT_FOUND: No document DOC-000404")
   })
 
-  it("exposes details.errors as strings", async () => {
+  it("formats FIELDS_INVALID entries ({ name, message }) and keeps them as field errors", async () => {
     server.use(
       http.post("*/api/templates/invoice/preview", () =>
         HttpResponse.json(
-          { code: "FIELDS_INVALID", message: "2 fields are invalid", details: { errors: ["billTo.name: required", "date: invalid"] } },
+          {
+            code: "FIELDS_INVALID",
+            message: "Invalid fields: date (expected YYYY-MM-DD); items.0.amount (expected an amount)",
+            details: {
+              errors: [
+                { name: "date", message: "expected YYYY-MM-DD" },
+                { name: "items.0.amount", message: "expected an amount" },
+              ],
+            },
+          },
           { status: 400 },
         ),
       ),
     )
     const err = (await request("/api/templates/invoice/preview", { json: {} }).catch((e: unknown) => e)) as ApiError
-    expect(err.errors).toEqual(["billTo.name: required", "date: invalid"])
+    expect(err.errors).toEqual(["date: expected YYYY-MM-DD", "items.0.amount: expected an amount"])
+    expect(err.fieldErrors.map(({ path, message }) => ({ path, message }))).toEqual([
+      { path: "date", message: "expected YYYY-MM-DD" },
+      { path: "items.0.amount", message: "expected an amount" },
+    ])
+  })
+
+  it("formats FIELDS_MISSING entries ({ name, label, type }) as required fields", async () => {
+    server.use(
+      http.post("*/api/templates/invoice/generate", () =>
+        HttpResponse.json(
+          {
+            code: "FIELDS_MISSING",
+            message: "Missing fields: billTo",
+            details: { missing: [{ name: "billTo", label: "Bill to", type: "entity" }], errors: [] },
+          },
+          { status: 400 },
+        ),
+      ),
+    )
+    const err = (await request("/api/templates/invoice/generate", { json: {} }).catch((e: unknown) => e)) as ApiError
+    expect(err.errors).toEqual(["billTo: is required"])
+    expect(err.fieldErrors[0]).toMatchObject({ path: "billTo", message: "is required", raw: { label: "Bill to" } })
+  })
+
+  it("formats WORKSPACE_INVALID entries ({ file, path, message }) by path", async () => {
+    server.use(
+      http.put("*/api/brands/acme", () =>
+        HttpResponse.json(
+          {
+            code: "WORKSPACE_INVALID",
+            message: "brands/acme/brand.json: palette.primary: must be a hex colour like #1a1a1a",
+            details: {
+              file: "brands/acme/brand.json",
+              errors: [{ file: "brands/acme/brand.json", path: "palette.primary", message: "must be a hex colour like #1a1a1a" }],
+            },
+          },
+          { status: 400 },
+        ),
+      ),
+    )
+    const err = (await request("/api/brands/acme", { method: "PUT", json: {} }).catch((e: unknown) => e)) as ApiError
+    expect(err.errors).toEqual(["palette.primary: must be a hex colour like #1a1a1a"])
+    expect(err.fieldErrors[0]).toMatchObject({ path: "palette.primary", raw: { file: "brands/acme/brand.json" } })
+  })
+
+  it("falls back to the message alone, or JSON for entries of unknown shape", async () => {
+    server.use(
+      http.get("*/api/odd", () =>
+        HttpResponse.json(
+          { code: "INVALID_INPUT", message: "Odd", details: { errors: ["plain text", { message: "no path" }, { weird: 1 }] } },
+          { status: 400 },
+        ),
+      ),
+    )
+    const err = (await request("/api/odd").catch((e: unknown) => e)) as ApiError
+    expect(err.errors).toEqual(["plain text", "no path", '{"weird":1}'])
   })
 
   it("maps a non-JSON failure to a generic ApiError", async () => {

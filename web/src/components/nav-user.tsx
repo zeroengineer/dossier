@@ -32,16 +32,19 @@ export function NavUser() {
               </Avatar>
               <span className="grid flex-1 text-left leading-tight">
                 <span className="truncate font-medium">{id}</span>
-                <span className="truncate text-xs text-muted-foreground">{clearance} clearance</span>
+                <span className="flex items-center gap-1">
+                  <span className="sr-only">Clearance</span>
+                  <SensitivityBadge level={clearance} />
+                </span>
               </span>
               <ChevronsUpDownIcon className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="min-w-56" side={isMobile ? "bottom" : "right"} align="end" sideOffset={4}>
             <DropdownMenuGroup>
-              <DropdownMenuLabel className="flex items-center gap-2 font-normal">
-                <span className="flex-1 truncate font-medium">{id}</span>
-                <SensitivityBadge level={clearance} />
+              <DropdownMenuLabel className="flex flex-col gap-0.5 font-normal">
+                <span className="truncate font-medium">{id}</span>
+                <span className="text-xs text-muted-foreground">{clearance} clearance</span>
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

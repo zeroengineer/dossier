@@ -14,12 +14,55 @@ export class ApiError extends Error {
     this.details = body.details
   }
 
-  /** `details.errors` as a list of strings, when the server sent one (validation errors). */
-  get errors(): string[] {
+  /**
+   * Field-level problems from `details`, for forms to map onto fields (`setError(path)`):
+   * `details.errors[]` (`{ file, path, message }` from WORKSPACE_INVALID, `{ name, message }` from FIELDS_INVALID)
+   * and `details.missing[]` (`{ name, label }` from FIELDS_MISSING, reported as "is required").
+   */
+  get fieldErrors(): FieldError[] {
+    const out: FieldError[] = []
     const errors = this.details["errors"]
-    if (!Array.isArray(errors)) return []
-    return errors.map((e) => (typeof e === "string" ? e : JSON.stringify(e)))
+    if (Array.isArray(errors)) for (const e of errors) out.push(toFieldError(e))
+    const missing = this.details["missing"]
+    if (Array.isArray(missing)) {
+      for (const m of missing) {
+        const name = isRecord(m) && typeof m["name"] === "string" ? m["name"] : null
+        out.push({ path: name, message: "is required", raw: m })
+      }
+    }
+    return out
   }
+
+  /** The field errors as one-line strings: `path: message` (JSON only for entries of unknown shape). */
+  get errors(): string[] {
+    return this.fieldErrors.map(formatFieldError)
+  }
+}
+
+/** One field-level problem. `path` is the dotted field path or name (`billTo.name`, `items.0.amount`), or null. */
+export interface FieldError {
+  path: string | null
+  message: string
+  /** The entry as the server sent it (may carry `file`, `label`, …). */
+  raw: unknown
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function toFieldError(entry: unknown): FieldError {
+  if (typeof entry === "string") return { path: null, message: entry, raw: entry }
+  if (isRecord(entry)) {
+    const path = typeof entry["path"] === "string" ? entry["path"] : typeof entry["name"] === "string" ? entry["name"] : null
+    const message = typeof entry["message"] === "string" ? entry["message"] : null
+    if (message !== null) return { path, message, raw: entry }
+  }
+  return { path: null, message: JSON.stringify(entry), raw: entry }
+}
+
+export function formatFieldError(e: FieldError): string {
+  return e.path ? `${e.path}: ${e.message}` : e.message
 }
 
 export type QueryValue = string | number | boolean | null | undefined

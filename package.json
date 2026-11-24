@@ -4,6 +4,11 @@
   "description": "Document vault and template-driven document generator with an MCP server.",
   "type": "module",
   "license": "MIT",
+  "homepage": "https://github.com/zeroengineer/dossier#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zeroengineer/dossier.git"
+  },
   "engines": {
     "node": ">=22.13"
   },

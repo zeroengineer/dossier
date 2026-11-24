@@ -14,9 +14,9 @@ import { Toaster } from "@/components/ui/sonner"
 function PaletteButton() {
   const { setOpen } = useCommandPalette()
   return (
-    <Button variant="outline" size="sm" onClick={() => setOpen(true)} aria-label="Open command palette" className="text-muted-foreground">
+    <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="text-muted-foreground">
       <SearchIcon data-icon="inline-start" />
-      <span className="hidden sm:inline">Search or jump to…</span>
+      <span className="sr-only sm:not-sr-only">Search or jump to…</span>
       <Kbd>{modKey()} K</Kbd>
     </Button>
   )

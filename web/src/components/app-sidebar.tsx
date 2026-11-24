@@ -6,11 +6,14 @@ import { LogoMark, LogoWordmark } from "@/components/logo"
 import { NavUser } from "@/components/nav-user"
 import { WhatsNewCard } from "@/components/whats-new"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Kbd } from "@/components/ui/kbd"
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem,
-  SidebarRail,
+  SidebarRail, useSidebar,
 } from "@/components/ui/sidebar"
 import { DOCS_URL } from "@/lib/links"
 import { DOCS_ICON, NAV_GROUPS, SETTINGS_ICON, SETTINGS_ITEMS, isActive } from "@/lib/nav"
@@ -30,38 +33,78 @@ function SearchButton() {
   )
 }
 
+/** In the icon rail the sub-pages cannot unfold, so Settings opens them as a flyout menu instead. */
+function SettingsFlyout({ active, pathname, hash }: { active: boolean; pathname: string; hash: string }) {
+  const SettingsIcon = SETTINGS_ICON
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <SidebarMenuButton tooltip="Settings" isActive={active}>
+          <SettingsIcon />
+          <span>Settings</span>
+        </SidebarMenuButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="right" align="start" sideOffset={4} className="min-w-44">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="text-xs text-muted-foreground">Settings</DropdownMenuLabel>
+          {SETTINGS_ITEMS.map((item) => {
+            const Icon = item.icon
+            const current = isActive(item, pathname, hash)
+            return (
+              <DropdownMenuItem key={item.to} asChild>
+                <Link to={item.to} aria-current={current ? "page" : undefined}>
+                  <Icon />
+                  {item.title}
+                </Link>
+              </DropdownMenuItem>
+            )
+          })}
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 function SystemGroup({ pathname, hash }: { pathname: string; hash: string }) {
   const SettingsIcon = SETTINGS_ICON
+  const { state, isMobile } = useSidebar()
   const inSettings = pathname === "/settings" || pathname.startsWith("/settings/")
+  const rail = state === "collapsed" && !isMobile
   return (
     <SidebarGroup>
       <SidebarGroupLabel>System</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          <Collapsible asChild defaultOpen className="group/collapsible">
+          {rail ? (
             <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip="Settings" isActive={inSettings}>
-                  <SettingsIcon />
-                  <span>Settings</span>
-                  <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {SETTINGS_ITEMS.map((item) => (
-                    <SidebarMenuSubItem key={item.to}>
-                      <SidebarMenuSubButton asChild isActive={isActive(item, pathname, hash)}>
-                        <Link to={item.to} aria-current={isActive(item, pathname, hash) ? "page" : undefined}>
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
+              <SettingsFlyout active={inSettings} pathname={pathname} hash={hash} />
             </SidebarMenuItem>
-          </Collapsible>
+          ) : (
+            <Collapsible asChild defaultOpen className="group/collapsible">
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton tooltip="Settings" isActive={inSettings}>
+                    <SettingsIcon />
+                    <span>Settings</span>
+                    <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {SETTINGS_ITEMS.map((item) => (
+                      <SidebarMenuSubItem key={item.to}>
+                        <SidebarMenuSubButton asChild isActive={isActive(item, pathname, hash)}>
+                          <Link to={item.to} aria-current={isActive(item, pathname, hash) ? "page" : undefined}>
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
+          )}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
@@ -84,6 +127,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
+        <nav aria-label="Main" className="flex flex-col">
         {NAV_GROUPS.map((group) => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
@@ -108,6 +152,7 @@ export function AppSidebar() {
           </SidebarGroup>
         ))}
         <SystemGroup pathname={pathname} hash={hash} />
+        </nav>
       </SidebarContent>
 
       <SidebarFooter className="gap-3">

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import path from "node:path"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
@@ -9,8 +10,24 @@ import { defineConfig } from "vite"
 const BACKEND = process.env.DOSSIER_DEV_BACKEND ?? "http://127.0.0.1:4400"
 const proxied = { target: BACKEND, changeOrigin: false }
 
+// Project links come from the root package.json (`homepage`, `repository`), so a fork changes them in one place.
+const rootPackage = JSON.parse(readFileSync(path.resolve(import.meta.dirname, "../package.json"), "utf8")) as {
+  homepage?: string
+  repository?: string | { url?: string }
+}
+const repoUrl = (typeof rootPackage.repository === "string" ? rootPackage.repository : rootPackage.repository?.url ?? "")
+  .replace(/^git\+/, "")
+  .replace(/\.git$/, "")
+const links = {
+  homepage: rootPackage.homepage ?? repoUrl,
+  docs: repoUrl ? `${repoUrl}/tree/main/docs` : (rootPackage.homepage ?? ""),
+}
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  define: {
+    __DOSSIER_LINKS__: JSON.stringify(links),
+  },
   resolve: {
     alias: { "@": path.resolve(import.meta.dirname, "src") },
   },

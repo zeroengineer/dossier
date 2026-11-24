@@ -52,7 +52,33 @@ describe("AppShell", () => {
     renderApp("/vault")
     const user = await screen.findByTestId("nav-user")
     expect(within(user).getByText("demo")).toBeInTheDocument()
-    expect(within(user).getByText("Confidential clearance")).toBeInTheDocument()
+    expect(within(user).getByText("Confidential", { selector: "[data-slot=badge]" })).toBeInTheDocument()
+  })
+
+  it("puts the sidebar groups in a Main navigation landmark", async () => {
+    renderApp("/vault")
+    await sidebar()
+    const main = screen.getByRole("navigation", { name: "Main" })
+    for (const name of ["Vault", "Generate", "Brands"]) expect(within(main).getByRole("link", { name })).toBeInTheDocument()
+  })
+
+  it("keeps the settings pages reachable from the icon rail through a flyout", async () => {
+    const { user, router } = renderApp("/vault")
+    await sidebar()
+    const trigger = document.querySelector<HTMLElement>("[data-sidebar=trigger]")
+    if (!trigger) throw new Error("no sidebar trigger")
+    await user.click(trigger)
+    await waitFor(() => expect(document.querySelector("[data-state=collapsed]")).not.toBeNull())
+    expect(screen.queryByRole("link", { name: "Numbering" })).not.toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "Settings" }))
+    await user.click(await screen.findByRole("menuitem", { name: "Numbering" }))
+    await waitFor(() => expect(router.state.location.pathname).toBe("/settings/numbering"))
+  })
+
+  it("names the header's palette button by its visible text", async () => {
+    renderApp("/vault")
+    await sidebar()
+    expect(screen.getByRole("button", { name: /^Search or jump to…/ })).toBeInTheDocument()
   })
 
   it("lists the workspace's brands in the switcher and remembers the choice", async () => {

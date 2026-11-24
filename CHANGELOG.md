@@ -21,6 +21,8 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 - Typed API client (`ApiError` from the `{ code, message, details }` body, JSON and multipart with
   `X-Dossier-Client: web`), TanStack Query with mutation errors shown as toasts, money and date formatting in minor
   units and the workspace locale.
+- Root `package.json` `homepage` and `repository` fields; the web app's help and docs links are read from them at
+  build time.
 - Scripts: `npm run build` (builds `web/dist`), `npm run dev:web` (Vite with a proxy to the server),
   `npm run test:web` (Vitest + Testing Library + MSW) and `npm run typecheck`.
 
