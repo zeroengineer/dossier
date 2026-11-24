@@ -127,3 +127,15 @@ test('mou: a partner without an address is missing; a brand without an address f
     ctx.ws.brands.set('acme', brand);
   }
 }));
+
+test('mou: print exposes the date parts, so a body can write a legal-style date', () => withExampleCtx(async (ctx) => {
+  const t = await getTemplate(ctx, 'mou');
+  const values = { ...fixtureInput('mou'), date: '2026-09-25', partnerName: 'Example', partnerAddress: 'Line 1', feePercent: 2, examplePrice: 100000 };
+  const { createFormatter } = await import('../../src/render/pdf/format.js');
+  const fmt = createFormatter(ctx.ws.config.locale);
+  const brand = ctx.ws.brands.get('acme');
+  const p = t.module.computed.print(values, { brand, fmt, params: t.meta.params });
+  assert.deepEqual([p.date, p.dateDay, p.dateMonth, p.dateYear], ['25 September 2026', '25th', 'September', '2026']);
+  const none = t.module.computed.print({ ...values, date: undefined }, { brand, fmt, params: t.meta.params });
+  assert.deepEqual([none.date, none.dateDay, none.dateMonth, none.dateYear], ['', '', '', '']);
+}));

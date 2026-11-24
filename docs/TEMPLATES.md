@@ -559,7 +559,7 @@ article), `partnerContact`, `partnerSignatory` (`{ name, designation, contact }`
 the event variant without one is an error on `event.name`), `service`, `date`, `feePercent`,
 `gstPercent` (18), `examplePrice` (1000, the fee illustration), `payoutDays` (7), `term`, `noticeDays` (30),
 `governingLaw`, `jurisdiction`, `signatory` (default `brand.defaultSignatory.mou`), `watermark`. `computed:print`
-gives the bodies printable strings: `print.date` (long), `print.company`, `print.companyUpper`,
+gives the bodies printable strings: `print.date` (long), `print.dateDay` (ordinal day, `25th`), `print.dateMonth`, `print.dateYear`, `print.company`, `print.companyUpper`,
 `print.companyRegistration` (the brand registration labelled `params.registrationLabel`, default `CIN`, else the first),
 `print.companyAddress` (registered address, else business, on one line), `print.partner`, `print.partnerUpper`,
 `print.partnerAddress`, `print.feePercent`, `print.gstPercent` and `print.example.{price,fee,gst,total,received}` (fee

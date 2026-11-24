@@ -21,7 +21,7 @@ function registration(brand, label) {
 }
 
 /**
- * Printable values for the bodies (`{{print.*}}`): dates, upper-case party names, one-line addresses, the first
+ * Printable values for the bodies (`{{print.*}}`): dates (`date` long, and `dateDay` 25th / `dateMonth` / `dateYear`), upper-case party names, one-line addresses, the first
  * party's registration, the event details and the fee illustration (`examplePrice` with `feePercent` and `gstPercent`
  * applied, each rounded half up to a minor unit).
  * @param {Record<string, any>} values @param {{ brand: object, fmt: object, params: object }} env
@@ -34,6 +34,10 @@ function print(values, env) {
   if (!partnerAddress) throw new Error('partnerAddress is empty');
   const out = {
     date: values.date ? fmt.date(values.date, 'long') : '',
+    // Parts for legal-style dates ("this {{print.dateDay}} day of {{print.dateMonth}}, {{print.dateYear}}").
+    dateDay: values.date ? fmt.date(values.date, 'Do') : '',
+    dateMonth: values.date ? fmt.date(values.date, 'MMMM') : '',
+    dateYear: values.date ? fmt.date(values.date, 'YYYY') : '',
     company: brand.legalName,
     companyUpper: brand.legalName.toUpperCase(),
     companyRegistration: registration(brand, params.registrationLabel),
