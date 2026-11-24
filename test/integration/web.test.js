@@ -53,8 +53,9 @@ before(async () => {
   ctx = openContext({ home, user: 'demo', env: {} });
   seedEntities(ctx);
   internCtx = openContext({ home, user: 'intern', env: {} });
-  app = buildServer(ctx);
-  internApp = buildServer(internCtx);
+  // No built web app here: unmatched page routes answer 503 (see spa.test.js for the built case).
+  app = buildServer(ctx, { spaDir: join(tmp.dir, 'no-dist') });
+  internApp = buildServer(internCtx, { spaDir: join(tmp.dir, 'no-dist') });
 
   pdfBytes = await makePdf(['Confidential board minutes about the sample merger']);
   secret = createDocument(ctx, { type: 'Board Resolution', title: 'Secret minutes', sensitivity: 'Confidential' });
@@ -95,13 +96,15 @@ describe('pages', () => {
     }
   });
 
-  test('unknown pages and documents render a 404 page; API answers JSON', async () => {
+  test('unknown old pages and documents render a 404 page; API answers JSON; other paths go to the web app', async () => {
     const page = await app.inject({ url: '/documents/DOC-999999' });
     assert.equal(page.statusCode, 404);
     assert.match(page.body, /DOCUMENT_NOT_FOUND/);
-    const route = await app.inject({ url: '/nowhere' });
+    const route = await app.inject({ url: '/settings/nowhere' });
     assert.equal(route.statusCode, 404);
     assert.match(route.headers['content-type'], /text\/html/);
+    // Other unmatched page paths are web-app routes (503 here because the web app is not built).
+    assert.equal((await app.inject({ url: '/nowhere' })).statusCode, 503);
     const json = await app.inject({ url: '/api/nowhere' });
     assert.equal(json.statusCode, 404);
     assert.equal(json.json().code, 'NOT_FOUND');

@@ -21,22 +21,31 @@ import searchRoutes from './web/routes/search.js';
 import templateRoutes from './web/routes/templates.js';
 import entityRoutes from './web/routes/entities.js';
 import settingsRoutes from './web/routes/settings.js';
+import metaRoutes from './web/routes/meta.js';
+import { SPA_CSP, spaRoutes } from './web/spa.js';
 
 /** Host names accepted when the server listens on a loopback address. */
 export const LOOPBACK_HOSTS = Object.freeze(['localhost', '127.0.0.1', '[::1]']);
 
-const PAGE_CSP = "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-src 'self'; "
+/** Content-Security-Policy of the server-rendered pages (until the web app replaces them). */
+export const PAGE_CSP = "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-src 'self'; "
   + "object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'self'";
+
+export { SPA_CSP };
+
+/** Where `npm run build` puts the web app. */
+export const SPA_DIR = join(REPO_ROOT, 'web', 'dist');
 
 /**
  * Build the Fastify app for one context (one workspace, one acting user).
  * @param {object} ctx from openContext
- * @param {{ allowedHosts?: string[]|null, logger?: boolean|object, fileSizeLimit?: number }} [opts]
+ * @param {{ allowedHosts?: string[]|null, logger?: boolean|object, fileSizeLimit?: number, spaDir?: string }} [opts]
  *   allowedHosts: Host header names accepted (default loopback names; null accepts any host);
- *   fileSizeLimit: largest upload in bytes (default 50 MB)
+ *   fileSizeLimit: largest upload in bytes (default 50 MB);
+ *   spaDir: the built web app (default `web/dist`; a missing folder answers its routes with 503)
  * @returns {import('fastify').FastifyInstance}
  */
-export function buildServer(ctx, { allowedHosts = LOOPBACK_HOSTS, logger = false, fileSizeLimit = 50 * 1024 * 1024 } = {}) {
+export function buildServer(ctx, { allowedHosts = LOOPBACK_HOSTS, logger = false, fileSizeLimit = 50 * 1024 * 1024, spaDir = SPA_DIR } = {}) {
   const app = Fastify({ logger });
 
   app.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string' }, (req, body, done) => {
@@ -84,15 +93,17 @@ export function buildServer(ctx, { allowedHosts = LOOPBACK_HOSTS, logger = false
     return sendPage(reply, errorPage(out, shellOf(ctx)), out.status);
   });
 
-  app.setNotFoundHandler((req, reply) => {
+  const notFound = (req, reply) => {
     const out = { status: 404, body: { code: 'NOT_FOUND', message: `No route ${req.method} ${req.url.split('?')[0]}`, details: {} } };
     if (wantsJson(req)) return reply.code(404).send(out.body);
     return sendPage(reply, errorPage(out, shellOf(ctx)), 404);
-  });
+  };
 
-  for (const routes of [assetRoutes, vaultRoutes, documentRoutes, uploadRoutes, searchRoutes, templateRoutes, entityRoutes, settingsRoutes]) {
-    app.register(routes, { ctx });
+  for (const routes of [assetRoutes, vaultRoutes, documentRoutes, uploadRoutes, searchRoutes, templateRoutes, entityRoutes, settingsRoutes, metaRoutes]) {
+    app.register(routes, { ctx, fileSizeLimit });
   }
+  // Last: the web app's static files and its index.html for unmatched GET/HEAD page routes (other misses: notFound).
+  spaRoutes(app, { dir: spaDir, notFound });
   return app;
 }
 

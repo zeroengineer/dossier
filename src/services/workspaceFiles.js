@@ -4,10 +4,13 @@
 // and the context's workspace is reloaded so the next request sees the change without a restart.
 import { createHash, randomBytes } from 'node:crypto';
 import { createRequire } from 'node:module';
-import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeSync } from 'node:fs';
+import {
+  closeSync, existsSync, fsyncSync, mkdirSync, openSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeSync,
+} from 'node:fs';
 import { dirname, join, posix } from 'node:path';
 import sharp from 'sharp';
 import { DossierError } from '../errors.js';
+import { FONTS_DIR } from '../paths.js';
 import { syncBrands } from '../context.js';
 import { clearanceFor, loadWorkspace, WorkspaceError } from '../workspace/index.js';
 import { CLEARANCES, FONT_WEIGHTS } from '../workspace/schemas.js';
@@ -19,6 +22,17 @@ const PDFDocument = createRequire(import.meta.url)('pdfkit');
 
 /** Largest accepted asset upload (bytes). */
 export const ASSET_MAX_BYTES = 10 * 1024 * 1024;
+
+/**
+ * `builtin:<Family>-<Style>` names of the fonts bundled in `assets/fonts`, sorted.
+ * @returns {string[]}
+ */
+export function builtinFonts() {
+  if (!existsSync(FONTS_DIR)) return [];
+  return readdirSync(FONTS_DIR, { withFileTypes: true }).filter((d) => d.isDirectory()).flatMap((d) => readdirSync(join(FONTS_DIR, d.name))
+    .filter((f) => /\.ttf$/i.test(f) && f.startsWith(`${d.name}-`))
+    .map((f) => `builtin:${f.replace(/\.ttf$/i, '')}`)).sort();
+}
 
 /** Largest before/after JSON text kept in one audit row; longer bodies are stored truncated with their hash. */
 export const AUDIT_CAP = 64 * 1024;

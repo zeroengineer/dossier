@@ -1,26 +1,15 @@
 // Settings: overview, brand editor (sections, asset uploads, preview, download), series and workspace editors, and
 // the JSON API for the same files. Writes go through src/services/workspaceFiles.js.
-import { existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { FONTS_DIR } from '../../paths.js';
 import { DossierError, isDossierError } from '../../errors.js';
 import { listTemplates } from '../../services/templates.js';
 import {
-  ASSET_MAX_BYTES, brandRel, getBrandFile, getSeriesFile, getWorkspaceFile, storeBrandAsset, writeBrand, writeSeries, writeWorkspaceConfig,
+  ASSET_MAX_BYTES, brandRel, builtinFonts, getBrandFile, getSeriesFile, getWorkspaceFile, storeBrandAsset, writeBrand, writeSeries, writeWorkspaceConfig,
 } from '../../services/workspaceFiles.js';
 import { renderBrandPreview } from '../../render/brandPreview.js';
 import { applyBrandSection, BRAND_SECTIONS, newBrandBody, seriesFromForm, workspaceFromForm } from '../settingsForms.js';
 import { brandPage, brandsPage, seriesPage, settingsPage, workspacePage } from '../views/settings.js';
 import { errorReply, readMultipart, seeOther, sendFile, sendPage, shellOf } from '../http.js';
 import { assetVersion } from './assets.js';
-
-/** `builtin:<Family>-<Style>` names of the bundled fonts. */
-function builtinFonts() {
-  if (!existsSync(FONTS_DIR)) return [];
-  return readdirSync(FONTS_DIR, { withFileTypes: true }).filter((d) => d.isDirectory()).flatMap((d) => readdirSync(join(FONTS_DIR, d.name))
-    .filter((f) => /\.ttf$/i.test(f) && f.startsWith(`${d.name}-`))
-    .map((f) => `builtin:${f.replace(/\.ttf$/i, '')}`)).sort();
-}
 
 /** Read an asset upload with the asset size limit; a larger file is ASSET_TOO_LARGE. */
 async function readAssetUpload(req) {
