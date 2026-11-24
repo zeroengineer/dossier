@@ -15,7 +15,7 @@ async function bodyRows() {
 }
 
 /** The template a row shows, read from its Generate link's label. */
-const titleOf = (row: HTMLElement) => within(row).getByRole("link").getAttribute("aria-label")?.replace(/^Generate /, "")
+const titleOf = (row: HTMLElement) => within(row).getByRole("link", { name: /^Generate / }).getAttribute("aria-label")?.replace(/^Generate /, "")
 
 /** A faceted filter button in the toolbar (the column headers have sort buttons with the same name). */
 const filterButton = (name: string) => {
@@ -104,6 +104,7 @@ describe("Templates page", () => {
     const { user, router } = renderApp("/templates")
     await bodyRows()
     expect(screen.getByRole("link", { name: "Generate Invoice" })).toHaveAttribute("href", "/generate/invoice")
+    expect(screen.getByRole("link", { name: "Invoice" })).toHaveAttribute("href", "/generate/invoice")
     await user.click(screen.getByText("Event brief"))
     await waitFor(() => expect(router.state.location.pathname).toBe("/generate/event-brief"))
   })

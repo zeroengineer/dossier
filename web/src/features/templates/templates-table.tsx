@@ -25,7 +25,9 @@ const columns: ColumnDef<TemplateSummary>[] = [
     enableHiding: false,
     cell: ({ row }) => (
       <div className="flex max-w-80 min-w-0 flex-col gap-0.5">
-        <span className="truncate font-medium">{row.original.title}</span>
+        <Link to={generatePath(row.original.id)} className="truncate font-medium hover:underline">
+          {row.original.title}
+        </Link>
         {row.original.description ? (
           <span className="truncate text-xs text-muted-foreground" title={row.original.description}>
             {row.original.description}
@@ -131,6 +133,7 @@ export function TemplatesTable({ templates, isLoading = false }: TemplatesTableP
 
   return (
     <DataTable
+      mode="client"
       columns={columns}
       data={templates}
       getRowId={(t) => t.id}
