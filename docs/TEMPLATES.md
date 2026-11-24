@@ -129,7 +129,9 @@ All exports are optional:
 | `renderHtml(values, env)` | hand-written HTML (a full document string) for templates without blocks |
 
 `env` is `{ ctx, brand, meta, params, fmt, input }` (`fmt` is the locale formatter: `money`, `number`, `date`,
-`amountInWords`). Everything printed must come from the brand, `params` or the values: no literal organisation data.
+`amountInWords`). `params` is `template.json` `params` with the brand's `templateParams[<templateId>]` replacing whole
+top-level keys (`effectiveParams` in `src/services/fields.js`), so a workspace can change a template's wording without
+copying the template; `computed` functions see the same params. Everything printed must come from the brand, `params` or the values: no literal organisation data.
 
 ## body.md
 
@@ -159,11 +161,13 @@ items; other blocks after the first `## For …` are dropped.
 | table | `{ type: 'table', columns: [label \| { key?, label, width?, align? }], rows: [[cells] \| { key: cell }], totalRows?, header?: false }` |
 | keyValue | `{ type: 'keyValue', rows: [[key, value]] }` |
 | signature | `{ type: 'signature', signatoryId?, party?, lines?: [text] }`: with `signatoryId` the brand signatory's image, name and title (and seal) under `party` (default `brand.strings.forCompany`); without, `party`, a blank sign line and `lines` |
-| spacer | `{ type: 'spacer', size }` (points) |
+| spacer | `{ type: 'spacer', size }` (points; a page break when it does not fit) or `{ type: 'spacer', lines }` (pdfkit `moveDown(lines)` in the current font, no break check) |
 | divider, pageBreak | `{ type: 'divider' }`, `{ type: 'pageBreak' }` |
 | custom | `{ type: 'custom', name, data }`: PDF calls `pdfCustom[name]`; HTML inserts `data.html` as given (escape what you put there) or `data.text`; Markdown uses `data.md` or `data.text` |
 
-Any block may carry `cover: true`.
+Any block may carry `cover: true`, and `style` (PDF only): an object deep-merged over the style of its type for that
+block (`{ type: 'paragraph', text, style: { moveDown: 1.2 } }`; a heading takes `heading.<level>` keys, a bullet list
+the `bullets` keys plus `paragraph` for its text, a signature `{ block: { seal: null } }`).
 
 ### Style
 
@@ -297,3 +301,51 @@ and the summary or signatory move to a new page when they would overlap the decl
 single-page only. Every continuation page repeats the logo, title, number and date (and the table header when rows
 continue), so a page on its own identifies the document; the declaration and thank-you strip are on the last page.
 The HTML signature image's alt text is `params.signatureAlt` (`{name}` = the signatory; default `Signature of {name}`).
+
+### Letter family: `offer-letter`, `internship-offer`, `internship-certificate`, `experience-certificate`, `relieving-letter`
+
+Block documents (layout profile `letter`, contact `hr`, party a `person` entity) built by `src/render/letterTemplate.js`
+and drawn as the legacy letters (docs/DISCOVERY.md A8 §2-4): letterhead, `renderBlocksPdf` with the template's style,
+footers. Checked against the legacy offer letter (with and without the seal), internship offer and certificate scripts
+fed the same wording: identical text positions, image boxes and pixel-identical pages. The shipped wording is neutral
+English and lives in `params`; nothing is hard-coded.
+
+| Template | Pages | Numbering | Seal default |
+|---|---|---|---|
+| `offer-letter` | page 1 (date right at `MT+CP+20`, "To," at `+45`, name, address, centred subject, salutation, opening paragraphs), page break, terms with numbered clauses, page break, Annexure 1 (earnings, deductions, summary, notes), page break, acceptance and signature | none unless `brand.series['offer-letter']` is set | on |
+| `internship-offer` | as the offer letter without the annexure; body lineGap 4, paragraphs 0.7 apart, clause headings kept with 45 pt | none unless mapped | off |
+| `internship-certificate`, `experience-certificate`, `relieving-letter` | one page: `Ref:` left and `Date:` right at `MT+CP+25` (Bold 9.5), title (ExtraBold 14, centred), salutation, paragraphs (10 / lineGap 5, 1.2 apart, 2.2 before the signature), signature (image h50) | `brand.series[<id>]`, `hr-cert` in the example | on (experience fixture shows off) |
+
+Footers: the brand footer (contact, `Confidential`, `Page n of N`) on the offer family; certificates leave out the
+centre text (`Page 1 of 1`). `params.footer` and `params.style` (deep-merged over the template style, e.g.
+`{ "heading": { "2": { "breakMin": 45 } } }` for the older offer-letter variant) adjust them.
+
+Params (all text is interpolated: brand keys such as `{legalName}`, `{contact.email}`, `{company}`, `{currency}`, every
+field formatted for print (`{joiningDate}` as `1 September 2026`, money as `₹10,000` with `{stipendWords}`, entities by
+name, lists of lines joined by line breaks), `{fullName}` (honorific + name), `{firstName}` (the `salutationName`
+field, else the first word of the name), `{number}`; offer letter also `{ctcMonthly}`, `{ctcAnnual}`,
+`{ctcMonthlyWords}`, `{ctcAnnualWords}`):
+
+| Param | Used by | Meaning |
+|---|---|---|
+| `refLabel`, `dateLabel` | all | `Ref: {number}` (printed only for a numbered template; `DRAFT` in its preview), `Date: {date}` |
+| `toLabel`, `subject` (+ `subjectUppercase`, default true), `salutation` | offer family | page-1 head |
+| `opening`, `openingMoveDown` | offer family | opening paragraphs (1.2 lines apart) |
+| `termsTitle`, `clauses`, `numberClauses` | offer family | `[{ title, paragraphs?, bullets?, bulletsFrom?, after?, when?, unless? }]`; titles numbered `1.`, `2.` …; `bulletsFrom` names a list field (`responsibilities`, `documents`) that replaces `bullets` when given; `when` / `unless` name values that must be set / empty (`probation`, `stipend`, `jurisdiction`) |
+| `annexure` | offer letter | `{ title, earnings: { columns, widths, totalLabel }, deductions: { title, columns, widths, rows }, summary: { title, columns, widths, rows }, notes }` |
+| `acceptance` | offer family | `{ title, paragraphs, fields, closing, gaps: { afterParagraphs 0.4, afterFields 0.6, beforeSignature 1.2 } }` |
+| `title`, `salutation`, `paragraphs`, `closingMoveDown` | certificates | heading and body |
+| `signature` | all | `{ forLine: "For {legalName}", lines: ["Authorized Signatory"], noSealOffsets }` |
+
+Paragraph items are text or `{ text, when?, unless?, align?, moveDown? }`. Fields: the person (`employee` / `intern`),
+`recipient.name` and `recipient.address` (from the person's `attrs.address`), `honorific`, `salutationName`, `date`,
+`designation` (from `attrs.designation`), the dates of the letter, `seal` (boolean) and `signatory` (default
+`brand.defaultSignatory[<templateId>]`, else `letter`). Offer letter: `joiningDate`, `probation` (boolean) and
+`probationPeriod`, `noticePeriod`, `workingHours`, `workingDays`, `placeOfWork` (lines, default the brand's business
+address), `governingLaw`, `jurisdiction`, `confidentialityPeriod`, `acceptanceDays`, `responsibilities`, `documents`,
+`earnings` (`[{ label, monthly, annual? }]`, annual default 12 × monthly; `computed:salary` sums them in paise; amounts
+print without paise when every figure is whole), `deductions` (`[{ label, value }]`). Internship offer: `startDate`,
+`endDate`, `stipend` (empty: unpaid, the stipend paragraph and clause are left out), `reportingTo`, `placeOfWork`.
+Certificates: `startDate`, `endDate` (relieving letter: `relievingDate`), `summary`, `department` (experience),
+`reason` (relieving). `opening`, `clauses` and `paragraphs` fields replace the params for one document.
+

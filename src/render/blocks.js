@@ -84,7 +84,8 @@ export function validateBlocks(blocks) {
         need(b.signatoryId !== undefined || b.party !== undefined, 'needs signatoryId or party');
         break;
       case 'spacer':
-        need(typeof b.size === 'number' && b.size >= 0, 'size must be a non-negative number');
+        if (b.lines !== undefined) need(typeof b.lines === 'number' && b.lines >= 0, 'lines must be a non-negative number');
+        else need(typeof b.size === 'number' && b.size >= 0, 'size must be a non-negative number');
         break;
       case 'custom':
         need(typeof b.name === 'string' && b.name !== '', 'name is required');
@@ -149,6 +150,15 @@ const merge = (base, over) => {
   for (const [k, v] of Object.entries(over)) out[k] = merge(base[k], v);
   return out;
 };
+
+/**
+ * Deep-merge `over` into `base` (plain objects merge key by key; arrays, null and other values replace).
+ * @param {object} base @param {object} [over]
+ * @returns {object}
+ */
+export function mergeStyle(base, over) {
+  return merge(base, over);
+}
 
 /**
  * Deep-merge a template style over BLOCK_STYLE_DEFAULTS (arrays are replaced).

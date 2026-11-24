@@ -1,5 +1,5 @@
 // Render the shared block model into a PDF with the Task 10 primitives (docs/TEMPLATES.md "Blocks").
-import { normaliseTable, paletteColour, resolveBlockStyle, validateBlocks } from '../blocks.js';
+import { mergeStyle, normaliseTable, paletteColour, resolveBlockStyle, validateBlocks } from '../blocks.js';
 import { drawSignatureBlock, SIGNATURE_DEFAULTS } from './signature.js';
 import { drawTable } from './tables.js';
 import { divider, needsBreak, renderParagraph, richBullets, richText, sectionHeader } from './text.js';
@@ -22,40 +22,48 @@ export async function renderBlocksPdf(ctx, blocks, style = {}, opts = {}) {
   const para = (ps, extra = {}) => ({
     fontSize: ps.fontSize, lineGap: ps.lineGap, align: ps.align, moveDown: ps.moveDown, regularFont: ps.regularFont,
     boldFont: ps.boldFont, fillColor: col(ps.color), boldColor: col(ps.boldColor), maxSpaceRatio: ps.maxSpaceRatio,
-    noJustifyUnderscores: ps.noJustifyUnderscores, amountEmphasis: ps.amountEmphasis, ...extra,
+    noJustifyUnderscores: ps.noJustifyUnderscores, amountEmphasis: ps.amountEmphasis, breakPad: ps.breakPad, ...extra,
   });
+  // A block's own `style` deep-merges over the style of its type (PDF only).
+  const own = (base, b) => (b.style ? mergeStyle(base, b.style) : base);
 
   if (ctx.pageNumber === 0) doc.addPage();
   for (const b of blocks) {
     doc.x = profile.ML;
     switch (b.type) {
       case 'heading': {
-        const hs = { ...s.heading[b.level], ...(b.cover ? s.coverHeading?.[b.level] : {}), ...(b.align ? { align: b.align } : {}) };
+        const hs = { ...own(s.heading[b.level], b), ...(b.cover ? s.coverHeading?.[b.level] : {}), ...(b.align ? { align: b.align } : {}) };
         sectionHeader(ctx, String(b.text), { ...hs, color: col(hs.color) });
         break;
       }
       case 'paragraph': {
-        const ps = { ...s.paragraph, ...(b.cover ? s.coverParagraph : {}), ...(b.align ? { align: b.align } : {}) };
+        const ps = { ...own(s.paragraph, b), ...(b.cover ? s.coverParagraph : {}), ...(b.align ? { align: b.align } : {}) };
         richText(ctx, String(b.text), para(ps));
         break;
       }
-      case 'bullets':
-        richBullets(ctx, b.items.map(String), { ...para(s.paragraph), ...s.bullets, bulletColor: col(s.bullets.bulletColor) });
+      case 'bullets': {
+        const { paragraph: pOver, ...lOver } = b.style ?? {};
+        const ls = mergeStyle(s.bullets, lOver);
+        richBullets(ctx, b.items.map(String), { ...para(mergeStyle(s.paragraph, pOver)), ...ls, bulletColor: col(ls.bulletColor) });
         break;
-      case 'numbered':
-        numbered(ctx, b.items.map(String), s.numbered, para(s.paragraph), col);
+      }
+      case 'numbered': {
+        const { paragraph: pOver, ...lOver } = b.style ?? {};
+        numbered(ctx, b.items.map(String), mergeStyle(s.numbered, lOver), para(mergeStyle(s.paragraph, pOver)), col);
         break;
+      }
       case 'table':
-        table(ctx, b, s.table, col);
+        table(ctx, b, own(s.table, b), col);
         break;
       case 'keyValue':
-        keyValue(ctx, b.rows, s.keyValue, col);
+        keyValue(ctx, b.rows, own(s.keyValue, b), col);
         break;
       case 'signature':
-        await signature(ctx, b, s.signature, col);
+        await signature(ctx, b, own(s.signature, b), col);
         break;
       case 'spacer':
-        if (needsBreak(ctx, b.size)) doc.addPage();
+        if (b.lines !== undefined) doc.moveDown(b.lines); // legacy `doc.moveDown(n)`: current font's line height, no break
+        else if (needsBreak(ctx, b.size)) doc.addPage();
         else doc.y += b.size;
         break;
       case 'divider':

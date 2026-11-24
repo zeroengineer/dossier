@@ -159,6 +159,18 @@ export function coerceValue(type, v, { minor = false } = {}) {
 const isBlank = (v) => typeof v === 'string' && v.trim() === '';
 const isEmpty = (v) => v === undefined || v === null || isBlank(v) || (Array.isArray(v) && v.length === 0);
 
+/**
+ * A template's params as the renderer sees them: `template.json` `params`, with the brand's
+ * `templateParams[<templateId>]` replacing whole top-level keys (per-brand clause lists, labels, defaults).
+ * @param {{ id: string, params?: object }} meta
+ * @param {{ templateParams?: Record<string, object> }} [brand]
+ * @returns {Record<string, unknown>}
+ */
+export function effectiveParams(meta, brand) {
+  const over = brand?.templateParams?.[meta.id];
+  return over ? { ...meta.params, ...over } : (meta.params ?? {});
+}
+
 /** Default strings that are read as a source instead of a literal. */
 const isSourceDefault = (d) => typeof d === 'string' && (d === 'today' || d === 'brand' || /^(brand\.|const:|computed:)/.test(d));
 
@@ -193,7 +205,7 @@ export function resolveTemplateFields(ctx, template, input = {}, { brandId, toda
   if (!wsBrand) throw new DossierError('BRAND_NOT_FOUND', `No brand "${bid}" in the workspace`, { brandId: bid });
   const brand = deepFreeze(structuredClone(wsBrand)); // templates get a copy they cannot change
   const { meta, module } = template;
-  const env = { ctx, brand, meta, params: meta.params, fmt: createFormatter(ctx.ws.config.locale), input };
+  const env = { ctx, brand, meta, params: effectiveParams(meta, brand), fmt: createFormatter(ctx.ws.config.locale), input };
 
   const values = {};
   const missing = [];

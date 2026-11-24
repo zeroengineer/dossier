@@ -15,7 +15,7 @@ import { storeBlobFile } from './blobs.js';
 import { addVersion, createDocument, linkDocuments, resetStatus, updateMetadata } from './documents.js';
 import { requireDoc } from './documentQueries.js';
 import { getEntity } from './entities.js';
-import { resolveTemplateFields, todayIso } from './fields.js';
+import { effectiveParams, resolveTemplateFields, todayIso } from './fields.js';
 import { allocateNumber, peekNumber } from './numbering.js';
 import { getTemplate } from './templates.js';
 
@@ -112,7 +112,7 @@ export async function renderRenditions(ctx, template, values, { brand, number = 
   const shownNumber = draft ? null : (number ?? null);
   const v = { ...values, number: shownNumber };
   const env = {
-    ctx, brand: brandObj, meta, params: meta.params, fmt: createFormatter(ctx.ws.config.locale), input,
+    ctx, brand: brandObj, meta, params: effectiveParams(meta, brandObj), fmt: createFormatter(ctx.ws.config.locale), input,
     number: shownNumber, draft,
   };
   const title = documentTitle(meta, values);

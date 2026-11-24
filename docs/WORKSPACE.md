@@ -69,7 +69,7 @@ The folder name must equal `id`. Paths in `brand.json` are relative to the brand
 | `registrations` | `[]` | `[{ "label": "CIN", "value": "…" }]`, any labels |
 | `addresses.business` | required | lines |
 | `addresses.registered` | none | lines |
-| `contacts` | required | `{ "<key>": { "email", "phone", "website" } }`; must contain `default` (templates may ask for `hr`, `billing`…) |
+| `contacts` | required | `{ "<key>": { "email", "phone", "website" } }`; must contain `default` (templates may ask for `hr`, `billing`…; a key the named contact leaves out falls back to `default`) |
 | `bankAccounts` | `[]` | `[{ accountName, bankName, accountNumber, ifsc?, swift?, branch? }]` |
 | `letterhead.lines` | `[]` | lines under the company name in the letter header; may use placeholders |
 | `footer.left` / `.center` / `.right` | `""` | page footer; may use placeholders, including `{page}` and `{pages}` |
@@ -86,6 +86,7 @@ The folder name must equal `id`. Paths in `brand.json` are relative to the brand
 | `tax.defaultHsn` | none | |
 | `series` | `{}` | `{ "<templateId>": "<seriesId>" }`; every series id must exist in `series.json` |
 | `layoutProfiles` | none | `{ "<profileId>": { …partial profile… } }` overrides of the shipped layout profiles |
+| `templateParams` | `{}` | `{ "<templateId>": { "<param>": … } }`: replaces whole top-level `params` of a template for this brand (e.g. the clause list of `offer-letter`) |
 
 Default palette:
 
@@ -97,7 +98,7 @@ Default palette:
 
 ### Placeholders in strings
 
-Strings such as letterhead lines, footer parts and `strings.*` may contain `{a.b.c}` paths, filled when a document is rendered. The brand itself is in scope (`{legalName}`, `{strings.confidential}`, `{registrations.0.value}`), plus `{contact.*}` (the contact the template uses, normally `contacts.default`) and `{page}` / `{pages}` in footers. A path that does not resolve prints as empty text, except an all-uppercase name such as `{YYYY}`, `{FY}`, `{CODE}` or `{CLIENT}`, which is kept as written so numbering tokens survive. Counter tokens such as `{####}` are never touched.
+Strings such as letterhead lines, footer parts and `strings.*` may contain `{a.b.c}` paths, filled when a document is rendered. The brand itself is in scope (`{legalName}`, `{strings.confidential}`, `{registrations.0.value}`), plus `{contact.*}` (the contact the template uses, normally `contacts.default`; missing keys come from `default`) and `{page}` / `{pages}` in footers. A path that does not resolve prints as empty text, except an all-uppercase name such as `{YYYY}`, `{FY}`, `{CODE}` or `{CLIENT}`, which is kept as written so numbering tokens survive. Counter tokens such as `{####}` are never touched.
 
 ### Assets and placeholders
 

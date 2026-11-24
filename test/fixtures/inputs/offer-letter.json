@@ -1,0 +1,9 @@
+{
+  "employee": "Jordan Placeholder",
+  "date": "2026-08-29",
+  "designation": "Software Developer",
+  "joiningDate": "2026-09-01",
+  "earnings": [
+    { "label": "Basic Salary", "monthly": "10,000" }
+  ]
+}

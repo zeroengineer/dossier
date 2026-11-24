@@ -1,0 +1,49 @@
+{
+  "id": "relieving-letter",
+  "version": 1,
+  "type": "Relieving Letter",
+  "title": "Relieving letter",
+  "description": "Letter confirming that an employee has been relieved of their duties, in the certificate layout.",
+  "category": "letter",
+  "layoutProfile": "letter",
+  "partyType": "Person",
+  "partyKind": "person",
+  "sensitivity": "Internal",
+  "renditions": ["pdf", "html", "md"],
+  "numbering": { "series": "brand", "required": true },
+  "contact": "hr",
+  "params": {
+    "refLabel": "Ref: {number}",
+    "dateLabel": "Date: {date}",
+    "title": "RELIEVING LETTER",
+    "salutation": "To Whom It May Concern,",
+    "paragraphs": [
+      "This is to certify that **{fullName}** was employed with **{company}** as **{designation}** from **{startDate}** to **{relievingDate}**.",
+      { "text": "{reason}", "when": "reason" },
+      "{firstName} has been relieved of all duties with effect from the close of working hours on **{relievingDate}**.",
+      "The work assigned to {firstName} has been handed over and the exit formalities have been completed.",
+      "We wish {firstName} every success in the future."
+    ],
+    "closingMoveDown": 2.2,
+    "signature": {
+      "forLine": "For {legalName}",
+      "lines": ["Authorized Signatory"]
+    }
+  },
+  "fields": [
+    { "name": "brand", "source": "brand", "required": true },
+    { "name": "employee", "label": "Employee", "source": "entity:person", "required": true },
+    { "name": "recipient.name", "label": "Name in the letter", "source": "employee.name", "type": "string", "required": true },
+    { "name": "honorific", "label": "Honorific", "source": "ask", "type": "string", "help": "Mr., Ms., Dr. … (printed before the name)" },
+    { "name": "salutationName", "label": "Short name", "source": "ask", "type": "string", "help": "Used in the body; default: the first name" },
+    { "name": "date", "label": "Date", "source": "today", "type": "date", "required": true },
+    { "name": "designation", "label": "Last designation", "source": "employee.attrs.designation", "type": "string", "required": true },
+    { "name": "startDate", "label": "Employed from", "source": "ask", "type": "date", "required": true },
+    { "name": "relievingDate", "label": "Relieving date (last working day)", "source": "ask", "type": "date", "required": true },
+    { "name": "reason", "label": "Reason sentence", "source": "ask", "type": "text", "help": "Optional sentence, e.g. \"This follows the resignation submitted by …\"" },
+    { "name": "paragraphs", "label": "Paragraphs", "source": "ask", "type": "array", "help": "Replaces all the template's paragraphs" },
+    { "name": "content", "source": "computed:content" },
+    { "name": "signatory", "source": "signatory", "required": true },
+    { "name": "seal", "label": "Company seal", "source": "ask", "type": "boolean", "default": true }
+  ]
+}

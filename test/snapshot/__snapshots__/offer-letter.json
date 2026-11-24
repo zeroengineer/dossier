@@ -1,0 +1,2649 @@
+{
+ "items": [
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 1,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 1,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 1,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 1,
+   "text": "Email: hr@example.com | www.example.com",
+   "x": 397,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 161
+  },
+  {
+   "page": 1,
+   "text": "Date: 29 August 2026",
+   "x": 453.5,
+   "y": 130,
+   "baseline": 140.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 104.5
+  },
+  {
+   "page": 1,
+   "text": "To,",
+   "x": 37.5,
+   "y": 155,
+   "baseline": 165.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 14.5
+  },
+  {
+   "page": 1,
+   "text": "Jordan Placeholder",
+   "x": 37.5,
+   "y": 175.5,
+   "baseline": 186.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 98
+  },
+  {
+   "page": 1,
+   "text": "House No. 0, Sample Street",
+   "x": 37.5,
+   "y": 195.5,
+   "baseline": 206,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 125.5
+  },
+  {
+   "page": 1,
+   "text": "Example Town",
+   "x": 37.5,
+   "y": 212,
+   "baseline": 223,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 65.5
+  },
+  {
+   "page": 1,
+   "text": "Example District",
+   "x": 37.5,
+   "y": 229,
+   "baseline": 239.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 74.5
+  },
+  {
+   "page": 1,
+   "text": "PIN: 000000",
+   "x": 37.5,
+   "y": 245.5,
+   "baseline": 256,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 57
+  },
+  {
+   "page": 1,
+   "text": "SUBJECT: OFFER OF EMPLOYMENT WITH ACME EVENTS PRIVATE LIMITED",
+   "x": 92.5,
+   "y": 292.5,
+   "baseline": 305,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 410.5
+  },
+  {
+   "page": 1,
+   "text": "Dear Jordan,",
+   "x": 37.5,
+   "y": 344,
+   "baseline": 355,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 60.5
+  },
+  {
+   "page": 1,
+   "text": "Further to our recent discussions, we are pleased to offer you the position of",
+   "x": 37.5,
+   "y": 380,
+   "baseline": 391,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 389.5
+  },
+  {
+   "page": 1,
+   "text": "Software Developer",
+   "x": 431,
+   "y": 380,
+   "baseline": 391,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 102
+  },
+  {
+   "page": 1,
+   "text": "with",
+   "x": 537,
+   "y": 380,
+   "baseline": 391,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 21
+  },
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 37.5,
+   "y": 398.5,
+   "baseline": 410,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 143.5
+  },
+  {
+   "page": 1,
+   "text": ".",
+   "x": 181,
+   "y": 398.5,
+   "baseline": 410,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 1,
+   "text": "We expect you to join us in the role of",
+   "x": 37.5,
+   "y": 434.5,
+   "baseline": 446,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 179
+  },
+  {
+   "page": 1,
+   "text": "Software Developer",
+   "x": 218.5,
+   "y": 434.5,
+   "baseline": 446,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 100.5
+  },
+  {
+   "page": 1,
+   "text": "on",
+   "x": 321,
+   "y": 434.5,
+   "baseline": 446,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 12.5
+  },
+  {
+   "page": 1,
+   "text": "1 September 2026",
+   "x": 335.5,
+   "y": 434.5,
+   "baseline": 446,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 91
+  },
+  {
+   "page": 1,
+   "text": ".",
+   "x": 426.5,
+   "y": 434.5,
+   "baseline": 446,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 1,
+   "text": "Your annual cost to the company (CTC) will be",
+   "x": 37.5,
+   "y": 470.5,
+   "baseline": 482,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 226.5
+  },
+  {
+   "page": 1,
+   "text": "₹1,20,000 per annum",
+   "x": 267,
+   "y": 470.5,
+   "baseline": 482,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 109
+  },
+  {
+   "page": 1,
+   "text": "(Rupees One Lakh Twenty Thousand",
+   "x": 378.5,
+   "y": 470.5,
+   "baseline": 482,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 179.5
+  },
+  {
+   "page": 1,
+   "text": "Only).",
+   "x": 37.5,
+   "y": 489.5,
+   "baseline": 501,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 29
+  },
+  {
+   "page": 1,
+   "text": "The break-up of your CTC is set out in Annexure 1.",
+   "x": 37.5,
+   "y": 525.5,
+   "baseline": 537,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 238
+  },
+  {
+   "page": 1,
+   "text": "We look forward to working with you.",
+   "x": 37.5,
+   "y": 561.5,
+   "baseline": 573,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 174.5
+  },
+  {
+   "page": 1,
+   "text": "hr@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 1,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 1,
+   "text": "Page 1 of 7",
+   "x": 522,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 35.5
+  },
+  {
+   "page": 2,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 2,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 2,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 2,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 2,
+   "text": "Email: hr@example.com | www.example.com",
+   "x": 397,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 161
+  },
+  {
+   "page": 2,
+   "text": "TERMS OF EMPLOYMENT",
+   "x": 37.5,
+   "y": 115.5,
+   "baseline": 133.5,
+   "size": 17,
+   "font": "Manrope-Bold",
+   "width": 199.5
+  },
+  {
+   "page": 2,
+   "text": "1. Employment Status",
+   "x": 37.5,
+   "y": 164,
+   "baseline": 176.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 125.5
+  },
+  {
+   "page": 2,
+   "text": "This offer is made on the terms set out in this letter and is subject to the policies of the Company in force",
+   "x": 37.5,
+   "y": 189,
+   "baseline": 200.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 2,
+   "text": "from time to time.",
+   "x": 37.5,
+   "y": 208,
+   "baseline": 219,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 85
+  },
+  {
+   "page": 2,
+   "text": "You will be on probation for",
+   "x": 37.5,
+   "y": 236,
+   "baseline": 247.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 133
+  },
+  {
+   "page": 2,
+   "text": "six (6) months",
+   "x": 173.5,
+   "y": 236,
+   "baseline": 247.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 75.5
+  },
+  {
+   "page": 2,
+   "text": "from your date of joining. When the probation period has been",
+   "x": 252,
+   "y": 236,
+   "baseline": 247.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 306
+  },
+  {
+   "page": 2,
+   "text": "completed satisfactorily, the Company will confirm your employment in writing. The Company may extend",
+   "x": 37.5,
+   "y": 255,
+   "baseline": 266,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 2,
+   "text": "the probation period at its discretion.",
+   "x": 37.5,
+   "y": 274,
+   "baseline": 285,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 179
+  },
+  {
+   "page": 2,
+   "text": "2. Designation and Duties",
+   "x": 37.5,
+   "y": 307,
+   "baseline": 320,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 148.5
+  },
+  {
+   "page": 2,
+   "text": "You are appointed as",
+   "x": 37.5,
+   "y": 332.5,
+   "baseline": 343.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 100.5
+  },
+  {
+   "page": 2,
+   "text": "Software Developer",
+   "x": 140,
+   "y": 332.5,
+   "baseline": 343.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 100.5
+  },
+  {
+   "page": 2,
+   "text": ".",
+   "x": 240,
+   "y": 332.5,
+   "baseline": 343.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 2,
+   "text": "Your responsibilities will include, among others:",
+   "x": 37.5,
+   "y": 360.5,
+   "baseline": 371.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 227.5
+  },
+  {
+   "page": 2,
+   "text": "•",
+   "x": 42.5,
+   "y": 388.5,
+   "baseline": 400,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 2,
+   "text": "Carrying out the work assigned to you by your reporting manager to the expected standard",
+   "x": 56.5,
+   "y": 388.5,
+   "baseline": 400,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 436.5
+  },
+  {
+   "page": 2,
+   "text": "•",
+   "x": 42.5,
+   "y": 412.5,
+   "baseline": 423.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 2,
+   "text": "Working with colleagues and other teams to meet agreed timelines",
+   "x": 56.5,
+   "y": 412.5,
+   "baseline": 423.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 321
+  },
+  {
+   "page": 2,
+   "text": "•",
+   "x": 42.5,
+   "y": 436.5,
+   "baseline": 447.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 2,
+   "text": "Keeping the records, reports and documentation of your work up to date",
+   "x": 56.5,
+   "y": 436.5,
+   "baseline": 447.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 346.5
+  },
+  {
+   "page": 2,
+   "text": "•",
+   "x": 42.5,
+   "y": 460,
+   "baseline": 471.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 2,
+   "text": "Following the processes, standards and policies of the Company",
+   "x": 56.5,
+   "y": 460,
+   "baseline": 471.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 309.5
+  },
+  {
+   "page": 2,
+   "text": "•",
+   "x": 42.5,
+   "y": 484,
+   "baseline": 495.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 2,
+   "text": "Any other duties the management assigns to you from time to time",
+   "x": 56.5,
+   "y": 484,
+   "baseline": 495.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 321
+  },
+  {
+   "page": 2,
+   "text": "The Company may change or add to your responsibilities as the needs of the business require.",
+   "x": 37.5,
+   "y": 514.5,
+   "baseline": 525.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 452
+  },
+  {
+   "page": 2,
+   "text": "You will perform your duties faithfully and diligently and devote your full working time to the business of the",
+   "x": 37.5,
+   "y": 542.5,
+   "baseline": 554,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 2,
+   "text": "Company.",
+   "x": 37.5,
+   "y": 561.5,
+   "baseline": 572.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 48
+  },
+  {
+   "page": 2,
+   "text": "3. Place of Work",
+   "x": 37.5,
+   "y": 594.5,
+   "baseline": 607.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 91.5
+  },
+  {
+   "page": 2,
+   "text": "Your place of work will be:",
+   "x": 37.5,
+   "y": 620,
+   "baseline": 631,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 122
+  },
+  {
+   "page": 2,
+   "text": "Acme Events Private Limited",
+   "x": 37.5,
+   "y": 648,
+   "baseline": 659,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 143.5
+  },
+  {
+   "page": 2,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 37.5,
+   "y": 667,
+   "baseline": 678,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 230.5
+  },
+  {
+   "page": 2,
+   "text": "Example City, Example State 000000, India",
+   "x": 37.5,
+   "y": 685.5,
+   "baseline": 697,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 204.5
+  },
+  {
+   "page": 2,
+   "text": "The Company may assign you to another office, project or client location as the needs of the business",
+   "x": 37.5,
+   "y": 716,
+   "baseline": 727.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 2,
+   "text": "require.",
+   "x": 37.5,
+   "y": 735,
+   "baseline": 746,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 37
+  },
+  {
+   "page": 2,
+   "text": "hr@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 2,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 2,
+   "text": "Page 2 of 7",
+   "x": 521,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37
+  },
+  {
+   "page": 3,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 3,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 3,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 3,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 3,
+   "text": "Email: hr@example.com | www.example.com",
+   "x": 397,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 161
+  },
+  {
+   "page": 3,
+   "text": "4. Working Hours",
+   "x": 37.5,
+   "y": 114,
+   "baseline": 126.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 98
+  },
+  {
+   "page": 3,
+   "text": "Your normal working hours are",
+   "x": 37.5,
+   "y": 139,
+   "baseline": 150.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 144.5
+  },
+  {
+   "page": 3,
+   "text": "9:00 AM to 6:00 PM",
+   "x": 184,
+   "y": 139,
+   "baseline": 150.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 98.5
+  },
+  {
+   "page": 3,
+   "text": ", including breaks.",
+   "x": 282.5,
+   "y": 139,
+   "baseline": 150.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 86
+  },
+  {
+   "page": 3,
+   "text": "Your working days are",
+   "x": 37.5,
+   "y": 167.5,
+   "baseline": 178.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 104
+  },
+  {
+   "page": 3,
+   "text": "Monday to Friday",
+   "x": 143.5,
+   "y": 167.5,
+   "baseline": 178.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 85.5
+  },
+  {
+   "page": 3,
+   "text": ".",
+   "x": 229,
+   "y": 167.5,
+   "baseline": 178.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 3,
+   "text": "You may be asked to work beyond your normal working hours when the work requires it.",
+   "x": 37.5,
+   "y": 195.5,
+   "baseline": 206.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 415.5
+  },
+  {
+   "page": 3,
+   "text": "5. Leave",
+   "x": 37.5,
+   "y": 228.5,
+   "baseline": 241.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 47
+  },
+  {
+   "page": 3,
+   "text": "You are entitled to leave and holidays under the leave policy of the Company, as amended from time to time.",
+   "x": 37.5,
+   "y": 254,
+   "baseline": 265,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 514
+  },
+  {
+   "page": 3,
+   "text": "6. Performance Review and Promotions",
+   "x": 37.5,
+   "y": 287,
+   "baseline": 300,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 227
+  },
+  {
+   "page": 3,
+   "text": "Pay revisions, incentives and promotions take into account:",
+   "x": 37.5,
+   "y": 312.5,
+   "baseline": 323.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 285.5
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 340.5,
+   "baseline": 351.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "Your individual performance",
+   "x": 56.5,
+   "y": 340.5,
+   "baseline": 351.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 133.5
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 364.5,
+   "baseline": 375.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "Your contribution to your team and to the Company",
+   "x": 56.5,
+   "y": 364.5,
+   "baseline": 375.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 246
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 388,
+   "baseline": 399.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "The quality of your work",
+   "x": 56.5,
+   "y": 388,
+   "baseline": 399.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 114.5
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 412,
+   "baseline": 423.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "Your attendance and conduct",
+   "x": 56.5,
+   "y": 412,
+   "baseline": 423.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 142
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 436,
+   "baseline": 447,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "The performance of the business",
+   "x": 56.5,
+   "y": 436,
+   "baseline": 447,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 159.5
+  },
+  {
+   "page": 3,
+   "text": "Pay revisions and promotions are not automatic and are decided by the Company.",
+   "x": 37.5,
+   "y": 466.5,
+   "baseline": 477.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 390.5
+  },
+  {
+   "page": 3,
+   "text": "7. Other Employment",
+   "x": 37.5,
+   "y": 499.5,
+   "baseline": 512,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 121
+  },
+  {
+   "page": 3,
+   "text": "While you are employed by the Company you will not take up any other employment, consultancy, freelance",
+   "x": 37.5,
+   "y": 524.5,
+   "baseline": 536,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 3,
+   "text": "work or business that conflicts with your duties to the Company, unless the Company has approved it in",
+   "x": 37.5,
+   "y": 543.5,
+   "baseline": 555,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 3,
+   "text": "writing in advance.",
+   "x": 37.5,
+   "y": 562.5,
+   "baseline": 573.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 89.5
+  },
+  {
+   "page": 3,
+   "text": "8. Confidentiality",
+   "x": 37.5,
+   "y": 595.5,
+   "baseline": 608.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 101
+  },
+  {
+   "page": 3,
+   "text": "You will keep confidential all information about the Company and its business that you receive in the course",
+   "x": 37.5,
+   "y": 621,
+   "baseline": 632,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 3,
+   "text": "of your employment, including:",
+   "x": 37.5,
+   "y": 639.5,
+   "baseline": 651,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 148
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 668,
+   "baseline": 679,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "Business plans and strategies",
+   "x": 56.5,
+   "y": 668,
+   "baseline": 679,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 144.5
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 691.5,
+   "baseline": 703,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "Information about clients and suppliers",
+   "x": 56.5,
+   "y": 691.5,
+   "baseline": 703,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 188
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 715.5,
+   "baseline": 727,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "Financial information",
+   "x": 56.5,
+   "y": 715.5,
+   "baseline": 727,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 100.5
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 739.5,
+   "baseline": 750.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "Software, source code and technical documentation",
+   "x": 56.5,
+   "y": 739.5,
+   "baseline": 750.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 252.5
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 763.5,
+   "baseline": 774.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "Internal systems, processes and know-how",
+   "x": 56.5,
+   "y": 763.5,
+   "baseline": 774.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 208
+  },
+  {
+   "page": 3,
+   "text": "hr@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 3,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 3,
+   "text": "Page 3 of 7",
+   "x": 521,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37
+  },
+  {
+   "page": 4,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 4,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 4,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 4,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 4,
+   "text": "Email: hr@example.com | www.example.com",
+   "x": 397,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 161
+  },
+  {
+   "page": 4,
+   "text": "•",
+   "x": 42.5,
+   "y": 110,
+   "baseline": 121,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 4,
+   "text": "Any other information marked or understood to be confidential",
+   "x": 56.5,
+   "y": 110,
+   "baseline": 121,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 300.5
+  },
+  {
+   "page": 4,
+   "text": "You will not disclose or use such information except to carry out your duties.",
+   "x": 37.5,
+   "y": 140.5,
+   "baseline": 151.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 364.5
+  },
+  {
+   "page": 4,
+   "text": "This obligation continues after your employment ends, for",
+   "x": 37.5,
+   "y": 168.5,
+   "baseline": 179.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 292
+  },
+  {
+   "page": 4,
+   "text": "three (3) years",
+   "x": 333.5,
+   "y": 168.5,
+   "baseline": 179.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 79
+  },
+  {
+   "page": 4,
+   "text": "from the date you leave the",
+   "x": 416.5,
+   "y": 168.5,
+   "baseline": 179.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 141
+  },
+  {
+   "page": 4,
+   "text": "Company.",
+   "x": 37.5,
+   "y": 187.5,
+   "baseline": 198.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 48
+  },
+  {
+   "page": 4,
+   "text": "9. Intellectual Property",
+   "x": 37.5,
+   "y": 220.5,
+   "baseline": 233.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 133.5
+  },
+  {
+   "page": 4,
+   "text": "All work that you create, alone or with others, in the course of your employment, including software, designs,",
+   "x": 37.5,
+   "y": 246,
+   "baseline": 257,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 4,
+   "text": "documents, inventions and improvements, belongs to the Company.",
+   "x": 37.5,
+   "y": 264.5,
+   "baseline": 276,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 327.5
+  },
+  {
+   "page": 4,
+   "text": "You agree to sign any document reasonably needed to confirm or record the rights of the Company in such",
+   "x": 37.5,
+   "y": 293,
+   "baseline": 304,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 4,
+   "text": "work.",
+   "x": 37.5,
+   "y": 311.5,
+   "baseline": 323,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 25.5
+  },
+  {
+   "page": 4,
+   "text": "10. Notice Period",
+   "x": 37.5,
+   "y": 345,
+   "baseline": 357.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 98
+  },
+  {
+   "page": 4,
+   "text": "Either party may end the employment by giving",
+   "x": 37.5,
+   "y": 370,
+   "baseline": 381.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 224.5
+  },
+  {
+   "page": 4,
+   "text": "thirty (30) days",
+   "x": 264,
+   "y": 370,
+   "baseline": 381.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 79
+  },
+  {
+   "page": 4,
+   "text": "of written notice, or pay in place of notice.",
+   "x": 345.5,
+   "y": 370,
+   "baseline": 381.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 200
+  },
+  {
+   "page": 4,
+   "text": "The Company may release you before the end of the notice period.",
+   "x": 37.5,
+   "y": 398.5,
+   "baseline": 409.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 319.5
+  },
+  {
+   "page": 4,
+   "text": "The Company may end your employment without notice in the case of:",
+   "x": 37.5,
+   "y": 426.5,
+   "baseline": 437.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 338.5
+  },
+  {
+   "page": 4,
+   "text": "•",
+   "x": 42.5,
+   "y": 454.5,
+   "baseline": 466,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 4,
+   "text": "Serious misconduct",
+   "x": 56.5,
+   "y": 454.5,
+   "baseline": 466,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 96.5
+  },
+  {
+   "page": 4,
+   "text": "•",
+   "x": 42.5,
+   "y": 478.5,
+   "baseline": 489.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 4,
+   "text": "Fraud or dishonesty",
+   "x": 56.5,
+   "y": 478.5,
+   "baseline": 489.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 95.5
+  },
+  {
+   "page": 4,
+   "text": "•",
+   "x": 42.5,
+   "y": 502.5,
+   "baseline": 513.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 4,
+   "text": "A breach of confidentiality",
+   "x": 56.5,
+   "y": 502.5,
+   "baseline": 513.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 126.5
+  },
+  {
+   "page": 4,
+   "text": "•",
+   "x": 42.5,
+   "y": 526,
+   "baseline": 537.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 4,
+   "text": "Gross negligence",
+   "x": 56.5,
+   "y": 526,
+   "baseline": 537.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 84
+  },
+  {
+   "page": 4,
+   "text": "•",
+   "x": 42.5,
+   "y": 550,
+   "baseline": 561,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 4,
+   "text": "A serious breach of the policies of the Company",
+   "x": 56.5,
+   "y": 550,
+   "baseline": 561,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 229.5
+  },
+  {
+   "page": 4,
+   "text": "11. Background Verification",
+   "x": 37.5,
+   "y": 585.5,
+   "baseline": 598,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 155.5
+  },
+  {
+   "page": 4,
+   "text": "This offer is subject to satisfactory verification of the information and documents you have provided.",
+   "x": 37.5,
+   "y": 610.5,
+   "baseline": 622,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 482.5
+  },
+  {
+   "page": 4,
+   "text": "If any of that information is found to be false or incomplete, the Company may withdraw this offer or end your",
+   "x": 37.5,
+   "y": 639,
+   "baseline": 650,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 4,
+   "text": "employment.",
+   "x": 37.5,
+   "y": 657.5,
+   "baseline": 669,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 63
+  },
+  {
+   "page": 4,
+   "text": "12. Remote and Hybrid Work",
+   "x": 37.5,
+   "y": 691,
+   "baseline": 703.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 160.5
+  },
+  {
+   "page": 4,
+   "text": "On request, you may be allowed to work remotely or in a hybrid arrangement with the prior written approval",
+   "x": 37.5,
+   "y": 716,
+   "baseline": 727.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 4,
+   "text": "of your manager.",
+   "x": 37.5,
+   "y": 735,
+   "baseline": 746,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 80.5
+  },
+  {
+   "page": 4,
+   "text": "Such approval is at the discretion of the Company and does not change the terms of your employment.",
+   "x": 37.5,
+   "y": 763,
+   "baseline": 774.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 493
+  },
+  {
+   "page": 4,
+   "text": "hr@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 4,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 4,
+   "text": "Page 4 of 7",
+   "x": 520.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37
+  },
+  {
+   "page": 5,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 5,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 5,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 5,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 5,
+   "text": "Email: hr@example.com | www.example.com",
+   "x": 397,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 161
+  },
+  {
+   "page": 5,
+   "text": "13. Documents",
+   "x": 37.5,
+   "y": 114,
+   "baseline": 126.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 85.5
+  },
+  {
+   "page": 5,
+   "text": "Please bring copies of the following documents on your date of joining. The originals may be asked for to",
+   "x": 37.5,
+   "y": 139,
+   "baseline": 150.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 5,
+   "text": "verify them and will be returned to you.",
+   "x": 37.5,
+   "y": 158,
+   "baseline": 169,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 186
+  },
+  {
+   "page": 5,
+   "text": "•",
+   "x": 42.5,
+   "y": 186,
+   "baseline": 197.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 5,
+   "text": "Proof of identity",
+   "x": 56.5,
+   "y": 186,
+   "baseline": 197.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 77.5
+  },
+  {
+   "page": 5,
+   "text": "•",
+   "x": 42.5,
+   "y": 210,
+   "baseline": 221,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 5,
+   "text": "Proof of address",
+   "x": 56.5,
+   "y": 210,
+   "baseline": 221,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 79.5
+  },
+  {
+   "page": 5,
+   "text": "•",
+   "x": 42.5,
+   "y": 234,
+   "baseline": 245,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 5,
+   "text": "Passport-size photographs",
+   "x": 56.5,
+   "y": 234,
+   "baseline": 245,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 131.5
+  },
+  {
+   "page": 5,
+   "text": "•",
+   "x": 42.5,
+   "y": 257.5,
+   "baseline": 269,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 5,
+   "text": "Educational certificates and mark sheets",
+   "x": 56.5,
+   "y": 257.5,
+   "baseline": 269,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 197.5
+  },
+  {
+   "page": 5,
+   "text": "•",
+   "x": 42.5,
+   "y": 281.5,
+   "baseline": 292.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 5,
+   "text": "Experience and relieving letters from previous employers (if any)",
+   "x": 56.5,
+   "y": 281.5,
+   "baseline": 292.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 308.5
+  },
+  {
+   "page": 5,
+   "text": "•",
+   "x": 42.5,
+   "y": 305.5,
+   "baseline": 316.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 5,
+   "text": "Bank account details",
+   "x": 56.5,
+   "y": 305.5,
+   "baseline": 316.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 101
+  },
+  {
+   "page": 5,
+   "text": "•",
+   "x": 42.5,
+   "y": 329.5,
+   "baseline": 340.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 5,
+   "text": "A signed copy of this letter",
+   "x": 56.5,
+   "y": 329.5,
+   "baseline": 340.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 128
+  },
+  {
+   "page": 5,
+   "text": "14. Company Policies",
+   "x": 37.5,
+   "y": 364.5,
+   "baseline": 377.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 121.5
+  },
+  {
+   "page": 5,
+   "text": "Your employment is governed by the policies and rules of the Company as amended from time to time.",
+   "x": 37.5,
+   "y": 390,
+   "baseline": 401,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 486.5
+  },
+  {
+   "page": 5,
+   "text": "A breach of these policies may lead to disciplinary action, including the end of your employment.",
+   "x": 37.5,
+   "y": 418,
+   "baseline": 429,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 460
+  },
+  {
+   "page": 5,
+   "text": "15. Governing Law and Jurisdiction",
+   "x": 37.5,
+   "y": 451,
+   "baseline": 464,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 199.5
+  },
+  {
+   "page": 5,
+   "text": "This letter is governed by the laws of India.",
+   "x": 37.5,
+   "y": 476.5,
+   "baseline": 487.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 202.5
+  },
+  {
+   "page": 5,
+   "text": "Any dispute arising from your employment will be subject to the jurisdiction of the competent courts.",
+   "x": 37.5,
+   "y": 504.5,
+   "baseline": 516,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 483.5
+  },
+  {
+   "page": 5,
+   "text": "hr@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 5,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 5,
+   "text": "Page 5 of 7",
+   "x": 520.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37
+  },
+  {
+   "page": 6,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 6,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 6,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 6,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 6,
+   "text": "Email: hr@example.com | www.example.com",
+   "x": 397,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 161
+  },
+  {
+   "page": 6,
+   "text": "ANNEXURE 1 – SALARY STRUCTURE",
+   "x": 37.5,
+   "y": 111.5,
+   "baseline": 130,
+   "size": 17,
+   "font": "Manrope-Bold",
+   "width": 285.5
+  },
+  {
+   "page": 6,
+   "text": "Earnings",
+   "x": 47.5,
+   "y": 165.5,
+   "baseline": 175.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 40.5
+  },
+  {
+   "page": 6,
+   "text": "Monthly Amount (₹)",
+   "x": 284.5,
+   "y": 165.5,
+   "baseline": 175.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 93
+  },
+  {
+   "page": 6,
+   "text": "Annual Amount (₹)",
+   "x": 460.5,
+   "y": 165.5,
+   "baseline": 175.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 87.5
+  },
+  {
+   "page": 6,
+   "text": "Basic Salary",
+   "x": 47.5,
+   "y": 187.5,
+   "baseline": 197.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 52.5
+  },
+  {
+   "page": 6,
+   "text": "10,000",
+   "x": 347,
+   "y": 187.5,
+   "baseline": 197.5,
+   "size": 9.5,
+   "font": "Manrope-Medium",
+   "width": 30.5
+  },
+  {
+   "page": 6,
+   "text": "1,20,000",
+   "x": 509.5,
+   "y": 187.5,
+   "baseline": 197.5,
+   "size": 9.5,
+   "font": "Manrope-Medium",
+   "width": 38
+  },
+  {
+   "page": 6,
+   "text": "Gross Salary / CTC",
+   "x": 47.5,
+   "y": 209.5,
+   "baseline": 219.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 85
+  },
+  {
+   "page": 6,
+   "text": "10,000",
+   "x": 345.5,
+   "y": 209.5,
+   "baseline": 219.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 32
+  },
+  {
+   "page": 6,
+   "text": "1,20,000",
+   "x": 507.5,
+   "y": 209.5,
+   "baseline": 219.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 40
+  },
+  {
+   "page": 6,
+   "text": "Statutory Deductions",
+   "x": 37.5,
+   "y": 258.5,
+   "baseline": 271,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 126
+  },
+  {
+   "page": 6,
+   "text": "Component",
+   "x": 47.5,
+   "y": 297.5,
+   "baseline": 308,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 54.5
+  },
+  {
+   "page": 6,
+   "text": "Amount",
+   "x": 511,
+   "y": 297.5,
+   "baseline": 308,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 36.5
+  },
+  {
+   "page": 6,
+   "text": "Professional Tax",
+   "x": 47.5,
+   "y": 319.5,
+   "baseline": 330,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 71.5
+  },
+  {
+   "page": 6,
+   "text": "As applicable",
+   "x": 489,
+   "y": 319.5,
+   "baseline": 330,
+   "size": 9.5,
+   "font": "Manrope-Medium",
+   "width": 59
+  },
+  {
+   "page": 6,
+   "text": "Income Tax (TDS)",
+   "x": 47.5,
+   "y": 341.5,
+   "baseline": 352,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 76.5
+  },
+  {
+   "page": 6,
+   "text": "As applicable",
+   "x": 489,
+   "y": 341.5,
+   "baseline": 352,
+   "size": 9.5,
+   "font": "Manrope-Medium",
+   "width": 59
+  },
+  {
+   "page": 6,
+   "text": "Salary Summary",
+   "x": 37.5,
+   "y": 390.5,
+   "baseline": 403.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 94
+  },
+  {
+   "page": 6,
+   "text": "Description",
+   "x": 47.5,
+   "y": 430,
+   "baseline": 440,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 54
+  },
+  {
+   "page": 6,
+   "text": "Amount",
+   "x": 511,
+   "y": 430,
+   "baseline": 440,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 36.5
+  },
+  {
+   "page": 6,
+   "text": "Gross Monthly Salary",
+   "x": 47.5,
+   "y": 452,
+   "baseline": 462,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 92.5
+  },
+  {
+   "page": 6,
+   "text": "₹10,000",
+   "x": 511.5,
+   "y": 452,
+   "baseline": 462,
+   "size": 9.5,
+   "font": "Manrope-Medium",
+   "width": 36
+  },
+  {
+   "page": 6,
+   "text": "Annual Cost to Company (CTC)",
+   "x": 47.5,
+   "y": 474,
+   "baseline": 484,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 136.5
+  },
+  {
+   "page": 6,
+   "text": "₹1,20,000",
+   "x": 504,
+   "y": 474,
+   "baseline": 484,
+   "size": 9.5,
+   "font": "Manrope-Medium",
+   "width": 44
+  },
+  {
+   "page": 6,
+   "text": "•",
+   "x": 42.5,
+   "y": 515,
+   "baseline": 526,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 6,
+   "text": "Statutory deductions, where applicable, are made from the salary as required by law.",
+   "x": 56.5,
+   "y": 515,
+   "baseline": 526,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 404.5
+  },
+  {
+   "page": 6,
+   "text": "•",
+   "x": 42.5,
+   "y": 536.5,
+   "baseline": 548,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 6,
+   "text": "Pay revisions, increments and other benefits are governed by the policies of the Company.",
+   "x": 56.5,
+   "y": 536.5,
+   "baseline": 548,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 432
+  },
+  {
+   "page": 6,
+   "text": "hr@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 6,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 6,
+   "text": "Page 6 of 7",
+   "x": 520.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 7,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 7,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 7,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 7,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 7,
+   "text": "Email: hr@example.com | www.example.com",
+   "x": 397,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 161
+  },
+  {
+   "page": 7,
+   "text": "ACCEPTANCE OF OFFER",
+   "x": 37.5,
+   "y": 115.5,
+   "baseline": 133.5,
+   "size": 17,
+   "font": "Manrope-Bold",
+   "width": 193
+  },
+  {
+   "page": 7,
+   "text": "Please sign and return a copy of this letter within seven (7) days of receiving it.",
+   "x": 37.5,
+   "y": 156,
+   "baseline": 167,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 376
+  },
+  {
+   "page": 7,
+   "text": "I confirm that I received this letter on __________________________.",
+   "x": 37.5,
+   "y": 184,
+   "baseline": 195,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 361
+  },
+  {
+   "page": 7,
+   "text": "I accept the offer of employment and agree to join Acme Events Private Limited on",
+   "x": 37.5,
+   "y": 212,
+   "baseline": 223.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 391
+  },
+  {
+   "page": 7,
+   "text": "__________________________.",
+   "x": 37.5,
+   "y": 231,
+   "baseline": 242,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 183
+  },
+  {
+   "page": 7,
+   "text": "Name:",
+   "x": 37.5,
+   "y": 265,
+   "baseline": 276,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 33
+  },
+  {
+   "page": 7,
+   "text": "___________________________________",
+   "x": 72.5,
+   "y": 265,
+   "baseline": 276,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 242.5
+  },
+  {
+   "page": 7,
+   "text": "Signature:",
+   "x": 37.5,
+   "y": 293,
+   "baseline": 304,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 54
+  },
+  {
+   "page": 7,
+   "text": "_______________________________",
+   "x": 93.5,
+   "y": 293,
+   "baseline": 304,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 215
+  },
+  {
+   "page": 7,
+   "text": "Date:",
+   "x": 37.5,
+   "y": 321,
+   "baseline": 332.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 27.5
+  },
+  {
+   "page": 7,
+   "text": "____________________________________",
+   "x": 67,
+   "y": 321,
+   "baseline": 332.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 249.5
+  },
+  {
+   "page": 7,
+   "text": "We look forward to having you as part of our team.",
+   "x": 37.5,
+   "y": 358,
+   "baseline": 369,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 238.5
+  },
+  {
+   "page": 7,
+   "text": "For Acme Events Private Limited",
+   "x": 37.5,
+   "y": 403.5,
+   "baseline": 413.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 146.5
+  },
+  {
+   "page": 7,
+   "text": "Sam Sample",
+   "x": 37.5,
+   "y": 504.5,
+   "baseline": 515,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 59.5
+  },
+  {
+   "page": 7,
+   "text": "Managing Director",
+   "x": 37.5,
+   "y": 518.5,
+   "baseline": 528,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 77.5
+  },
+  {
+   "page": 7,
+   "text": "Authorized Signatory",
+   "x": 37.5,
+   "y": 530.5,
+   "baseline": 540,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 87.5
+  },
+  {
+   "page": 7,
+   "text": "hr@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 7,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 7,
+   "text": "Page 7 of 7",
+   "x": 521.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 36.5
+  }
+ ],
+ "images": [
+  {
+   "page": 1,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 2,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 3,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 4,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 5,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 6,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 7,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 7,
+   "x": 37.5,
+   "y": 427.5,
+   "width": 66.5,
+   "height": 55
+  },
+  {
+   "page": 7,
+   "x": 470,
+   "y": 415.5,
+   "width": 83.5,
+   "height": 83.5
+  }
+ ]
+}

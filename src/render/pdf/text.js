@@ -153,8 +153,9 @@ export function layoutParagraph(ctx, text, width, options = {}) {
  * @param {number} width
  * @param {{ fontSize?: number, lineGap?: number, fillColor?: string, boldColor?: string, align?: 'justify'|'left'|'center',
  *   moveDown?: number, regularFont?: string, boldFont?: string, maxSpaceRatio?: number, noJustifyUnderscores?: boolean,
- *   amountEmphasis?: boolean|{ font?: string, sizeDelta?: number, dy?: number, color?: string, prefix?: string } }} [options]
+ *   breakPad?: number, amountEmphasis?: boolean|{ font?: string, sizeDelta?: number, dy?: number, color?: string, prefix?: string } }} [options]
  *   `maxSpaceRatio` (MoU: 2.2) keeps normal spacing when the justified gap would exceed that many spaces.
+ *   `breakPad` (internship offer: 5) adds that many points to the space a line needs before a page break.
  * @returns {{ lines: number }}
  */
 export function renderParagraph(ctx, text, startX, width, options = {}) {
@@ -164,7 +165,7 @@ export function renderParagraph(ctx, text, startX, width, options = {}) {
   const { lines, lh, spaceW } = layoutParagraph(ctx, text, width, o);
 
   for (const line of lines) {
-    if (needsBreak(ctx, lh)) doc.addPage();
+    if (needsBreak(ctx, lh + (o.breakPad ?? 0))) doc.addPage();
     let curX = startX;
     const justify = line.justify && line.words.length > 1;
     let spaceWidth = spaceW;

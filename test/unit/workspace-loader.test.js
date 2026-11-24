@@ -213,10 +213,14 @@ test('the shipped example workspace validates and is fully wired', () => {
   assert.deepEqual(b.tax.modes[1].rates, [{ label: 'CGST (9%)', rate: 0.09 }, { label: 'SGST (9%)', rate: 0.09 }]);
   assert.deepEqual(b.tax.modes[2].rates, [{ label: 'IGST @ 18%', rate: 0.18 }]);
   assert.equal(b.tax.defaultHsn, '998596');
-  const templateIds = ['invoice', 'debit-note', 'receipt', 'offer-letter', 'internship-offer', 'internship-certificate',
+  const templateIds = ['invoice', 'debit-note', 'receipt', 'internship-certificate',
     'experience-certificate', 'relieving-letter', 'employee-final-settlement', 'ticketing-settlement-statement',
     'client-final-settlement', 'remittance-statement', 'expense-statement', 'mou', 'board-resolution', 'proposal', 'pricing-report'];
   for (const t of templateIds) assert.ok(ws.series.has(b.series[t]), `series for ${t}`);
+  // Offer letters are unnumbered unless a brand maps a series; certificates and the relieving letter share hr-cert.
+  assert.equal(b.series['offer-letter'], undefined);
+  assert.equal(b.series['internship-offer'], undefined);
+  for (const t of ['internship-certificate', 'experience-certificate', 'relieving-letter']) assert.equal(b.series[t], 'hr-cert', t);
   assert.equal(ws.series.get('invoice-main').pattern, 'ACM-{YYYY}-{####}');
   assert.equal(ws.series.get('invoice-main').scope, 'brand+year');
   assert.equal(ws.series.get('debit-note').counter, 'invoice-main');

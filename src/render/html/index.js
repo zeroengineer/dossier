@@ -197,7 +197,7 @@ function blockHtml(b, ctx) {
     case 'keyValue':
       return `<table class="kv"><tbody>${b.rows.map(([k, v]) => `<tr><td class="k">${escapeHtml(k)}</td><td class="v">${escapeHtml(`${ctx.s.keyValue.separator}${v ?? ''}`)}</td></tr>`).join('')}</tbody></table>`;
     case 'signature': return signatureHtml(b, ctx.brand, ctx.ws, ctx.opts);
-    case 'spacer': return `<div class="spacer" style="height: ${pt(b.size)}"></div>`;
+    case 'spacer': return `<div class="spacer" style="height: ${b.lines !== undefined ? `${b.lines}em` : pt(b.size)}"></div>`;
     case 'divider': return '<hr class="divider">';
     case 'pageBreak': return '<div class="page-break"></div>';
     case 'custom':

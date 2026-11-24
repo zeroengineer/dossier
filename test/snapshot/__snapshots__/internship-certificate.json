@@ -1,0 +1,357 @@
+{
+ "items": [
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 1,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 1,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 1,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 1,
+   "text": "Email: hr@example.com | www.example.com",
+   "x": 397,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 161
+  },
+  {
+   "page": 1,
+   "text": "Ref: ACM/HR/2026/EXP-001",
+   "x": 37.5,
+   "y": 135,
+   "baseline": 145,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 129.5
+  },
+  {
+   "page": 1,
+   "text": "Date: 29 August 2026",
+   "x": 458.5,
+   "y": 135,
+   "baseline": 145,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 99
+  },
+  {
+   "page": 1,
+   "text": "INTERNSHIP COMPLETION CERTIFICATE",
+   "x": 163,
+   "y": 187,
+   "baseline": 202,
+   "size": 14,
+   "font": "Manrope-ExtraBold",
+   "width": 269
+  },
+  {
+   "page": 1,
+   "text": "To Whom It May Concern,",
+   "x": 37.5,
+   "y": 254,
+   "baseline": 264.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 122
+  },
+  {
+   "page": 1,
+   "text": "This is to certify that",
+   "x": 37.5,
+   "y": 281,
+   "baseline": 292,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 99.5
+  },
+  {
+   "page": 1,
+   "text": "Ms. Riley Testcase",
+   "x": 140.5,
+   "y": 281,
+   "baseline": 292,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 91
+  },
+  {
+   "page": 1,
+   "text": "has successfully completed an internship with",
+   "x": 234.5,
+   "y": 281,
+   "baseline": 292,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 219
+  },
+  {
+   "page": 1,
+   "text": "Acme Events Private",
+   "x": 456.5,
+   "y": 281,
+   "baseline": 292,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 101.5
+  },
+  {
+   "page": 1,
+   "text": "Limited",
+   "x": 37.5,
+   "y": 300,
+   "baseline": 310.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 36
+  },
+  {
+   "page": 1,
+   "text": "as",
+   "x": 75.5,
+   "y": 300,
+   "baseline": 310.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 11
+  },
+  {
+   "page": 1,
+   "text": "Software Developer Intern",
+   "x": 88.5,
+   "y": 300,
+   "baseline": 310.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 127
+  },
+  {
+   "page": 1,
+   "text": "from",
+   "x": 217.5,
+   "y": 300,
+   "baseline": 310.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 21.5
+  },
+  {
+   "page": 1,
+   "text": "18 May 2026",
+   "x": 241,
+   "y": 300,
+   "baseline": 310.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 59
+  },
+  {
+   "page": 1,
+   "text": "to",
+   "x": 301.5,
+   "y": 300,
+   "baseline": 310.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 9.5
+  },
+  {
+   "page": 1,
+   "text": "18 August 2026",
+   "x": 313.5,
+   "y": 300,
+   "baseline": 310.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 74.5
+  },
+  {
+   "page": 1,
+   "text": ".",
+   "x": 388,
+   "y": 300,
+   "baseline": 310.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 1,
+   "text": "During the internship, Riley worked on user interface tasks for the team, including building reusable components,",
+   "x": 37.5,
+   "y": 335,
+   "baseline": 345.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 1,
+   "text": "implementing screens from design specifications and connecting them to existing services, and showed a sound",
+   "x": 37.5,
+   "y": 353.5,
+   "baseline": 364,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 1,
+   "text": "understanding of the work and consistency in meeting goals.",
+   "x": 37.5,
+   "y": 372,
+   "baseline": 383,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 278.5
+  },
+  {
+   "page": 1,
+   "text": "Throughout the internship, Riley was diligent, cooperative and committed, and their conduct was found to be",
+   "x": 37.5,
+   "y": 407,
+   "baseline": 418,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 1,
+   "text": "good.",
+   "x": 37.5,
+   "y": 426,
+   "baseline": 436.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 26
+  },
+  {
+   "page": 1,
+   "text": "We thank Riley for their contribution and wish them every success in the future.",
+   "x": 37.5,
+   "y": 461,
+   "baseline": 471.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 362
+  },
+  {
+   "page": 1,
+   "text": "For Acme Events Private Limited",
+   "x": 37.5,
+   "y": 509.5,
+   "baseline": 520.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 154
+  },
+  {
+   "page": 1,
+   "text": "Sam Sample",
+   "x": 37.5,
+   "y": 605.5,
+   "baseline": 616.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 59.5
+  },
+  {
+   "page": 1,
+   "text": "Managing Director",
+   "x": 37.5,
+   "y": 619.5,
+   "baseline": 629.5,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 77.5
+  },
+  {
+   "page": 1,
+   "text": "Authorized Signatory",
+   "x": 37.5,
+   "y": 631.5,
+   "baseline": 641.5,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 87.5
+  },
+  {
+   "page": 1,
+   "text": "hr@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 1,
+   "text": "Page 1 of 1",
+   "x": 523,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 35
+  }
+ ],
+ "images": [
+  {
+   "page": 1,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 1,
+   "x": 37.5,
+   "y": 533.5,
+   "width": 60.5,
+   "height": 50
+  },
+  {
+   "page": 1,
+   "x": 470,
+   "y": 522,
+   "width": 83.5,
+   "height": 83.5
+  }
+ ]
+}

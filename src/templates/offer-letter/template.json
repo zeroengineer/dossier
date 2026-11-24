@@ -1,0 +1,273 @@
+{
+  "id": "offer-letter",
+  "version": 1,
+  "type": "Offer Letter",
+  "title": "Offer letter",
+  "description": "Offer of employment: addressee page, terms of employment, salary annexure and acceptance page.",
+  "category": "letter",
+  "layoutProfile": "letter",
+  "partyType": "Person",
+  "partyKind": "person",
+  "sensitivity": "Confidential",
+  "renditions": ["pdf", "html", "md"],
+  "numbering": { "series": "brand", "required": false },
+  "contact": "hr",
+  "params": {
+    "refLabel": "Ref: {number}",
+    "dateLabel": "Date: {date}",
+    "toLabel": "To,",
+    "subject": "Subject: Offer of employment with {company}",
+    "subjectUppercase": true,
+    "salutation": "Dear {firstName},",
+    "openingMoveDown": 1.2,
+    "opening": [
+      "Further to our recent discussions, we are pleased to offer you the position of **{designation}** with **{company}**.",
+      "We expect you to join us in the role of **{designation}** on **{joiningDate}**.",
+      "Your annual cost to the company (CTC) will be **{ctcAnnual} per annum** ({ctcAnnualWords}).",
+      "The break-up of your CTC is set out in Annexure 1.",
+      "We look forward to working with you."
+    ],
+    "termsTitle": "Terms of Employment",
+    "numberClauses": true,
+    "clauses": [
+      {
+        "title": "Employment Status",
+        "paragraphs": [
+          "This offer is made on the terms set out in this letter and is subject to the policies of the Company in force from time to time.",
+          { "text": "You will be on probation for **{probationPeriod}** from your date of joining. When the probation period has been completed satisfactorily, the Company will confirm your employment in writing. The Company may extend the probation period at its discretion.", "when": "probation" },
+          { "text": "No probation period applies to this appointment. You will be employed as a full-time employee from your date of joining.", "unless": "probation" }
+        ]
+      },
+      {
+        "title": "Designation and Duties",
+        "paragraphs": [
+          "You are appointed as **{designation}**.",
+          "Your responsibilities will include, among others:"
+        ],
+        "bulletsFrom": "responsibilities",
+        "bullets": [
+          "Carrying out the work assigned to you by your reporting manager to the expected standard",
+          "Working with colleagues and other teams to meet agreed timelines",
+          "Keeping the records, reports and documentation of your work up to date",
+          "Following the processes, standards and policies of the Company",
+          "Any other duties the management assigns to you from time to time"
+        ],
+        "after": [
+          "The Company may change or add to your responsibilities as the needs of the business require.",
+          "You will perform your duties faithfully and diligently and devote your full working time to the business of the Company."
+        ]
+      },
+      {
+        "title": "Place of Work",
+        "paragraphs": [
+          "Your place of work will be:",
+          { "text": "**{company}**\n{placeOfWork}", "moveDown": 0.8 },
+          "The Company may assign you to another office, project or client location as the needs of the business require."
+        ]
+      },
+      {
+        "title": "Working Hours",
+        "paragraphs": [
+          "Your normal working hours are **{workingHours}**, including breaks.",
+          "Your working days are **{workingDays}**.",
+          "You may be asked to work beyond your normal working hours when the work requires it."
+        ]
+      },
+      {
+        "title": "Leave",
+        "paragraphs": [
+          "You are entitled to leave and holidays under the leave policy of the Company, as amended from time to time."
+        ]
+      },
+      {
+        "title": "Performance Review and Promotions",
+        "paragraphs": [
+          "Pay revisions, incentives and promotions take into account:"
+        ],
+        "bullets": [
+          "Your individual performance",
+          "Your contribution to your team and to the Company",
+          "The quality of your work",
+          "Your attendance and conduct",
+          "The performance of the business"
+        ],
+        "after": [
+          "Pay revisions and promotions are not automatic and are decided by the Company."
+        ]
+      },
+      {
+        "title": "Other Employment",
+        "paragraphs": [
+          "While you are employed by the Company you will not take up any other employment, consultancy, freelance work or business that conflicts with your duties to the Company, unless the Company has approved it in writing in advance."
+        ]
+      },
+      {
+        "title": "Confidentiality",
+        "paragraphs": [
+          "You will keep confidential all information about the Company and its business that you receive in the course of your employment, including:"
+        ],
+        "bullets": [
+          "Business plans and strategies",
+          "Information about clients and suppliers",
+          "Financial information",
+          "Software, source code and technical documentation",
+          "Internal systems, processes and know-how",
+          "Any other information marked or understood to be confidential"
+        ],
+        "after": [
+          "You will not disclose or use such information except to carry out your duties.",
+          "This obligation continues after your employment ends, for **{confidentialityPeriod}** from the date you leave the Company."
+        ]
+      },
+      {
+        "title": "Intellectual Property",
+        "paragraphs": [
+          "All work that you create, alone or with others, in the course of your employment, including software, designs, documents, inventions and improvements, belongs to the Company.",
+          "You agree to sign any document reasonably needed to confirm or record the rights of the Company in such work."
+        ]
+      },
+      {
+        "title": "Notice Period",
+        "paragraphs": [
+          "Either party may end the employment by giving **{noticePeriod}** of written notice, or pay in place of notice.",
+          "The Company may release you before the end of the notice period.",
+          "The Company may end your employment without notice in the case of:"
+        ],
+        "bullets": [
+          "Serious misconduct",
+          "Fraud or dishonesty",
+          "A breach of confidentiality",
+          "Gross negligence",
+          "A serious breach of the policies of the Company"
+        ]
+      },
+      {
+        "title": "Background Verification",
+        "paragraphs": [
+          "This offer is subject to satisfactory verification of the information and documents you have provided.",
+          "If any of that information is found to be false or incomplete, the Company may withdraw this offer or end your employment."
+        ]
+      },
+      {
+        "title": "Remote and Hybrid Work",
+        "paragraphs": [
+          "On request, you may be allowed to work remotely or in a hybrid arrangement with the prior written approval of your manager.",
+          "Such approval is at the discretion of the Company and does not change the terms of your employment."
+        ]
+      },
+      {
+        "title": "Documents",
+        "paragraphs": [
+          "Please bring copies of the following documents on your date of joining. The originals may be asked for to verify them and will be returned to you."
+        ],
+        "bulletsFrom": "documents",
+        "bullets": [
+          "Proof of identity",
+          "Proof of address",
+          "Passport-size photographs",
+          "Educational certificates and mark sheets",
+          "Experience and relieving letters from previous employers (if any)",
+          "Bank account details",
+          "A signed copy of this letter"
+        ]
+      },
+      {
+        "title": "Company Policies",
+        "paragraphs": [
+          "Your employment is governed by the policies and rules of the Company as amended from time to time.",
+          "A breach of these policies may lead to disciplinary action, including the end of your employment."
+        ]
+      },
+      {
+        "title": "Governing Law and Jurisdiction",
+        "paragraphs": [
+          "This letter is governed by the laws of {governingLaw}.",
+          { "text": "The courts at {jurisdiction} will have exclusive jurisdiction over any dispute arising from your employment.", "when": "jurisdiction" },
+          { "text": "Any dispute arising from your employment will be subject to the jurisdiction of the competent courts.", "unless": "jurisdiction" }
+        ]
+      }
+    ],
+    "annexure": {
+      "title": "Annexure 1 – Salary Structure",
+      "earnings": {
+        "columns": ["Earnings", "Monthly Amount ({currency})", "Annual Amount ({currency})"],
+        "widths": [200, 150],
+        "totalLabel": "Gross Salary / CTC"
+      },
+      "deductions": {
+        "title": "Statutory Deductions",
+        "columns": ["Component", "Amount"],
+        "widths": [250],
+        "rows": [
+          { "label": "Professional Tax", "value": "As applicable" },
+          { "label": "Income Tax (TDS)", "value": "As applicable" }
+        ]
+      },
+      "summary": {
+        "title": "Salary Summary",
+        "columns": ["Description", "Amount"],
+        "widths": [250],
+        "rows": [
+          { "label": "Gross Monthly Salary", "value": "{ctcMonthly}" },
+          { "label": "Annual Cost to Company (CTC)", "value": "{ctcAnnual}" }
+        ]
+      },
+      "notes": [
+        "Statutory deductions, where applicable, are made from the salary as required by law.",
+        "Pay revisions, increments and other benefits are governed by the policies of the Company."
+      ]
+    },
+    "acceptance": {
+      "title": "Acceptance of Offer",
+      "paragraphs": [
+        "Please sign and return a copy of this letter within {acceptanceDays} of receiving it.",
+        "I confirm that I received this letter on __________________________.",
+        "I accept the offer of employment and agree to join {company} on __________________________."
+      ],
+      "fields": [
+        "**Name:** ___________________________________",
+        "**Signature:** _______________________________",
+        "**Date:** ____________________________________"
+      ],
+      "closing": "We look forward to having you as part of our team."
+    },
+    "signature": {
+      "forLine": "For {legalName}",
+      "lines": ["Authorized Signatory"]
+    }
+  },
+  "fields": [
+    { "name": "brand", "source": "brand", "required": true },
+    { "name": "employee", "label": "Employee", "source": "entity:person", "required": true },
+    { "name": "recipient.name", "label": "Addressee name", "source": "employee.name", "type": "string", "required": true },
+    { "name": "recipient.address", "label": "Addressee address", "source": "employee.attrs.address", "help": "Address lines (a list or text with line breaks)" },
+    { "name": "honorific", "label": "Honorific", "source": "ask", "type": "string", "help": "Mr., Ms., Dr. …" },
+    { "name": "salutationName", "label": "Name in the salutation", "source": "ask", "type": "string", "help": "Default: the first name" },
+    { "name": "date", "label": "Date", "source": "today", "type": "date", "required": true },
+    { "name": "designation", "label": "Designation", "source": "employee.attrs.designation", "type": "string", "required": true },
+    { "name": "joiningDate", "label": "Joining date", "source": "ask", "type": "date", "required": true },
+    { "name": "probation", "label": "Probation applies", "source": "ask", "type": "boolean", "default": true },
+    { "name": "probationPeriod", "label": "Probation period", "source": "ask", "type": "string", "default": "six (6) months" },
+    { "name": "noticePeriod", "label": "Notice period", "source": "ask", "type": "string", "default": "thirty (30) days" },
+    { "name": "workingHours", "label": "Working hours", "source": "ask", "type": "string", "default": "9:00 AM to 6:00 PM" },
+    { "name": "workingDays", "label": "Working days", "source": "ask", "type": "string", "default": "Monday to Friday" },
+    { "name": "placeOfWork", "label": "Place of work", "source": "brand.addresses.business", "help": "Address lines (a list or text with line breaks); default: the brand's business address" },
+    { "name": "governingLaw", "label": "Governing law", "source": "ask", "type": "string", "default": "India" },
+    { "name": "jurisdiction", "label": "Courts (place)", "source": "ask", "type": "string", "help": "City whose courts have jurisdiction; without it the letter names the competent courts" },
+    { "name": "confidentialityPeriod", "label": "Confidentiality period after leaving", "source": "ask", "type": "string", "default": "three (3) years" },
+    { "name": "acceptanceDays", "label": "Days to accept", "source": "ask", "type": "string", "default": "seven (7) days" },
+    { "name": "responsibilities", "label": "Responsibilities", "source": "ask", "type": "array", "help": "List of duties; default: the generic list in the template" },
+    { "name": "documents", "label": "Documents to bring", "source": "ask", "type": "array", "help": "List of documents; default: the generic list in the template" },
+    { "name": "earnings", "label": "Salary components", "source": "ask", "type": "array", "required": true,
+      "item": { "label": "string", "monthly": "money", "annual": "money" },
+      "help": "[{ label, monthly, annual? }]; annual defaults to 12 × monthly" },
+    { "name": "deductions", "label": "Deductions", "source": "ask", "type": "array", "item": { "label": "string", "value": "string" },
+      "help": "[{ label, value }]; default: the template's statutory deductions" },
+    { "name": "salary", "source": "computed:salary" },
+    { "name": "opening", "label": "Opening paragraphs", "source": "ask", "type": "array", "help": "Replaces the template's opening paragraphs" },
+    { "name": "clauses", "label": "Clauses", "source": "ask", "type": "array", "help": "[{ title, paragraphs?, bullets?, after? }]; replaces the template's clauses" },
+    { "name": "content", "source": "computed:content" },
+    { "name": "signatory", "source": "signatory", "required": true },
+    { "name": "seal", "label": "Company seal", "source": "ask", "type": "boolean", "default": true }
+  ]
+}

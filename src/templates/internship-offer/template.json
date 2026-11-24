@@ -1,0 +1,202 @@
+{
+  "id": "internship-offer",
+  "version": 1,
+  "type": "Internship Offer",
+  "title": "Internship offer",
+  "description": "Offer of internship: addressee page, terms of internship and acceptance page.",
+  "category": "letter",
+  "layoutProfile": "letter",
+  "partyType": "Person",
+  "partyKind": "person",
+  "sensitivity": "Confidential",
+  "renditions": ["pdf", "html", "md"],
+  "numbering": { "series": "brand", "required": false },
+  "contact": "hr",
+  "params": {
+    "refLabel": "Ref: {number}",
+    "dateLabel": "Date: {date}",
+    "toLabel": "To,",
+    "subject": "Subject: Offer of internship – {designation}",
+    "subjectUppercase": true,
+    "salutation": "Dear {firstName},",
+    "openingMoveDown": 1.2,
+    "opening": [
+      "We are pleased to offer you an internship with **{company}** as **{designation}**.",
+      "The internship is meant to give you practical experience of the work of our team, alongside experienced colleagues and on live projects.",
+      "The internship will start on **{startDate}** and end on **{endDate}**, unless it is extended or ended earlier as set out in this letter.",
+      { "text": "You will receive a monthly stipend of **{stipend} ({stipendWords})**.", "when": "stipend" },
+      "We look forward to working with you."
+    ],
+    "termsTitle": "Terms of Internship",
+    "numberClauses": true,
+    "clauses": [
+      {
+        "title": "Internship Position",
+        "paragraphs": [
+          "You are offered the position of **{designation}**. You will support the team in the work assigned to you by your reporting manager, including research, development, testing and documentation."
+        ]
+      },
+      {
+        "title": "Duration",
+        "paragraphs": [
+          "The internship runs from **{startDate}** to **{endDate}**.",
+          "The Company may extend the internship depending on project needs and your performance.",
+          "Completing the internship does not by itself entitle you to employment with the Company, although good performance may be taken into account for future openings."
+        ]
+      },
+      {
+        "title": "Reporting",
+        "paragraphs": [
+          "You will report to {reportingTo}.",
+          "You are expected to complete the tasks assigned to you on time and to take part in reviews, discussions and team meetings."
+        ]
+      },
+      {
+        "title": "Place of Work",
+        "paragraphs": [
+          "Your place of work will be {placeOfWork}.",
+          "Depending on the needs of the work, you may be asked to work remotely, in a hybrid arrangement or at another location."
+        ]
+      },
+      {
+        "title": "Working Hours",
+        "paragraphs": [
+          "Normal working hours are **{workingHours}**, **{workingDays}**.",
+          "You are expected to be punctual and to attend regularly. Longer hours may occasionally be needed to meet deadlines."
+        ]
+      },
+      {
+        "title": "Stipend",
+        "when": "stipend",
+        "paragraphs": [
+          "You will receive a monthly stipend of **{stipend} ({stipendWords})**, paid through the normal payment process of the Company.",
+          "The stipend is not a salary and does not create any right to the benefits of employees."
+        ]
+      },
+      {
+        "title": "Leave",
+        "paragraphs": [
+          "Leave during the internship needs the prior approval of your reporting manager.",
+          { "text": "Absence without approval may lead to a reduction of the stipend, an extension of the internship or its early end.", "when": "stipend" },
+          { "text": "Absence without approval may lead to an extension of the internship or its early end.", "unless": "stipend" }
+        ]
+      },
+      {
+        "title": "Confidentiality",
+        "paragraphs": [
+          "You will keep confidential all information about the Company that you receive during the internship, including:"
+        ],
+        "bullets": [
+          "Source code, designs and technical documentation",
+          "Information about clients",
+          "Product and business plans",
+          "Internal systems and infrastructure",
+          "Financial and commercial information",
+          "Processes and know-how of the Company"
+        ],
+        "after": [
+          "You will not copy, disclose or use such information except for the work of the Company. This obligation continues for **{confidentialityPeriod}** after the internship ends."
+        ]
+      },
+      {
+        "title": "Intellectual Property",
+        "paragraphs": [
+          "All work that you create or contribute to during the internship, including software, documents, designs and inventions, belongs to **{company}**."
+        ]
+      },
+      {
+        "title": "Code of Conduct",
+        "paragraphs": [
+          "You will follow the policies of the Company, including those on information security, the use of Company equipment, workplace conduct and professional ethics.",
+          "Misconduct or a breach of these policies may lead to the immediate end of the internship."
+        ]
+      },
+      {
+        "title": "Evaluation",
+        "paragraphs": [
+          "Your performance will be reviewed from time to time, taking into account your skills, attitude to learning, quality of work, communication, teamwork and conduct."
+        ]
+      },
+      {
+        "title": "Ending the Internship",
+        "paragraphs": [
+          "Either party may end the internship by giving **{noticePeriod}** of written notice.",
+          "The Company may end the internship immediately in the case of misconduct, a breach of confidentiality, false information or a serious breach of its policies."
+        ]
+      },
+      {
+        "title": "Documents",
+        "paragraphs": [
+          "On your first day, please submit copies of:"
+        ],
+        "bulletsFrom": "documents",
+        "bullets": [
+          "Proof of identity",
+          "Passport-size photographs",
+          "Educational certificates",
+          "Your student identity card (if applicable)",
+          "Bank account details",
+          "A signed copy of this letter"
+        ]
+      },
+      {
+        "title": "Internship Certificate",
+        "paragraphs": [
+          "When you complete the internship satisfactorily, the Company may issue an internship certificate."
+        ]
+      },
+      {
+        "title": "Governing Law",
+        "paragraphs": [
+          { "text": "This letter is governed by the laws of {governingLaw}. The courts at {jurisdiction} will have exclusive jurisdiction over any dispute arising from the internship.", "when": "jurisdiction" },
+          { "text": "This letter is governed by the laws of {governingLaw}. Any dispute arising from the internship will be subject to the jurisdiction of the competent courts.", "unless": "jurisdiction" }
+        ]
+      }
+    ],
+    "acceptance": {
+      "title": "Acceptance of Offer",
+      "paragraphs": [
+        "Please sign and return a copy of this letter within {acceptanceDays} of receiving it.",
+        "I accept the offer of internship and agree to join **{company}** on **{startDate}**."
+      ],
+      "fields": [
+        "**Name:** ___________________________________",
+        "**Signature:** _______________________________",
+        "**Date:** ____________________________________"
+      ],
+      "closing": "We look forward to having you as part of our team."
+    },
+    "signature": {
+      "forLine": "For {legalName}",
+      "lines": ["Authorized Signatory"]
+    }
+  },
+  "fields": [
+    { "name": "brand", "source": "brand", "required": true },
+    { "name": "intern", "label": "Intern", "source": "entity:person", "required": true },
+    { "name": "recipient.name", "label": "Addressee name", "source": "intern.name", "type": "string", "required": true },
+    { "name": "recipient.address", "label": "Addressee address", "source": "intern.attrs.address", "help": "Address lines (a list or text with line breaks)" },
+    { "name": "honorific", "label": "Honorific", "source": "ask", "type": "string", "help": "Mr., Ms., Dr. …" },
+    { "name": "salutationName", "label": "Name in the salutation", "source": "ask", "type": "string", "help": "Default: the first name" },
+    { "name": "date", "label": "Date", "source": "today", "type": "date", "required": true },
+    { "name": "designation", "label": "Internship position", "source": "intern.attrs.designation", "type": "string", "required": true },
+    { "name": "startDate", "label": "Start date", "source": "ask", "type": "date", "required": true },
+    { "name": "endDate", "label": "End date", "source": "ask", "type": "date", "required": true },
+    { "name": "stipend", "label": "Monthly stipend", "source": "ask", "type": "money", "help": "Leave empty for an unpaid internship" },
+    { "name": "reportingTo", "label": "Reports to", "source": "ask", "type": "string", "default": "your team lead or any other person the Company names" },
+    { "name": "placeOfWork", "label": "Place of work", "source": "ask", "type": "string", "default": "the office of the Company" },
+    { "name": "workingHours", "label": "Working hours", "source": "ask", "type": "string", "default": "9:00 AM to 6:00 PM" },
+    { "name": "workingDays", "label": "Working days", "source": "ask", "type": "string", "default": "Monday to Friday" },
+    { "name": "noticePeriod", "label": "Notice period", "source": "ask", "type": "string", "default": "seven (7) days" },
+    { "name": "governingLaw", "label": "Governing law", "source": "ask", "type": "string", "default": "India" },
+    { "name": "jurisdiction", "label": "Courts (place)", "source": "ask", "type": "string", "help": "City whose courts have jurisdiction; without it the letter names the competent courts" },
+    { "name": "confidentialityPeriod", "label": "Confidentiality period after the internship", "source": "ask", "type": "string", "default": "three (3) years" },
+    { "name": "acceptanceDays", "label": "Days to accept", "source": "ask", "type": "string", "default": "seven (7) days" },
+    { "name": "documents", "label": "Documents to bring", "source": "ask", "type": "array", "help": "List of documents; default: the generic list in the template" },
+    { "name": "opening", "label": "Opening paragraphs", "source": "ask", "type": "array", "help": "Replaces the template's opening paragraphs" },
+    { "name": "clauses", "label": "Clauses", "source": "ask", "type": "array", "help": "[{ title, paragraphs?, bullets?, after? }]; replaces the template's clauses" },
+    { "name": "content", "source": "computed:content" },
+    { "name": "signatory", "source": "signatory", "required": true },
+    { "name": "seal", "label": "Company seal", "source": "ask", "type": "boolean", "default": false }
+  ]
+}

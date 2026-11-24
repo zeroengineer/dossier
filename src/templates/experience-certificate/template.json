@@ -1,0 +1,51 @@
+{
+  "id": "experience-certificate",
+  "version": 1,
+  "type": "Experience Certificate",
+  "title": "Experience certificate",
+  "description": "Certificate of employment and experience, numbered in the HR certificate series.",
+  "category": "letter",
+  "layoutProfile": "letter",
+  "partyType": "Person",
+  "partyKind": "person",
+  "sensitivity": "Internal",
+  "renditions": ["pdf", "html", "md"],
+  "numbering": { "series": "brand", "required": true },
+  "contact": "hr",
+  "params": {
+    "refLabel": "Ref: {number}",
+    "dateLabel": "Date: {date}",
+    "title": "EXPERIENCE CERTIFICATE",
+    "salutation": "To Whom It May Concern,",
+    "paragraphs": [
+      "This is to certify that **{fullName}** was employed with **{company}** from **{startDate}** to **{endDate}**.",
+      { "text": "During this period, {firstName} worked as **{designation}** in the **{department}**.", "when": "department" },
+      { "text": "During this period, {firstName} worked as **{designation}**.", "unless": "department" },
+      { "text": "{summary}", "when": "summary" },
+      { "text": "{firstName} carried out the duties of the role diligently and responsibly, and we found {firstName} to be committed and willing to learn.", "unless": "summary" },
+      "We thank {firstName} for their service and wish them continued success in their future career."
+    ],
+    "closingMoveDown": 2.2,
+    "signature": {
+      "forLine": "For {legalName}",
+      "lines": ["Authorized Signatory"]
+    }
+  },
+  "fields": [
+    { "name": "brand", "source": "brand", "required": true },
+    { "name": "employee", "label": "Employee", "source": "entity:person", "required": true },
+    { "name": "recipient.name", "label": "Name on the certificate", "source": "employee.name", "type": "string", "required": true },
+    { "name": "honorific", "label": "Honorific", "source": "ask", "type": "string", "help": "Mr., Ms., Dr. … (printed before the name)" },
+    { "name": "salutationName", "label": "Short name", "source": "ask", "type": "string", "help": "Used in the body; default: the first name" },
+    { "name": "date", "label": "Date", "source": "today", "type": "date", "required": true },
+    { "name": "designation", "label": "Designation", "source": "employee.attrs.designation", "type": "string", "required": true },
+    { "name": "department", "label": "Department", "source": "ask", "type": "string" },
+    { "name": "startDate", "label": "Employed from", "source": "ask", "type": "date", "required": true },
+    { "name": "endDate", "label": "Employed until", "source": "ask", "type": "date", "required": true },
+    { "name": "summary", "label": "Work summary", "source": "ask", "type": "text", "help": "A paragraph on the work done; replaces the generic paragraph" },
+    { "name": "paragraphs", "label": "Paragraphs", "source": "ask", "type": "array", "help": "Replaces all the template's paragraphs" },
+    { "name": "content", "source": "computed:content" },
+    { "name": "signatory", "source": "signatory", "required": true },
+    { "name": "seal", "label": "Company seal", "source": "ask", "type": "boolean", "default": true }
+  ]
+}

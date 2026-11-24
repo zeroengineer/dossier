@@ -1,5 +1,5 @@
 // Render a built-in template from a fake-data fixture (test/fixtures/inputs/<id>.json) without touching the vault:
-// example workspace, in-memory database, the example client entities, a pinned number and creation date.
+// example workspace, in-memory database, the example client and person entities, a pinned number and creation date.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
@@ -19,7 +19,7 @@ const SNAPSHOTS = join(import.meta.dirname, '..', 'snapshot', '__snapshots__');
 export const fixtureInput = (id) => JSON.parse(readFileSync(join(INPUTS, `${id}.json`), 'utf8'));
 
 /**
- * Open a throwaway context on a copy of the example workspace with the example clients as entities.
+ * Open a throwaway context on a copy of the example workspace with the example clients and people as entities.
  * @param {(ctx: object) => Promise<any>} fn
  */
 export async function withExampleCtx(fn) {
@@ -30,7 +30,7 @@ export async function withExampleCtx(fn) {
     initWorkspace(home);
     ctx = openContext({ home, user: 'demo', dbFile: ':memory:', env: {} });
     const seeds = JSON.parse(readFileSync(join(home, 'seeds', 'entities.json'), 'utf8'));
-    for (const e of seeds.entities.filter((x) => x.kind === 'client')) upsertEntity(ctx, e);
+    for (const e of seeds.entities.filter((x) => x.kind === 'client' || x.kind === 'person')) upsertEntity(ctx, e);
     return await fn(ctx, home);
   } finally {
     ctx?.close();

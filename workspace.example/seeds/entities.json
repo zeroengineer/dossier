@@ -18,8 +18,8 @@
     { "kind": "engagement", "name": "Example Fest 2026 - Sample College", "attrs": { "code": "EXF26", "startDate": "2026-02-10", "endDate": "2026-02-12" } },
     { "kind": "engagement", "name": "Example Conference 2026 - Sample College", "attrs": { "code": "EXC26", "startDate": "2026-09-05", "endDate": "2026-09-06" } },
     { "kind": "engagement", "name": "Sample Annual Meet 2026", "attrs": { "code": "SAM26" } },
-    { "kind": "person", "name": "Jordan Placeholder", "attrs": { "email": "jordan@example.com", "phone": "+00 00000 00000", "designation": "Event Coordinator" } },
-    { "kind": "person", "name": "Riley Testcase", "attrs": { "email": "riley@example.com", "phone": "+00 00000 00000", "designation": "Software Intern" } },
+    { "kind": "person", "name": "Jordan Placeholder", "attrs": { "email": "jordan@example.com", "phone": "+00 00000 00000", "designation": "Event Coordinator", "address": ["House No. 0, Sample Street", "Example Town", "Example District", "PIN: 000000"] } },
+    { "kind": "person", "name": "Riley Testcase", "attrs": { "email": "riley@example.com", "phone": "+00 00000 00000", "designation": "Software Intern", "address": ["Flat 0, Placeholder Residency", "Example City", "PIN: 000000"] } },
     { "kind": "vendor", "name": "Example Sound and Light Co", "attrs": { "gstin": "00CCCCC0000C0Z0", "email": "sales@example.com" } },
     { "kind": "product", "name": "Acme Tickets", "attrs": { "description": "Example ticketing product" }, "brand": "acme" }
   ],

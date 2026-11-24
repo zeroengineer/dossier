@@ -34,11 +34,12 @@ export const PRODUCER = 'Dossier';
  */
 
 /**
- * The interpolation scope for a brand: the brand itself plus `contact` (the named contact, falling back to `default`).
+ * The interpolation scope for a brand: the brand itself plus `contact` (the named contact; each key it does not set
+ * falls back to the `default` contact, so an `hr` contact with only an email still prints the default website).
  * @param {object} brand @param {string} [contact]
  */
 export function brandScope(brand, contact = 'default') {
-  return { ...brand, contact: brand.contacts?.[contact] ?? brand.contacts?.default ?? {} };
+  return { ...brand, contact: { ...brand.contacts?.default, ...brand.contacts?.[contact] } };
 }
 
 /**

@@ -1,0 +1,1848 @@
+{
+ "items": [
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 1,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 1,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 1,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 1,
+   "text": "Email: hr@example.com | www.example.com",
+   "x": 397,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 161
+  },
+  {
+   "page": 1,
+   "text": "Date: 3 July 2026",
+   "x": 475.5,
+   "y": 130,
+   "baseline": 140.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 82.5
+  },
+  {
+   "page": 1,
+   "text": "To,",
+   "x": 37.5,
+   "y": 155,
+   "baseline": 165.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 14.5
+  },
+  {
+   "page": 1,
+   "text": "Riley Testcase",
+   "x": 37.5,
+   "y": 175.5,
+   "baseline": 186.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 73
+  },
+  {
+   "page": 1,
+   "text": "Flat 0, Placeholder Residency",
+   "x": 37.5,
+   "y": 195.5,
+   "baseline": 206,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 134.5
+  },
+  {
+   "page": 1,
+   "text": "Example City",
+   "x": 37.5,
+   "y": 212,
+   "baseline": 223,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 59.5
+  },
+  {
+   "page": 1,
+   "text": "PIN: 000000",
+   "x": 37.5,
+   "y": 229,
+   "baseline": 239.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 57
+  },
+  {
+   "page": 1,
+   "text": "SUBJECT: OFFER OF INTERNSHIP – SOFTWARE DEVELOPER INTERN",
+   "x": 109.5,
+   "y": 275.5,
+   "baseline": 288.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 376.5
+  },
+  {
+   "page": 1,
+   "text": "Dear Ms. Riley,",
+   "x": 37.5,
+   "y": 327.5,
+   "baseline": 338.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 69
+  },
+  {
+   "page": 1,
+   "text": "We are pleased to offer you an internship with",
+   "x": 37.5,
+   "y": 363,
+   "baseline": 374.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 219.5
+  },
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 259,
+   "y": 363,
+   "baseline": 374.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 143.5
+  },
+  {
+   "page": 1,
+   "text": "as",
+   "x": 404.5,
+   "y": 363,
+   "baseline": 374.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 11.5
+  },
+  {
+   "page": 1,
+   "text": "Software Developer Intern",
+   "x": 418,
+   "y": 363,
+   "baseline": 374.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 133.5
+  },
+  {
+   "page": 1,
+   "text": ".",
+   "x": 551.5,
+   "y": 363,
+   "baseline": 374.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 1,
+   "text": "The internship is meant to give you practical experience of the work of our team, alongside experienced",
+   "x": 37.5,
+   "y": 398.5,
+   "baseline": 410,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 1,
+   "text": "colleagues and on live projects.",
+   "x": 37.5,
+   "y": 417,
+   "baseline": 428,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 151
+  },
+  {
+   "page": 1,
+   "text": "The internship will start on",
+   "x": 37.5,
+   "y": 452.5,
+   "baseline": 464,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 128
+  },
+  {
+   "page": 1,
+   "text": "6 July 2026",
+   "x": 168,
+   "y": 452.5,
+   "baseline": 464,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 57.5
+  },
+  {
+   "page": 1,
+   "text": "and end on",
+   "x": 227.5,
+   "y": 452.5,
+   "baseline": 464,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 53.5
+  },
+  {
+   "page": 1,
+   "text": "5 October 2026",
+   "x": 283.5,
+   "y": 452.5,
+   "baseline": 464,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 78
+  },
+  {
+   "page": 1,
+   "text": ", unless it is extended or ended earlier as",
+   "x": 361.5,
+   "y": 452.5,
+   "baseline": 464,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 196
+  },
+  {
+   "page": 1,
+   "text": "set out in this letter.",
+   "x": 37.5,
+   "y": 471,
+   "baseline": 482,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 96
+  },
+  {
+   "page": 1,
+   "text": "You will receive a monthly stipend of",
+   "x": 37.5,
+   "y": 506.5,
+   "baseline": 517.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 173
+  },
+  {
+   "page": 1,
+   "text": "₹10,000 (Rupees Ten Thousand Only)",
+   "x": 212.5,
+   "y": 506.5,
+   "baseline": 517.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 190.5
+  },
+  {
+   "page": 1,
+   "text": ".",
+   "x": 403,
+   "y": 506.5,
+   "baseline": 517.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 1,
+   "text": "We look forward to working with you.",
+   "x": 37.5,
+   "y": 542,
+   "baseline": 553,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 174.5
+  },
+  {
+   "page": 1,
+   "text": "hr@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 1,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 1,
+   "text": "Page 1 of 5",
+   "x": 521.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 36
+  },
+  {
+   "page": 2,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 2,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 2,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 2,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 2,
+   "text": "Email: hr@example.com | www.example.com",
+   "x": 397,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 161
+  },
+  {
+   "page": 2,
+   "text": "TERMS OF INTERNSHIP",
+   "x": 37.5,
+   "y": 115.5,
+   "baseline": 133.5,
+   "size": 17,
+   "font": "Manrope-Bold",
+   "width": 185.5
+  },
+  {
+   "page": 2,
+   "text": "1. Internship Position",
+   "x": 37.5,
+   "y": 164,
+   "baseline": 176.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 121.5
+  },
+  {
+   "page": 2,
+   "text": "You are offered the position of",
+   "x": 37.5,
+   "y": 189,
+   "baseline": 200.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 145
+  },
+  {
+   "page": 2,
+   "text": "Software Developer Intern",
+   "x": 184.5,
+   "y": 189,
+   "baseline": 200.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 133.5
+  },
+  {
+   "page": 2,
+   "text": ". You will support the team in the work assigned to",
+   "x": 318,
+   "y": 189,
+   "baseline": 200.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 239.5
+  },
+  {
+   "page": 2,
+   "text": "you by your reporting manager, including research, development, testing and documentation.",
+   "x": 37.5,
+   "y": 207.5,
+   "baseline": 218.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 448.5
+  },
+  {
+   "page": 2,
+   "text": "2. Duration",
+   "x": 37.5,
+   "y": 241,
+   "baseline": 253.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 64
+  },
+  {
+   "page": 2,
+   "text": "The internship runs from",
+   "x": 37.5,
+   "y": 266,
+   "baseline": 277.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 118.5
+  },
+  {
+   "page": 2,
+   "text": "6 July 2026",
+   "x": 158,
+   "y": 266,
+   "baseline": 277.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 57.5
+  },
+  {
+   "page": 2,
+   "text": "to",
+   "x": 217.5,
+   "y": 266,
+   "baseline": 277.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 10
+  },
+  {
+   "page": 2,
+   "text": "5 October 2026",
+   "x": 230,
+   "y": 266,
+   "baseline": 277.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 78
+  },
+  {
+   "page": 2,
+   "text": ".",
+   "x": 307.5,
+   "y": 266,
+   "baseline": 277.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 2,
+   "text": "The Company may extend the internship depending on project needs and your performance.",
+   "x": 37.5,
+   "y": 294.5,
+   "baseline": 306,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 443.5
+  },
+  {
+   "page": 2,
+   "text": "Completing the internship does not by itself entitle you to employment with the Company, although good",
+   "x": 37.5,
+   "y": 323,
+   "baseline": 334,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 2,
+   "text": "performance may be taken into account for future openings.",
+   "x": 37.5,
+   "y": 341.5,
+   "baseline": 352.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 289
+  },
+  {
+   "page": 2,
+   "text": "3. Reporting",
+   "x": 37.5,
+   "y": 374.5,
+   "baseline": 387.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 71
+  },
+  {
+   "page": 2,
+   "text": "You will report to your team lead or any other person the Company names.",
+   "x": 37.5,
+   "y": 400,
+   "baseline": 411,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 353
+  },
+  {
+   "page": 2,
+   "text": "You are expected to complete the tasks assigned to you on time and to take part in reviews, discussions and",
+   "x": 37.5,
+   "y": 428.5,
+   "baseline": 439.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 2,
+   "text": "team meetings.",
+   "x": 37.5,
+   "y": 446.5,
+   "baseline": 458,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 75.5
+  },
+  {
+   "page": 2,
+   "text": "4. Place of Work",
+   "x": 37.5,
+   "y": 480,
+   "baseline": 493,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 91.5
+  },
+  {
+   "page": 2,
+   "text": "Your place of work will be the office of the Company.",
+   "x": 37.5,
+   "y": 505.5,
+   "baseline": 516.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 248
+  },
+  {
+   "page": 2,
+   "text": "Depending on the needs of the work, you may be asked to work remotely, in a hybrid arrangement or at",
+   "x": 37.5,
+   "y": 534,
+   "baseline": 545,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 2,
+   "text": "another location.",
+   "x": 37.5,
+   "y": 552,
+   "baseline": 563.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 82.5
+  },
+  {
+   "page": 2,
+   "text": "5. Working Hours",
+   "x": 37.5,
+   "y": 585.5,
+   "baseline": 598.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 98
+  },
+  {
+   "page": 2,
+   "text": "Normal working hours are",
+   "x": 37.5,
+   "y": 611,
+   "baseline": 622,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 122
+  },
+  {
+   "page": 2,
+   "text": "9:00 AM to 6:00 PM",
+   "x": 161.5,
+   "y": 611,
+   "baseline": 622,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 98.5
+  },
+  {
+   "page": 2,
+   "text": ",",
+   "x": 260.5,
+   "y": 611,
+   "baseline": 622,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 3
+  },
+  {
+   "page": 2,
+   "text": "Monday to Friday",
+   "x": 265.5,
+   "y": 611,
+   "baseline": 622,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 85.5
+  },
+  {
+   "page": 2,
+   "text": ".",
+   "x": 351,
+   "y": 611,
+   "baseline": 622,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 2,
+   "text": "You are expected to be punctual and to attend regularly. Longer hours may occasionally be needed to meet",
+   "x": 37.5,
+   "y": 639,
+   "baseline": 650.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 2,
+   "text": "deadlines.",
+   "x": 37.5,
+   "y": 657.5,
+   "baseline": 668.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 49.5
+  },
+  {
+   "page": 2,
+   "text": "6. Stipend",
+   "x": 37.5,
+   "y": 691,
+   "baseline": 703.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 59
+  },
+  {
+   "page": 2,
+   "text": "You will receive a monthly stipend of",
+   "x": 37.5,
+   "y": 716,
+   "baseline": 727.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 186.5
+  },
+  {
+   "page": 2,
+   "text": "₹10,000 (Rupees Ten Thousand Only)",
+   "x": 228.5,
+   "y": 716,
+   "baseline": 727.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 199.5
+  },
+  {
+   "page": 2,
+   "text": ", paid through the normal",
+   "x": 428,
+   "y": 716,
+   "baseline": 727.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 130
+  },
+  {
+   "page": 2,
+   "text": "payment process of the Company.",
+   "x": 37.5,
+   "y": 734.5,
+   "baseline": 745.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 164.5
+  },
+  {
+   "page": 2,
+   "text": "The stipend is not a salary and does not create any right to the benefits of employees.",
+   "x": 37.5,
+   "y": 763,
+   "baseline": 774,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 411.5
+  },
+  {
+   "page": 2,
+   "text": "hr@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 2,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 2,
+   "text": "Page 2 of 5",
+   "x": 520,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 3,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 3,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 3,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 3,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 3,
+   "text": "Email: hr@example.com | www.example.com",
+   "x": 397,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 161
+  },
+  {
+   "page": 3,
+   "text": "7. Leave",
+   "x": 37.5,
+   "y": 114,
+   "baseline": 126.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 46
+  },
+  {
+   "page": 3,
+   "text": "Leave during the internship needs the prior approval of your reporting manager.",
+   "x": 37.5,
+   "y": 139,
+   "baseline": 150.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 380
+  },
+  {
+   "page": 3,
+   "text": "Absence without approval may lead to a reduction of the stipend, an extension of the internship or its early",
+   "x": 37.5,
+   "y": 167.5,
+   "baseline": 178.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 3,
+   "text": "end.",
+   "x": 37.5,
+   "y": 186,
+   "baseline": 197,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 21
+  },
+  {
+   "page": 3,
+   "text": "8. Confidentiality",
+   "x": 37.5,
+   "y": 219,
+   "baseline": 232,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 101
+  },
+  {
+   "page": 3,
+   "text": "You will keep confidential all information about the Company that you receive during the internship,",
+   "x": 37.5,
+   "y": 244.5,
+   "baseline": 255.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 3,
+   "text": "including:",
+   "x": 37.5,
+   "y": 263,
+   "baseline": 274,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 47.5
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 291,
+   "baseline": 302.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "Source code, designs and technical documentation",
+   "x": 56.5,
+   "y": 291,
+   "baseline": 302.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 248
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 314.5,
+   "baseline": 326,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "Information about clients",
+   "x": 56.5,
+   "y": 314.5,
+   "baseline": 326,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 121.5
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 338,
+   "baseline": 349,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "Product and business plans",
+   "x": 56.5,
+   "y": 338,
+   "baseline": 349,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 133.5
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 361.5,
+   "baseline": 372.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "Internal systems and infrastructure",
+   "x": 56.5,
+   "y": 361.5,
+   "baseline": 372.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 170
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 384.5,
+   "baseline": 396,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "Financial and commercial information",
+   "x": 56.5,
+   "y": 384.5,
+   "baseline": 396,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 179
+  },
+  {
+   "page": 3,
+   "text": "•",
+   "x": 42.5,
+   "y": 408,
+   "baseline": 419,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 3,
+   "text": "Processes and know-how of the Company",
+   "x": 56.5,
+   "y": 408,
+   "baseline": 419,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 202.5
+  },
+  {
+   "page": 3,
+   "text": "You will not copy, disclose or use such information except for the work of the Company. This obligation",
+   "x": 37.5,
+   "y": 438,
+   "baseline": 449,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 3,
+   "text": "continues for",
+   "x": 37.5,
+   "y": 456,
+   "baseline": 467.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 64.5
+  },
+  {
+   "page": 3,
+   "text": "three (3) years",
+   "x": 104,
+   "y": 456,
+   "baseline": 467.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 75.5
+  },
+  {
+   "page": 3,
+   "text": "after the internship ends.",
+   "x": 181.5,
+   "y": 456,
+   "baseline": 467.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 122
+  },
+  {
+   "page": 3,
+   "text": "9. Intellectual Property",
+   "x": 37.5,
+   "y": 489.5,
+   "baseline": 502.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 133.5
+  },
+  {
+   "page": 3,
+   "text": "All work that you create or contribute to during the internship, including software, documents, designs and",
+   "x": 37.5,
+   "y": 515,
+   "baseline": 526,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 3,
+   "text": "inventions, belongs to",
+   "x": 37.5,
+   "y": 533,
+   "baseline": 544.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 107
+  },
+  {
+   "page": 3,
+   "text": "Acme Events Private Limited",
+   "x": 146.5,
+   "y": 533,
+   "baseline": 544.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 143.5
+  },
+  {
+   "page": 3,
+   "text": ".",
+   "x": 290,
+   "y": 533,
+   "baseline": 544.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 3,
+   "text": "10. Code of Conduct",
+   "x": 37.5,
+   "y": 566.5,
+   "baseline": 579.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 117.5
+  },
+  {
+   "page": 3,
+   "text": "You will follow the policies of the Company, including those on information security, the use of Company",
+   "x": 37.5,
+   "y": 592,
+   "baseline": 603,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 3,
+   "text": "equipment, workplace conduct and professional ethics.",
+   "x": 37.5,
+   "y": 610,
+   "baseline": 621.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 267
+  },
+  {
+   "page": 3,
+   "text": "Misconduct or a breach of these policies may lead to the immediate end of the internship.",
+   "x": 37.5,
+   "y": 638.5,
+   "baseline": 650,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 428.5
+  },
+  {
+   "page": 3,
+   "text": "11. Evaluation",
+   "x": 37.5,
+   "y": 672,
+   "baseline": 685,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 77.5
+  },
+  {
+   "page": 3,
+   "text": "Your performance will be reviewed from time to time, taking into account your skills, attitude to learning,",
+   "x": 37.5,
+   "y": 697.5,
+   "baseline": 708.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 3,
+   "text": "quality of work, communication, teamwork and conduct.",
+   "x": 37.5,
+   "y": 715.5,
+   "baseline": 727,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 268.5
+  },
+  {
+   "page": 3,
+   "text": "12. Ending the Internship",
+   "x": 37.5,
+   "y": 749,
+   "baseline": 762,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 143.5
+  },
+  {
+   "page": 3,
+   "text": "hr@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 3,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 3,
+   "text": "Page 3 of 5",
+   "x": 520.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 4,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 4,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 4,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 4,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 4,
+   "text": "Email: hr@example.com | www.example.com",
+   "x": 397,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 161
+  },
+  {
+   "page": 4,
+   "text": "Either party may end the internship by giving",
+   "x": 37.5,
+   "y": 110,
+   "baseline": 121,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 213.5
+  },
+  {
+   "page": 4,
+   "text": "seven (7) days",
+   "x": 253,
+   "y": 110,
+   "baseline": 121,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 73.5
+  },
+  {
+   "page": 4,
+   "text": "of written notice.",
+   "x": 328.5,
+   "y": 110,
+   "baseline": 121,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 81.5
+  },
+  {
+   "page": 4,
+   "text": "The Company may end the internship immediately in the case of misconduct, a breach of confidentiality,",
+   "x": 37.5,
+   "y": 138.5,
+   "baseline": 149.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 4,
+   "text": "false information or a serious breach of its policies.",
+   "x": 37.5,
+   "y": 156.5,
+   "baseline": 168,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 243.5
+  },
+  {
+   "page": 4,
+   "text": "13. Documents",
+   "x": 37.5,
+   "y": 190,
+   "baseline": 203,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 85.5
+  },
+  {
+   "page": 4,
+   "text": "On your first day, please submit copies of:",
+   "x": 37.5,
+   "y": 215.5,
+   "baseline": 226.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 200
+  },
+  {
+   "page": 4,
+   "text": "•",
+   "x": 42.5,
+   "y": 244,
+   "baseline": 255,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 4,
+   "text": "Proof of identity",
+   "x": 56.5,
+   "y": 244,
+   "baseline": 255,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 77.5
+  },
+  {
+   "page": 4,
+   "text": "•",
+   "x": 42.5,
+   "y": 267,
+   "baseline": 278.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 4,
+   "text": "Passport-size photographs",
+   "x": 56.5,
+   "y": 267,
+   "baseline": 278.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 131.5
+  },
+  {
+   "page": 4,
+   "text": "•",
+   "x": 42.5,
+   "y": 290.5,
+   "baseline": 301.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 4,
+   "text": "Educational certificates",
+   "x": 56.5,
+   "y": 290.5,
+   "baseline": 301.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 115.5
+  },
+  {
+   "page": 4,
+   "text": "•",
+   "x": 42.5,
+   "y": 314,
+   "baseline": 325,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 4,
+   "text": "Your student identity card (if applicable)",
+   "x": 56.5,
+   "y": 314,
+   "baseline": 325,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 193.5
+  },
+  {
+   "page": 4,
+   "text": "•",
+   "x": 42.5,
+   "y": 337,
+   "baseline": 348.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 4,
+   "text": "Bank account details",
+   "x": 56.5,
+   "y": 337,
+   "baseline": 348.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 101
+  },
+  {
+   "page": 4,
+   "text": "•",
+   "x": 42.5,
+   "y": 360.5,
+   "baseline": 372,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 4,
+   "text": "A signed copy of this letter",
+   "x": 56.5,
+   "y": 360.5,
+   "baseline": 372,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 128
+  },
+  {
+   "page": 4,
+   "text": "14. Internship Certificate",
+   "x": 37.5,
+   "y": 395.5,
+   "baseline": 408,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 144
+  },
+  {
+   "page": 4,
+   "text": "When you complete the internship satisfactorily, the Company may issue an internship certificate.",
+   "x": 37.5,
+   "y": 420.5,
+   "baseline": 432,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 470.5
+  },
+  {
+   "page": 4,
+   "text": "15. Governing Law",
+   "x": 37.5,
+   "y": 454,
+   "baseline": 467,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 103.5
+  },
+  {
+   "page": 4,
+   "text": "This letter is governed by the laws of India. Any dispute arising from the internship will be subject to the",
+   "x": 37.5,
+   "y": 479.5,
+   "baseline": 490.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 4,
+   "text": "jurisdiction of the competent courts.",
+   "x": 37.5,
+   "y": 497.5,
+   "baseline": 509,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 177
+  },
+  {
+   "page": 4,
+   "text": "hr@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 4,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 4,
+   "text": "Page 4 of 5",
+   "x": 520,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 5,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 5,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 5,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 5,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 5,
+   "text": "Email: hr@example.com | www.example.com",
+   "x": 397,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 161
+  },
+  {
+   "page": 5,
+   "text": "ACCEPTANCE OF OFFER",
+   "x": 37.5,
+   "y": 115.5,
+   "baseline": 133.5,
+   "size": 17,
+   "font": "Manrope-Bold",
+   "width": 193
+  },
+  {
+   "page": 5,
+   "text": "Please sign and return a copy of this letter within seven (7) days of receiving it.",
+   "x": 37.5,
+   "y": 156,
+   "baseline": 167,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 376
+  },
+  {
+   "page": 5,
+   "text": "I accept the offer of internship and agree to join",
+   "x": 37.5,
+   "y": 184,
+   "baseline": 195.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 227.5
+  },
+  {
+   "page": 5,
+   "text": "Acme Events Private Limited",
+   "x": 267,
+   "y": 184,
+   "baseline": 195.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 143.5
+  },
+  {
+   "page": 5,
+   "text": "on",
+   "x": 413,
+   "y": 184,
+   "baseline": 195.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 12.5
+  },
+  {
+   "page": 5,
+   "text": "6 July 2026",
+   "x": 427.5,
+   "y": 184,
+   "baseline": 195.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 57.5
+  },
+  {
+   "page": 5,
+   "text": ".",
+   "x": 485,
+   "y": 184,
+   "baseline": 195.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 5,
+   "text": "Name:",
+   "x": 37.5,
+   "y": 218.5,
+   "baseline": 229.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 33
+  },
+  {
+   "page": 5,
+   "text": "___________________________________",
+   "x": 72.5,
+   "y": 218.5,
+   "baseline": 229.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 242.5
+  },
+  {
+   "page": 5,
+   "text": "Signature:",
+   "x": 37.5,
+   "y": 246.5,
+   "baseline": 258,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 54
+  },
+  {
+   "page": 5,
+   "text": "_______________________________",
+   "x": 93.5,
+   "y": 246.5,
+   "baseline": 258,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 215
+  },
+  {
+   "page": 5,
+   "text": "Date:",
+   "x": 37.5,
+   "y": 275,
+   "baseline": 286,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 27.5
+  },
+  {
+   "page": 5,
+   "text": "____________________________________",
+   "x": 67,
+   "y": 275,
+   "baseline": 286,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 249.5
+  },
+  {
+   "page": 5,
+   "text": "We look forward to having you as part of our team.",
+   "x": 37.5,
+   "y": 312,
+   "baseline": 323,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 238.5
+  },
+  {
+   "page": 5,
+   "text": "For Acme Events Private Limited",
+   "x": 37.5,
+   "y": 357.5,
+   "baseline": 368,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 146.5
+  },
+  {
+   "page": 5,
+   "text": "Sam Sample",
+   "x": 37.5,
+   "y": 438.5,
+   "baseline": 449.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 59.5
+  },
+  {
+   "page": 5,
+   "text": "Managing Director",
+   "x": 37.5,
+   "y": 452.5,
+   "baseline": 462,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 77.5
+  },
+  {
+   "page": 5,
+   "text": "Authorized Signatory",
+   "x": 37.5,
+   "y": 464.5,
+   "baseline": 474,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 87.5
+  },
+  {
+   "page": 5,
+   "text": "hr@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 5,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 5,
+   "text": "Page 5 of 5",
+   "x": 520,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  }
+ ],
+ "images": [
+  {
+   "page": 1,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 2,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 3,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 4,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 5,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 5,
+   "x": 37.5,
+   "y": 373.5,
+   "width": 66.5,
+   "height": 55
+  }
+ ]
+}

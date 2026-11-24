@@ -118,6 +118,7 @@ export const BrandSchema = z.object({
   }),
   series: z.record(z.string(), id).default({}),
   layoutProfiles: z.record(z.string(), z.record(z.string(), z.unknown())).optional(),
+  templateParams: z.record(z.string(), z.record(z.string(), z.unknown())).default({}),
 }).superRefine((b, ctx) => {
   const seen = new Set();
   b.signatories.forEach((s, i) => {

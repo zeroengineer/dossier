@@ -1,0 +1,49 @@
+{
+  "id": "internship-certificate",
+  "version": 1,
+  "type": "Internship Certificate",
+  "title": "Internship certificate",
+  "description": "Certificate of completion of an internship, numbered in the HR certificate series.",
+  "category": "letter",
+  "layoutProfile": "letter",
+  "partyType": "Person",
+  "partyKind": "person",
+  "sensitivity": "Internal",
+  "renditions": ["pdf", "html", "md"],
+  "numbering": { "series": "brand", "required": true },
+  "contact": "hr",
+  "params": {
+    "refLabel": "Ref: {number}",
+    "dateLabel": "Date: {date}",
+    "title": "INTERNSHIP COMPLETION CERTIFICATE",
+    "salutation": "To Whom It May Concern,",
+    "paragraphs": [
+      "This is to certify that **{fullName}** has successfully completed an internship with **{company}** as **{designation}** from **{startDate}** to **{endDate}**.",
+      { "text": "{summary}", "when": "summary" },
+      { "text": "During the internship, {firstName} worked on the tasks assigned by the team and showed a sound understanding of the work, a readiness to learn and consistency in meeting goals.", "unless": "summary" },
+      "Throughout the internship, {firstName} was diligent, cooperative and committed, and their conduct was found to be good.",
+      "We thank {firstName} for their contribution and wish them every success in the future."
+    ],
+    "closingMoveDown": 2.2,
+    "signature": {
+      "forLine": "For {legalName}",
+      "lines": ["Authorized Signatory"]
+    }
+  },
+  "fields": [
+    { "name": "brand", "source": "brand", "required": true },
+    { "name": "intern", "label": "Intern", "source": "entity:person", "required": true },
+    { "name": "recipient.name", "label": "Name on the certificate", "source": "intern.name", "type": "string", "required": true },
+    { "name": "honorific", "label": "Honorific", "source": "ask", "type": "string", "help": "Mr., Ms., Dr. … (printed before the name)" },
+    { "name": "salutationName", "label": "Short name", "source": "ask", "type": "string", "help": "Used in the body; default: the first name" },
+    { "name": "date", "label": "Date", "source": "today", "type": "date", "required": true },
+    { "name": "designation", "label": "Internship position", "source": "intern.attrs.designation", "type": "string", "required": true },
+    { "name": "startDate", "label": "Start date", "source": "ask", "type": "date", "required": true },
+    { "name": "endDate", "label": "End date", "source": "ask", "type": "date", "required": true },
+    { "name": "summary", "label": "Work summary", "source": "ask", "type": "text", "help": "A paragraph on the work done; replaces the generic second paragraph" },
+    { "name": "paragraphs", "label": "Paragraphs", "source": "ask", "type": "array", "help": "Replaces all the template's paragraphs" },
+    { "name": "content", "source": "computed:content" },
+    { "name": "signatory", "source": "signatory", "required": true },
+    { "name": "seal", "label": "Company seal", "source": "ask", "type": "boolean", "default": true }
+  ]
+}
