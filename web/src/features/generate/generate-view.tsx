@@ -1,6 +1,7 @@
 import * as React from "react"
 import { ArrowLeftIcon } from "lucide-react"
 import { Link } from "react-router"
+import { toast } from "sonner"
 import { useMe } from "@/api/me"
 import { useTemplate } from "@/api/templates"
 import type { BrandSummary, TemplateDetail } from "@/api/types"
@@ -19,6 +20,7 @@ import { ApiError } from "@/lib/api"
 import { useActiveBrand } from "@/lib/active-brand"
 import { GenerateFields, useGenerateForm } from "./form"
 import { GeneratePreview } from "./preview"
+import { unofferedChoices } from "./schema"
 
 /**
  * `/generate/:templateId`: the template's form next to its preview. The brand starts as the sidebar's active brand;
@@ -49,6 +51,7 @@ export function GenerateTemplate({ templateId }: { templateId: string }) {
       template={template.data}
       brands={brands}
       brandId={brandId}
+      isPlaceholderData={template.isPlaceholderData}
       onBrandChange={setPicked}
     />
   )
@@ -58,13 +61,33 @@ interface GenerateWorkspaceProps {
   template: TemplateDetail
   brands: BrandSummary[]
   brandId: string | null
+  /** The fields shown are the previous brand's while the selected brand's load. */
+  isPlaceholderData: boolean
   onBrandChange: (id: string) => void
 }
 
-function GenerateWorkspace({ template, brands, brandId, onBrandChange }: GenerateWorkspaceProps) {
+function GenerateWorkspace({ template, brands, brandId, isPlaceholderData, onBrandChange }: GenerateWorkspaceProps) {
   const form = useGenerateForm(template)
   const isMobile = useIsMobile()
   const { meta } = template
+
+  // A brand switch can change a brand-list enum's choices: clear values the new brand does not offer, and say so.
+  const shownFields = React.useRef(template.fields)
+  React.useEffect(() => {
+    if (shownFields.current === template.fields) return
+    shownFields.current = template.fields
+    const cleared = unofferedChoices(template.fields, form.getValues())
+    for (const f of cleared) form.setValue(f.name, "", { shouldDirty: true, shouldValidate: true })
+    if (cleared.length) {
+      toast.info(`Cleared ${cleared.map((f) => f.label).join(", ")}`, {
+        description: "The value is not offered for this brand; the template default applies.",
+      })
+    }
+  }, [template.fields, form])
+
+  const preview = (
+    <GeneratePreview template={template} form={form} brandId={brandId} isPlaceholderData={isPlaceholderData} />
+  )
 
   const formPane = (
     <form
@@ -122,7 +145,7 @@ function GenerateWorkspace({ template, brands, brandId, onBrandChange }: Generat
           </TabsList>
           <TabsContent value="form">{formPane}</TabsContent>
           <TabsContent value="preview" className="min-h-96">
-            <GeneratePreview />
+            {preview}
           </TabsContent>
         </Tabs>
       ) : (
@@ -132,9 +155,7 @@ function GenerateWorkspace({ template, brands, brandId, onBrandChange }: Generat
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize="45" minSize="25">
-            <div className="h-full p-6">
-              <GeneratePreview />
-            </div>
+            <div className="h-full p-6">{preview}</div>
           </ResizablePanel>
         </ResizablePanelGroup>
       )}

@@ -106,7 +106,7 @@ export function TemplateFieldInput({ field, control, meta }: FieldProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={UNSET}>{hint ? `Default (${hint})` : "Default"}</SelectItem>
+                  <SelectItem value={UNSET}>{hint ? `Default (${hint})` : "—"}</SelectItem>
                   {(field.choices ?? []).map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}

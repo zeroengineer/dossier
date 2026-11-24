@@ -119,6 +119,18 @@ export function listText(v: unknown): string {
   return JSON.stringify(v, null, 2)
 }
 
+/**
+ * Choice fields whose value is not among the field's `choices` (any more): after a brand switch, a brand list such as
+ * the tax modes can differ. The form clears them so the Select does not hold a value it cannot show.
+ */
+export function unofferedChoices(fields: readonly TemplateField[], values: FormValues): TemplateField[] {
+  return fields.filter((f) => {
+    if (fieldKind(f) !== "enum") return false
+    const v = getPath(values, f.name)
+    return typeof v === "string" && v !== "" && !(f.choices ?? []).includes(v)
+  })
+}
+
 /** A scalar as input text; an entity object shows its name. */
 function scalarText(v: unknown): string {
   if (v === undefined || v === null) return ""
@@ -153,7 +165,15 @@ export function toFormValues(
     switch (fieldKind(f)) {
       case "boolean": {
         const fallback = metaFieldOf(metaFields, f.name)?.default
-        value = typeof v === "boolean" ? v : typeof fallback === "boolean" ? fallback : undefined
+        // A required switch starts off rather than unset, so it is always sent.
+        value =
+          typeof v === "boolean"
+            ? v
+            : typeof fallback === "boolean"
+              ? fallback
+              : mustFill(f, metaFields)
+                ? false
+                : undefined
         break
       }
       case "rows": {

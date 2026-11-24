@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { TemplateField, TemplateMetaField } from "@/api/types"
 import { builtinTemplateDetails } from "@/test/fixtures-generate"
-import { fieldKind, fieldsToZod, listText, mustFill, toFormValues } from "./schema"
+import { fieldKind, fieldsToZod, listText, mustFill, toFormValues, unofferedChoices } from "./schema"
 
 const field = (over: Partial<TemplateField> & Pick<TemplateField, "name">): TemplateField => ({
   label: over.name,
@@ -159,6 +159,7 @@ describe("toFormValues", () => {
     field({ name: "seal", type: "boolean" }),
     field({ name: "watermark", type: "boolean" }),
     field({ name: "taxMode", type: "enum", choices: ["none", "igst"] }),
+    field({ name: "consent", type: "boolean", required: true }),
   ]
   const meta: TemplateMetaField[] = [{ name: "seal", type: "boolean", default: true }]
 
@@ -172,6 +173,7 @@ describe("toFormValues", () => {
       seal: true,
       watermark: undefined,
       taxMode: "",
+      consent: false,
     })
   })
 
@@ -194,6 +196,7 @@ describe("toFormValues", () => {
       seal: false,
       watermark: undefined,
       taxMode: "igst",
+      consent: false,
     })
   })
 
@@ -204,3 +207,17 @@ describe("toFormValues", () => {
     expect(listText([{ label: "Bank", value: "Example Bank" }])).toBe('[\n  {\n    "label": "Bank",\n    "value": "Example Bank"\n  }\n]')
   })
 })
+
+describe("unofferedChoices", () => {
+  it("lists choice fields whose value is not among the choices", () => {
+    const fields = [
+      field({ name: "taxMode", type: "enum", choices: ["none"] }),
+      field({ name: "weight", type: "enum", choices: ["Medium", "Bold"] }),
+      field({ name: "nested.mode", type: "enum", choices: ["a"] }),
+      field({ name: "plain", type: "string" }),
+    ]
+    const values = { taxMode: "igst", weight: "Bold", nested: { mode: "" }, plain: "x" }
+    expect(unofferedChoices(fields, values).map((f) => f.name)).toEqual(["taxMode"])
+  })
+})
+

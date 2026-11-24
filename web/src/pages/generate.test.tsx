@@ -195,9 +195,47 @@ describe("Generate form", () => {
     const tax = await screen.findByRole("combobox", { name: label("Tax") })
     await user.click(tax)
     const options = (await screen.findAllByRole("option")).map((o) => o.textContent)
-    expect(options).toEqual(["Default", "none", "cgst_sgst", "igst"])
+    expect(options).toEqual(["—", "none", "cgst_sgst", "igst"])
     await user.click(screen.getByRole("option", { name: "igst" }))
     expect(tax).toHaveTextContent("igst")
+  })
+
+  it("clears a choice the newly selected brand does not offer, and says so", async () => {
+    // acme offers every tax mode; acme-studio (say, not GST-registered) only "none".
+    const invoice = detail("invoice")
+    const studio: TemplateDetail = {
+      ...invoice,
+      fields: invoice.fields.map((f) => (f.name === "taxMode" ? { ...f, choices: ["none"] } : f)),
+    }
+    server.use(
+      http.get("*/api/templates/:id", ({ request }) =>
+        HttpResponse.json(new URL(request.url).searchParams.get("brandId") === "acme-studio" ? studio : invoice),
+      ),
+    )
+    const { user } = renderApp("/generate/invoice")
+    const tax = await screen.findByRole("combobox", { name: label("Tax") })
+    await user.click(tax)
+    await user.click(await screen.findByRole("option", { name: "igst" }))
+    expect(tax).toHaveTextContent("igst")
+
+    await user.click(screen.getByRole("combobox", { name: "Brand" }))
+    await user.click(await screen.findByRole("option", { name: "Acme Studio LLP" }))
+    expect(await screen.findByText("Cleared Tax")).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole("combobox", { name: label("Tax") })).toHaveTextContent("—"))
+    await user.click(screen.getByRole("combobox", { name: label("Tax") }))
+    expect((await screen.findAllByRole("option")).map((o) => o.textContent)).toEqual(["—", "none"])
+  })
+
+  it("keeps a choice the new brand also offers", async () => {
+    const { user } = renderApp("/generate/invoice")
+    const tax = await screen.findByRole("combobox", { name: label("Tax") })
+    await user.click(tax)
+    await user.click(await screen.findByRole("option", { name: "none" }))
+    await user.click(screen.getByRole("combobox", { name: "Brand" }))
+    await user.click(await screen.findByRole("option", { name: "Acme Studio LLP" }))
+    await waitFor(() => expect(screen.getByRole("combobox", { name: "Brand" })).toHaveTextContent("Acme Studio LLP"))
+    // (Toasts are global to sonner, so a "Cleared" toast from an earlier test may still be listed: check the value.)
+    expect(screen.getByRole("combobox", { name: label("Tax") })).toHaveTextContent("none")
   })
 
   it("says when the template does not exist", async () => {

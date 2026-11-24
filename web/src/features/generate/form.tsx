@@ -13,10 +13,12 @@ import type { FormValues } from "./to-input"
  */
 export function useGenerateForm(template: TemplateDetail, input?: Record<string, unknown>) {
   const { fields, meta } = template
+  // Computed once: later renders (a brand switch) must not rebuild the initial values.
+  const [defaultValues] = React.useState(() => toFormValues(fields, meta.fields, input))
   const resolver = React.useMemo(() => zodResolver(fieldsToZod(fields, meta.fields)), [fields, meta.fields])
   return useForm<FormValues>({
     // Initial values only: a brand switch refetches the fields (same names) and keeps what was typed.
-    defaultValues: toFormValues(fields, meta.fields, input),
+    defaultValues,
     resolver,
     mode: "onTouched",
   })

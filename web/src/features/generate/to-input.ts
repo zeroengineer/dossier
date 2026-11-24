@@ -78,18 +78,26 @@ function prune(v: unknown): unknown {
  * `formToInput` (src/web/routes/templates.js). List rows with every cell blank are dropped (an empty list is left out);
  * a list without row columns and an object field are a textarea holding JSON, or (lists) one entry per line. Blank
  * scalars stay `''` (the server treats them as not provided and applies sources and defaults).
+ *
+ * `rowIndex` maps each list field to the form row of every row sent (`rowIndex.items[1] === 2`: the second row in the
+ * input is the form's third). Pass it to `remapErrorPath` before putting a server error such as `items.1.amount` on
+ * the form, since blank rows before it were dropped.
  */
-export function toInput(
-  fields: readonly TemplateField[],
-  values: FormValues,
-): { input: Record<string, unknown>; errors: InputProblem[] } {
+export function toInput(fields: readonly TemplateField[], values: FormValues): InputResult {
   const input = prune(structuredClone(values)) as Record<string, unknown>
   const errors: InputProblem[] = []
+  const rowIndex: RowIndex = {}
   for (const f of fields) {
     const v = getPath(input, f.name)
     if (v === undefined) continue
     if (f.type === "array" && f.item) {
-      const rows = (Array.isArray(v) ? v : []).filter((r) => isObj(r) && Object.values(r).some((x) => !blank(x)))
+      const kept: number[] = []
+      const rows = (Array.isArray(v) ? v : []).filter((r, i) => {
+        const keep = isObj(r) && Object.values(r).some((x) => !blank(x))
+        if (keep) kept.push(i)
+        return keep
+      })
+      rowIndex[f.name] = kept
       setPath(input, f.name, rows.length ? rows : undefined)
     } else if ((f.type === "array" || f.type === "object") && typeof v === "string") {
       const r = parseStructured(f, v)
@@ -97,5 +105,30 @@ export function toInput(
       else setPath(input, f.name, r.value)
     }
   }
-  return { input, errors }
+  return { input, errors, rowIndex }
+}
+
+/** List field name -> the form row index of each row sent, in input order (see `toInput`). */
+export type RowIndex = Record<string, number[]>
+
+export interface InputResult {
+  input: Record<string, unknown>
+  errors: InputProblem[]
+  rowIndex: RowIndex
+}
+
+/**
+ * Turn a path the server reported against the sent input (`items.1.amount`) into the form's path (`items.2.amount`
+ * when a blank row 0 was dropped). Paths outside list rows come back unchanged.
+ */
+export function remapErrorPath(path: string, rowIndex: RowIndex): string {
+  for (const [name, kept] of Object.entries(rowIndex)) {
+    if (!path.startsWith(`${name}.`)) continue
+    const [index, ...rest] = path.slice(name.length + 1).split(".")
+    if (index === undefined || !/^\d+$/.test(index)) continue
+    const formIndex = kept[Number(index)]
+    if (formIndex === undefined) continue
+    return [name, String(formIndex), ...rest].join(".")
+  }
+  return path
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { TemplateField } from "@/api/types"
-import { toInput } from "./to-input"
+import { remapErrorPath, toInput } from "./to-input"
 
 const field = (over: Partial<TemplateField> & Pick<TemplateField, "name">): TemplateField => ({
   label: over.name,
@@ -21,6 +21,7 @@ describe("toInput", () => {
     expect(toInput(fields, { billTo: { name: "Demo Retail LLP", gstin: "" }, date: "" })).toEqual({
       input: { billTo: { name: "Demo Retail LLP", gstin: "" }, date: "" },
       errors: [],
+      rowIndex: {},
     })
   })
 
@@ -55,10 +56,15 @@ describe("toInput", () => {
 
   it("reads an object textarea as JSON only", () => {
     const fees = field({ name: "fees", type: "object" })
-    expect(toInput([fees], { fees: '{ "gstPercent": 18 }' })).toEqual({ input: { fees: { gstPercent: 18 } }, errors: [] })
+    expect(toInput([fees], { fees: '{ "gstPercent": 18 }' })).toEqual({
+      input: { fees: { gstPercent: 18 } },
+      errors: [],
+      rowIndex: {},
+    })
     expect(toInput([fees], { fees: "gstPercent: 18" })).toEqual({
       input: { fees: "gstPercent: 18" },
       errors: [{ name: "fees", message: "expected a JSON object" }],
+      rowIndex: {},
     })
   })
 
@@ -86,5 +92,26 @@ describe("toInput", () => {
     const values = { items: [{ amount: "" }], docs: "a\nb" }
     toInput([field({ name: "items", type: "array", item: { amount: "money" } }), field({ name: "docs", type: "array" })], values)
     expect(values).toEqual({ items: [{ amount: "" }], docs: "a\nb" })
+  })
+
+  it("maps a server error on a sent row back to its form row when blank rows were dropped", () => {
+    const items = field({ name: "items", type: "array", item: { description: "text", amount: "money" } })
+    const { input, rowIndex } = toInput([items, field({ name: "billTo.name" })], {
+      items: [
+        { description: "", amount: "" },
+        { description: "Stage", amount: "abc" },
+        { description: " ", amount: "" },
+        { description: "Sound", amount: "1000" },
+      ],
+      billTo: { name: "" },
+    })
+    expect(input["items"]).toEqual([{ description: "Stage", amount: "abc" }, { description: "Sound", amount: "1000" }])
+    expect(rowIndex).toEqual({ items: [1, 3] })
+    // The server reports the bad amount of the first row it got: form row 1 (the blank row 0 was not sent).
+    expect(remapErrorPath("items.0.amount", rowIndex)).toBe("items.1.amount")
+    expect(remapErrorPath("items.1", rowIndex)).toBe("items.3")
+    expect(remapErrorPath("items", rowIndex)).toBe("items")
+    expect(remapErrorPath("billTo.name", rowIndex)).toBe("billTo.name")
+    expect(remapErrorPath("itemsExtra.0.x", rowIndex)).toBe("itemsExtra.0.x")
   })
 })
