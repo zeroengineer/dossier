@@ -29,7 +29,8 @@ export function deepMerge(base, over) {
   return out;
 }
 
-function readJson(home, rel, { optional = false } = {}) {
+function readJson(home, rel, { optional = false, files } = {}) {
+  if (files?.has(rel)) return structuredClone(files.get(rel));
   const file = join(home, rel);
   if (!existsSync(file)) {
     if (optional) return undefined;
@@ -69,30 +70,37 @@ function builtinFontPath(spec) {
 /**
  * Load and validate a workspace directory.
  * @param {string} home workspace root (DOSSIER_HOME)
+ * @param {{ files?: Map<string, unknown> }} [opts] `files`: parsed JSON bodies used instead of the files on disk, keyed
+ *   by workspace-relative path (`workspace.json`, `series.json`, `brands/<id>/brand.json`), so a candidate edit can be
+ *   validated against the rest of the workspace before anything is written. A `brands/<id>/brand.json` key adds that
+ *   brand even when its folder does not exist yet.
  * @returns {{ home: string, config: object, brands: Map<string, object>, series: Map<string, object>, templatesDir: string,
  *   seeds: { entities: object[], relations: object[] }, configHash: string, brandHashes: Map<string, string>, brandDirs: Map<string, string[]> }}
  */
-export function loadWorkspace(home) {
+export function loadWorkspace(home, { files } = {}) {
   home = resolve(home);
-  const config = validate(WorkspaceSchema, readJson(home, 'workspace.json'), 'workspace.json');
+  const config = validate(WorkspaceSchema, readJson(home, 'workspace.json', { files }), 'workspace.json');
 
-  const seriesList = validate(SeriesFileSchema, readJson(home, 'series.json', { optional: true }) ?? [], 'series.json');
+  const seriesList = validate(SeriesFileSchema, readJson(home, 'series.json', { optional: true, files }) ?? [], 'series.json');
   const series = new Map(seriesList.map((s) => [s.id, s]));
 
-  const seeds = validate(SeedsSchema, readJson(home, join('seeds', 'entities.json'), { optional: true }) ?? {}, 'seeds/entities.json');
+  const seeds = validate(SeedsSchema, readJson(home, 'seeds/entities.json', { optional: true, files }) ?? {}, 'seeds/entities.json');
 
   // Raw brand files, keyed by directory name.
   const brandsRoot = join(home, 'brands');
   const raw = new Map();
-  if (existsSync(brandsRoot)) {
-    for (const name of readdirSync(brandsRoot).sort()) {
-      const rel = `brands/${name}/brand.json`;
-      if (!statSync(join(brandsRoot, name)).isDirectory() || !existsSync(join(home, rel))) continue;
-      const body = readJson(home, rel);
-      if (!isPlainObject(body)) throw new WorkspaceError(rel, 'invalid: (root): expected an object');
-      if (body.id !== name) throw new WorkspaceError(rel, `invalid:\n  id: "${body.id}" must match the folder name "${name}"`);
-      raw.set(name, body);
-    }
+  const names = new Set(existsSync(brandsRoot) ? readdirSync(brandsRoot) : []);
+  for (const key of files?.keys() ?? []) {
+    const m = /^brands\/([^/]+)\/brand\.json$/.exec(key);
+    if (m) names.add(m[1]);
+  }
+  for (const name of [...names].sort()) {
+    const rel = `brands/${name}/brand.json`;
+    if (!files?.has(rel) && (!statSync(join(brandsRoot, name)).isDirectory() || !existsSync(join(home, rel)))) continue;
+    const body = readJson(home, rel, { files });
+    if (!isPlainObject(body)) throw new WorkspaceError(rel, 'invalid: (root): expected an object');
+    if (body.id !== name) throw new WorkspaceError(rel, `invalid:\n  id: "${body.id}" must match the folder name "${name}"`);
+    raw.set(name, body);
   }
 
   // Resolve inheritance (merge raw JSON, then validate the merged result).

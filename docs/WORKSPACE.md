@@ -42,6 +42,18 @@ brands/acme/brand.json: invalid:
   contacts: must contain a "default" contact
 ```
 
+## Editing in the web UI
+
+Settings (`/settings`) edits these files in place: `/settings/brands` lists and creates brands, `/settings/brands/<id>` edits one brand section by section, `/settings/series` edits `series.json` and `/settings/workspace` the name, default brand, locale and users of `workspace.json`. The same files are available as JSON: `GET/PUT /api/brands/<id>`, `POST /api/brands/<id>/assets/<key>`, `GET/PUT /api/series`, `GET/PUT /api/workspace`.
+
+- Every save is checked against the whole workspace first, exactly as at startup (a series that a brand still maps, or a counter chain, is refused with the file and field named). A refused save changes nothing. Saving `series.json` is also refused when a template that loads today would stop loading.
+- Files are written atomically (a temporary file in the same folder, then renamed), audited as `workspace.write` (before and after, capped at 64 KB), and the running server reloads the workspace and updates the brand's `config_hash` at once. Files edited by hand are read at startup (and with the next save from the UI).
+- A brand form section replaces only its own keys; `layoutProfiles`, `templateParams` and keys the forms do not show are kept. Asset paths entered in the forms or API must stay inside the brand folder (no absolute paths, no `..`).
+- For a brand with `inheritsFrom`, blank fields show the inherited value and are left out of the file; lists (registrations, bank accounts, letterhead lines, signatories, tax modes) are written only when "override" is ticked; maps (contacts, strings, default signatories, series) hold only the brand's own keys. `inheritsFrom` itself is set when the brand is created (or in the file).
+- Uploads (`logo`, `seal`, `watermark`, `signature:<signatoryId>`, `signature-large:<signatoryId>`, `font:<weight>`): images must be PNG or JPEG and fonts TrueType or OpenType, at most 10 MB. The file is stored as `assets/<slot>-<hash>.<ext>` (fonts in `assets/fonts/`); the uploaded file name is never used. Uploading a signature for a brand that inherits its signatories copies the inherited list into the brand first.
+- `GET /settings/brands/<id>/preview.pdf` renders one page with the letterhead, palette, fonts, a signature block and the footer, from the saved settings. `/settings/brands/<id>/brand.json` downloads the brand's own file.
+- On `/settings/workspace` you cannot give a user (yourself included) a clearance above your own.
+
 ## workspace.json
 
 | Field | Default | Notes |

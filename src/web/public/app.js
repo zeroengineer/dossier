@@ -1,4 +1,5 @@
-// Progressive enhancement for the generate form: add/remove array rows, and preview without leaving the page.
+// Progressive enhancement: add/remove array rows (generate and settings forms), settings palette defaults, and the
+// generate preview without leaving the page.
 // Every page works without this script.
 (function () {
   'use strict';
@@ -36,6 +37,14 @@
       else tr.querySelectorAll('input, textarea, select').forEach(function (el) { el.value = ''; });
       renumber(tb, t.getAttribute('data-rows'));
     }
+  });
+
+  // Settings palette: changing a colour unticks its "default" box, so the new value is saved.
+  document.addEventListener('input', function (ev) {
+    var name = ev.target && ev.target.getAttribute && ev.target.getAttribute('data-default-for');
+    if (!name) return;
+    var box = document.querySelector('input[type=checkbox][name="' + CSS.escape(name) + '"]');
+    if (box) box.checked = false;
   });
 
   function el(tag, attrs, text) {
