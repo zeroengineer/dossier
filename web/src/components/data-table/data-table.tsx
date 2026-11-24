@@ -26,12 +26,18 @@ import "./column-meta"
 
 export const DEFAULT_PAGE_SIZE = 20
 
+/**
+ * `client`: `data` is every row; the table sorts, filters and paginates it.
+ * `server`: `data` is one page already sorted and filtered by the API; pass `rowCount` (the total) once known.
+ */
+export type DataTableMode = "client" | "server"
+
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   /** Stable row id (e.g. the document id); defaults to the row index. */
   getRowId?: (row: TData, index: number) => string
-  /** Makes rows clickable (and keyboard-activatable with Enter). Clicks on buttons, links and inputs inside a row are ignored. */
+  /** Makes rows clickable (and keyboard-activatable with Enter or Space). Clicks on buttons, links and inputs inside a row are ignored. */
   onRowClick?: (row: TData) => void
   /** Shows skeleton rows instead of data. */
   isLoading?: boolean
@@ -46,12 +52,18 @@ export interface DataTableProps<TData, TValue> {
   pageSizeOptions?: number[]
   initialState?: InitialTableState
 
-  /** Controlled sorting. With `manualSorting` the rows are shown as given (server-side sort). */
+  /**
+   * `client` (default) or `server` (manual sorting, filtering and pagination; the caller resets `pageIndex` when its
+   * search, filters or sort change). For backward compatibility, omitting `mode` but passing `rowCount` means server.
+   */
+  mode?: DataTableMode
+
+  /** Controlled sorting. With `manualSorting` (or `mode="server"`) the rows are shown as given. */
   sorting?: SortingState
   onSortingChange?: OnChangeFn<SortingState>
   manualSorting?: boolean
 
-  /** Controlled pagination. Passing `rowCount` switches to manual (server-side) pagination: `data` is one page. */
+  /** Controlled pagination. In server mode `rowCount` is the total number of rows (may be undefined while loading). */
   pagination?: PaginationState
   onPaginationChange?: OnChangeFn<PaginationState>
   rowCount?: number
@@ -88,9 +100,10 @@ export function DataTable<TData, TValue>({
   showPagination = true,
   pageSizeOptions,
   initialState,
+  mode,
   sorting: sortingProp,
   onSortingChange,
-  manualSorting = false,
+  manualSorting: manualSortingProp = false,
   pagination: paginationProp,
   onPaginationChange,
   rowCount,
@@ -100,7 +113,8 @@ export function DataTable<TData, TValue>({
   onColumnVisibilityChange,
   className,
 }: DataTableProps<TData, TValue>) {
-  const manualPagination = rowCount !== undefined
+  const server = mode ? mode === "server" : rowCount !== undefined
+  const manualSorting = server || manualSortingProp
   const [sorting, setSorting] = useMaybeControlled(sortingProp, onSortingChange, initialState?.sorting ?? [])
   const [pagination, setPagination] = useMaybeControlled(paginationProp, onPaginationChange, {
     pageIndex: initialState?.pagination?.pageIndex ?? 0,
@@ -113,27 +127,48 @@ export function DataTable<TData, TValue>({
     initialState?.columnVisibility ?? {},
   )
 
+  // Client mode: a new sort or filter (search, facets, Reset) starts again at the first page.
+  const resetPageIndex = React.useCallback(() => {
+    setPagination((old) => (old.pageIndex === 0 ? old : { ...old, pageIndex: 0 }))
+  }, [setPagination])
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    setSorting(updater)
+    if (!manualSorting) resetPageIndex()
+  }
+  const handleColumnFiltersChange: OnChangeFn<ColumnFiltersState> = (updater) => {
+    setColumnFilters(updater)
+    if (!server) resetPageIndex()
+  }
+
   const table = useReactTable({
     data,
     columns,
     getRowId,
     state: { sorting, pagination, columnFilters, columnVisibility },
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     onPaginationChange: setPagination,
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange: handleColumnFiltersChange,
     onColumnVisibilityChange: setColumnVisibility,
     manualSorting,
-    manualPagination,
-    manualFiltering: manualPagination,
+    manualPagination: server,
+    manualFiltering: server,
     rowCount,
     autoResetPageIndex: false,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: manualSorting ? undefined : getSortedRowModel(),
-    getFilteredRowModel: manualPagination ? undefined : getFilteredRowModel(),
-    getPaginationRowModel: manualPagination ? undefined : getPaginationRowModel(),
+    getFilteredRowModel: server ? undefined : getFilteredRowModel(),
+    getPaginationRowModel: server ? undefined : getPaginationRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
+
+  // Client mode: when rows disappear (new data, a deleted row) and the current page is past the end, go to the last page.
+  const pageCount = table.getPageCount()
+  React.useEffect(() => {
+    if (!server && pagination.pageIndex > 0 && pagination.pageIndex >= pageCount) {
+      setPagination((old) => ({ ...old, pageIndex: Math.max(pageCount - 1, 0) }))
+    }
+  }, [server, pagination.pageIndex, pageCount, setPagination])
 
   const rows = table.getRowModel().rows
   const visibleColumns = table.getVisibleLeafColumns()
@@ -147,7 +182,7 @@ export function DataTable<TData, TValue>({
   }
 
   function handleRowKeyDown(event: React.KeyboardEvent<HTMLTableRowElement>, row: Row<TData>) {
-    if (event.key !== "Enter" || event.target !== event.currentTarget) return
+    if ((event.key !== "Enter" && event.key !== " ") || event.target !== event.currentTarget) return
     event.preventDefault()
     onRowClick?.(row.original)
   }
@@ -193,7 +228,7 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() ? "selected" : undefined}
                   tabIndex={onRowClick ? 0 : undefined}
-                  className={cn(onRowClick && "cursor-pointer focus-visible:bg-muted/50 focus-visible:outline-none")}
+                  className={cn(onRowClick && "cursor-pointer focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset")}
                   onClick={onRowClick ? (event) => handleRowClick(event, row) : undefined}
                   onKeyDown={onRowClick ? (event) => handleRowKeyDown(event, row) : undefined}
                 >

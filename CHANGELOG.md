@@ -35,6 +35,9 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
   popover, calendar, combobox, field, checkbox, switch, toggle group, alert dialog and others), a reusable data table
   (TanStack Table: sorting, faceted filters, column visibility, pagination, client or server side), the dashboard API
   types, and react-hook-form, zod, date-fns and Recharts.
+- Shared confirmation dialog for destructive actions (outlined red confirm, pending state while the action runs).
+  The data table has an explicit client or server mode, returns to the first page when a client-side sort, search or
+  filter changes, and its clickable rows show a focus ring and open with Enter or Space.
 
 ### Changed
 

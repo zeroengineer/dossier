@@ -27,13 +27,30 @@ Also leave the shared components below and `components/ui/*` as they are; if one
 ## Reuse before you build
 
 - `components/data-table/*` (import from `@/components/data-table`): `DataTable` (TanStack Table v8, row click,
-  skeleton rows, empty state, client or manual server-side pagination via `rowCount`, manual sorting),
+  skeleton rows, empty state, `mode="client" | "server"`, see below),
   `DataTableToolbar` (search slot, filter slots, Reset, View menu), `DataTableFacetedFilter` (client `column` or
   controlled `selected`/`onSelectedChange` for URL params; `facetFilterFn` for client columns),
   `DataTableColumnHeader` (sort/hide menu), `DataTableViewOptions`, `DataTablePagination`. Per-column
   `meta: { label, className }` sets the View-menu label and responsive classes (`hidden md:table-cell`).
 - App components: `page-header`, `empty-state`, `error-state`, `status-badge`, `sensitivity-badge`, `money`,
-  `date-text`, `page-skeleton`.
+  `date-text`, `page-skeleton`, `confirm-dialog` (`ConfirmDialog`: every destructive or irreversible action; title,
+  description, `confirmLabel`, outlined red confirm, async `onConfirm` with a pending state, closes on success and
+  stays open on failure; `trigger` or controlled `open`/`onOpenChange`).
+
+### Data table modes
+
+- **Client mode** (default): pass every row in `data`. Sorting, search, faceted filters and pagination run in the
+  table, and any new sort, search, filter or Reset goes back to page 1.
+- **Server mode** (the documents list, anything paged by the API): pass `mode="server"` plus controlled `pagination`
+  / `onPaginationChange`, `sorting` / `onSortingChange` (if sortable), and `rowCount` = the API total (it may be
+  undefined while the first page loads; the table stays in server mode). `data` is the current page as returned.
+  You own the page index: when search, filters or sort change, set `pageIndex` to 0 yourself (usually in the same URL
+  search-params update). Keep the previous page on screen while the next one loads with
+  `useQuery({ ..., placeholderData: keepPreviousData })` and pass `isLoading` only for the very first load.
+  Use controlled `search` / `selected` props on the toolbar and faceted filters (URL params), not column filters.
+- Clickable rows (`onRowClick`) activate on click, Enter and Space and show a focus ring. The primary cell (title or
+  number) should still render a real `<Link>` to the target so it can be opened in a new tab and is announced as a
+  link; the row click ignores clicks on links and buttons inside it.
 - shadcn (`components/ui`): accordion, alert, alert-dialog, avatar, badge, breadcrumb, button, button-group, calendar,
   card, chart, checkbox, collapsible, combobox, command, context-menu, dialog, dropdown-menu, empty, field,
   hover-card, input, input-group, item, kbd, label, native-select, navigation-menu, pagination, popover, progress,
@@ -54,8 +71,9 @@ Semantic tokens only (`bg-card`, `text-muted-foreground`, `border`, ...); no raw
 ## Tests
 
 - Tests live next to the feature (`features/<area>/*.test.tsx`, `pages/<page>.test.tsx`), Vitest + Testing Library.
-- MSW: put your default handlers in `web/src/test/handlers/<area>.ts` exporting `export const handlers = [...]`.
-  `test/handlers/index.ts` picks up every file in that folder automatically, so do not edit it. Per-test overrides
+- MSW: put your default handlers in `web/src/test/handlers/<area>.ts` (or `.tsx`) exporting
+  `export const handlers = [...]`. `test/handlers/index.ts` picks up every file in that folder automatically, so do
+  not edit it; a file there without a `handlers` array makes every test fail on purpose. Per-test overrides
   use `server.use(...)` from `@/test/server`.
 - Fixtures: example workspace data only (Acme Events, Alex Example, `ACM-` numbers, example.com/org/net). Put
   area fixtures in your own file (e.g. `test/fixtures-<area>.ts`), not in `test/fixtures.ts`.

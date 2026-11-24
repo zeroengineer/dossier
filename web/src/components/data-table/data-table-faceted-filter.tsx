@@ -108,7 +108,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                 const isSelected = selected.has(option.value)
                 const count = facets?.get(option.value)
                 return (
-                  <CommandItem key={option.value} value={option.label} onSelect={() => toggle(option.value)} data-checked={isSelected}>
+                  <CommandItem key={option.value} value={option.label} onSelect={() => toggle(option.value)} data-checked={isSelected} aria-checked={isSelected}>
                     <div
                       aria-hidden
                       className={cn(
@@ -120,6 +120,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                     </div>
                     {option.icon ? <option.icon className="text-muted-foreground" /> : null}
                     <span>{option.label}</span>
+                    {isSelected ? <span className="sr-only">(selected)</span> : null}
                     {count !== undefined ? <span className="ml-auto font-mono text-xs text-muted-foreground">{count}</span> : null}
                   </CommandItem>
                 )
