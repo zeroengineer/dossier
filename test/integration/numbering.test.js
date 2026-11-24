@@ -124,6 +124,7 @@ test('seedCounter only moves forward and is audited', () => withCtx((ctx) => {
   assert.throws(() => seedCounter(ctx, 'invoice-main', { year: 2026 }, -1), code('INVALID_INPUT'));
   assert.throws(() => seedCounter(ctx, 'invoice-main', {}, 10), code('NUMBER_VAR_MISSING'));
   assert.throws(() => seedCounter(ctx, 'settlement', { year: 2026 }, 10), code('NUMBER_VAR_MISSING'));
+  assert.throws(() => seedCounter(ctx, 'fy-series', { fy: '2026-28' }, 10), code('INVALID_INPUT'));
 }));
 
 test('registerExisting parses legacy numbers and seeds past them', () => withCtx((ctx) => {

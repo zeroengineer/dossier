@@ -119,3 +119,24 @@ test('scopeKey requires the vars its scope uses', () => {
   assert.throws(() => scopeKey(series('{#}', 'brand+year+client'), { brand: 'acme', year: 2026 }), code('NUMBER_VAR_MISSING'));
   assert.equal(scopeKey(series('{#}', 'global'), {}), 'num:s');
 });
+
+test('dates with impossible days are INVALID_INPUT', () => {
+  for (const date of ['2026-02-31', '2026-04-31', '2026-01-00', '2025-02-29']) {
+    assert.throws(() => formatNumber('{YYYY}-{#}', { date, seq: 1 }), code('INVALID_INPUT'), date);
+  }
+  assert.equal(formatNumber('{YYYY}-{#}', { date: '2024-02-29', seq: 1 }), '2024-1');
+  assert.equal(formatNumber('{YYYY}-{#}', { date: '2026-12-31', seq: 1 }), '2026-1');
+});
+
+test('an explicit fy must look like 2026-27 with consecutive years', () => {
+  const fySeries = series('{FY}-{#}');
+  for (const fy of ['2026-28', '2026', '26-27', '2026-2027', 2026]) {
+    assert.throws(() => scopeKey(fySeries, { fy, brand: 'acme' }), code('INVALID_INPUT'), String(fy));
+    assert.throws(() => formatNumber('{FY}-{#}', { fy, seq: 1 }), code('INVALID_INPUT'), String(fy));
+  }
+  assert.equal(scopeKey(fySeries, { fy: '2099-00', brand: 'acme' }), 'num:s:ACME:FY2099-00');
+});
+
+test('parseNumber: adjacent hyphenated code tokens resolve greedily', () => {
+  assert.deepEqual(parseNumber('{CLIENT}-{CODE}-{#}', 'A-B-C-1'), { client: 'A-B', code: 'C', seq: 1 });
+});

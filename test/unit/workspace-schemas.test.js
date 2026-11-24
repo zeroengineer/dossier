@@ -122,6 +122,17 @@ test('SeriesFileSchema validates patterns and shared-counter scopes', () => {
   ]);
   assert.equal(year.success, false);
   assert.match(formatIssues(year.error), /1\.pattern.*same year/);
+  const chain = SeriesFileSchema.safeParse([
+    { id: 'inv', pattern: 'I-{YYYY}-{####}' },
+    { id: 'dn', pattern: 'D-{YYYY}-{####}', counter: 'inv' },
+    { id: 'rec', pattern: 'R-{YYYY}-{####}', counter: 'dn' },
+  ]);
+  assert.equal(chain.success, false);
+  assert.match(formatIssues(chain.error), /2\.counter.*counter must name a series that owns its counter/);
+  assert.equal(SeriesFileSchema.safeParse([
+    { id: 'inv', pattern: 'I-{YYYY}-{####}', counter: 'inv' },
+    { id: 'dn', pattern: 'D-{YYYY}-{####}', counter: 'inv' },
+  ]).success, true);
   assert.equal(SeriesFileSchema.safeParse([
     { id: 'inv', pattern: 'I-{YYYY}-{####}' },
     { id: 'rec', pattern: 'R-{YY}-{####}', counter: 'inv' },

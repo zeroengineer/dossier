@@ -118,7 +118,7 @@ If a referenced file is missing, Dossier uses a neutral grey placeholder from `a
 | `start` | `1` | first number; a series that shares another's counter uses that series' `start` |
 | `counter` | own id | share another series' counter (e.g. invoices, debit notes and receipts on one sequence) |
 
-`{BRAND}`, `{CLIENT}` and `{CODE}` values are uppercased and reduced to `A-Z`, `0-9` and `-` (spaces and `_` become `-`). The year of a year-scoped counter is the calendar year when the pattern has `{YYYY}`, else the financial year when it has `{FY}`, else the calendar year of the document date; so a `{FY}` series restarts in April. A series that shares a counter must have the owner's `scope` and count by the same kind of year, otherwise the workspace does not load. `{CODE}` does not split a counter; `{CLIENT}` does only with scope `brand+year+client`.
+`{BRAND}`, `{CLIENT}` and `{CODE}` values are uppercased and reduced to `A-Z`, `0-9` and `-` (spaces and `_` become `-`). The year of a year-scoped counter is the calendar year when the pattern has `{YYYY}`, else the financial year when it has `{FY}`, else the calendar year of the document date; so a `{FY}` series restarts in April. `counter` must name a series that owns its counter (no chains), and a series that shares a counter must have the owner's `scope` and count by the same kind of year, otherwise the workspace does not load. `{CODE}` does not split a counter; `{CLIENT}` does only with scope `brand+year+client`.
 
 ## seeds/entities.json
 

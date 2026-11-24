@@ -155,6 +155,10 @@ export const SeriesFileSchema = z.array(SeriesSchema).superRefine((list, ctx) =>
       ctx.addIssue({ code: 'custom', path: [i, 'counter'], message: `unknown series "${s.counter}"` });
       return;
     }
+    if (owner.counter && owner.counter !== owner.id) {
+      ctx.addIssue({ code: 'custom', path: [i, 'counter'], message: `counter must name a series that owns its counter ("${owner.id}" shares "${owner.counter}")` });
+      return;
+    }
     // Sharers must build the same counter keys as the owner, or the shared counter silently splits.
     if (owner.scope !== s.scope) {
       ctx.addIssue({ code: 'custom', path: [i, 'scope'], message: `shares the counter of "${owner.id}", so its scope must be "${owner.scope}"` });

@@ -72,6 +72,17 @@ export function financialYear(year, month) {
   return `${start}-${String((start + 1) % 100).padStart(2, '0')}`;
 }
 
+/**
+ * True for a financial-year string like `2026-27` whose second part is the year after the first.
+ * @param {unknown} fy
+ * @returns {boolean}
+ */
+export function isFinancialYear(fy) {
+  if (typeof fy !== 'string' || !/^\d{4}-\d{2}$/.test(fy)) return false;
+  const [a, b] = fy.split('-').map(Number);
+  return (a + 1) % 100 === b;
+}
+
 /** Year and month (1-12) of a `YYYY-MM-DD…` string (taken literally, no time zone shift) or a Date (local time). */
 function dateParts(date) {
   if (date === undefined || date === null) return null;
@@ -81,7 +92,9 @@ function dateParts(date) {
   }
   const m = typeof date === 'string' && /^(\d{4})-(\d{2})-(\d{2})/.exec(date);
   const month = m ? Number(m[2]) : 0;
-  if (!m || month < 1 || month > 12) throw new DossierError('INVALID_INPUT', `Invalid date "${date}" (expected YYYY-MM-DD)`, { date: String(date) });
+  const day = m ? Number(m[3]) : 0;
+  const daysInMonth = m ? new Date(Date.UTC(Number(m[1]), month, 0)).getUTCDate() : 0;
+  if (!m || month < 1 || month > 12 || day < 1 || day > daysInMonth) throw new DossierError('INVALID_INPUT', `Invalid date "${date}" (expected YYYY-MM-DD)`, { date: String(date) });
   return { year: Number(m[1]), month };
 }
 
@@ -103,7 +116,10 @@ function resolver(vars = {}) {
     return mo;
   };
   const fy = () => {
-    if (vars.fy !== undefined && vars.fy !== null) return String(vars.fy);
+    if (vars.fy !== undefined && vars.fy !== null) {
+      if (!isFinancialYear(vars.fy)) throw new DossierError('INVALID_INPUT', `Invalid financial year "${vars.fy}" (expected e.g. 2026-27)`, { fy: String(vars.fy) });
+      return vars.fy;
+    }
     const d = fromDate();
     if (!d) throw missing('FY', { hint: 'pass a date' });
     return financialYear(d.year, d.month);
@@ -176,6 +192,10 @@ export function patternToRegex(pattern) {
  * @param {string} number
  * @returns {{ seq: number, year?: number, month?: number, fy?: string, client?: string, code?: string, brand?: string } | null}
  *   null when the number does not fit the pattern (or its values disagree, e.g. `{YYYY}` and `{YY}`)
+ * Code tokens (`{CLIENT}`, `{CODE}`, `{BRAND}`) may contain `-`, so a hyphen next to one is ambiguous: with
+ * `{CLIENT}-{CODE}` the number `A-B-C` parses as client `A-B`, code `C` (the regex is greedy, the first code token
+ * takes the longest match), and with `{CODE}-{##}` a code ending in `-<digits>` cannot be told from the counter.
+ * Separate code tokens with a character they cannot contain (e.g. `/`) when numbers must parse back unambiguously.
  */
 export function parseNumber(pattern, number) {
   if (typeof number !== 'string') return null;
@@ -196,11 +216,7 @@ export function parseNumber(pattern, number) {
       case 'YYYY': ok = put('year', Number(raw)); break;
       case 'YY': ok = 'year' in vars ? vars.year % 100 === Number(raw) : put('year', 2000 + Number(raw)); break;
       case 'MM': ok = put('month', Number(raw)); break;
-      case 'FY': {
-        const [a, b] = raw.split('-').map(Number);
-        ok = (a + 1) % 100 === b && put('fy', raw);
-        break;
-      }
+      case 'FY': ok = isFinancialYear(raw) && put('fy', raw); break;
       default: ok = put(CODE_VAR[tokens[i].token], raw);
     }
     if (!ok || (tokens[i].token === '#' && !Number.isSafeInteger(vars.seq))) return null;
