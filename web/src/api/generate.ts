@@ -1,7 +1,8 @@
-import { useQuery } from "@tanstack/react-query"
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ApiError, request } from "@/lib/api"
 import { keys } from "@/lib/keys"
-import type { ApiErrorBody, EntityMatchList } from "./types"
+import type { ApiErrorBody, EntityMatchList, GenerateRequest, GenerateResult } from "./types"
+import { treeKeys } from "./vault"
 
 /** The most entities the API returns in one list (src/services/entities.js MAX_LIMIT). */
 const ENTITY_OPTIONS_LIMIT = 500
@@ -84,5 +85,63 @@ export async function previewTemplate(id: string, body: PreviewRequest, signal?:
     code: typeof err.code === "string" ? err.code : "HTTP_ERROR",
     message: typeof err.message === "string" ? err.message : res.statusText || `Request failed with status ${res.status}`,
     details: typeof err.details === "object" && err.details !== null ? err.details : {},
+  })
+}
+
+/** Preview query keys under the template (`templates` prefix): one per brand and input. */
+export const previewKeys = {
+  draft: (id: string, brandId: string | null, inputJson: string) =>
+    [...keys.templates.detail(id), "preview", { brandId, input: inputJson }] as const,
+  text: (url: string) => [...keys.templates.all, "preview-text", url] as const,
+}
+
+/**
+ * The draft preview of `inputJson` (the JSON of `toInput(...).input`); idle while `inputJson` is null. A new input
+ * cancels the request in flight (the query passes its signal on); the last answer stays on screen while the next loads.
+ */
+export function usePreview(id: string, brandId: string | null, inputJson: string | null) {
+  return useQuery({
+    queryKey: previewKeys.draft(id, brandId, inputJson ?? ""),
+    queryFn: ({ signal }) =>
+      previewTemplate(id, { input: JSON.parse(inputJson ?? "{}") as Record<string, unknown>, brandId }, signal),
+    enabled: inputJson !== null,
+    placeholderData: keepPreviousData,
+    retry: false,
+    // The files live under a token on the server: ask again rather than trust an old answer for long.
+    staleTime: 30_000,
+    gcTime: 60_000,
+  })
+}
+
+/** A text preview file (Markdown) as a string. */
+export function usePreviewText(url: string, enabled = true) {
+  return useQuery({
+    queryKey: previewKeys.text(url),
+    queryFn: ({ signal }) => request<string>(url, { signal, headers: { Accept: "text/markdown, text/plain, application/json" } }),
+    enabled,
+    retry: false,
+  })
+}
+
+export const generateFromTemplate = (id: string, body: GenerateRequest) =>
+  request<GenerateResult>(`/api/templates/${encodeURIComponent(id)}/generate`, { json: body })
+
+/**
+ * `POST /api/templates/:id/generate`: a new document or, with `documentId`, its next version. The caller shows every
+ * error itself (field problems on the form, STATUS_LOCKED as an alert, the rest as a toast), so the global toast is off.
+ * On success every view a document appears in is refreshed: documents, dashboard, vault tree and search.
+ */
+export function useGenerateDocument(id: string) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (body: GenerateRequest) => generateFromTemplate(id, body),
+    meta: { silentError: true },
+    onSuccess: () =>
+      Promise.all([
+        client.invalidateQueries({ queryKey: keys.documents.all }),
+        client.invalidateQueries({ queryKey: ["dashboard"] }),
+        client.invalidateQueries({ queryKey: treeKeys.all }),
+        client.invalidateQueries({ queryKey: ["search"] }),
+      ]),
   })
 }

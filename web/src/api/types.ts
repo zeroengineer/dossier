@@ -705,3 +705,37 @@ export interface BrandAssetUpload {
 export interface SeriesIdList {
   series: Array<{ id: string }>
 }
+
+// generate preview
+
+/** `POST /api/templates/:id/generate` body (src/web/routes/templates.js; src/services/generator.js generateDocument). */
+export interface GenerateRequest {
+  input: Record<string, unknown>
+  /** New documents only: the issuing brand (absent: the workspace default). A regenerate keeps the document's brand. */
+  brandId?: string
+  /** Regenerate: the document to add a version to (same template and brand; it keeps its number). */
+  documentId?: string
+  /** Regenerate a Sent/Signed/Paid document anyway (it goes back to Draft); without it the server answers STATUS_LOCKED. */
+  force?: boolean
+  /** The new version's note. */
+  note?: string
+}
+
+/** One stored file of a generated version. */
+export interface GeneratedRendition {
+  kind: string
+  sha256: string
+  filename: string
+  bytes: number
+}
+
+/** 201 from `POST /api/templates/:id/generate`. */
+export interface GenerateResult {
+  documentId: string
+  /** The document number; null for templates without numbering. */
+  number: string | null
+  versionNo: number
+  renditions: GeneratedRendition[]
+  /** Placeholders that printed empty (`PLACEHOLDER_EMPTY` …). */
+  warnings: { code?: string; name: string; message: string }[]
+}
