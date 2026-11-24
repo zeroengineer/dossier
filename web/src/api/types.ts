@@ -361,3 +361,43 @@ export interface DocumentUnlinkResult {
 export interface DocumentLinkSearch {
   hits: Array<{ document: DocumentSummary; score: number; match: "number" | "metadata" | "text"; snippet: string | null }>
 }
+
+// search
+
+/** How a search hit matched (src/services/search.js): document number or id, metadata (title, number, parties), or text. */
+export type SearchMatch = "number" | "metadata" | "text"
+
+/** One ranked hit of `GET /api/search`. */
+export interface SearchHit {
+  document: DocumentSummary
+  /** Relevance, higher is better (negated bm25; 0 for a number match without a text match). */
+  score: number
+  match: SearchMatch
+  /** For text matches: an extract of the document text with matched terms between `[` and `]`; null otherwise. */
+  snippet: string | null
+}
+
+/** A document one hop from a hit (a document relation) or from a matched entity (party, signatory, named). */
+export interface SearchRelated {
+  document: DocumentSummary
+  /** `from` is the hit's document id (kind `document`) or the entity id (kind `entity`); `relation` the type or role. */
+  via: { kind: "entity" | "document"; relation: string; from: string | number }
+}
+
+/** An entity whose name or an alias contains the query (src/services/entities.js findEntities). */
+export interface SearchEntity {
+  id: number
+  kind: string
+  name: string
+  brand: string | null
+  aliases: string[]
+  /** The alias that matched, when the match was on an alias rather than the name. */
+  matched: string | null
+}
+
+/** `GET /api/search?q=&limit=` (src/services/search.js search). */
+export interface SearchResult {
+  hits: SearchHit[]
+  related: SearchRelated[]
+  entities: SearchEntity[]
+}
