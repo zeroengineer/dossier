@@ -17,6 +17,9 @@ dossier-workspace/
 *.p12
 
 # generated output
+web/dist/
+web/coverage/
+web/brand-src/renders/
 samples-out/
 coverage/
 test/.tmp/

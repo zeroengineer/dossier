@@ -18,6 +18,7 @@ const ROOT = resolve(import.meta.dirname, '..');
 /** What is scanned: everything shipped, including every doc (DISCOVERY.md and PLAN.md use neutral labels). */
 export const SCAN_PATHS = [
   'src', 'assets', 'workspace.example', 'test', 'scripts', 'bin', 'docs', 'README.md', 'package.json', '.gitignore',
+  'web/src', 'web/public', 'web/brand-src', 'web/package.json', 'web/index.html', 'CHANGELOG.md', 'Dockerfile', 'docker-compose.yml',
 ];
 
 /**
