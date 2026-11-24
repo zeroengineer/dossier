@@ -6,6 +6,7 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ### Added
 
+- Templates page: every template with category, type, version, numbering, renditions, sensitivity and source (built-in, workspace or inherited), filters, a Generate action per row, and an alert listing template folders that failed to load.
 - Settings API for the web app: `GET /api/series/usage`, `GET /api/brands/:id/assets` (effective file per slot with `source`, `present`, `version` and a pinned url), `GET /api/brands/:id/file` (download as `<id>.json`), `GET /api/brands/:id/preview.pdf`; asset routes for the seal, watermark and large signatures.
 - Web: document page (`/documents/:id`) with PDF, HTML and Markdown preview tabs, a versions table that drives the preview, details, linked entities and relations in both directions; 403 and 404 shown as error states.
 - Logo concepts (three directions) with brief and sources in `web/brand-src/`; the owner chose concept A, "Bound D".

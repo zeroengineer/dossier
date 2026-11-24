@@ -216,6 +216,7 @@ export interface DocumentDetail extends DocumentSummary {
   relations: DocumentRelation[]
   createdBy: string | null
   createdAt: string
+}
 
 // templates
 
