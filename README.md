@@ -211,8 +211,9 @@ npm run visual -- --update  # rewrite the baselines (always from the example wor
   data. Run `npm run samples` first.
 - **Organisation-data guard** (`test/unit/no-org-data.test.js`, also `node scripts/org-data-guard.js`) scans `src/`,
   `assets/`, `workspace.example/`, `test/`, `scripts/`, this README and the user docs for values shaped like real
-  Indian GSTIN, CIN, PAN and IFSC codes, 11-18 digit account numbers and `+91` phone numbers (the fake example values
-  are allowed). Point `DOSSIER_DENYLIST` at a file outside the repo with one regular expression per line
+  Indian GSTIN, CIN, PAN and IFSC codes, 11-18 digit account numbers and `+91` phone numbers (only the listed fake example
+  values are allowed). Numbers written with grouping (`5020 0012 3456`) and lowercase identifiers are not detected, so
+  put those in the denylist too. Point `DOSSIER_DENYLIST` at a file outside the repo with one regular expression per line
   (case-insensitive), such as your organisation, client and people names, to check those too:
   `DOSSIER_DENYLIST=~/dossier-denylist.txt npm test`.
 
@@ -255,8 +256,9 @@ design and data model; `docs/DECISIONS.md` records the decisions and their reaso
 - **Files only through documents.** Stored bytes are served only through a document the user may read; non-PDF files
   carry `Content-Security-Policy: sandbox`, so an uploaded HTML or SVG file cannot script the app.
 - **Preview tokens.** Draft previews are written to `data/previews/<token>/` and served at `/previews/<token>/…`. The
-  token is a sha256 of the template, the input and the brand, so it cannot be guessed, but whoever has the URL can open
-  the preview; previews are not clearance-checked beyond the template check made when the preview is created.
+  token is a sha256 of the template, the input and the brand: it is not listed anywhere and is hard to guess without
+  the exact inputs, but whoever has the URL can open the preview; previews are not clearance-checked beyond the
+  template check made when the preview is created.
 - **No secrets in the vault.** Uploads named `*.pem`, `*.key`, `*.env`, `.env*`, or whose bytes or text contain PEM
   armour or `PRIVATE KEY`, are refused (`SECRET_REJECTED`). Keep keys and passwords in a password manager.
 - **Audit.** Every write is recorded in `audit_log` with the actor (`<user>`, or `mcp:<user>` for the MCP server).

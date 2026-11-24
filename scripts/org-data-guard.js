@@ -26,20 +26,31 @@ export const SCAN_PATHS = [
 const BINARY_EXT = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.pdf', '.ttf', '.otf', '.woff', '.woff2',
   '.sqlite', '.db', '.zip', '.gz', '.p12']);
 const LOCKFILES = new Set(['package-lock.json', 'npm-shrinkwrap.json', 'yarn.lock', 'pnpm-lock.yaml']);
-const SKIP_DIRS = new Set(['node_modules', '.git', 'data']);
+/** Directory names skipped at any depth. */
+const SKIP_DIRS = new Set(['node_modules', '.git']);
+/** Runtime data folders skipped only at these paths (relative to the scan root, `/`-separated). */
+const SKIP_PATHS = new Set(['data', 'workspace.example/data']);
 
 /**
- * The fake example values the repo uses on purpose (docs/WORKSPACE.md): the example brand's CIN and GSTIN.
+ * The exact fake identifiers the repo uses on purpose (the example workspace and tests).
+ * Identifier-shaped matches (GSTIN, CIN, PAN, IFSC) are allowed only when listed here.
  */
-export const FAKE_VALUES = new Set(['U00000XX2000PTC000000', '00AAAAA0000A0Z0']);
+export const FAKE_VALUES = new Set([
+  'U00000XX2000PTC000000', '00AAAAA0000A0Z0', 'AAAAA0000A', 'EXMP0000000', // example brand (workspace.example)
+  '00BBBBB0000B0Z0', '00CCCCC0000C0Z0', // example group entity and client (workspace.example/seeds)
+  'EXMP0000001', // second fake bank account (test/integration/settings.test.js)
+]);
+
+/** True only for a listed fake identifier. */
+export const isFakeId = (m) => FAKE_VALUES.has(m);
 
 /**
- * True for an obvious placeholder: a listed fake value, or digits that are all zero except at most one (`000000000001`,
- * `100000000000`), or an ascending run `123456789…` padded with zeros (amount-in-words tests).
+ * True for an obvious placeholder number (bank accounts, phones): digits that are all zero except at most one
+ * (`000000000001`, `100000000000`, `+00 00000 00000`), or an ascending run `123456789…` padded with zeros
+ * (amount-in-words tests).
  * @param {string} m
  */
 export function isFakeValue(m) {
-  if (FAKE_VALUES.has(m)) return true;
   const digits = m.replace(/\D/g, '');
   if (!digits) return false;
   if (digits.replace(/0/g, '').length <= 1) return true;
@@ -52,12 +63,13 @@ export function isFakeValue(m) {
  * @type {Array<{ id: string, re: RegExp, fake: (m: string) => boolean }>}
  */
 export const BUILTIN_PATTERNS = [
-  { id: 'gstin', re: /\b\d{2}[A-Z]{5}\d{4}[A-Z][0-9A-Z]Z[0-9A-Z]\b/g, fake: isFakeValue },
-  { id: 'cin', re: /\b[LU]\d{5}[A-Z]{2}\d{4}(?:PLC|PTC|OPC|NPL|GOI|SGC|FLC|FTC|GAP|GAT|ULL|ULT)\d{6}\b/g, fake: isFakeValue },
-  { id: 'pan', re: /\b[A-Z]{3}[PCHFATBLJG][A-Z]\d{4}[A-Z]\b/g, fake: isFakeValue },
-  { id: 'ifsc', re: /\b[A-Z]{4}0[A-Z0-9]{6}\b/g, fake: isFakeValue },
-  // 11-18 digits on their own (not part of a decimal number, a hex string, an id or a longer run).
-  { id: 'bank-account', re: /(?<![\w.,/-])\d{11,18}(?![\w]|[.,]\d)/g, fake: isFakeValue },
+  { id: 'gstin', re: /\b\d{2}[A-Z]{5}\d{4}[A-Z][0-9A-Z]Z[0-9A-Z]\b/g, fake: isFakeId },
+  { id: 'cin', re: /\b[LU]\d{5}[A-Z]{2}\d{4}(?:PLC|PTC|OPC|NPL|GOI|SGC|FLC|FTC|GAP|GAT|ULL|ULT)\d{6}\b/g, fake: isFakeId },
+  { id: 'pan', re: /\b[A-Z]{3}[PCHFATBLJG][A-Z]\d{4}[A-Z]\b/g, fake: isFakeId },
+  { id: 'ifsc', re: /\b[A-Z]{4}0[A-Z0-9]{6}\b/g, fake: isFakeId },
+  // 11-18 digits on their own: not part of a decimal or grouped number (`595.28000000000001`), a hex string, an id
+  // or a longer run. A `.`, `-` or `_` after a letter still counts as a separator (`A/c No.<digits>`, `acct-<digits>`).
+  { id: 'bank-account', re: /(?<!\d[.,_-])(?<![\dA-Za-z/])\d{11,18}(?![\w]|[.,]\d)/g, fake: isFakeValue },
   { id: 'phone-in', re: /\+91[\s-]*\d(?:[\s-]*\d){9}/g, fake: isFakeValue },
 ];
 
@@ -67,12 +79,13 @@ export const BUILTIN_PATTERNS = [
  * @returns {Array<{ id: string, re: RegExp, fake: () => false }>}
  */
 export function loadDenylist(file) {
-  return readFileSync(file, 'utf8').split(/\r?\n/).map((l) => l.trim()).filter((l) => l && !l.startsWith('#'))
-    .map((l, i) => {
+  return readFileSync(file, 'utf8').split(/\r?\n/).map((l, i) => ({ l: l.trim(), line: i + 1 }))
+    .filter(({ l }) => l && !l.startsWith('#'))
+    .map(({ l, line }) => {
       try {
-        return { id: `denylist:${i + 1}`, re: new RegExp(l, 'gi'), fake: () => false };
+        return { id: `denylist:${line}`, re: new RegExp(l, 'gi'), fake: () => false };
       } catch (err) {
-        throw new Error(`${file}: line ${i + 1} is not a valid regular expression: ${err.message}`);
+        throw new Error(`${file}: line ${line} is not a valid regular expression: ${err.message}`);
       }
     });
 }
@@ -81,17 +94,18 @@ function isBinary(buf) {
   return buf.subarray(0, 8192).includes(0);
 }
 
-function* walk(abs) {
+function* walk(abs, root) {
   const st = statSync(abs);
   if (st.isFile()) {
     yield abs;
     return;
   }
-  if (!st.isDirectory()) return;
+  if (!st.isDirectory() || SKIP_PATHS.has(relative(root, abs).split(sep).join('/'))) return;
   for (const d of readdirSync(abs, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
-    if (d.isDirectory() && SKIP_DIRS.has(d.name)) continue;
+    const child = join(abs, d.name);
+    if (d.isDirectory() && (SKIP_DIRS.has(d.name) || SKIP_PATHS.has(relative(root, child).split(sep).join('/')))) continue;
     if (d.isSymbolicLink()) continue;
-    yield* walk(join(abs, d.name));
+    yield* walk(child, root);
   }
 }
 
@@ -109,7 +123,7 @@ export function scanTree({ root = ROOT, paths = SCAN_PATHS, denylist = process.e
   for (const p of paths) {
     const abs = resolve(root, p);
     if (!existsSync(abs)) continue;
-    for (const file of walk(abs)) {
+    for (const file of walk(abs, resolve(root))) {
       const name = file.split(sep).at(-1);
       if (file === skipFile || LOCKFILES.has(name) || BINARY_EXT.has(extname(name).toLowerCase())) continue;
       const buf = readFileSync(file);
