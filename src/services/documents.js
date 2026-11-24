@@ -395,6 +395,32 @@ export function updateStatus(ctx, id, status) {
 }
 
 /**
+ * Put a document back to `status` without the lifecycle rules, for the generator: a regenerated document is new
+ * content, so it returns to Draft (or the status the caller names). A Superseded document stays Superseded
+ * (INVALID_STATUS_TRANSITION) and `Superseded` is never set here. Audited as `document.status` with `extra`.
+ * Joins the caller's transaction.
+ * @param {object} ctx
+ * @param {string} id
+ * @param {string} status
+ * @param {Record<string, unknown>} [extra] added to the audit `after` (e.g. `{ reason: 'regenerate' }`)
+ */
+export function resetStatus(ctx, id, status, extra = {}) {
+  if (!STATUSES.includes(status) || status === 'Superseded') {
+    throw invalid(`status must be one of ${STATUSES.filter((s) => s !== 'Superseded').join(', ')}`, { status });
+  }
+  ctx.repo.tx(() => {
+    const row = requireDoc(ctx, id);
+    if (row.status === 'Superseded') {
+      throw new DossierError('INVALID_STATUS_TRANSITION', `${row.id} is Superseded`, { from: row.status, to: status, allowed: [] });
+    }
+    if (row.status === status) return;
+    ctx.db.prepare('UPDATE documents SET status = ?, updated_at = ? WHERE id = ?').run(status, nowIso(), row.id);
+    ctx.repo.audit('document.status', 'document', row.id, { status: row.status }, { status, ...extra });
+    changed(ctx, [row.id]);
+  });
+}
+
+/**
  * Supersede `oldId` by `newId`: the old document becomes `Superseded` and a `supersedes` relation new -> old is
  * recorded (rule B5.2).
  * @param {object} ctx

@@ -37,11 +37,13 @@ test('listTemplates registers extra template dirs and upserts registry rows with
   const [row] = rows(ctx).filter((r) => r.id === 'sample-letter');
   assert.equal(row.hash, t.hash);
   assert.equal(JSON.parse(row.meta_json).title, 'Sample letter');
-  const audits = ctx.db.prepare("SELECT action FROM audit_log WHERE action LIKE 'template.%'").all();
+  const audits = ctx.db.prepare("SELECT action FROM audit_log WHERE action LIKE 'template.%' AND target_id = 'sample-letter@1'").all();
   assert.deepEqual(audits.map((a) => a.action), ['template.register']);
+  const auditCount = () => ctx.db.prepare("SELECT count(*) AS n FROM audit_log WHERE action LIKE 'template.%'").get().n;
+  const n = auditCount();
 
   listTemplates(ctx, { dirs: [FIXTURES] });
-  assert.equal(ctx.db.prepare("SELECT count(*) AS n FROM audit_log WHERE action LIKE 'template.%'").get().n, 1, 'unchanged templates are not rewritten');
+  assert.equal(auditCount(), n, 'unchanged templates are not rewritten');
 }));
 
 test('without extra dirs the fixture is not listed (built-ins stay clean)', () => withCtx((ctx) => {
@@ -118,7 +120,7 @@ test('an invalid template folder is reported, left out of the list, and only bre
   for (const [name, [json, re]] of Object.entries(cases)) {
     await t.test(name, () => withCtx(async (ctx) => {
       const list = listTemplates(ctx, { dirs: [FIXTURES] });
-      assert.deepEqual(list.map((x) => x.id), ['notes'], 'the broken override is left out, the fixture is not used in its place');
+      assert.deepEqual(list.map((x) => x.id).filter((id) => id !== 'test-note'), ['notes'], 'the broken override is left out, the fixture is not used in its place');
       const errors = listTemplateErrors(ctx, { dirs: [FIXTURES] });
       assert.equal(errors.length, 1);
       assert.equal(errors[0].id, 'sample-letter');

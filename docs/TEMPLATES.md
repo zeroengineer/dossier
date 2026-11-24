@@ -201,3 +201,41 @@ logo and signature images as data URIs; otherwise they load from `/assets/fonts/
 `blocksToMarkdown(blocks, { brand, title })` (`src/render/md/index.js`) writes GitHub-flavoured Markdown: headings,
 paragraphs, lists, pipe tables (total rows bold, `|` escaped), key/value rows as `- **Key:** value`, signatures as
 lines, `---` dividers and `<!-- page break -->`.
+
+## Generating documents
+
+`src/services/generator.js`:
+
+- `previewDocument(ctx, templateId, input, { brandId })` resolves the fields; with anything missing or invalid it
+  returns `{ ok: false, missing, errors }`. Otherwise it renders every rendition as a draft and writes them to
+  `<dataDir>/previews/<token>/preview.{pdf,html,md}`, returning `{ ok: true, token, renditions: [{ kind, path, bytes }] }`.
+  The token is a sha256 over the template hash, the canonical JSON of the input (keys sorted) and the brand's config
+  hash. A preview writes no document, number, blob or audit row (loading a template still upserts its registry row).
+- `generateDocument(ctx, templateId, input, { brandId, status = 'Draft', documentId })` creates a numbered document
+  with version 1 and returns `{ documentId, number, versionNo, renditions: [{ kind, sha256, filename, bytes }] }`.
+  Missing fields fail with `FIELDS_MISSING` (`details.missing`), bad values with `FIELDS_INVALID`. With `documentId`
+  (a document generated from the same template) it adds the next version, keeps the number and puts the status back to
+  Draft (or `status`).
+- `renderRenditions(ctx, template, values, { brand, number, draft, creationDate })` renders without touching the
+  database.
+
+What the generator fills in:
+
+| Document field | From |
+|---|---|
+| number | series `numbering.series`, or `brand.series[<templateId>]` when it is `"brand"`; date = `values.date`; `{CLIENT}` = the party's `attrs.code`; `{CODE}` = `values.numberCode` (else `values.code`) |
+| party | the first field whose value is an entity of kind `partyKind` (party type `partyType`) |
+| amount | `values.total` (minor units) in the locale's `currencyCode` |
+| date | `values.date` |
+| title | `<template title> - <party name>` |
+| sensitivity, type | the template's |
+| issuing brand / entity | the brand; the `company` entity linked to that brand, if any |
+| document entities | `party`, `signatory` (an entity field named `signatory`, else the person entity named like the brand signatory), `issuer` |
+| relations | `generated_from` -> `template:<id>@<version>` (attrs: template id, version, hash, source); each `relations` entry links to the document id held in its field (`optional: false` makes the field required) |
+| version input | the canonical JSON of the input |
+
+Templates see `values.number` (null in a preview: print `values.number ?? 'DRAFT'`) and `env.number` / `env.draft`.
+A `body.md` is filled with `number` = `DRAFT` in previews. Preview PDFs carry the vector watermark
+`DRAFT — NOT NUMBERED` on every page. Final renditions use `creationDate` = now. Blocks templates are drawn with the
+letterhead, the blocks and the footers; a `renderPdf` template draws everything itself (the generator only adds the
+draft watermark and finalises the file). HTML renditions are standalone (fonts and images embedded).

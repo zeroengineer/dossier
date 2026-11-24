@@ -1,0 +1,25 @@
+{
+  "id": "test-note",
+  "version": 1,
+  "type": "Note",
+  "title": "Test note",
+  "category": "letter",
+  "layoutProfile": "letter",
+  "partyType": "Person",
+  "partyKind": "person",
+  "sensitivity": "Internal",
+  "renditions": ["pdf", "html", "md"],
+  "numbering": { "series": "brand", "required": true },
+  "params": { "heading": "Note" },
+  "fields": [
+    { "name": "brand", "source": "brand", "required": true },
+    { "name": "person", "label": "Recipient", "source": "entity:person", "required": true },
+    { "name": "date", "source": "today", "type": "date" },
+    { "name": "subject", "label": "Subject", "source": "ask", "type": "string", "required": true },
+    { "name": "body", "label": "Body", "source": "ask", "type": "text", "required": true },
+    { "name": "total", "label": "Amount", "source": "ask", "type": "money" },
+    { "name": "basedOn", "label": "Based on document", "source": "ask", "type": "string" },
+    { "name": "signatory", "source": "signatory", "required": true }
+  ],
+  "relations": [{ "type": "based_on", "field": "basedOn", "optional": true }]
+}

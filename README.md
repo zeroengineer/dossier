@@ -46,12 +46,16 @@ The folder tree is generated from metadata, never stored: `node bin/dossier.js t
 
 `search(ctx, { q, types, status, partyId, from, to, limit, expand })` (`src/services/search.js`) looks a query up in document numbers, metadata (title, type, number, party names and aliases) and the extracted text of each document's current version. Results come in order: exact document number (or `DOC-` id) match, number prefix, metadata match, text match (text hits carry a snippet with matched words in `[` `]`). Every word of the query must match; FTS operators are treated as plain words. Entities whose name or alias contains the query are returned too, and one hop of related documents is added: documents linked to a hit by any relation (quotation, MoU, invoice, receipt, settlement…) and the documents where a matched entity is party, signatory or named. Results never include documents above the user's clearance. The index is kept up to date by every write; `node bin/dossier.js reindex` rebuilds it.
 
+## Generating documents
+
+`previewDocument` and `generateDocument` (`src/services/generator.js`) turn a template and an input into documents. A preview renders every rendition with the number shown as `DRAFT` and a `DRAFT — NOT NUMBERED` watermark on each PDF page, under `data/previews/<token>/`, and writes nothing to the vault. Generating allocates the next number of the template's series, renders PDF, HTML and Markdown with it, and files one document (party, date, amount, sensitivity, issuing brand) with version 1, the `generated_from` template link, declared relations and party/signatory/issuer entities. Regenerating an existing document adds a version with the same number. See `docs/TEMPLATES.md`.
+
 ## Documentation
 
 - `docs/PLAN.md`: architecture, data model, rules, cache layers, testing and build order.
 - `docs/DISCOVERY.md`: findings from the legacy document scripts this app replaces (redacted).
 - `docs/WORKSPACE.md`: creating and customising a workspace (brands, assets, series, seeds).
-- `docs/TEMPLATES.md`: template folders, `template.json` fields and sources, the block model and the PDF/HTML/Markdown renderers.
+- `docs/TEMPLATES.md`: template folders, `template.json` fields and sources, the block model, the PDF/HTML/Markdown renderers and generation.
 - `docs/DECISIONS.md`: small decisions and their reasons.
 
 ## License
