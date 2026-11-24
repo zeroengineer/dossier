@@ -94,13 +94,24 @@ const tokenOf = (ctx, template, input, bid) => createHash('sha256')
 // ---------- rendering ----------
 
 /**
+ * The Markdown body to fill: `body.<variant>.md` when the values have a string `variant` naming one, else `body.md`.
+ * @param {{ body?: string, bodies?: Record<string, string> }} template @param {Record<string, unknown>} values
+ * @returns {string|undefined}
+ */
+export function bodyFor(template, values) {
+  const name = values?.variant;
+  if (typeof name === 'string' && template.bodies && Object.hasOwn(template.bodies, name)) return template.bodies[name];
+  return template.body;
+}
+
+/**
  * Render a template's renditions (no database access). Templates see `values.number` (null for a draft) and `env`
- * `{ ctx, brand, meta, params, fmt, input, number, draft }`. PDF: the module's `renderPdf(pdfCtx, values, env)`, else
+ * `{ ctx, brand, meta, params, fmt, input, number, draft, markdown }` (`markdown`: the filled body, see bodyFor). PDF: the module's `renderPdf(pdfCtx, values, env)`, else
  * its blocks through letterhead + renderBlocksPdf + footers; a draft gets the vector watermark on every page. HTML:
- * `renderHtml(values, env)` else `blocksToHtml` (standalone). Markdown: the filled `body.md` else `blocksToMarkdown`.
- * Blocks come from `blocks(values, env)`, else from the filled body.md.
+ * `renderHtml(values, env)` else `blocksToHtml` (standalone). Markdown: the filled body else `blocksToMarkdown`.
+ * Blocks come from `blocks(values, env)`, else from the filled body.
  * @param {object} ctx
- * @param {{ id: string, meta: object, module: object, body?: string }} template
+ * @param {{ id: string, meta: object, module: object, body?: string, bodies?: Record<string, string> }} template
  * @param {Record<string, unknown>} values resolved field values
  * @param {{ brand: object|string, number?: string|null, draft?: boolean, creationDate: Date|string, input?: object }} opts
  * @returns {Promise<Array<{ kind: 'pdf'|'html'|'md', buffer: Buffer, mime: string }>>}
@@ -119,7 +130,9 @@ export async function renderRenditions(ctx, template, values, { brand, number = 
   const contact = meta.contact ?? 'default';
 
   let filledMd;
-  if (template.body !== undefined) filledMd = fillMarkdown(template.body, { ...v, number: draft ? DRAFT_NUMBER : (shownNumber ?? '') }).text;
+  const body = bodyFor(template, v);
+  if (body !== undefined) filledMd = fillMarkdown(body, { ...v, number: draft ? DRAFT_NUMBER : (shownNumber ?? '') }).text;
+  env.markdown = filledMd;
   let blocks;
   const getBlocks = () => {
     if (blocks) return blocks;

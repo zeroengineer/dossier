@@ -162,3 +162,110 @@ test('every .js file in the template folder is part of the hash', () => withCtx(
   writeFileSync(join(home, 'templates', 'sample-letter', 'notes.txt'), 'still not code');
   assert.equal(sampleHash(ctx), h, 'other files do not count');
 }));
+
+// ---------- workspace overrides without index.js inherit the built-in module ----------
+
+/** Copy the fixture templates to a temporary "built-in" folder that the test may edit. */
+function withBase(fn) {
+  return withCtx(async (ctx, home) => {
+    const base = join(home, 'builtin-copy');
+    cpSync(FIXTURES, base, { recursive: true });
+    return fn(ctx, home, base);
+  });
+}
+const put = (home, rel, body) => {
+  mkdirSync(join(home, rel, '..'), { recursive: true });
+  writeFileSync(join(home, rel), body);
+};
+
+test('override with body.md only: built-in meta and module, workspace body; hash covers both folders', () => withBase(async (ctx, home, base) => {
+  const builtin = listTemplates(ctx, { dirs: [base] }).find((t) => t.id === 'sample-letter');
+  put(home, 'templates/sample-letter/body.md', '# Private body\n\n{{person.name}}\n');
+  const t = listTemplates(ctx, { dirs: [base] }).find((x) => x.id === 'sample-letter');
+  assert.equal(t.source, 'workspace');
+  assert.equal(t.path, join(home, 'templates', 'sample-letter'));
+  assert.equal(t.inherits, join(base, 'sample-letter'));
+  assert.equal(t.title, 'Sample letter', 'the built-in meta is used');
+  assert.notEqual(t.hash, builtin.hash);
+  assert.deepEqual(listTemplateErrors(ctx, { dirs: [base] }), []);
+
+  const loaded = await getTemplate(ctx, 'sample-letter', { dirs: [base] });
+  assert.equal(loaded.body, '# Private body\n\n{{person.name}}\n');
+  assert.equal(typeof loaded.module.computed.annual, 'function', 'the built-in module is reused');
+  assert.equal(typeof loaded.module.blocks, 'function');
+  assert.equal(loaded.meta.title, 'Sample letter');
+  const [row] = rows(ctx).filter((r) => r.id === 'sample-letter');
+  assert.deepEqual([row.source, row.hash], ['workspace', t.hash]);
+
+  writeFileSync(join(base, 'sample-letter', 'index.js'), `${readFileSync(join(base, 'sample-letter', 'index.js'), 'utf8')}\nexport const marker = 1;\n`);
+  const t2 = listTemplates(ctx, { dirs: [base] }).find((x) => x.id === 'sample-letter');
+  assert.notEqual(t2.hash, t.hash, 'the built-in module files are part of the hash');
+  assert.equal((await getTemplate(ctx, 'sample-letter', { dirs: [base] })).module.marker, 1);
+  writeFileSync(join(home, 'templates', 'sample-letter', 'body.md'), '# Changed\n');
+  const t3 = listTemplates(ctx, { dirs: [base] }).find((x) => x.id === 'sample-letter');
+  assert.notEqual(t3.hash, t2.hash, 'the workspace body is part of the hash');
+}));
+
+test('override with template.json only: workspace meta replaces the built-in meta, the module is reused', () => withBase(async (ctx, home, base) => {
+  put(home, 'templates/sample-letter/template.json', FIXTURE_JSON.replace('"Sample letter"', '"Private letter"'));
+  const t = await getTemplate(ctx, 'sample-letter', { dirs: [base] });
+  assert.equal(t.source, 'workspace');
+  assert.equal(t.meta.title, 'Private letter');
+  assert.equal(t.body, undefined);
+  assert.equal(typeof t.module.computed.annual, 'function');
+  const builtinBody = listTemplates(ctx, { dirs: [base] }).find((x) => x.id === 'test-memo');
+  put(home, 'templates/test-memo/template.json', readFileSync(join(base, 'test-memo', 'template.json'), 'utf8').replace('"Test memo"', '"Memo"'));
+  const memo = await getTemplate(ctx, 'test-memo', { dirs: [base] });
+  assert.equal(memo.meta.title, 'Memo');
+  assert.equal(memo.body, readFileSync(join(base, 'test-memo', 'body.md'), 'utf8'), 'the built-in body is used when the override has none');
+  assert.notEqual(memo.hash, builtinBody.hash);
+}));
+
+test('named bodies (body.<name>.md) load, and an override replaces them one file at a time', () => withBase(async (ctx, home, base) => {
+  writeFileSync(join(base, 'test-memo', 'body.short.md'), 'Short {{text}}\n');
+  writeFileSync(join(base, 'test-memo', 'body.long.md'), 'Long {{text}}\n');
+  const builtin = await getTemplate(ctx, 'test-memo', { dirs: [base] });
+  assert.deepEqual(builtin.bodies, { long: 'Long {{text}}\n', short: 'Short {{text}}\n' });
+  put(home, 'templates/test-memo/body.short.md', 'Private short\n');
+  const t = await getTemplate(ctx, 'test-memo', { dirs: [base] });
+  assert.equal(t.body, builtin.body);
+  assert.deepEqual(t.bodies, { long: 'Long {{text}}\n', short: 'Private short\n' });
+}));
+
+test('a broken override without index.js is reported and is not replaced by the built-in', async (t) => {
+  const cases = {
+    'bad JSON': [{ 'template.json': '{oops' }, /templates\/sample-letter\/template\.json: invalid JSON/],
+    'id mismatch': [{ 'template.json': FIXTURE_JSON.replace('"id": "sample-letter"', '"id": "other"') }, /must match the folder name/],
+    'computed function the built-in module lacks': [
+      { 'template.json': FIXTURE_JSON.replace('"computed:annual"', '"computed:missing"') }, /index\.js exports no computed\.missing\(\)/],
+  };
+  for (const [name, [files, re]] of Object.entries(cases)) {
+    await t.test(name, () => withBase(async (ctx, home, base) => {
+      for (const [f, body] of Object.entries(files)) put(home, `templates/sample-letter/${f}`, body);
+      const listed = listTemplates(ctx, { dirs: [base] });
+      if (name.startsWith('computed')) {
+        assert.equal(listed.find((x) => x.id === 'sample-letter').source, 'workspace');
+      } else {
+        assert.equal(listed.some((x) => x.id === 'sample-letter'), false);
+        const [err] = listTemplateErrors(ctx, { dirs: [base] });
+        assert.deepEqual([err.id, err.source, err.code], ['sample-letter', 'workspace', 'TEMPLATE_INVALID']);
+        assert.match(err.message, re);
+      }
+      await assert.rejects(getTemplate(ctx, 'sample-letter', { dirs: [base] }), (e) => code('TEMPLATE_INVALID')(e) && re.test(e.message));
+    }));
+  }
+  await t.test('body.md for an id with no built-in', () => withCtx(async (ctx, home) => {
+    put(home, 'templates/nothing-here/body.md', '# Orphan\n');
+    const [err] = listTemplateErrors(ctx);
+    assert.equal(err.id, 'nothing-here');
+    assert.match(err.message, /no template\.json and no built-in template "nothing-here" to inherit from/);
+    await assert.rejects(getTemplate(ctx, 'nothing-here'), code('TEMPLATE_INVALID'));
+  }));
+  await t.test('a broken built-in is inherited as broken', () => withBase(async (ctx, home, base) => {
+    writeFileSync(join(base, 'sample-letter', 'template.json'), '{oops');
+    put(home, 'templates/sample-letter/body.md', '# Body\n');
+    const [err] = listTemplateErrors(ctx, { dirs: [base] });
+    assert.equal(err.source, 'workspace');
+    assert.match(err.message, /inherits from a built-in template that does not load.*invalid JSON/s);
+  }));
+});
