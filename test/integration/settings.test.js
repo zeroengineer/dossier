@@ -1,6 +1,6 @@
 import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { tmpDir } from '../helpers/tmp.js';
@@ -170,8 +170,10 @@ describe('brand sections round-trip', () => {
     assert.equal(b.fonts.bold, undefined);
     assert.equal(ctx.ws.brands.get('acme').fonts.bold, 'builtin:Manrope-Bold');
 
+    await rejectSection('assets', { 'assets.logo': 'assets/logo.png', 'assets.watermark': 'assets/wm.png' }, /assets.watermark<\/code>: no file &quot;assets\/wm.png&quot;/);
+    writeFileSync(join(home, 'brands', 'acme', 'assets', 'wm.png'), await png(4, 4));
     b = await saveSection('assets', { 'assets.logo': 'assets/logo.png', 'assets.seal': '', 'assets.watermark': 'assets/wm.png' });
-    assert.deepEqual(b.assets, { logo: 'assets/logo.png', watermark: 'assets/wm.png' });
+    assert.deepEqual(b.assets, { logo: 'assets/logo.png', watermark: 'assets/wm.png' }, 'an unchanged missing logo path is left alone');
   });
 
   test('signatories, strings, tax modes and the series map', async () => {
@@ -246,6 +248,7 @@ describe('invalid brand input', () => {
     await rejectSection('fonts', { 'fonts.bold': 'builtin:Nope-Bold' }, /unknown built-in font/);
     await rejectSection('assets', { 'assets.logo': '../../outside.png' }, /assets.logo<\/code>: must be a relative path inside the brand folder/);
     await rejectSection('assets', { 'assets.logo': '/etc/hosts' }, /assets.logo<\/code>: must be a relative path/);
+    await rejectSection('assets', { 'assets.logo': 'assets/nothing-here.png' }, /assets.logo<\/code>: no file &quot;assets\/nothing-here.png&quot;/);
     await rejectSection('signatories', {
       'signatories.0.id': 'md', 'signatories.0.name': 'A', 'signatories.0.title': 'B',
       'signatories.1.id': 'md', 'signatories.1.name': 'C', 'signatories.1.title': 'D',
@@ -259,6 +262,36 @@ describe('invalid brand input', () => {
     const r = await rejectSection('registrations', { 'registrations.0.label': 'Typed label', 'registrations.0.value': '' }, /registrations.0.value/);
     assert.match(r.body, /value="Typed label"/);
     assert.match(r.body, /name="registrations.0.value" value="" class="invalid"/);
+  });
+
+  test('brand ids such as .. and %2F are not found or refused, and nothing is written', async () => {
+    const before = readdirSync(home).sort();
+    const brandsBefore = readdirSync(join(home, 'brands')).sort();
+    const reqs = [
+      ['GET', '/settings/brands/..'], ['GET', '/settings/brands/%2F'], ['GET', '/settings/brands/%2E%2E'], ['GET', '/settings/brands/..%2F..%2Fworkspace/brand.json'],
+      ['GET', '/settings/brands/%2E%2E/preview.pdf'], ['GET', '/api/brands/%2E%2E'], ['GET', '/api/brands/%2F'],
+    ];
+    for (const [method, url] of reqs) {
+      const r = await app.inject({ method, url });
+      assert.equal(r.statusCode, 404, `${url}: ${r.statusCode}`);
+    }
+    for (const url of ['/settings/brands/%2E%2E', '/settings/brands/%2F', '/settings/brands/..']) {
+      const r = await post(url, { $section: 'identity', legalName: 'X', shortName: 'X', 'addresses.business': 'L' });
+      assert.equal(r.statusCode, 404, url);
+    }
+    for (const url of ['/api/brands/%2E%2E', '/api/brands/%2F', '/api/brands/..%2F..%2Fx', '/api/brands/a%2Fb']) {
+      const r = await api('PUT', url, { legalName: 'X', shortName: 'X', addresses: { business: ['L'] }, contacts: { default: {} } });
+      // %2E%2E is normalised to ".." by URL parsing and leaves no route (404); other ids are refused (400).
+      assert.ok([400, 404].includes(r.statusCode), `${url}: ${r.body}`);
+      assert.ok(['INVALID_INPUT', 'NOT_FOUND'].includes(r.json().code), url);
+    }
+    const up = await upload('/api/brands/%2E%2E/assets/logo', {}, { filename: 'a.png', mime: 'image/png', buffer: await png(4, 4) }, { origin: ORIGIN });
+    assert.equal(up.statusCode, 404);
+    const created = await post('/settings/brands', { id: '..', legalName: 'X', shortName: 'X', 'addresses.business': 'L', 'contact.email': 'x@example.com' });
+    assert.equal(created.statusCode, 400);
+    assert.deepEqual(readdirSync(home).sort(), before);
+    assert.deepEqual(readdirSync(join(home, 'brands')).sort(), brandsBefore);
+    assert.equal(existsSync(join(tmp.dir, 'brand.json')), false);
   });
 
   test('unknown sections and brands', async () => {
@@ -282,6 +315,8 @@ describe('brand assets', () => {
     assert.match(pv.rawPayload.toString('latin1'), /\/Width 600\s/);
     const served = await app.inject({ url: '/assets/brands/acme/logo' });
     assert.deepEqual(served.rawPayload, buffer);
+    const rows = ctx.db.prepare("SELECT id, target_id FROM audit_log WHERE action = 'workspace.write' ORDER BY id DESC LIMIT 2").all();
+    assert.deepEqual(rows.map((r) => r.target_id).sort(), [`brands/acme/${logo}`, 'brands/acme/brand.json'].sort(), 'asset and brand.json audited together');
   });
 
   test('signatures, JPEG and fonts through the API', async () => {
@@ -315,6 +350,13 @@ describe('brand assets', () => {
       assert.equal(r.statusCode, 400, `${key}: ${r.body.slice(0, 200)}`);
       assert.match(r.body, re, key);
     }
+    const huge = Buffer.concat([(await png(4, 4)), Buffer.alloc(10 * 1024 * 1024)]);
+    const big = await upload('/api/brands/acme/assets/logo', {}, { filename: 'big.png', mime: 'image/png', buffer: huge }, { origin: ORIGIN });
+    assert.equal(big.statusCode, 413, big.body.slice(0, 200));
+    assert.equal(big.json().code, 'ASSET_TOO_LARGE');
+    const bigForm = await upload('/settings/brands/acme/assets', { key: 'logo' }, { filename: 'big.png', mime: 'image/png', buffer: huge });
+    assert.equal(bigForm.statusCode, 413);
+    assert.match(bigForm.body, /ASSET_TOO_LARGE/);
     const apiBad = await upload('/api/brands/acme/assets/logo', {}, cases[0][1], { origin: ORIGIN });
     assert.equal(apiBad.json().code, 'ASSET_INVALID');
     assert.deepEqual(readFileSync(brandFile()), before);
@@ -496,9 +538,41 @@ describe('workspace settings', () => {
 
   test('lowering your own clearance applies at once', async () => {
     const w = (await api('GET', '/api/workspace')).json().workspace;
-    const r = await api('PUT', '/api/workspace', { ...w, users: { ...w.users, demo: { clearance: 'Internal' } } });
+    const r = await api('PUT', '/api/workspace', { ...w, users: { ...w.users, demo: { clearance: 'Internal' }, senior: { clearance: 'Confidential' } } });
     assert.equal(r.statusCode, 200, r.body);
     assert.equal(ctx.user.clearance, 'Internal');
+  });
+
+  test('the clearance rule uses effective clearances: blank, removed and new users default to Confidential', async () => {
+    const file = join(home, 'workspace.json');
+    const before = readFileSync(file);
+    const w = (await api('GET', '/api/workspace')).json().workspace;
+    const { demo, ...others } = w.users;
+    const { senior, ...notSenior } = w.users;
+    const refused = [
+      [{ ...w.users, demo: {} }, 'users.demo.clearance', /would give demo clearance Confidential/],
+      [others, 'users.demo.clearance', /above your own clearance \(Internal\)/],
+      [{ ...w.users, newbie: {} }, 'users.newbie.clearance', /would give newbie clearance Confidential/],
+      [{ ...w.users, newbie: { clearance: 'Restricted' } }, 'users.newbie.clearance', /Restricted/],
+      [{ ...w.users, senior: { clearance: 'Public' } }, 'users.senior.clearance', /cannot change a user with clearance Confidential/],
+      [notSenior, 'users.senior.clearance', /cannot remove a user with clearance Confidential/],
+    ];
+    for (const [users, path, re] of refused) {
+      const r = await api('PUT', '/api/workspace', { ...w, users });
+      assert.equal(r.statusCode, 400, `${JSON.stringify(users)}: ${r.body}`);
+      const e = r.json().details.errors.find((x) => x.path === path);
+      assert.ok(e, `${path} in ${r.body}`);
+      assert.match(e.message, re);
+    }
+    const form = await post('/settings/workspace', { name: w.name, defaultBrand: 'acme', 'users.0.id': 'demo', 'users.0.clearance': '', 'users.1.id': 'senior', 'users.1.clearance': 'Confidential' });
+    assert.equal(form.statusCode, 400);
+    assert.match(form.body, /would give demo clearance Confidential/);
+    assert.deepEqual(readFileSync(file), before);
+    assert.equal(ctx.user.clearance, 'Internal');
+
+    const ok = await api('PUT', '/api/workspace', { ...w, users: { ...w.users, newbie: { clearance: 'Public' } } });
+    assert.equal(ok.statusCode, 200, ok.body);
+    assert.equal(ctx.ws.config.users.newbie.clearance, 'Public');
   });
 });
 

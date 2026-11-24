@@ -6,6 +6,7 @@ const STATUS = {
   STATUS_LOCKED: 409,
   INVALID_STATUS_TRANSITION: 409,
   NUMBER_CONTENDED: 409,
+  ASSET_TOO_LARGE: 413,
   CONFLICT: 409,
   TEMPLATE_INVALID: 500,
   TEMPLATE_SYNTAX: 500,
@@ -173,12 +174,13 @@ export const wantsJson = (req) => req.url.startsWith('/api/') || /application\/j
 /**
  * Read a multipart request: the first file part (bytes, name, mime) and every text field (flat).
  * @param {import('fastify').FastifyRequest} req
+ * @param {object} [opts] per-request @fastify/multipart options, e.g. `{ limits: { fileSize } }`
  * @returns {Promise<{ file: { buffer: Buffer, filename: string, mime: string }|null, fields: Record<string, string> }>}
  */
-export async function readMultipart(req) {
+export async function readMultipart(req, opts) {
   let file = null;
   const fields = {};
-  for await (const p of req.parts()) {
+  for await (const p of req.parts(opts)) {
     if (p.type === 'file') {
       const buffer = await p.toBuffer();
       if (!file && p.filename) file = { buffer, filename: p.filename, mime: p.mimetype };

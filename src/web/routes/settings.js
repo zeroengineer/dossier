@@ -6,7 +6,7 @@ import { FONTS_DIR } from '../../paths.js';
 import { DossierError, isDossierError } from '../../errors.js';
 import { listTemplates } from '../../services/templates.js';
 import {
-  brandRel, getBrandFile, getSeriesFile, getWorkspaceFile, storeBrandAsset, writeBrand, writeSeries, writeWorkspaceConfig,
+  ASSET_MAX_BYTES, brandRel, getBrandFile, getSeriesFile, getWorkspaceFile, storeBrandAsset, writeBrand, writeSeries, writeWorkspaceConfig,
 } from '../../services/workspaceFiles.js';
 import { renderBrandPreview } from '../../render/brandPreview.js';
 import { applyBrandSection, BRAND_SECTIONS, newBrandBody, seriesFromForm, workspaceFromForm } from '../settingsForms.js';
@@ -19,6 +19,18 @@ function builtinFonts() {
   return readdirSync(FONTS_DIR, { withFileTypes: true }).filter((d) => d.isDirectory()).flatMap((d) => readdirSync(join(FONTS_DIR, d.name))
     .filter((f) => /\.ttf$/i.test(f) && f.startsWith(`${d.name}-`))
     .map((f) => `builtin:${f.replace(/\.ttf$/i, '')}`)).sort();
+}
+
+/** Read an asset upload with the asset size limit; a larger file is ASSET_TOO_LARGE. */
+async function readAssetUpload(req) {
+  try {
+    return await readMultipart(req, { limits: { fileSize: ASSET_MAX_BYTES } });
+  } catch (err) {
+    if (err?.code === 'FST_REQ_FILE_TOO_LARGE') {
+      throw new DossierError('ASSET_TOO_LARGE', `Assets are limited to ${ASSET_MAX_BYTES / 1024 / 1024} MB`, { max: ASSET_MAX_BYTES });
+    }
+    throw err;
+  }
 }
 
 const fieldErrors = (err) => (isDossierError(err, 'WORKSPACE_INVALID') ? err.details.errors : null);
@@ -98,8 +110,8 @@ export default async function settingsRoutes(app, { ctx }) {
   app.post('/settings/brands/:id/assets', async (req, reply) => {
     const { id } = req.params;
     getBrandFile(ctx, id);
-    const { file, fields } = await readMultipart(req);
     try {
+      const { file, fields } = await readAssetUpload(req);
       if (!file) throw new DossierError('INVALID_INPUT', 'Choose a file to upload');
       await storeBrandAsset(ctx, id, fields.key, file);
       return seeOther(reply, `/settings/brands/${encodeURIComponent(id)}?saved=upload`);
@@ -183,7 +195,7 @@ export default async function settingsRoutes(app, { ctx }) {
   app.post('/api/brands/:id/assets/:key', async (req) => {
     const { id, key } = req.params;
     getBrandFile(ctx, id);
-    const { file } = await readMultipart(req);
+    const { file } = await readAssetUpload(req);
     if (!file) throw new DossierError('INVALID_INPUT', 'A multipart "file" part is required');
     const r = await storeBrandAsset(ctx, id, key, file);
     return { key: r.key, path: r.path, sha256: r.sha256, bytes: r.bytes, brand: brandJson(r) };

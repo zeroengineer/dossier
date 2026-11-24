@@ -1,8 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { applyBrandSection, newBrandBody, parseRates, seriesFromForm, workspaceFromForm } from '../../src/web/settingsForms.js';
-import { isSafeRelPath, parseAssetKey } from '../../src/services/workspaceFiles.js';
+import { isSafeRelPath, parseAssetKey, writeFileAtomic } from '../../src/services/workspaceFiles.js';
 import { loadWorkspace, WorkspaceError } from '../../src/workspace/index.js';
 import { tmpDir } from '../helpers/tmp.js';
 import { minimalBrand, writeWorkspace } from '../helpers/workspace.js';
@@ -53,6 +54,21 @@ test('loadWorkspace validates candidate files without touching the disk', () => 
     assert.throws(() => loadWorkspace(t.dir, { files: new Map([['series.json', [{ id: 'inv', pattern: 'I-{PREFIX}-{###}' }]]]) }),
       (e) => e instanceof WorkspaceError && e.file === 'series.json');
     assert.equal(loadWorkspace(join(t.dir)).brands.has('new'), false);
+  } finally {
+    t.cleanup();
+  }
+});
+
+test('writeFileAtomic replaces a file and leaves no temp file when the rename fails', () => {
+  const t = tmpDir();
+  try {
+    const f = join(t.dir, 'a.json');
+    writeFileAtomic(f, 'one');
+    writeFileAtomic(f, 'two');
+    assert.equal(readFileSync(f, 'utf8'), 'two');
+    mkdirSync(join(t.dir, 'busy', 'inner'), { recursive: true });
+    assert.throws(() => writeFileAtomic(join(t.dir, 'busy'), 'x'));
+    assert.deepEqual(readdirSync(t.dir).sort(), ['a.json', 'busy']);
   } finally {
     t.cleanup();
   }

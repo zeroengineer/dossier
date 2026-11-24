@@ -60,23 +60,29 @@ export function issuesOf(err) {
  * @param {string|Buffer} data
  */
 export function writeFileAtomic(file, data) {
-  mkdirSync(dirname(file), { recursive: true });
-  const tmp = join(dirname(file), `.${posix.basename(file)}.${process.pid}.${randomBytes(6).toString('hex')}.tmp`);
+  const dir = dirname(file);
+  mkdirSync(dir, { recursive: true });
+  const tmp = join(dir, `.${posix.basename(file)}.${process.pid}.${randomBytes(6).toString('hex')}.tmp`);
   const fd = openSync(tmp, 'wx', 0o644);
   try {
-    const buf = Buffer.isBuffer(data) ? data : Buffer.from(data, 'utf8');
-    let off = 0;
-    while (off < buf.length) off += writeSync(fd, buf, off, buf.length - off);
-    fsyncSync(fd);
-  } finally {
-    closeSync(fd);
-  }
-  try {
+    try {
+      const buf = Buffer.isBuffer(data) ? data : Buffer.from(data, 'utf8');
+      let off = 0;
+      while (off < buf.length) off += writeSync(fd, buf, off, buf.length - off);
+      fsyncSync(fd);
+    } finally {
+      closeSync(fd);
+    }
     renameSync(tmp, file);
   } catch (err) {
     rmSync(tmp, { force: true });
     throw err;
   }
+  // Make the rename durable; not every platform can open or fsync a directory.
+  try {
+    const dfd = openSync(dir, 'r');
+    try { fsyncSync(dfd); } finally { closeSync(dfd); }
+  } catch { /* best effort */ }
 }
 
 /** Parsed JSON of a workspace file, or undefined when it does not exist. */
@@ -101,10 +107,11 @@ function capped(body) {
  * @param {object} ctx
  * @param {string} rel workspace-relative path
  * @param {unknown} body parsed JSON
- * @param {{ check?: (candidate: object) => Array<{ file?: string, path: string, message: string }> }} [opts]
+ * @param {{ check?: (candidate: object) => Array<{ file?: string, path: string, message: string }>,
+ *   audits?: Array<[string, string, string, unknown, unknown]> }} [opts] audits: more audit rows for the same transaction
  * @returns {object} the reloaded workspace
  */
-function commit(ctx, rel, body, { check } = {}) {
+function commit(ctx, rel, body, { check, audits = [] } = {}) {
   const home = ctx.ws.home;
   let candidate;
   try {
@@ -134,6 +141,7 @@ function commit(ctx, rel, body, { check } = {}) {
   if (ctx.user) ctx.user.clearance = clearanceFor(ws, ctx.user.id);
   ctx.repo.tx(() => {
     ctx.repo.audit('workspace.write', 'workspace', rel, capped(before), capped(body));
+    for (const a of audits) ctx.repo.audit(...a);
     syncBrands(ctx.repo, ws);
   });
   return ws;
@@ -189,7 +197,7 @@ function pathFields(body) {
 }
 
 /** Field errors for asset paths that changed and leave the brand folder (or a font that is not a .ttf/.otf file). */
-function pathErrors(rel, body, before) {
+function pathErrors(rel, body, before, exists) {
   const old = new Map(pathFields(before).map((f) => [f.key, f.value]));
   const errors = [];
   for (const f of pathFields(body)) {
@@ -198,6 +206,8 @@ function pathErrors(rel, body, before) {
       errors.push({ file: rel, path: f.path, message: 'must be a relative path inside the brand folder (no "..", no absolute path)' });
     } else if (f.font && !/\.(ttf|otf)$/i.test(f.value)) {
       errors.push({ file: rel, path: f.path, message: 'must be "builtin:<Family>-<Style>" or a .ttf/.otf file' });
+    } else if (!exists(f.value)) {
+      errors.push({ file: rel, path: f.path, message: `no file "${f.value}" in the brand folder${body.inheritsFrom ? ' or the brands it inherits from' : ''} (upload it instead)` });
     }
   }
   return errors;
@@ -208,10 +218,11 @@ function pathErrors(rel, body, before) {
  * @param {object} ctx
  * @param {string} id
  * @param {object} body the complete brand.json content (for a brand with `inheritsFrom`, only the overridden fields)
- * @param {{ create?: boolean }} [opts] create: refuse (BRAND_DUPLICATE) when the brand exists
+ * @param {{ create?: boolean, audits?: Array<[string, string, string, unknown, unknown]> }} [opts] create: refuse
+ *   (BRAND_DUPLICATE) when the brand exists; audits: more audit rows written with the brand.json one
  * @returns {{ created: boolean } & ReturnType<typeof getBrandFile>}
  */
-export function writeBrand(ctx, id, body, { create = false } = {}) {
+export function writeBrand(ctx, id, body, { create = false, audits } = {}) {
   assertBrandId(id);
   const rel = brandRel(id);
   if (!isPlainObject(body)) throw workspaceInvalid(rel, [{ path: '(root)', message: 'expected a JSON object' }]);
@@ -220,9 +231,11 @@ export function writeBrand(ctx, id, body, { create = false } = {}) {
   const exists = existsSync(join(ctx.ws.home, rel));
   if (create && (exists || ctx.ws.brands.has(id))) throw new DossierError('BRAND_DUPLICATE', `Brand "${id}" already exists`, { brandId: id });
   const before = exists ? readRaw(ctx, rel) : undefined;
-  const errors = pathErrors(rel, body, before);
+  // Changed paths must name an existing file in this brand's folder or a parent's (as brandAsset looks them up).
+  const dirs = [join(ctx.ws.home, 'brands', id), ...(typeof body.inheritsFrom === 'string' ? ctx.ws.brandDirs.get(body.inheritsFrom) ?? [] : [])];
+  const errors = pathErrors(rel, body, before, (p) => dirs.some((d) => existsSync(join(d, ...p.split('/')))));
   if (errors.length) throw workspaceInvalid(rel, errors);
-  commit(ctx, rel, body);
+  commit(ctx, rel, body, { audits });
   return { created: !exists, ...getBrandFile(ctx, id) };
 }
 
@@ -322,12 +335,13 @@ export async function storeBrandAsset(ctx, brandId, key, { buffer }) {
   const existed = existsSync(abs);
   if (!existed) writeFileAtomic(abs, buffer);
   try {
-    writeBrand(ctx, brandId, body);
+    writeBrand(ctx, brandId, body, {
+      audits: [['workspace.write', 'workspace', `brands/${brandId}/${rel}`, null, { key, sha256: hash, bytes: buffer.length }]],
+    });
   } catch (err) {
     if (!existed) rmSync(abs, { force: true });
     throw err;
   }
-  ctx.repo.audit('workspace.write', 'workspace', `brands/${brandId}/${rel}`, null, { key, sha256: hash, bytes: buffer.length });
   clearImageCache();
   return { key, path: rel, sha256: hash, bytes: buffer.length, ...getBrandFile(ctx, brandId) };
 }
@@ -373,17 +387,39 @@ export function getWorkspaceFile(ctx) {
 export function writeWorkspaceConfig(ctx, body) {
   const rel = 'workspace.json';
   if (!isPlainObject(body)) throw workspaceInvalid(rel, [{ path: '(root)', message: 'expected a JSON object' }]);
-  const mine = CLEARANCES.indexOf(ctx.user?.clearance ?? 'Confidential');
-  const before = getWorkspaceFile(ctx) ?? {};
+  commit(ctx, rel, body, { check: (candidate) => clearanceErrors(ctx, candidate) });
+  return getWorkspaceFile(ctx);
+}
+
+/**
+ * The clearance rule of a workspace.json edit, on effective clearances (an unlisted user or a blank clearance is
+ * Confidential): no user may end up above the acting user unless already there unchanged (a newly listed user counts
+ * as granted), and a listed user ranked above the acting user may not be changed or removed. Adding a user at or
+ * below the acting user's clearance is allowed.
+ * @param {object} ctx
+ * @param {object} candidate the workspace loaded with the new workspace.json
+ * @returns {Array<{ path: string, message: string }>}
+ */
+export function clearanceErrors(ctx, candidate) {
+  const mineName = ctx.user?.clearance ?? 'Confidential';
+  const mine = CLEARANCES.indexOf(mineName);
+  const rank = (c) => CLEARANCES.indexOf(c);
+  const listedBefore = new Set(Object.keys(ctx.ws.config.users ?? {}));
+  const ids = new Set([...listedBefore, ...Object.keys(candidate.config.users ?? {})]);
+  if (ctx.user?.id) ids.add(ctx.user.id);
   const errors = [];
-  for (const [uid, u] of Object.entries(isPlainObject(body.users) ? body.users : {})) {
-    const c = isPlainObject(u) ? u.clearance : undefined;
-    if (c === undefined || c === before.users?.[uid]?.clearance) continue;
-    if (CLEARANCES.indexOf(c) > mine) {
-      errors.push({ path: `users.${uid}.clearance`, message: `cannot grant ${c}: above your own clearance (${ctx.user.clearance})` });
+  for (const uid of [...ids].sort()) {
+    const before = clearanceFor(ctx.ws, uid);
+    const after = clearanceFor(candidate, uid);
+    const removed = listedBefore.has(uid) && !Object.hasOwn(candidate.config.users ?? {}, uid);
+    const path = `users.${uid}.clearance`;
+    const listedNow = !listedBefore.has(uid) && Object.hasOwn(candidate.config.users ?? {}, uid);
+    if ((after !== before || listedNow) && rank(after) > mine) {
+      const hint = removed || after === 'Confidential' ? ' (a removed, unlisted or blank user is Confidential)' : '';
+      errors.push({ path, message: `would give ${uid} clearance ${after}${hint}: above your own clearance (${mineName})` });
+    } else if (listedBefore.has(uid) && rank(before) > mine && (after !== before || removed)) {
+      errors.push({ path, message: `cannot ${removed ? 'remove' : 'change'} a user with clearance ${before}: above your own clearance (${mineName})` });
     }
   }
-  if (errors.length) throw workspaceInvalid(rel, errors);
-  commit(ctx, rel, body);
-  return getWorkspaceFile(ctx);
+  return errors;
 }
