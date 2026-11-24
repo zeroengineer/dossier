@@ -579,3 +579,129 @@ export interface EntityRelation {
   role: string
   attrs: Record<string, unknown>
 }
+
+// settings
+
+/** A row of `GET /api/brands` (src/web/routes/settings.js brandList). `inheritsFrom` is absent for a root brand. */
+export interface BrandListItem {
+  id: string
+  legalName: string
+  inheritsFrom?: string
+}
+
+/** `GET /api/brands`. */
+export interface BrandList {
+  brands: BrandListItem[]
+}
+
+export interface BrandContact {
+  email?: string
+  phone?: string
+  website?: string
+}
+
+export interface BrandBankAccount {
+  accountName: string
+  bankName: string
+  accountNumber: string
+  ifsc?: string
+  swift?: string
+  branch?: string
+}
+
+export interface BrandSignatory {
+  id: string
+  name: string
+  title: string
+  titleLong?: string
+  signature?: string
+  signatureLarge?: string
+  email?: string
+  phone?: string
+}
+
+export interface BrandTaxMode {
+  id: string
+  label: string
+  /** `rate` is a fraction (0.09 = 9%). */
+  rates: Array<{ label: string; rate: number }>
+}
+
+/** A brand as validated by the workspace (src/workspace/schemas.js BrandSchema): inheritance and defaults applied. */
+export interface ResolvedBrand {
+  id: string
+  inheritsFrom?: string
+  legalName: string
+  shortName: string
+  registrations: Array<{ label: string; value: string }>
+  addresses: { business: string[]; registered?: string[] }
+  contacts: Record<string, BrandContact>
+  bankAccounts: BrandBankAccount[]
+  letterhead: { lines: string[] }
+  footer: { left: string; center: string; right: string }
+  palette: Record<string, string>
+  fonts: Record<string, string>
+  assets: { logo: string; seal?: string; watermark?: string }
+  signatories: BrandSignatory[]
+  defaultSignatory: Record<string, string>
+  projectContact?: string
+  strings: Record<string, string>
+  tax: { modes: BrandTaxMode[]; defaultMode: string; defaultHsn?: string }
+  series: Record<string, string>
+  layoutProfiles?: Record<string, Record<string, unknown>>
+  templateParams: Record<string, Record<string, unknown>>
+}
+
+/**
+ * A brand's own `brand.json` as stored: hand-editable, so any key may be missing or of an unexpected shape (a brand
+ * with `inheritsFrom` stores only its overrides) and unknown keys are kept.
+ */
+export interface BrandFile {
+  id: string
+  inheritsFrom?: string
+  [key: string]: unknown
+}
+
+/** `GET /api/brands/:id` and `PUT /api/brands/:id` (src/web/routes/settings.js brandJson). */
+export interface BrandDetail {
+  id: string
+  file: BrandFile
+  resolved: ResolvedBrand
+  /** Hash of the resolved brand; changes whenever the brand (or a brand it inherits from) changes. */
+  configHash: string
+}
+
+/** Where an asset slot's file comes from (`null`: nothing is drawn, e.g. an unset watermark). */
+export type BrandAssetSource = "configured" | "default" | "fallback" | "placeholder" | null
+
+/** One asset slot of `GET /api/brands/:id/assets` (src/web/routes/settings.js brandAssetList). */
+export interface BrandAsset {
+  /** `assets.logo`, `assets.seal`, `assets.watermark`, `signature:<id>`, `signature-large:<id>`, `font:<weight>`. */
+  key: string
+  path: string | null
+  source: BrandAssetSource
+  /** True when the brand provides the file itself (`source` configured or default). */
+  present: boolean
+  version: string | null
+  /** Served URL, already pinned with `?v=` when there is a version. */
+  url: string
+}
+
+/** `GET /api/brands/:id/assets`. */
+export interface BrandAssets {
+  assets: BrandAsset[]
+}
+
+/** `POST /api/brands/:id/assets/:key`: the stored file and the brand after the write. */
+export interface BrandAssetUpload {
+  key: string
+  path: string
+  sha256: string
+  bytes: number
+  brand: BrandDetail
+}
+
+/** `GET /api/series`, as far as the brand editor reads it (the series ids for the series map). */
+export interface SeriesIdList {
+  series: Array<{ id: string }>
+}
