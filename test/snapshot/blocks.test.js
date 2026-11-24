@@ -4,7 +4,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXAMPLE_WORKSPACE } from '../../src/paths.js';
 import { loadWorkspace } from '../../src/workspace/index.js';
-import { blocksToHtml, cssColour, escapeHtml } from '../../src/render/html/index.js';
+import { blocksToHtml, cssColour, cssValue, escapeHtml } from '../../src/render/html/index.js';
 import { blocksToMarkdown } from '../../src/render/md/index.js';
 import { BlockError, validateBlocks } from '../../src/render/blocks.js';
 import { parseMarkdownBlocks } from '../../src/render/md/parse.js';
@@ -49,7 +49,7 @@ test('palette values and styleVars cannot break out of the stylesheet', () => {
   assert.match(html, /--xstyle: 1px\/stylescript;/);
   assert.match(html, /--accent: blue  body  x;/);
   const quoted = blocksToHtml([], { brand, styleVars: { accent: `"x' /* y */ z` } });
-  assert.match(quoted, /--accent: x  y  z;/);
+  assert.match(quoted, /--accent: x \/ y \/ z;/);
   assert.equal(cssColour('#1a1a1a'), '#1a1a1a');
   assert.equal(cssColour('hsla(10, 20%, 30%, 0.5)'), 'hsla(10, 20%, 30%, 0.5)');
   assert.equal(cssColour('url(x)'), 'inherit');
@@ -105,4 +105,14 @@ test('validateBlocks rejects malformed blocks with a path', () => {
   ];
   for (const [block, re] of bad) assert.throws(() => validateBlocks([block]), (e) => e instanceof BlockError && re.test(e.message));
   assert.throws(() => validateBlocks({}), /must be an array/);
+});
+
+test('cssValue never lets a comment token form, whatever is stripped first', () => {
+  for (const v of ['/"*x', '//**x', "a*'/b", '/*x*/', '*/}', '/<*', '/\\*x', "/'*'/", 'a/**/b', '/;*x']) {
+    const out = cssValue(v);
+    assert.doesNotMatch(out, /\/\*|\*\//, `${v} -> ${out}`);
+    assert.doesNotMatch(out, /[<>{};\\"'*]/, `${v} -> ${out}`);
+  }
+  assert.equal(cssValue('12pt/1.5 Manrope'), '12pt/1.5 Manrope');
+  assert.equal(cssValue(null), '');
 });

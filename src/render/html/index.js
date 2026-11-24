@@ -41,8 +41,14 @@ export function cssColour(v) {
   return typeof v === 'string' && CSS_COLOUR.test(v.trim()) ? v.trim() : 'inherit';
 }
 
-/** A styleVars value: no characters that could end the declaration, rule or style element, open a string or a comment. */
-const cssValue = (v) => String(v ?? '').replace(/\/\*|\*\//g, '').replace(/[<>{};\\"']/g, '');
+/**
+ * A styleVars value: no characters that could end the declaration, rule or style element, open a string or a comment.
+ * `*` is dropped outright (removing only `/*` pairs let `/"*x` or `//**x` collapse into a new `/*`), so no comment
+ * token can form; a lone `/` (e.g. `12pt/1.5`) is harmless and kept.
+ * @param {unknown} v
+ * @returns {string}
+ */
+export const cssValue = (v) => String(v ?? '').replace(/[<>{};\\"'*]/g, '');
 
 /** A length in points for CSS (rounded to 0.001). */
 export const pt = (n) => `${Math.round(n * 1000) / 1000}pt`;
