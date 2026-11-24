@@ -45,7 +45,7 @@ brands/acme/brand.json: invalid:
 
 ## Editing in the web UI
 
-Settings (`/settings`) edits these files in place: `/settings/brands` lists and creates brands, `/settings/brands/<id>` edits one brand section by section, `/settings/series` edits `series.json` and `/settings/workspace` the name, default brand, locale and users of `workspace.json`. The same files are available as JSON: `GET/PUT /api/brands/<id>`, `POST /api/brands/<id>/assets/<key>`, `GET/PUT /api/series`, `GET/PUT /api/workspace`.
+Settings (`/settings`) edits these files in place: `/settings/brands` lists and creates brands, `/settings/brands/<id>` edits one brand section by section, `/settings/series` edits `series.json` and `/settings/workspace` the name, default brand, locale and users of `workspace.json`. The same files are available as JSON: `GET/PUT /api/brands/<id>`, `POST /api/brands` (create only: an existing id is `BRAND_DUPLICATE`, 409), `POST /api/brands/<id>/assets/<key>`, `GET/PUT /api/series`, `GET/PUT /api/workspace`.
 
 - Every save is checked against the whole workspace first, exactly as at startup (a series that a brand still maps, or a counter chain, is refused with the file and field named). A refused save changes nothing. Saving `series.json` is also refused when a template that loads today would stop loading.
 - Files are written atomically (a temporary file in the same folder, then renamed), audited as `workspace.write` (before and after, capped at 64 KB), and the running server reloads the workspace and updates the brand's `config_hash` at once. Files edited by hand are read at startup (and with the next save from the UI). The MCP server checks the files before every tool call and reloads them when they changed (see `docs/MCP.md`).

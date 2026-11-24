@@ -198,6 +198,60 @@ describe("Brand assets", () => {
     expect(screen.getByText("All changes saved.")).toBeInTheDocument()
   })
 
+  it("keeps an uploaded signature and an unsaved signatory edit through the next save", async () => {
+    const bodies = capturePuts()
+    const newPath = "assets/sign-ops-abcdef123456.png"
+    server.use(
+      http.post("*/api/brands/:id/assets/:key", () => {
+        const signatories = (acmeFile["signatories"] as Array<Record<string, string>>).map((s) => (s["id"] === "ops" ? { ...s, signature: newPath } : s))
+        const file = { ...acmeFile, signatories }
+        return HttpResponse.json({ key: "signature:ops", path: newPath, sha256: "abcdef", bytes: 4, brand: { ...brandDetails["acme"], file } })
+      }),
+    )
+    const { user } = await openEditor("/settings/brands/acme?tab=signatories")
+    const name = screen.getByLabelText("Name (signatory 1)")
+    await user.clear(name)
+    await user.type(name, "Alex Q. Example")
+    // Edited fields survive the reload after an upload (keepDirtyValues), the signature path among them unless it is
+    // set from the upload; a new row must survive too.
+    const sig = screen.getByLabelText("Signature image (signatory 1)")
+    await user.clear(sig)
+    await user.type(sig, "assets/typed.png")
+    await user.click(screen.getByRole("button", { name: "Add signatory" }))
+    await user.type(screen.getByLabelText("Id (signatory 3)"), "cfo")
+    await user.type(screen.getByLabelText("Name (signatory 3)"), "Casey Example")
+    await user.type(screen.getByLabelText("Title (signatory 3)"), "CFO")
+    await user.click(screen.getByRole("tab", { name: "Assets" }))
+    await screen.findByRole("group", { name: "Signature: ops" })
+    await user.upload(screen.getByLabelText("Upload Signature: ops"), new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], "s.png", { type: "image/png" }))
+    expect(await screen.findByText("Signature: ops uploaded")).toBeInTheDocument()
+    await user.click(saveButton())
+    await waitFor(() => expect(bodies).toHaveLength(1))
+    const ops = (bodies[0]!["signatories"] as Array<Record<string, string>>)[0]
+    expect(ops).toMatchObject({ id: "ops", name: "Alex Q. Example", signature: newPath })
+    expect((bodies[0]!["signatories"] as unknown[])[2]).toEqual({ id: "cfo", name: "Casey Example", title: "CFO" })
+  })
+
+  it("takes the signatories the server copied into an inheriting brand on a signature upload", async () => {
+    const bodies = capturePuts()
+    const newPath = "assets/sign-ops-abcdef123456.png"
+    const copied = (acmeFile["signatories"] as Array<Record<string, string>>).map((s) => (s["id"] === "ops" ? { ...s, signature: newPath } : s))
+    server.use(
+      http.post("*/api/brands/:id/assets/:key", () =>
+        HttpResponse.json({ key: "signature:ops", path: newPath, sha256: "abcdef", bytes: 4, brand: { ...brandDetails["acme-studio"], file: { ...brandDetails["acme-studio"]!.file, signatories: copied } } }),
+      ),
+    )
+    const { user } = await openEditor("/settings/brands/acme-studio?tab=assets")
+    await screen.findByRole("group", { name: "Signature: ops" })
+    await user.upload(screen.getByLabelText("Upload Signature: ops"), new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], "s.png", { type: "image/png" }))
+    expect(await screen.findByText("Signature: ops uploaded")).toBeInTheDocument()
+    await user.click(screen.getByRole("tab", { name: "Signatories" }))
+    expect(screen.getByRole("switch", { name: "Override the inherited list" })).toBeChecked()
+    await user.click(saveButton())
+    await waitFor(() => expect(bodies).toHaveLength(1))
+    expect(bodies[0]!["signatories"]).toEqual(copied)
+  })
+
   it("reports a file that is too large without uploading, and a 413 from the server", async () => {
     let calls = 0
     server.use(

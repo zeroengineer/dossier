@@ -19,11 +19,11 @@ describe("Brands settings page", () => {
   })
 
   it("creates a brand with only the filled-in fields of an inheriting brand and opens it", async () => {
-    let sent: { id: string; body: BrandFile } | null = null
+    let sent: BrandFile | null = null
     server.use(
-      http.put("*/api/brands/:id", async ({ params, request }) => {
+      http.post("*/api/brands", async ({ request }) => {
         const body = (await request.json()) as BrandFile
-        sent = { id: String(params["id"]), body }
+        sent = body
         return HttpResponse.json({ id: body.id, file: body, resolved: {}, configHash: "x" }, { status: 201 })
       }),
     )
@@ -35,7 +35,7 @@ describe("Brands settings page", () => {
     await user.type(within(dialog).getByLabelText("Short name (blank inherits)"), "North")
     await user.click(within(dialog).getByRole("button", { name: "Create brand" }))
     await waitFor(() => expect(router.state.location.pathname).toBe("/settings/brands/acme-north"))
-    expect(sent).toEqual({ id: "acme-north", body: { id: "acme-north", inheritsFrom: "acme", shortName: "North" } })
+    expect(sent).toEqual({ id: "acme-north", inheritsFrom: "acme", shortName: "North" })
   })
 
   it("refuses an id that is taken or malformed before saving", async () => {
@@ -54,7 +54,7 @@ describe("Brands settings page", () => {
 
   it("shows the server's field errors on the dialog's fields", async () => {
     server.use(
-      http.put("*/api/brands/:id", () =>
+      http.post("*/api/brands", () =>
         HttpResponse.json(
           {
             code: "WORKSPACE_INVALID",
@@ -79,5 +79,22 @@ describe("Brands settings page", () => {
     expect(await within(dialog).findByText("must not be empty")).toBeInTheDocument()
     expect(within(dialog).getByLabelText("Legal name")).toHaveAttribute("aria-invalid", "true")
     expect(within(dialog).getByText("(root): something else")).toBeInTheDocument()
+  })
+
+  it("shows BRAND_DUPLICATE (a brand created meanwhile) on the id field", async () => {
+    server.use(
+      http.post("*/api/brands", () =>
+        HttpResponse.json({ code: "BRAND_DUPLICATE", message: 'Brand "acme-two" already exists', details: { brandId: "acme-two" } }, { status: 409 }),
+      ),
+    )
+    const { user } = renderApp("/settings/brands")
+    await screen.findByRole("link", { name: "acme-studio" })
+    await user.click(screen.getByRole("button", { name: "New brand" }))
+    const dialog = await screen.findByRole("dialog", { name: "New brand" })
+    await user.type(within(dialog).getByLabelText("Id"), "acme-two")
+    await user.type(within(dialog).getByLabelText("Legal name"), "Acme Two")
+    await user.click(within(dialog).getByRole("button", { name: "Create brand" }))
+    expect(await within(dialog).findByText("A brand with this id already exists")).toBeInTheDocument()
+    expect(within(dialog).getByLabelText("Id")).toHaveAttribute("aria-invalid", "true")
   })
 })

@@ -76,10 +76,12 @@ export function useSaveBrand(id: string) {
   return useMutation({ mutationFn: (body: BrandFile) => putBrand(id, body), onSuccess: (detail) => invalidate(detail) })
 }
 
-/** Create a brand: `PUT` of its first `brand.json` (the caller checks the id is not taken). */
+/** Create a brand (`POST /api/brands`): never overwrites; an existing id is BRAND_DUPLICATE (409). */
+export const createBrand = (body: BrandFile) => request<BrandDetail>("/api/brands", { method: "POST", json: body })
+
 export function useCreateBrand() {
   const invalidate = useInvalidateBrands()
-  return useMutation({ mutationFn: (body: BrandFile) => putBrand(body.id, body), onSuccess: (detail) => invalidate(detail) })
+  return useMutation({ mutationFn: createBrand, onSuccess: (detail) => invalidate(detail) })
 }
 
 export function useUploadBrandAsset(id: string) {

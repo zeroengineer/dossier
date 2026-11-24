@@ -1,13 +1,16 @@
+// Repeatable rows for the settings forms (brands, numbering, ...), generic over the form's values.
 import { PlusIcon, Trash2Icon } from "lucide-react"
-import { Controller, useFieldArray, type Control, type FieldArrayPath, type FieldPath } from "react-hook-form"
+import {
+  Controller, useFieldArray, type Control, type FieldArray, type FieldArrayPath, type FieldPath, type FieldValues,
+} from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
-import { ListError, SelectField, TextField } from "../form-fields"
-import type { BrandFormValues } from "./brand-form"
+import { ListError, SelectField, TextField } from "./form-fields"
 
 export interface RowColumn {
+  /** The row's field (`label`, `value`, ...). */
   key: string
   label: string
   placeholder?: string
@@ -25,25 +28,30 @@ const GRID: Record<number, string> = {
   4: "sm:grid-cols-2 xl:grid-cols-4",
 }
 
-interface RowsEditorProps {
-  control: Control<BrandFormValues>
-  /** The field array (`registrations.rows`, `contacts`, ...). */
-  name: FieldArrayPath<BrandFormValues>
+interface RowsEditorProps<T extends FieldValues, N extends FieldArrayPath<T>> {
+  control: Control<T>
+  /** The field array (`registrations.rows`, `contacts`, `series`, ...). */
+  name: N
   columns: RowColumn[]
-  /** A blank row. */
-  blank: Record<string, string>
-  /** Accessible name of row `i` ("registration 1"). */
+  /** A blank row (what "Add" appends). */
+  blank: FieldArray<T, N>
+  /** Accessible name of row `i` ("registration 1"); also suffixes each field's label for screen readers. */
   rowLabel: (i: number) => string
   addLabel: string
-  /** Read-only (an inherited list that is not overridden). */
+  /** Read-only (e.g. an inherited list that is not overridden): no Add or Remove, disabled fields. */
   disabled?: boolean
   empty?: string
   /** Grid columns per row (default: the number of columns, at most 4). */
   gridColumns?: number
 }
 
-/** Repeatable rows of fields with Add / Remove; blank rows are dropped when saving. */
-export function RowsEditor({ control, name, columns, blank, rowLabel, addLabel, disabled, empty = "No rows yet.", gridColumns }: RowsEditorProps) {
+/**
+ * Rows of fields with Add / Remove, one bordered group per row. Field errors show under each field; an error set on
+ * `<name>.root` shows under the rows.
+ */
+export function RowsEditor<T extends FieldValues, N extends FieldArrayPath<T>>({
+  control, name, columns, blank, rowLabel, addLabel, disabled, empty = "No rows yet.", gridColumns,
+}: RowsEditorProps<T, N>) {
   const { fields, append, remove } = useFieldArray({ control, name })
   const grid = GRID[Math.min(gridColumns ?? columns.length, 4)] ?? GRID[4]
   return (
@@ -53,7 +61,7 @@ export function RowsEditor({ control, name, columns, blank, rowLabel, addLabel, 
         <div key={f.id} role="group" aria-label={rowLabel(i)} className="flex items-start gap-2 rounded-lg border bg-card p-3">
           <div className={cn("grid flex-1 gap-3", grid)}>
             {columns.map((c) => {
-              const fieldName = `${name}.${i}.${c.key}` as FieldPath<BrandFormValues>
+              const fieldName = `${name}.${i}.${c.key}` as FieldPath<T>
               const label = (
                 <>
                   {c.label}
@@ -87,7 +95,7 @@ export function RowsEditor({ control, name, columns, blank, rowLabel, addLabel, 
       <ListError control={control} name={name} />
       {disabled ? null : (
         <div>
-          <Button type="button" variant="outline" size="sm" onClick={() => append(blank as never)}>
+          <Button type="button" variant="outline" size="sm" onClick={() => append(blank)}>
             <PlusIcon data-icon="inline-start" />
             {addLabel}
           </Button>
@@ -97,8 +105,17 @@ export function RowsEditor({ control, name, columns, blank, rowLabel, addLabel, 
   )
 }
 
-/** The "override the inherited list" switch of an inheriting brand's list (`<list>.override`). */
-export function OverrideSwitch({ control, name, parentId }: { control: Control<BrandFormValues>; name: FieldPath<BrandFormValues>; parentId: string }) {
+interface OverrideSwitchProps<T extends FieldValues> {
+  control: Control<T>
+  /** A boolean field: on = this form saves its own list. */
+  name: FieldPath<T>
+  /** Where the list comes from while the switch is off (e.g. the parent brand's id). */
+  source: string
+  label?: string
+}
+
+/** "Override the inherited list" switch for a list that is otherwise taken from `source`. */
+export function OverrideSwitch<T extends FieldValues>({ control, name, source, label = "Override the inherited list" }: OverrideSwitchProps<T>) {
   const id = `override-${name.replace(/\W/g, "-")}`
   return (
     <Controller
@@ -108,11 +125,9 @@ export function OverrideSwitch({ control, name, parentId }: { control: Control<B
         <Field orientation="horizontal">
           <Switch id={id} checked={field.value === true} onCheckedChange={field.onChange} />
           <FieldContent>
-            <FieldLabel htmlFor={id}>Override the inherited list</FieldLabel>
+            <FieldLabel htmlFor={id}>{label}</FieldLabel>
             <FieldDescription>
-              {field.value === true
-                ? "This brand saves its own list."
-                : `Off: the list of ${parentId} is used (shown read-only). Turn on to edit a copy.`}
+              {field.value === true ? "This list is saved here." : `Off: the list of ${source} is used (shown read-only). Turn on to edit a copy.`}
             </FieldDescription>
           </FieldContent>
         </Field>

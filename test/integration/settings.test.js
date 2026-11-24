@@ -434,6 +434,28 @@ describe('brand API', () => {
     assert.equal(escape.statusCode, 400);
     assert.deepEqual(readFileSync(brandFile()), before);
   });
+
+  test('POST /api/brands creates a brand and never overwrites one', async () => {
+    const body = { id: 'epsilon', legalName: 'Epsilon Example', shortName: 'Epsilon', addresses: { business: ['L'] }, contacts: { default: {} } };
+    const created = await api('POST', '/api/brands', body);
+    assert.equal(created.statusCode, 201, created.body);
+    assert.equal(created.json().id, 'epsilon');
+    assert.deepEqual(brandJson('epsilon'), body);
+
+    const before = readFileSync(brandFile());
+    const dup = await api('POST', '/api/brands', { ...body, id: 'acme', legalName: 'Overwritten' });
+    assert.equal(dup.statusCode, 409);
+    assert.equal(dup.json().code, 'BRAND_DUPLICATE');
+    assert.deepEqual(readFileSync(brandFile()), before);
+
+    const noId = await api('POST', '/api/brands', { legalName: 'No id' });
+    assert.equal(noId.statusCode, 400);
+    assert.equal(noId.json().code, 'INVALID_INPUT');
+    const invalid = await api('POST', '/api/brands', { id: 'zeta', shortName: 'Zeta' });
+    assert.equal(invalid.statusCode, 400);
+    assert.equal(invalid.json().code, 'WORKSPACE_INVALID');
+    assert.equal(existsSync(join(home, 'brands', 'zeta')), false);
+  });
 });
 
 describe('series', () => {

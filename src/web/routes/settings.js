@@ -247,6 +247,13 @@ export default async function settingsRoutes(app, { ctx }) {
   const brandJson = (b) => ({ id: b.id, file: b.file, resolved: b.resolved, configHash: b.configHash });
 
   app.get('/api/brands', () => ({ brands: brandList() }));
+  // Create only: an existing id is BRAND_DUPLICATE (409), never overwritten (PUT replaces).
+  app.post('/api/brands', (req, reply) => {
+    const body = req.body;
+    const id = body !== null && typeof body === 'object' && !Array.isArray(body) ? body.id : undefined;
+    const r = writeBrand(ctx, id, body, { create: true });
+    return reply.code(201).send(brandJson(r));
+  });
   app.get('/api/brands/:id', (req) => brandJson(getBrandFile(ctx, req.params.id)));
   app.put('/api/brands/:id', (req, reply) => {
     const r = writeBrand(ctx, req.params.id, req.body);

@@ -22,6 +22,30 @@ describe("brand form round trip", () => {
     expect(body).toEqual(studioFile)
   })
 
+  it("adds nothing to a new brand's file, and a legal name change sends just that change", () => {
+    const file = newBrandFile({
+      id: "acme-two", inheritsFrom: "", legalName: "Acme Two", shortName: "Two", business: "Line 1", email: "two@example.com", phone: "", website: "",
+    })
+    const ctx: BrandContext = { resolved: { ...acmeResolved, id: "acme-two" }, parent: null, fontWeights: meta.fontWeights }
+    const values = toFormValues(file, ctx)
+    const same = toBrandFile(values, file)
+    expect(same.problems).toEqual([])
+    expect(same.body).toEqual(file)
+    expect(same.body).not.toHaveProperty("tax")
+    values.legalName = "Acme Two Private Limited"
+    expect(toBrandFile(values, file).body).toEqual({ ...file, legalName: "Acme Two Private Limited" })
+  })
+
+  it("keeps the file's key order when the Advanced JSON changes a key", () => {
+    const base = { ...acmeFile, layoutProfiles: { letter: { ML: 40 } }, zeta: 1 }
+    const values = toFormValues(base, rootCtx)
+    values.advanced = JSON.stringify({ zeta: 2, layoutProfiles: { letter: { ML: 50 } }, added: true })
+    const { body } = toBrandFile(values, base)
+    const expected = [...Object.keys(acmeFile).filter((k) => k !== "templateParams"), "layoutProfiles", "zeta", "added"]
+    expect(Object.keys(body)).toEqual(expected)
+    expect(body["zeta"]).toBe(2)
+  })
+
   it("keeps keys the form does not edit and replaces them from the Advanced JSON", () => {
     const values = toFormValues({ ...acmeFile, custom: { a: 1 } }, rootCtx)
     expect(JSON.parse(values.advanced)).toEqual({ templateParams: { invoice: { showHsn: true } }, custom: { a: 1 } })

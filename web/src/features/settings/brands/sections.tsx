@@ -1,17 +1,17 @@
 // The brand editor's tabs (except Assets): one card per section, bound to the editor's form.
 import type * as React from "react"
 import { Link } from "react-router"
-import { Controller, useWatch, type FieldPath, type UseFormReturn } from "react-hook-form"
+import { Controller, useWatch, type FieldArray, type FieldPath, type UseFormReturn } from "react-hook-form"
 import type { BrandFile } from "@/api/types"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { FieldGroup, FieldSeparator } from "@/components/ui/field"
+import { FieldSeparator } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 import { SelectField, TextField } from "../form-fields"
 import { fallbackOf, parentValue, type BrandContext, type BrandFormValues, type MapRow, type OverridableList } from "./brand-form"
-import { OverrideSwitch, RowsEditor, type RowColumn } from "./rows-editor"
+import { OverrideSwitch, RowsEditor, type RowColumn } from "../rows-editor"
+import { Section } from "../section"
 
 export interface SectionProps {
   form: UseFormReturn<BrandFormValues>
@@ -25,20 +25,6 @@ export interface SectionProps {
 type Name = FieldPath<BrandFormValues>
 
 const text = (v: unknown) => (typeof v === "string" ? v : Array.isArray(v) ? v.join("\n") : v === undefined || v === null ? "" : String(v))
-
-export function Section({ title, description, children }: { title: string; description?: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        {description ? <CardDescription>{description}</CardDescription> : null}
-      </CardHeader>
-      <CardContent>
-        <FieldGroup>{children}</FieldGroup>
-      </CardContent>
-    </Card>
-  )
-}
 
 /** Placeholder of a scalar: the inherited value for an inheriting brand. */
 const inheritedPlaceholder = ({ parentId, ctx }: SectionProps, path: string) => (parentId ? text(parentValue(ctx, path)) : undefined)
@@ -124,12 +110,12 @@ function ListSection({ form, parentId, title, description, list, columns, blank,
   const editable = !parentId || value.override
   return (
     <Section title={title} description={description}>
-      {parentId ? <OverrideSwitch control={form.control} name={`${list}.override` as Name} parentId={parentId} /> : null}
+      {parentId ? <OverrideSwitch control={form.control} name={`${list}.override` as Name} source={parentId} /> : null}
       <RowsEditor
         control={form.control}
         name={`${list}.rows` as `registrations.rows`}
         columns={columns}
-        blank={blank}
+        blank={blank as unknown as FieldArray<BrandFormValues, "registrations.rows">}
         rowLabel={rowLabel}
         addLabel={addLabel}
         disabled={!editable}

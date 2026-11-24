@@ -12,36 +12,35 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { FieldGroup, FieldSeparator } from "@/components/ui/field"
 import { Spinner } from "@/components/ui/spinner"
-import { errorMessage } from "@/lib/api"
+import { ApiError, errorMessage } from "@/lib/api"
 import { SelectField, TextField } from "../form-fields"
 import { applyServerErrors, type UnplacedError } from "../server-errors"
 import { newBrandFieldFor, newBrandFile, type NewBrandValues } from "./brand-form"
 
 const BLANK: NewBrandValues = { id: "", inheritsFrom: "", legalName: "", shortName: "", business: "", email: "", phone: "", website: "" }
 
+const TAKEN = "A brand with this id already exists"
+
 /** The id rule is the backend's (src/services/workspaceFiles.js BRAND_ID); repeated here to answer before saving. */
-const schemaFor = (taken: Set<string>) =>
-  z.object({
-    id: z
-      .string()
-      .trim()
-      .min(1, "Enter an id")
-      .regex(/^[a-z0-9][a-z0-9_-]*$/, 'Use lowercase letters, digits, "-" or "_"')
-      .refine((v) => !taken.has(v), "A brand with this id already exists"),
-    inheritsFrom: z.string(),
-    legalName: z.string(),
-    shortName: z.string(),
-    business: z.string(),
-    email: z.string(),
-    phone: z.string(),
-    website: z.string(),
-  })
+const schema = z.object({
+  id: z
+    .string()
+    .trim()
+    .min(1, "Enter an id")
+    .regex(/^[a-z0-9][a-z0-9_-]*$/, 'Use lowercase letters, digits, "-" or "_"'),
+  inheritsFrom: z.string(),
+  legalName: z.string(),
+  shortName: z.string(),
+  business: z.string(),
+  email: z.string(),
+  phone: z.string(),
+  website: z.string(),
+})
 
 /** "New brand" button + dialog: writes the brand's first brand.json and opens its editor. */
 export function NewBrandDialog({ brands }: { brands: BrandListItem[] }) {
   const [open, setOpen] = React.useState(false)
-  const taken = React.useMemo(() => new Set(brands.map((b) => b.id)), [brands])
-  const form = useForm<NewBrandValues>({ defaultValues: BLANK, resolver: zodResolver(schemaFor(taken)) })
+  const form = useForm<NewBrandValues>({ defaultValues: BLANK, resolver: zodResolver(schema) })
   const create = useCreateBrand()
   const navigate = useNavigate()
   const [failure, setFailure] = React.useState<{ error: unknown; unplaced: UnplacedError[] } | null>(null)
@@ -58,12 +57,21 @@ export function NewBrandDialog({ brands }: { brands: BrandListItem[] }) {
 
   const onSubmit = form.handleSubmit(async (values) => {
     setFailure(null)
+    // Answer at once for ids already listed; the server refuses any other existing id (BRAND_DUPLICATE).
+    if (brands.some((b) => b.id === values.id.trim())) {
+      form.setError("id", { type: "taken", message: TAKEN })
+      return
+    }
     try {
       const detail = await create.mutateAsync(newBrandFile(values))
       toast.success(`Brand ${detail.id} created`)
       onOpenChange(false)
       void navigate(`/settings/brands/${encodeURIComponent(detail.id)}`)
     } catch (err) {
+      if (err instanceof ApiError && err.code === "BRAND_DUPLICATE") {
+        form.setError("id", { type: "server", message: TAKEN })
+        return
+      }
       const id = values.id.trim()
       const { unplaced } = applyServerErrors(err, form.setError, newBrandFieldFor, `brands/${id}/brand.json`)
       setFailure({ error: err, unplaced })

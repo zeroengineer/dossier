@@ -28,5 +28,13 @@ export const handlers = [
     }
     return HttpResponse.json(detail, { status: before ? 200 : 201 })
   }),
+  http.post("*/api/brands", async ({ request }) => {
+    const body = (await request.json()) as BrandFile
+    if (brandDetails[body.id]) {
+      return HttpResponse.json({ code: "BRAND_DUPLICATE", message: `Brand "${body.id}" already exists`, details: { brandId: body.id } }, { status: 409 })
+    }
+    const detail: BrandDetail = { id: body.id, file: body, resolved: { ...brandDetails["acme"]!.resolved, id: body.id }, configHash: "eeeeeeeeeeee5555" }
+    return HttpResponse.json(detail, { status: 201 })
+  }),
   http.get("*/api/series", () => HttpResponse.json(seriesIds)),
 ]

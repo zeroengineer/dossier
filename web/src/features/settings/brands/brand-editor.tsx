@@ -121,6 +121,16 @@ export function BrandEditor({ brand, parent, fontWeights, builtinFonts, seriesId
     else if (slot.startsWith("font:")) {
       const w = slot.slice(5)
       form.setValue(`fonts.${w}`, next.fonts[w] ?? "")
+    } else if (slot.startsWith("signature:") || slot.startsWith("signature-large:")) {
+      // keepDirtyValues may have kept the old rows (any signatory edit makes them dirty): set the uploaded path on the
+      // row with that signatory id, or take the server's rows when it made the list the brand's own (inheriting brand).
+      const sid = slot.slice(slot.indexOf(":") + 1)
+      const prop = slot.startsWith("signature-large:") ? "signatureLarge" : "signature"
+      const uploaded = next.signatories.rows.find((s) => s.id === sid)?.[prop] ?? ""
+      const current = form.getValues("signatories")
+      const i = current.rows.findIndex((s) => s.id.trim() === sid)
+      if (parentId && !current.override) form.setValue("signatories", next.signatories, { shouldDirty: true })
+      else if (i >= 0) form.setValue(`signatories.rows.${i}.${prop}`, uploaded, { shouldDirty: true })
     }
   }
 

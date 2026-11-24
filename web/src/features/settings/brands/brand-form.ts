@@ -1,9 +1,13 @@
 // The brand editor's form model and its conversion to and from brand.json. Ported from the server-rendered settings
 // forms (src/web/settingsForms.js applyBrandSection) so a save writes the same file:
-// - Every key the form does not edit (layoutProfiles, templateParams, unknown keys, unknown sub-keys) is kept; the
-//   Advanced tab edits the top-level ones as JSON.
+// - Top-level keys the form does not edit (layoutProfiles, templateParams, unknown keys) and unknown sub-keys of the
+//   edited objects (e.g. `letterhead.x`, `tax.x`) are kept, in their order; the Advanced tab edits the top-level ones as
+//   JSON. Rows of lists and maps are rebuilt from their columns, so unknown keys inside a row (a registration, a
+//   signatory, a contact entry, a tax mode) are not kept.
 // - For a brand with `inheritsFrom`, a blank scalar means "inherit" (the key is left out), a list is written only when
 //   its "override" switch is on, and map entries (contacts, strings, ...) merge with the inherited ones key by key.
+// - For a root brand, an empty list the file does not have is not added (a file without `tax` stays without it).
+// - Values are trimmed and blank rows and lines dropped on save, as the old forms did.
 // Validation of the result stays on the server (PUT /api/brands/:id -> WORKSPACE_INVALID with dotted paths);
 // `fieldFor` maps those paths back onto form fields.
 import type { BrandFile, ResolvedBrand } from "@/api/types"
@@ -228,7 +232,11 @@ export function toBrandFile(values: BrandFormValues, base: BrandFile): BuildResu
   const list = <T extends object>(name: string, path: string, l: OverridableList<T>, toItem: (row: Record<keyof T, string>, index: number) => unknown) => {
     const kept = keptRows(l.rows)
     indexes[name] = kept.map((k) => k.index)
-    setPath(body, path, !inherits || l.override ? kept.map((k) => toItem(k.row, k.index)) : undefined)
+    const items = kept.map((k) => toItem(k.row, k.index))
+    // A root brand writes its list, except an empty one the file does not have (the schema default applies; writing
+    // `tax.modes: []` would even fail its min(1)). An inheriting brand writes it only when overriding.
+    const write = inherits ? l.override : items.length > 0 || at(base, path) !== undefined
+    setPath(body, path, write ? items : undefined)
   }
   /** Rows keyed by `key` -> object; blank rows dropped, bad or duplicate keys reported. */
   const map = <T extends { key: string }>(name: string, rows: T[], valueOf: (row: Record<keyof T, string>) => unknown, keepEmpty = false) => {
@@ -300,8 +308,9 @@ export function toBrandFile(values: BrandFormValues, base: BrandFile): BuildResu
       const clash = Object.keys(extra).filter((k) => (EDITED_KEYS as readonly string[]).includes(k))
       if (clash.length) problems.push({ field: "advanced", message: `${clash.map((k) => `"${k}"`).join(", ")} ${clash.length > 1 ? "are" : "is"} edited on its own tab` })
       else {
-        for (const k of Object.keys(body)) if (!(EDITED_KEYS as readonly string[]).includes(k)) delete body[k]
-        Object.assign(body, extra)
+        // In place: kept keys keep their position in the file, removed ones go, new ones are appended.
+        for (const k of Object.keys(body)) if (!(EDITED_KEYS as readonly string[]).includes(k) && !Object.hasOwn(extra, k)) delete body[k]
+        for (const [k, v] of Object.entries(extra)) body[k] = v
       }
     }
   }

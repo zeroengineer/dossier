@@ -11,7 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { ApiError, errorMessage } from "@/lib/api"
 import { TextField } from "../form-fields"
-import { Section, type SectionProps } from "./sections"
+import { Section } from "../section"
+import type { SectionProps } from "./sections"
 
 /** Display name of an asset slot key. */
 export function slotLabel(key: string): string {
