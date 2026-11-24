@@ -125,7 +125,8 @@ export function parseRowHeight(v) {
  * is interpolated with the brand, e.g. `{tax.defaultHsn}`), `rowHeight` (`number | 'auto'`), `subtotalLabel`,
  * `totalLabel`, `showBank`, `bankTitle`, `bankFields`, `bankLabels`, `acknowledgement` (`{ title, text }` or false),
  * `contactLabels`, `taxIdLabel`, `declarationTitle`, `declarationString` (brand string key), `declaration` (fallback
- * text), `thankYouString`, `frame` (style overrides, see INVOICE_FRAME_DEFAULTS).
+ * text), `thankYouString`, `signatureAlt` (HTML alt text of the signature image, `{name}` = the signatory; default
+ * `Signature of {name}`), `frame` (style overrides, see INVOICE_FRAME_DEFAULTS).
  * Values: `number`, `date`, `billTo.{name,address}`, `items[{ description, amount, <column keys> }]`, `totals`
  * (from invoiceTotals), `bank`, `signatory`, `acknowledgement.{title,text}`, `rowHeight`, `descriptionWeight`, `seal`.
  * @param {Record<string, any>} values
@@ -213,6 +214,7 @@ export function invoiceModel(values, env) {
       name: up(signatory.name),
       title: up(signatory.title),
       seal: values.seal === true,
+      alt: interp(p.signatureAlt ?? 'Signature of {name}', { name: signatory.name }),
     } : null,
     declaration: { title: p.declarationTitle ?? 'Declaration', text: declaration },
     thankYou: interp(brand.strings?.[p.thankYouString ?? 'thankYou'] ?? ''),
@@ -234,7 +236,8 @@ export const DEFAULT_COLUMNS = Object.freeze([
  * +15 (header h22, rows fixed height or max(minHeight, description height + 2×textDy)); summary +15 below the table
  * (bank details or the acknowledgement panel on the left, calc rows h18 and the total pill on the right, x = PW-MR-200);
  * signatory rule at max(y after the total + 35, summaryY + panelReserve); declaration at PH-MB-10-45; thank-you strip at
- * PH-MB-10. Rows or a summary that would run into the signatory and declaration zone move to a new page.
+ * PH-MB-10. Rows or a summary that would run into the signatory and declaration zone move to a new page, which repeats
+ * the logo, title, number and date.
  * @param {import('./document.js').PdfContext} ctx
  * @param {ReturnType<typeof invoiceModel>} model
  * @param {object} [frame] style overrides (deep-merged over INVOICE_FRAME_DEFAULTS)
@@ -247,14 +250,9 @@ export async function drawInvoiceFrame(ctx, model, frame) {
   const { ML, MR, MT, MB, PW, PH, CW } = profile;
   const rule = (y, color = S.rule.color) => doc.moveTo(ML, y).lineTo(PW - MR, y).strokeColor(col(color)).lineWidth(S.rule.width).stroke();
 
-  doc.addPage();
-
-  // Header: logo, title, number and date.
+  // Header: logo, title, number and date (repeated on continuation pages so every page identifies the document).
   const headerY = MT;
   const logo = await ctx.assets.logo({ resizeHeight: S.logo.resizeHeight });
-  placeImage(ctx, logo, ML, headerY, { height: S.logo.height });
-  doc.font(S.title.font).fontSize(S.title.size).fillColor(col(S.title.color))
-    .text(model.title, ML, headerY + S.title.dy, { align: 'right', width: CW });
   const m = S.meta;
   const metaRow = (y, label, value, font) => {
     doc.font(m.labelFont).fontSize(m.size).fillColor(col(m.labelColor))
@@ -262,12 +260,23 @@ export async function drawInvoiceFrame(ctx, model, frame) {
       .font(font).fillColor(col(m.color))
       .text(value, ML, y, { align: 'right', width: CW });
   };
-  const metaY = headerY + m.dy;
-  metaRow(metaY, model.number.label, model.number.value, m.numberFont);
-  const dateY = metaY + m.gap;
-  metaRow(dateY, model.date.label, model.date.value, m.dateFont);
-  const headerRuleY = dateY + S.headerRuleGap;
-  rule(headerRuleY);
+  /** Add a page with the document head; returns the y of the rule under it. */
+  const newPage = () => {
+    doc.addPage();
+    placeImage(ctx, logo, ML, headerY, { height: S.logo.height });
+    doc.font(S.title.font).fontSize(S.title.size).fillColor(col(S.title.color))
+      .text(model.title, ML, headerY + S.title.dy, { align: 'right', width: CW });
+    const metaY = headerY + m.dy;
+    metaRow(metaY, model.number.label, model.number.value, m.numberFont);
+    const dateY = metaY + m.gap;
+    metaRow(dateY, model.date.label, model.date.value, m.dateFont);
+    const ruleY = dateY + S.headerRuleGap;
+    rule(ruleY);
+    return ruleY;
+  };
+  const headerRuleY = newPage();
+  /** Top of the content on a continuation page. */
+  const continueAt = () => newPage() + S.table.gap;
 
   // Parties.
   const P = S.parties;
@@ -351,8 +360,7 @@ export async function drawInvoiceFrame(ctx, model, frame) {
     const h = rowHeightOf(row);
     if (y + h > declY - 10) {
       rule(y, T.ruleColor);
-      doc.addPage();
-      y = drawHeader(MT);
+      y = drawHeader(continueAt());
     }
     const fills = R.fills ?? [];
     if (fills.length) doc.rect(ML, y, CW, h).fill(col(fills[idx % fills.length]));
@@ -379,11 +387,11 @@ export async function drawInvoiceFrame(ctx, model, frame) {
   const SM = S.summary;
   let summaryY = tableBottom + SM.gap;
   const calcRows = model.calc.length;
-  const summaryNeeds = Math.max(SM.panelReserve, calcRows * SM.calc.rowHeight + SM.total.gap + SM.total.height + SM.total.dy) + S.signature.gap + sigNeeds;
-  if (summaryY + summaryNeeds > declY) {
-    doc.addPage();
-    summaryY = MT;
-  }
+  // The signatory rule goes at max(y after the total + gap, summaryY + panelReserve); y after the total is the last
+  // calc row, the pill gap and the total text line.
+  const calcHeight = calcRows * SM.calc.rowHeight + SM.total.gap + SM.total.textDy + doc.font(SM.total.font).fontSize(SM.total.size).currentLineHeight(true);
+  const summaryNeeds = Math.max(SM.panelReserve, calcHeight + S.signature.gap) + sigNeeds;
+  if (summaryY + summaryNeeds > declY) summaryY = continueAt();
   if (model.bank) {
     const B = SM.bank;
     doc.font(B.headingFont).fontSize(B.headingSize).fillColor(col(B.headingColor)).text(model.bank.title, ML, summaryY);
@@ -421,10 +429,7 @@ export async function drawInvoiceFrame(ctx, model, frame) {
   // Signatory and the bottom strip (bottom margin 0 so nothing breaks the page).
   const G = S.signature;
   let footerStartY = Math.max(doc.y + G.gap, summaryY + SM.panelReserve);
-  if (footerStartY + sigNeeds > declY) {
-    doc.addPage();
-    footerStartY = MT;
-  }
+  if (footerStartY + sigNeeds > declY) footerStartY = continueAt();
   const savedBottom = doc.page.margins.bottom;
   doc.page.margins.bottom = 0;
   rule(footerStartY);

@@ -38,6 +38,7 @@
     "declarationString": "receiptDeclaration",
     "declaration": "We declare that this receipt shows the actual amount received as described and that all particulars are true and correct.",
     "thankYouString": "thankYou",
+    "signatureAlt": "Signature of {name}",
     "frame": {
       "meta": { "labelInset": 100 },
       "table": {

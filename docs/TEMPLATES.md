@@ -274,7 +274,9 @@ What is printed, and from where:
 | declaration, thank-you | `brand.strings[params.declarationString]` (`invoiceDeclaration`, `debitNoteDeclaration`, `receiptDeclaration`), else `params.declaration`; `brand.strings.thankYou` |
 
 Variants: `rowHeight` (field or param): a number of points (legacy 44, 70, 105; debit note 24, receipt 34) or `"auto"`
-(invoice default: `max(44, description height + 24)`); `descriptionWeight` `Medium` or `Bold`; `params.frame`
+(invoice default: `max(44, description height + 24)`; the padding is 2 × the template's row text offset
+`frame.table.row.textDy`, so `"auto"` gives `+ 24` on the invoice and receipt (12) but `+ 14` on the debit note (7), always
+at least `frame.table.row.minHeight` 44); `descriptionWeight` `Medium` or `Bold`; `params.frame`
 deep-merges over `INVOICE_FRAME_DEFAULTS` (every offset, size and colour; the debit note and receipt use it for the
 CW-100 meta inset, row text offsets, the `#cbd5e1` table rule, the receipt's 8 pt table and its +6 start for
 descriptions over 40 characters). A bad `rowHeight` or `bankAccount` is a field error (computed field `layout` /
@@ -292,4 +294,6 @@ ids) -> one `pays` relation per invoice or debit note. Numbering uses the brand 
 
 Rows that do not fit above the signatory and declaration zone continue on a new page with the table header repeated,
 and the summary or signatory move to a new page when they would overlap the declaration; the legacy scripts were
-single-page only.
+single-page only. Every continuation page repeats the logo, title, number and date (and the table header when rows
+continue), so a page on its own identifies the document; the declaration and thank-you strip are on the last page.
+The HTML signature image's alt text is `params.signatureAlt` (`{name}` = the signatory; default `Signature of {name}`).

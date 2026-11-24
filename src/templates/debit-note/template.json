@@ -36,6 +36,7 @@
     "declarationString": "debitNoteDeclaration",
     "declaration": "We declare that this debit note shows the actual amounts of the charges described and that all particulars are true and correct.",
     "thankYouString": "thankYou",
+    "signatureAlt": "Signature of {name}",
     "frame": {
       "meta": { "labelInset": 100 },
       "table": { "row": { "textDy": 7, "descriptionLineGap": null }, "ruleColor": "#cbd5e1" }

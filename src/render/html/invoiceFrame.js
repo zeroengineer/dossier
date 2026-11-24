@@ -92,7 +92,7 @@ ${fills}
     : model.acknowledgement ? `<div class="ack"><h3>${e(model.acknowledgement.title)}</h3><p>${e(model.acknowledgement.text)}</p></div>` : '<div></div>';
   const calc = model.calc.map((r) => `<div class="r"><span>${e(r.label)}</span><span class="v">${e(r.value)}</span></div>`).join('');
   const s = model.signatory;
-  const sign = s ? `<div class="sign"><div class="for">${e(s.forLine)}</div>${sig ? `<img src="${e(sig)}" alt="${e(`Signature of ${s.name}`)}">` : ''}`
+  const sign = s ? `<div class="sign"><div class="for">${e(s.forLine)}</div>${sig ? `<img src="${e(sig)}" alt="${e(s.alt)}">` : ''}`
     + `<div class="name">${e(s.name)}</div>${s.title ? `<div class="title">${e(s.title)}</div>` : ''}</div>` : '';
 
   return `<!DOCTYPE html>

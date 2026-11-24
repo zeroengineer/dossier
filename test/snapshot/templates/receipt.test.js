@@ -58,3 +58,34 @@ test('receipt: acknowledgement text and title come from the fields when given', 
   assert.ok(find(items, 'FINAL SETTLEMENT'));
   assert.ok(find(items, 'Paid in full by Example Institute of Sample Studies: ₹24,549.50.'));
 }));
+
+test('receipt: six rows still fit on one page (overflow estimate boundary)', () => withExampleCtx(async (ctx) => {
+  const base = fixtureInput('receipt').items;
+  const input = { ...fixtureInput('receipt'), items: [...base, ...base] };
+  const { pdf } = await renderFixture(ctx, 'receipt', { input });
+  const items = await extractItems(pdf);
+  assert.deepEqual([...new Set(items.map((i) => i.page))], [1]);
+  const sno = find(items, 'S.NO');
+  const subtotal = find(items, 'Subtotal Received');
+  assert.equal(subtotal.y, sno.y - 7 + 22 + 6 * 34 + 25);
+  near(subtotal.y, 511, 'summary y');
+  const title = find(items, 'CHIEF OPERATING OFFICER');
+  assert.ok(title.y + 20 < find(items, 'Declaration').y, 'signatory well above the declaration');
+}));
+
+test('receipt: a long payment list splits; the continuation page repeats the logo, title and number', () => withExampleCtx(async (ctx) => {
+  const items = Array.from({ length: 16 }, (_, i) => ({ description: `Payment ${i + 1}`, reference: `Invoice ACM-2026-${String(i + 1).padStart(4, '0')}`, amount: 1000 }));
+  const { pdf } = await renderFixture(ctx, 'receipt', { input: { ...fixtureInput('receipt'), items } });
+  const all = await extractItems(pdf);
+  assert.deepEqual([...new Set(all.map((i) => i.page))], [1, 2]);
+  const p2 = all.filter((i) => i.page === 2);
+  const { extractImages } = await import('../../helpers/pdfText.js');
+  const logos = (await extractImages(pdf)).filter((im) => im.x === 40 && im.y === 40);
+  assert.deepEqual(logos.map((im) => im.page), [1, 2], 'logo on both pages');
+  assert.equal(find(p2, 'PAYMENT RECEIPT').y, 36);
+  assert.equal(find(p2, 'ACM-2026-0001').y, 66);
+  assert.equal(find(p2, '20/07/2026').y, 79);
+  assert.equal(find(p2, 'S.NO').y, 99 + 15 + 7, 'table header repeated below the head rule');
+  assert.ok(find(p2, 'Payment 16') && find(p2, 'Total Received') && find(p2, 'Declaration'));
+  assert.equal(all.filter((i) => i.text === 'Declaration').length, 1, 'declaration on the last page only');
+}));

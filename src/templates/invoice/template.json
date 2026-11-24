@@ -35,7 +35,8 @@
     "declarationTitle": "Declaration",
     "declarationString": "invoiceDeclaration",
     "declaration": "We declare that this invoice shows the actual price of the goods or services described and that all particulars are true and correct.",
-    "thankYouString": "thankYou"
+    "thankYouString": "thankYou",
+    "signatureAlt": "Signature of {name}"
   },
   "fields": [
     { "name": "brand", "source": "brand", "required": true },

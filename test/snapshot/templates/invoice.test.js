@@ -120,6 +120,7 @@ test('invoice: preview prints DRAFT in place of the number; HTML and Markdown ca
   for (const s of ['INVOICE NO: ', 'ACM-2026-0001', 'BILL TO', 'ACME EVENTS PRIVATE LIMITED', '₹ 17,928.98', 'SGST (9%)', 'BANK DETAILS', 'ALEX EXAMPLE', 'THANK YOU FOR YOUR BUSINESS']) {
     assert.ok(final.html.includes(s), `html has ${s}`);
   }
+  assert.match(final.html, /alt="Signature of Alex Example"/, 'alt text from params.signatureAlt');
   assert.match(final.md, /^# INVOICE\n/);
   assert.match(final.md, /\| \*\*Total Invoice\*\* \|/);
   assert.match(final.md, /\*\*FOR ACME EVENTS PRIVATE LIMITED\*\*/);
