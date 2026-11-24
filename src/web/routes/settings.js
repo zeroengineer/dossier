@@ -5,7 +5,9 @@ import {
   ASSET_MAX_BYTES, brandRel, builtinFonts, getBrandFile, getSeriesFile, getWorkspaceFile, seriesUsage, storeBrandAsset, writeBrand, writeSeries, writeWorkspaceConfig,
 } from '../../services/workspaceFiles.js';
 import { renderBrandPreview } from '../../render/brandPreview.js';
-import { missingBrandAssets } from '../../workspace/index.js';
+import { sep } from 'node:path';
+import { PLACEHOLDERS_DIR } from '../../paths.js';
+import { brandAsset, missingBrandAssets } from '../../workspace/index.js';
 import { FONT_WEIGHTS } from '../../workspace/schemas.js';
 import { applyBrandSection, BRAND_SECTIONS, newBrandBody, seriesFromForm, workspaceFromForm } from '../settingsForms.js';
 import { brandPage, brandsPage, seriesPage, settingsPage, workspacePage } from '../views/settings.js';
@@ -24,40 +26,74 @@ async function readAssetUpload(req) {
   }
 }
 
-/** Served URL of a brand asset slot, or null for slots no route serves (seal, watermark, large signatures). */
+/** Served URL of a brand asset slot (see src/web/routes/assets.js), without `?v=`. */
 function assetPath(brandId, key) {
   const b = `/assets/brands/${encodeURIComponent(brandId)}`;
   const [kind, arg] = key.split(':');
   if (key === 'assets.logo') return `${b}/logo`;
+  if (key === 'assets.seal') return `${b}/seal`;
+  if (key === 'assets.watermark') return `${b}/watermark`;
   if (kind === 'signature') return `${b}/signatures/${encodeURIComponent(arg)}`;
-  if (kind === 'font') return `${b}/fonts/${arg}`;
-  return null;
+  if (kind === 'signature-large') return `${b}/signatures-large/${encodeURIComponent(arg)}`;
+  return `${b}/fonts/${arg}`;
 }
 
+const DEFAULT_SEAL = 'assets/seal.png';
+const isPlaceholder = (file) => file.startsWith(`${PLACEHOLDERS_DIR}${sep}`);
+
 /**
- * Every asset slot of a brand (logo, seal, watermark, each signatory's signature and large signature, each font
- * weight): the configured path (null when unset), whether it resolves to the brand's own file (not a placeholder or
- * the built-in fallback font; a valid `builtin:` font counts), its version (first 12 hex digits of the sha256, null
- * when not present) and its URL, pinned with `?v=` when present.
+ * Every asset slot of a brand, in a stable order: `assets.logo`, `assets.seal`, `assets.watermark`, then
+ * `signature:<id>` and `signature-large:<id>` per signatory, then `font:<weight>` for each FONT_WEIGHTS entry. Each
+ * slot reports what the renderer (brandAsset) actually uses:
+ * - `source`: `configured` (the brand's own file at the path it names; a valid `builtin:` font counts), `default` (seal
+ *   unset, but `assets/seal.png` exists in the brand folders), `fallback` (a large signature with no `signatureLarge`
+ *   that uses the signatory's signature, or a font whose spec is missing/invalid and falls back to built-in Manrope),
+ *   `placeholder` (the shipped placeholder image), or null (a watermark that is unset or missing: nothing is drawn).
+ * - `path`: the brand-relative path of the file used when `source` is configured, default, or a large-signature
+ *   fallback (the signature's path); otherwise the configured value that did not resolve (null when unset).
+ * - `present`: `source` is configured or default, i.e. the brand provides the file itself.
+ * - `version`: the first 12 hex digits of the sha256 of the file served for the slot (also for a placeholder or a
+ *   fallback), null when nothing is served. `url`: the served URL, pinned with `?v=<version>` when there is a version.
  * @param {object} ctx
  * @param {string} brandId a known brand
- * @returns {Array<{ key: string, path: string|null, present: boolean, version: string|null, url: string|null }>}
+ * @returns {Array<{ key: string, path: string|null, source: 'configured'|'default'|'fallback'|'placeholder'|null,
+ *   present: boolean, version: string|null, url: string }>}
  */
 function brandAssetList(ctx, brandId) {
   const brand = ctx.ws.brands.get(brandId);
   const missing = new Set(missingBrandAssets(ctx.ws, brandId).map((m) => m.key));
+  /** 'own' (a non-placeholder file), 'placeholder', or null (nothing). */
+  const resolves = (key) => {
+    const file = brandAsset(ctx.ws, brandId, key);
+    if (!file) return null;
+    return isPlaceholder(file) ? 'placeholder' : 'own';
+  };
+  const image = (key, configured, unsetDefault = null) => {
+    const r = resolves(key);
+    if (r !== 'own') return { path: configured ?? null, source: r };
+    return configured ? { path: configured, source: 'configured' } : { path: unsetDefault, source: 'default' };
+  };
   const slots = [
-    ['assets.logo', brand.assets.logo], ['assets.seal', brand.assets.seal], ['assets.watermark', brand.assets.watermark],
-    ...brand.signatories.flatMap((s) => [[`signature:${s.id}`, s.signature], [`signature-large:${s.id}`, s.signatureLarge]]),
-    ...FONT_WEIGHTS.map((w) => [`font:${w}`, brand.fonts[w]]),
+    ['assets.logo', () => image('assets.logo', brand.assets.logo)],
+    ['assets.seal', () => image('assets.seal', brand.assets.seal, DEFAULT_SEAL)],
+    ['assets.watermark', () => image('assets.watermark', brand.assets.watermark)],
+    ...brand.signatories.flatMap((s) => [
+      [`signature:${s.id}`, () => image(`signature:${s.id}`, s.signature)],
+      [`signature-large:${s.id}`, () => {
+        if (resolves(`signature-large:${s.id}`) !== 'own') return { path: s.signatureLarge ?? null, source: 'placeholder' };
+        return s.signatureLarge ? { path: s.signatureLarge, source: 'configured' } : { path: s.signature, source: 'fallback' };
+      }],
+    ]),
+    ...FONT_WEIGHTS.map((w) => [`font:${w}`, () => {
+      const spec = brand.fonts[w] ?? null;
+      return { path: spec, source: spec && !missing.has(`font:${w}`) ? 'configured' : 'fallback' };
+    }]),
   ];
-  return slots.map(([key, configured]) => {
-    const path = configured ?? null;
-    const present = Boolean(path) && !missing.has(key);
-    const version = present ? assetVersion(ctx, brandId, key) : null;
+  return slots.map(([key, describe]) => {
+    const { path, source } = describe();
+    const version = source ? assetVersion(ctx, brandId, key) : null;
     const base = assetPath(brandId, key);
-    const url = base && version ? `${base}?v=${version}` : base;
-    return { key, path, present: present && version !== null, version, url };
+    return { key, path, source, present: source === 'configured' || source === 'default', version, url: version ? `${base}?v=${version}` : base };
   });
 }
 
@@ -155,8 +191,8 @@ export default async function settingsRoutes(app, { ctx }) {
 
   // Old page routes and their /api/ replacements share these handlers (the /settings/ ones go with the old UI).
   const downloadBrandFile = (req, reply) => {
-    const { file } = getBrandFile(ctx, req.params.id);
-    return sendFile(reply, { buffer: Buffer.from(`${JSON.stringify(file, null, 2)}\n`), filename: 'brand.json', mime: 'application/json' }, { download: true });
+    const { id, file } = getBrandFile(ctx, req.params.id);
+    return sendFile(reply, { buffer: Buffer.from(`${JSON.stringify(file, null, 2)}\n`), filename: `${id}.json`, mime: 'application/json' }, { download: true });
   };
   const sendBrandPreview = async (req, reply) => {
     const { id } = getBrandFile(ctx, req.params.id);

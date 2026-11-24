@@ -66,6 +66,14 @@ export function assetVersion(ctx, brandId, key) {
 export default async function assetRoutes(app, { ctx }) {
   app.get('/assets/brands/:brandId/logo', (req, reply) => sendAsset(req, reply, assetFile(ctx, req.params.brandId, 'assets.logo')));
 
+  app.get('/assets/brands/:brandId/seal', (req, reply) => sendAsset(req, reply, assetFile(ctx, req.params.brandId, 'assets.seal')));
+  app.get('/assets/brands/:brandId/watermark', (req, reply) => sendAsset(req, reply, assetFile(ctx, req.params.brandId, 'assets.watermark')));
+
+  app.get('/assets/brands/:brandId/signatures-large/:signatoryId', (req, reply) => {
+    const { brandId, signatoryId } = req.params;
+    return sendAsset(req, reply, assetFile(ctx, brandId, `signature-large:${signatoryId}`));
+  });
+
   app.get('/assets/brands/:brandId/signatures/:signatoryId', (req, reply) => {
     const { brandId, signatoryId } = req.params;
     return sendAsset(req, reply, assetFile(ctx, brandId, `signature:${signatoryId}`));

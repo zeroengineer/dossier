@@ -9,6 +9,7 @@ import { initWorkspace } from '../../src/workspace/index.js';
 import { openContext } from '../../src/context.js';
 import { buildServer } from '../../src/server.js';
 import { FONTS_DIR } from '../../src/paths.js';
+import { FONT_WEIGHTS } from '../../src/workspace/schemas.js';
 import { BUILTIN_TEMPLATES_DIR } from '../../src/services/templates.js';
 
 const ORIGIN = 'http://localhost:80';
@@ -99,7 +100,7 @@ describe('settings pages', () => {
   test('download brand.json and the preview PDF (no-store)', async () => {
     const dl = await app.inject({ url: '/settings/brands/acme/brand.json' });
     assert.equal(dl.statusCode, 200);
-    assert.match(dl.headers['content-disposition'], /^attachment; filename="brand.json"/);
+    assert.match(dl.headers['content-disposition'], /^attachment; filename="acme.json"/);
     assert.deepEqual(JSON.parse(dl.body), brandJson('acme'));
     const pv = await app.inject({ url: '/settings/brands/acme/preview.pdf' });
     assert.equal(pv.statusCode, 200);
@@ -623,45 +624,99 @@ describe('settings API for the web app', () => {
     assert.ok(n > 0, 'the example workspace maps some series');
   });
 
-  test('GET /api/brands/:id/assets lists every slot with presence, version and a pinned url', async () => {
+  test('GET /api/brands/:id/assets reports what the renderer uses for every slot, with served urls', async () => {
     const created = await api('PUT', '/api/brands/delta', {
       legalName: 'Delta Example', shortName: 'Delta', addresses: { business: ['L'] }, contacts: { default: {} },
       signatories: [{ id: 'md', name: 'Sam Sample', title: 'Director' }],
       fonts: { regular: 'builtin:Manrope-Regular' },
     });
     assert.equal(created.statusCode, 201, created.body);
+    const list = async () => {
+      const r = await api('GET', '/api/brands/delta/assets');
+      assert.equal(r.statusCode, 200, r.body);
+      return Object.fromEntries(r.json().assets.map((a) => [a.key, a]));
+    };
+    const fetchPinned = async (a, bytes) => {
+      assert.match(a.version, /^[0-9a-f]{12}$/, a.key);
+      assert.ok(a.url.endsWith(`?v=${a.version}`), a.url);
+      const r = await app.inject({ url: a.url });
+      assert.equal(r.statusCode, 200, `${a.url}: ${r.body}`);
+      assert.match(r.headers['cache-control'], /immutable/, a.url);
+      if (bytes) assert.deepEqual(r.rawPayload, bytes, a.url);
+    };
 
-    const first = await api('GET', '/api/brands/delta/assets');
-    assert.equal(first.statusCode, 200, first.body);
-    const byKey = Object.fromEntries(first.json().assets.map((a) => [a.key, a]));
-    assert.deepEqual(Object.keys(byKey).slice(0, 5), ['assets.logo', 'assets.seal', 'assets.watermark', 'signature:md', 'signature-large:md']);
-    assert.ok(Object.keys(byKey).some((k) => k.startsWith('font:')));
-    assert.deepEqual(byKey['assets.logo'], { key: 'assets.logo', path: 'assets/logo.png', present: false, version: null, url: '/assets/brands/delta/logo' });
-    assert.deepEqual(byKey['assets.seal'], { key: 'assets.seal', path: null, present: false, version: null, url: null });
-    assert.deepEqual(byKey['signature:md'], { key: 'signature:md', path: null, present: false, version: null, url: '/assets/brands/delta/signatures/md' });
-    const builtin = byKey['font:regular'];
-    assert.equal(builtin.present, true, JSON.stringify(builtin));
-    assert.match(builtin.version, /^[0-9a-f]{12}$/);
-    assert.equal(builtin.url, `/assets/brands/delta/fonts/regular?v=${builtin.version}`);
+    let byKey = await list();
+    assert.deepEqual(Object.keys(byKey), [
+      'assets.logo', 'assets.seal', 'assets.watermark', 'signature:md', 'signature-large:md',
+      ...FONT_WEIGHTS.map((w) => `font:${w}`),
+    ]);
+    for (const w of FONT_WEIGHTS) {
+      const f = byKey[`font:${w}`];
+      assert.equal(f.source, 'configured', w);
+      assert.equal(f.present, true, w);
+      assert.equal(f.url, `/assets/brands/delta/fonts/${w}?v=${f.version}`);
+      await fetchPinned(f);
+    }
+    assert.equal(byKey['font:regular'].path, 'builtin:Manrope-Regular');
 
-    const buffer = await png(40, 20);
-    const up = await upload('/api/brands/delta/assets/logo', {}, { filename: 'l.png', mime: 'image/png', buffer }, { origin: ORIGIN });
-    assert.equal(up.statusCode, 200, up.body);
-    const after = (await api('GET', '/api/brands/delta/assets')).json().assets.find((a) => a.key === 'assets.logo');
-    assert.equal(after.path, up.json().path);
-    assert.equal(after.present, true);
-    assert.equal(after.version, up.json().sha256.slice(0, 12));
-    assert.equal(after.url, `/assets/brands/delta/logo?v=${after.version}`);
-    const served = await app.inject({ url: after.url });
-    assert.equal(served.statusCode, 200);
-    assert.match(served.headers['cache-control'], /immutable/);
-    assert.deepEqual(served.rawPayload, buffer);
+    // Nothing uploaded yet: placeholders (still served and versioned), no watermark at all.
+    for (const [key, path, url] of [
+      ['assets.logo', 'assets/logo.png', '/assets/brands/delta/logo'], ['assets.seal', null, '/assets/brands/delta/seal'],
+      ['signature:md', null, '/assets/brands/delta/signatures/md'], ['signature-large:md', null, '/assets/brands/delta/signatures-large/md'],
+    ]) {
+      const a = byKey[key];
+      assert.deepEqual({ path: a.path, source: a.source, present: a.present }, { path, source: 'placeholder', present: false }, key);
+      assert.equal(a.url, `${url}?v=${a.version}`);
+      await fetchPinned(a);
+    }
+    assert.deepEqual(byKey['assets.watermark'], { key: 'assets.watermark', path: null, source: null, present: false, version: null, url: '/assets/brands/delta/watermark' });
+    assert.equal((await app.inject({ url: '/assets/brands/delta/watermark' })).statusCode, 404);
+
+    // The seal's default file, present on disk but not named in brand.json.
+    const seal = await png(30, 30);
+    mkdirSync(join(home, 'brands', 'delta', 'assets'), { recursive: true });
+    writeFileSync(join(home, 'brands', 'delta', 'assets', 'seal.png'), seal);
+    // A signature without a large one: the large slot falls back to the signature.
+    const sigBytes = await png(60, 20);
+    const sig = await upload('/api/brands/delta/assets/signature:md', {}, { filename: 's.png', mime: 'image/png', buffer: sigBytes }, { origin: ORIGIN });
+    assert.equal(sig.statusCode, 200, sig.body);
+    const logoBytes = await png(40, 20);
+    const logo = await upload('/api/brands/delta/assets/logo', {}, { filename: 'l.png', mime: 'image/png', buffer: logoBytes }, { origin: ORIGIN });
+    assert.equal(logo.statusCode, 200, logo.body);
+
+    byKey = await list();
+    assert.deepEqual({ ...byKey['assets.seal'], version: undefined, url: undefined },
+      { key: 'assets.seal', path: 'assets/seal.png', source: 'default', present: true, version: undefined, url: undefined });
+    await fetchPinned(byKey['assets.seal'], seal);
+    assert.deepEqual({ path: byKey['signature:md'].path, source: byKey['signature:md'].source, present: byKey['signature:md'].present },
+      { path: sig.json().path, source: 'configured', present: true });
+    assert.equal(byKey['signature:md'].version, sig.json().sha256.slice(0, 12));
+    const large = byKey['signature-large:md'];
+    assert.deepEqual({ path: large.path, source: large.source, present: large.present }, { path: sig.json().path, source: 'fallback', present: false });
+    assert.equal(large.version, byKey['signature:md'].version, 'versioned from the file actually used');
+    await fetchPinned(large, sigBytes);
+    const l = byKey['assets.logo'];
+    assert.deepEqual({ path: l.path, source: l.source, present: l.present, version: l.version }, { path: logo.json().path, source: 'configured', present: true, version: logo.json().sha256.slice(0, 12) });
+    assert.equal(l.url, `/assets/brands/delta/logo?v=${l.version}`);
+    await fetchPinned(l, logoBytes);
+
+    // Its own large signature replaces the fallback.
+    const bigBytes = await png(120, 40);
+    const big = await upload('/api/brands/delta/assets/signature-large:md', {}, { filename: 'b.png', mime: 'image/png', buffer: bigBytes }, { origin: ORIGIN });
+    assert.equal(big.statusCode, 200, big.body);
+    const own = (await list())['signature-large:md'];
+    assert.deepEqual({ path: own.path, source: own.source, present: own.present, version: own.version },
+      { path: big.json().path, source: 'configured', present: true, version: big.json().sha256.slice(0, 12) });
+    await fetchPinned(own, bigBytes);
+    // An unpinned request revalidates instead.
+    const unpinned = await app.inject({ url: '/assets/brands/delta/seal' });
+    assert.equal(unpinned.headers['cache-control'], 'public, no-cache');
   });
 
-  test('GET /api/brands/:id/file downloads brand.json; preview.pdf is no-store', async () => {
+  test('GET /api/brands/:id/file downloads <id>.json; preview.pdf is no-store', async () => {
     const dl = await api('GET', '/api/brands/acme/file');
     assert.equal(dl.statusCode, 200);
-    assert.match(dl.headers['content-disposition'], /^attachment; filename="brand.json"/);
+    assert.match(dl.headers['content-disposition'], /^attachment; filename="acme.json"/);
     assert.match(dl.headers['content-type'], /^application\/json/);
     assert.deepEqual(JSON.parse(dl.body), brandJson('acme'));
     const pv = await api('GET', '/api/brands/acme/preview.pdf');
