@@ -1,8 +1,12 @@
 # Templates
 
 A template is a folder `<templateId>/` holding `template.json` (metadata and field schema) and `index.js` (the
-renderer module), `body.md` (a Markdown body), or both; `body.<name>.md` files add named bodies (see body.md). This is
-the first version of the format; later tasks extend it.
+renderer module), `body.md` (a Markdown body), or both; `body.<name>.md` files add named bodies (see body.md).
+
+This guide covers, in order: where templates are loaded from and how a workspace overrides them, `template.json`
+(fields and their sources), `index.js`, `body.md` placeholders, the block model and styles, the HTML and Markdown
+renditions, per-brand wording (`brand.templateParams`), numbering, generation (warnings, `env.draft`), a worked
+example of a new workspace template, and the built-in templates.
 
 ## Where templates come from
 
@@ -166,6 +170,14 @@ A Markdown body filled with `fillMarkdown(body, values)` (`src/render/md/fill.js
 first. A section tag alone on its line removes that line. Nothing is escaped. Missing values print as empty text and
 are returned in `missing`; unbalanced tags throw `TEMPLATE_SYNTAX` with the line number.
 
+**Values are inserted raw.** A placeholder's value is pasted into the Markdown as it is, before the Markdown is
+parsed, so a value can change the document's structure: a newline followed by `## For …` starts a signature section,
+a leading `#`, `-` or `1.` makes a heading or list item, `|` adds table cells and `---` adds a divider (and, before the
+first divider, moves blocks into the cover). This is by design (a field may hold a whole clause in Markdown), but it
+means anyone who can type into a field can reshape the document. Keep free-text fields to people who may edit the
+wording, prefer single-line `string` fields (trimmed) for names and values that go into tables or signature lines, and
+check the preview. Nothing in the HTML rendition is affected: the parsed blocks are escaped when written as HTML.
+
 Named bodies: `body.<name>.md` (name: lowercase letters, digits, `-`, `_`) next to `body.md`. When the resolved values
 have a string field `variant` naming one, that body is filled instead of `body.md` (`bodyFor` in
 `src/services/generator.js`); any other value, or none, uses `body.md`. The filled body is also passed to the module as
@@ -236,6 +248,67 @@ logo and signature images as data URIs; otherwise they load from `/assets/fonts/
 paragraphs, lists, pipe tables (total rows bold, `|` escaped), key/value rows as `- **Key:** value`, signatures as
 lines, `---` dividers and `<!-- page break -->`.
 
+## Per-brand wording: `brand.templateParams`
+
+A brand can change a template's params without a template folder: `brand.json` `templateParams.<templateId>` is an
+object whose top-level keys **replace** the same keys of `template.json` `params` whole (they are not deep-merged), for
+every document that brand issues with that template (`effectiveParams` in `src/services/fields.js`).
+
+```json
+{
+  "templateParams": {
+    "offer-letter": { "subject": "Appointment letter", "clauses": [{ "title": "Working hours", "paragraphs": ["…"] }] },
+    "invoice": { "title": "TAX INVOICE" },
+    "proposal": { "sections": [{ "title": "About us", "blocks": [{ "type": "paragraph", "text": "…" }] }] }
+  }
+}
+```
+
+Use it for wording, labels, clause lists and default sections that differ per brand. Because a key replaces the whole
+value, copy the full list or object you change (for example every clause, not only the one you edit). Some templates
+also take a field with the same role for one document (`clauses`, `paragraphs`, `sections`, `resolutions`…), which wins
+over both. The resolved params are what `env.params` and `computed` functions see, and what the MCP `get_template`
+tool reports. Order of precedence, lowest first: built-in `template.json` params (or a workspace `template.json` that
+replaces them), `brand.templateParams.<id>`, then per-document fields where the template has them.
+
+To change field definitions, defaults, the numbering or the renditions, override `template.json` in the workspace
+instead (see "Workspace overrides that inherit").
+
+## Numbering
+
+A template's `numbering` decides whether its documents get a number and from which series (`series.json`, see
+docs/WORKSPACE.md):
+
+| `numbering` | Series used |
+|---|---|
+| absent or `null` | none: the document has no number (`values.number` is null) |
+| `{ "series": "<seriesId>" }` | that series; it must exist in `series.json` or the template does not load |
+| `{ "series": "brand", "required": true }` | the issuing brand's `series[<templateId>]`; a brand without an entry fails with `SERIES_UNKNOWN` |
+| `{ "series": "brand", "required": false }` | the brand's entry when there is one, else no number (how offer letters and most statements are unnumbered until a brand maps them) |
+
+Patterns are literal text plus tokens: `{YYYY}`, `{YY}`, `{MM}` and `{FY}` come from `values.date` (Indian financial
+year for `{FY}`), `{BRAND}` is the brand id, `{CLIENT}` is `values.clientCode`, else the party's `attrs.code`, and
+`{CODE}` is `values.numberCode`, else `values.code`; then exactly one zero-padded counter `{###}`. Prefixes are literal
+(`ACM-REC-{YYYY}-{####}`); there is no prefix token. `scope` says where the counter restarts:
+
+| `scope` | One counter per |
+|---|---|
+| `global` | series |
+| `brand` | series and brand |
+| `brand+year` (default) | series, brand and year (calendar year, or financial year for an `{FY}` pattern) |
+| `brand+year+client` | as `brand+year`, and `{CLIENT}` |
+| `brand+year+code` | as `brand+year`, and `{CODE}` (e.g. quotations `ACM-Q-EISS-2026-01` and `ACM-Q-SSP-2026-01` count separately) |
+
+`counter: "<seriesId>"` makes a series count on another series' counter (the example invoice, debit note and receipt
+patterns share `invoice-main`, so their numbers never collide). A series that shares a counter needs the owner's scope
+and year basis. A value that a pattern needs and the document does not supply (no date for `{YYYY}`, no client code for
+`{CLIENT}`) fails with `NUMBER_VAR_MISSING`.
+
+When numbers are given out: a preview never takes a number (it prints `DRAFT`); generating takes the next number in a
+transaction; regenerating a document keeps its number; a number repeated in its series (from an upload or an import)
+is accepted and flagged as a conflict. Counters only move forward; importing documents with existing numbers moves
+the counter past them.
+
 ## Generating documents
 
 `src/services/generator.js`:
@@ -291,6 +364,48 @@ filled with `number` = `DRAFT` in previews and `''` when a final document has no
 `DRAFT — NOT NUMBERED` on every page. Preview PDFs are dated midnight UTC of the preview's `today`, final renditions use `creationDate` = now (or the `creationDate` option). Blocks templates are drawn with the
 letterhead, the blocks and the footers; a `renderPdf` template draws everything itself (the generator only adds the
 draft watermark and finalises the file). HTML renditions are standalone (fonts and images embedded).
+
+## Example: a new template in a workspace
+
+A Markdown-bodied template needs no code. Create `templates/thank-you/` in the workspace with:
+
+`template.json`
+
+```json
+{
+  "id": "thank-you", "version": 1, "type": "Letter", "title": "Thank-you note",
+  "category": "letter", "layoutProfile": "letter", "partyType": "Client", "partyKind": "client",
+  "sensitivity": "Internal", "numbering": { "series": "generic", "required": true },
+  "fields": [
+    { "name": "brand", "source": "brand", "required": true },
+    { "name": "client", "label": "Client", "source": "entity:client", "required": true },
+    { "name": "date", "source": "today", "type": "date" },
+    { "name": "event", "label": "Event", "source": "ask", "required": true },
+    { "name": "note", "label": "Note", "source": "ask", "type": "text" }
+  ]
+}
+```
+
+`body.md`
+
+```markdown
+# Thank you
+
+Ref: {{number}}
+
+Dear {{client.name}},
+
+Thank you for choosing {{brand.legalName}} for {{event}}.
+
+{{#if note}}{{note}}{{/if}}
+```
+
+It appears in the template list at once (the registry notices new and changed files), the web form asks for the
+client, event and note, a preview prints `Ref: DRAFT`, and generating numbers it in the `generic` series. A template
+that needs a computed value or an absolutely positioned layout adds an `index.js` (see index.js above); look at
+`src/templates/*/index.js` and the shared modules in `src/render/` for working examples. Everything printed must come
+from the brand, params or the values; run `npm test` (the organisation-data guard scans the shipped tree) before
+publishing a template outside your workspace.
 
 ## Built-in templates
 

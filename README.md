@@ -1,109 +1,285 @@
 # Dossier
 
-Dossier is a document vault and a template-driven document generator in one app.
+Dossier is a local document vault and a template-driven document generator in one app, with an MCP server so Claude
+Code can work with it.
 
-- **Vault.** Every document has one ID, versions with one current, and renditions (PDF, HTML, Markdown) under that ID. Files are stored once by checksum. The folder tree is a view generated from metadata.
-- **Generator.** Templates are files with a field schema, a numbering series and the renditions to produce. Preview makes an unnumbered draft; final generation assigns the number, renders all renditions, stores them and links relations.
-- **MCP server.** Claude Code can search, read, preview and generate documents through tools whose business rules live in the server.
+- **Vault.** Every document has one ID (`DOC-000001`), versions with exactly one current, and renditions (PDF, HTML,
+  Markdown, the original upload) under that ID. Files are stored once by checksum. The folder tree is a view computed
+  from metadata, never stored.
+- **Generator.** A template is a folder with a field schema, a numbering series and the renditions to produce.
+  Preview makes an unnumbered draft; generating assigns the next number, renders every rendition, files them in the
+  vault and links the related documents and entities. Seventeen templates ship (invoices, letters, statements, an MoU,
+  a board resolution, proposals and reports).
+- **MCP server.** Claude Code can search, read, preview and generate documents through tools whose business rules live
+  in the server.
 
-Dossier holds no organisation data in code. Names, registration ids, addresses, bank details, logos, seals, signatures, clause texts and numbering patterns all live in a **workspace** directory that you own.
+Dossier holds **no organisation data in code**. Names, registration ids, addresses, bank details, logos, seals,
+signatures, clause texts and numbering patterns all live in a **workspace** folder that you own and keep out of git.
+The repository ships only a fake example workspace (the brand "Acme Events Private Limited") and neutral placeholder
+images; a test fails if anything that looks like a real identifier gets into the shipped tree.
 
-> Status: under construction. See `docs/PLAN.md` for the feature list and build order.
+## Quick start
 
-## Requirements
-
-- Node.js 22.13 or newer (uses the built-in `node:sqlite`).
-- Optional: `pdftoppm` (poppler) for visual diff tests.
-
-## Setup
+Requirements: Node.js 22.13 or newer (Dossier uses the built-in `node:sqlite`). Optional: `pdftoppm` (poppler) for the
+visual checks.
 
 ```sh
 npm install
 npm test
-node bin/dossier.js init  # create ./workspace from the fake example (or: init <dir>) and load its seed entities
+
+node bin/dossier.js init ./workspace        # copy the example workspace and load its seed entities
 export DOSSIER_HOME=$PWD/workspace
-node bin/dossier.js seed  # (re)load seeds/entities.json; idempotent, never overwrites your edits
-```
-
-## Running the web UI
-
-```sh
-DOSSIER_USER=demo node bin/dossier.js serve   # or: npm start
+export DOSSIER_USER=demo                     # a user listed in workspace.json (clearance Confidential)
+node bin/dossier.js serve                    # or: npm start
 # Dossier is running at http://127.0.0.1:4400
 ```
 
-`serve [--port N] [--host H]` (or `PORT` / `HOST`) starts the server for the workspace in `DOSSIER_HOME`, acting as `DOSSIER_USER` with that user's clearance. Pages: the vault tree (`/`), a document page (metadata, versions, renditions with open/download links, related entities and documents, status, link, metadata and new-version forms), upload, search, generate (a form built from the template's fields, with array rows, a draft preview in the page and generate/regenerate), templates, entities (create, edit, aliases, relations) and settings: brands (identity, registrations, contacts, bank accounts, letterhead and footer, palette, fonts, images, signatories, strings, tax modes, series map; logo/seal/signature/font uploads; a live letterhead preview PDF and a brand.json download), number series and the workspace (name, default brand, locale, users). Settings are written to the workspace files and apply without a restart (see docs/WORKSPACE.md).
+Open the URL, pick **Generate**, choose a template (for example `invoice`), fill in the form, preview the draft and
+generate. The document is filed under `03 Clients/…` in the vault tree with its PDF, HTML and Markdown renditions.
 
-The JSON API mirrors the services: `GET /api/tree`, `GET /api/documents[/:id]`, `POST /api/documents/:id/status|metadata|links`, `DELETE /api/documents/:id/links?toId=&type=`, `GET /api/documents/:id/renditions/:kind[?version=]`, `POST /api/upload` (multipart: `file` plus metadata fields or a `meta` JSON field), `GET /api/search?q=`, `GET /api/templates[/:id]`, `POST /api/templates/:id/resolve|preview|generate` (`{ input, brandId?, documentId?, force?, note? }`; preview and generate return `warnings`), `GET/POST /api/entities`, `GET /api/entities/:id`, `POST /api/entities/:id/relations`, `GET /api/brands`, `GET/PUT /api/brands/:id` (the brand's own brand.json; PUT creates or replaces it), `POST /api/brands/:id/assets/:key` (multipart `file`; key `logo`, `seal`, `watermark`, `signature:<id>`, `signature-large:<id>`, `font:<weight>`), `GET/PUT /api/series`, `GET/PUT /api/workspace`. Errors are `{ code, message, details }` with `*_NOT_FOUND` 404, `FORBIDDEN` 403, duplicates, locked or contended states 409 and validation errors 400 (a workspace edit that does not validate is `WORKSPACE_INVALID` with `details.errors: [{ file, path, message }]`).
+`npm run samples` generates one document per template from fake data into `samples-out/` without touching your
+workspace, which is a quick way to see every layout.
 
-Security: the server listens on `127.0.0.1` and only answers requests whose `Host` is a loopback name (set `HOST` to listen elsewhere; then `DOSSIER_ALLOWED_HOSTS=a.example,b.example` limits the host names). Every POST/PUT/PATCH/DELETE must come from the same origin: its `Origin` (or `Referer`) host must equal the `Host`; a request without either is accepted only with a JSON body, a non-POST method or an `X-Dossier-Client` header (scripts uploading multipart), none of which a cross-site page can send without a CORS preflight. File bytes are only served through a document the user may read (`/documents/:id/renditions/:kind`, `/blobs/:sha256/:name`), non-PDF files with `Content-Security-Policy: sandbox`. There is no login: anyone who can reach the port acts as `DOSSIER_USER`.
+### Command line
 
-The example workspace uses the fake brand "Acme Events Private Limited" and neutral placeholder images. Customise it as described in `docs/WORKSPACE.md`.
-
-PDF geometry snapshots live in `test/snapshot/__snapshots__/`; after an intended layout change, refresh them with `UPDATE_SNAPSHOTS=1 npm run test:snapshot` and review the diff.
-
-## Vault rules
-
-- Every document has one ID (`DOC-000001`). Each version holds up to one rendition per kind (`pdf`, `html`, `md`, `original`); exactly one version is current.
-- Files are stored once by sha256 under `<DOSSIER_HOME>/data/blobs/<first two hex>/<sha256>`. Stored renditions are never changed; a stamped or corrected file is a new version.
-- Status moves forward only: Draft -> Sent | Signed | Superseded, Sent -> Signed | Paid | Superseded, Signed -> Paid | Superseded, Paid -> Superseded.
-- A document number repeated within its series is accepted but flagged (`numberConflict`) with an audit warning.
-- Sensitivity (Public < Internal < Confidential < Restricted) is checked against the user's clearance (`users` in `workspace.json`, default Confidential) on every read, list and write.
-- **Uploads are deduplicated and searchable.** Byte-identical uploads share one stored file (the response says `deduped`). Text is extracted from PDF, HTML, Markdown and plain-text uploads for search; other files are stored without text. A repeated document number in a series is accepted with a `NUMBER_CONFLICT` warning.
-- **No secrets in the vault.** Uploads named `*.pem`, `*.key`, `*.env`, `.env*`, or whose bytes or extracted text contain `-----BEGIN` or `PRIVATE KEY`, are refused with `SECRET_REJECTED`. Keep keys and passwords in a password manager; a `Restricted` document may record where they live.
-
-## Folder tree
-
-The folder tree is generated from metadata, never stored: `node bin/dossier.js tree [node-id] [--folders] [--json]` prints it for the current user (`DOSSIER_USER`). Top level is who (`01 Company` ... `10 Restricted`), the leaf is what kind of document (from the type routing table in `src/domain/routing.js`). Clients are grouped business line -> client -> engagement (only when a client's documents span more than one engagement) -> leaf; finance documents by Indian financial year (`FY 2026-27`). Restricted documents appear only in `10 Restricted`, and only for users cleared for Restricted. Rename folders or reroute types with `hierarchy` in `workspace.json` (see `docs/WORKSPACE.md`).
-
-## Search
-
-`search(ctx, { q, types, status, partyId, from, to, limit, expand })` (`src/services/search.js`) looks a query up in document numbers, metadata (title, type, number, party names and aliases) and the extracted text of each document's current version. Results come in order: exact document number (or `DOC-` id) match, number prefix, metadata match, text match (text hits carry a snippet with matched words in `[` `]`). Every word of the query must match; FTS operators are treated as plain words. Entities whose name or alias contains the query are returned too, and one hop of related documents is added: documents linked to a hit by any relation (quotation, MoU, invoice, receipt, settlement…) and the documents where a matched entity is party, signatory or named. Results never include documents above the user's clearance. The index is kept up to date by every write; `node bin/dossier.js reindex` rebuilds it.
-
-Caches: reads (entities, the folder tree, the template registry, brands, recent searches) are cached in memory and dropped on every write, including writes by another process sharing the database; rendered files are cached on disk in `data/cache/render` (`DOSSIER_RENDER_CACHE_MB`, default 500; `node bin/dossier.js cache clear` empties it). Stored files are served with an `ETag` and `private` caching (a shared proxy never keeps a gated file); see docs/PLAN.md B9.
-
-## Generating documents
-
-`previewDocument` and `generateDocument` (`src/services/generator.js`) turn a template and an input into documents. A preview renders every rendition with the number shown as `DRAFT` and a `DRAFT — NOT NUMBERED` watermark on each PDF page, under `data/previews/<token>/`, and writes nothing to the vault. Generating allocates the next number of the template's series, renders PDF, HTML and Markdown with it, and files one document (party, date, amount, sensitivity, issuing brand) with version 1, the `generated_from` template link, declared relations and party/signatory/issuer entities. Regenerating a Draft document adds a version with the same number; Sent, Signed or Paid documents are superseded instead (or regenerated with `force`). See `docs/TEMPLATES.md`.
-
-Built-in templates: `invoice`, `debit-note` and `receipt` (the legacy invoice layout; tax lines from the brand's `tax.modes`, one shared counter through the brand `series` map). A debit note can name the invoice it `adjusts`; a receipt lists the invoices and debit notes it `pays`. The letter family: `offer-letter` (with the salary annexure), `internship-offer`, `internship-certificate`, `experience-certificate` and `relieving-letter` (the legacy letter layouts; certificates numbered in the `hr-cert` series, offer letters unnumbered unless the brand maps a series; clause lists and other wording replaceable per brand with `templateParams` or per document). The statements: `employee-final-settlement`, `ticketing-settlement-statement` (ticket sales, platform fee with GST, net settlement), `client-final-settlement` (numbered `FSS/{CLIENT}/{YYYY}/{###}`, `settles` invoices), `remittance-statement` (optionally `pays` documents) and `expense-statement`; amounts are computed in paise and the engagement, when given, is stored on the document. `mou` is Markdown-bodied (an organisation-wide and an event body, neutral clauses; the legacy v2 MoU layout with signature cards and an optional draft watermark) and `board-resolution` prints a certified board resolution with director lists. `proposal` (numbered in the `quotation` series, one counter per `{CODE}` (scope `brand+year+code`), the code from the engagement or client) and `pricing-report` (`report` series) draw the legacy gen-2 proposal and pricing report layouts: cover, contents with page numbers and sections given as data (`sections: [{ title, blocks, subsections? }]`, default content in the template params), with fee cards, a fixed-price card, the two-column sign-off from brand signatories and fee calculator tables (Delegate Paid / Organiser Paid, rates as params, exact paise maths). A workspace folder `templates/<id>/` without `index.js` reuses the built-in module with its own `body.md` and/or `template.json`, so private wording never needs a copy of the code. See "Built-in templates" in `docs/TEMPLATES.md`.
-
-## Importing an existing folder
-
-```sh
-node bin/dossier.js import <folder> --dry-run              # read and classify everything, write nothing, print the summary
-node bin/dossier.js import <folder>                        # register the files into the vault
-node bin/dossier.js import <folder> --index <folder>/_index.csv [--brand <id>] [--json]
+```text
+dossier init [dir]                    create a workspace from the shipped example (default $DOSSIER_HOME or ./workspace)
+dossier seed                          load seeds/entities.json (idempotent; never overwrites edits)
+dossier serve [--port N] [--host H]   web UI and JSON API (default http://127.0.0.1:4400; HOST / PORT env)
+dossier tree [node-id] [--folders] [--json]   print the folder tree for the current user
+dossier reindex                       rebuild the full-text search index
+dossier cache clear                   empty the rendered-file cache
+dossier import <folder> [--index <csv>] [--dry-run] [--brand <id>] [--json]   register an existing folder
+dossier help
 ```
 
-`import` registers documents that already exist (for example a folder laid out like the vault tree) and only reads the source files; it never changes, moves or deletes them. It walks the folder, or with `--index` reads a CSV with the columns `original_path,vault_path,vault_folder,md5,size_bytes,note` (`vault_path` relative to the CSV's folder, which is the import root in this mode; paths with `..`, paths outside that folder, symbolic links and files whose folder resolves outside it are refused as "outside import root" / "symbolic link"). For each file:
+Run them as `node bin/dossier.js …`, or `npm link` once to get a `dossier` command. Every command works on the
+workspace in `DOSSIER_HOME` (default `./workspace`) as the user `DOSSIER_USER`.
 
-- **Skipped and reported:** dotfiles (`.DS_Store` files are only counted), `node_modules`, symbolic links, generator source folders (a name such as "Generator Source", a folder with a `package.json`, or a `src`/`scripts` folder holding `.js`/`.mjs`/`.py` files; a "Scripts" folder of documents imports), anything under a Restricted/Security top-level folder or a folder whose name (after a number prefix) starts with the word "Restricted" ("Restricted - Security", "Restricted Files", "Restricted (HR)") at any depth, root-level `_*.csv` and `*HIERARCHY*.md` files (index/spec files, folder mode), and files the secret scanner flags (`.pem`, `.key`, `.env`, PEM armour or `PRIVATE KEY` in the bytes or text). Index rows with an empty `vault_path` (copies the index recorded as identical) count as duplicates; names with a `[from …]` suffix import normally (the suffix is dropped from the title).
-- **Deduplicated by sha256:** a second identical file in the same run is a duplicate; a file whose bytes are already in the vault is left alone, so running the import again imports nothing new. A path imported before whose bytes changed is filed as a new document with a `SOURCE_CHANGED` warning.
-- **Classified by its folders:** the top-level folder is matched on the name after its number against the configured and default top-level names and generic aliases (so `04 Products`, `05 Templates`, `06 Vendors - Invoices Received` work), or against a group entity already in the entity list; the leaf folder gives the type through the routing table read backwards (`Invoices and Receipts` -> Invoice, Debit Note or Receipt, chosen by the number's series or words in the file name; a folder named after a type, such as `MoU`, also works). Folders between them become entities, created when missing: `03 Clients/<business line>/<client>/[<engagement>/]<leaf>`, `02 People/<person>`, `04 Vendors/<vendor>`, `05 Products/<product>`; `Name (CODE)` gives the name and the alias `CODE`. Anything not recognised is imported as type `Other`. The source path is kept on the version (`input.import.source_path`, and the note "Imported from …"); a `YYYY-MM-DD` in the file name becomes the document date.
-- **Numbers:** every series in `series.json` is tried against the file name (a `/` in the pattern also matches `-` or `_`) and then the extracted text. A hit sets the number and series, and the counter is moved past it (never back). A number already used in its series is filed with the conflict flag and listed under "Number conflicts".
-- **Sensitivity:** People folders and identity-document folders (a name containing "identity" or "KYC") are Confidential, everything else Internal (`importFolder(ctx, { sensitivity: { default, people, identity }, identityPattern })` changes this). Files above the importing user's clearance are skipped.
+| Variable | Default | Meaning |
+|---|---|---|
+| `DOSSIER_HOME` | `./workspace` | workspace folder |
+| `DOSSIER_USER` | your OS user name (`mcp` for the MCP server) | acting user; clearance from `workspace.json` `users`, `Confidential` when not listed |
+| `HOST`, `PORT` | `127.0.0.1`, `4400` | web server address |
+| `DOSSIER_ALLOWED_HOSTS` | none | host names the web server answers when `HOST` is not loopback |
+| `DOSSIER_TEMPLATE_DIRS` | none | extra template folders (separated like `PATH`) |
+| `DOSSIER_RENDER_CACHE_MB` | `500` | size of the rendered-file cache |
+| `DOSSIER_DENYLIST` | none | file of regular expressions the organisation-data guard also checks (see Testing) |
 
-The summary lists files, imported (or "would import"), already in the vault, duplicates, new entities, documents by type, numbers parsed, conflicts, skipped files and warnings (for example an `md5` that no longer matches the index); `--json` prints it as JSON. `importFolder` in `src/services/importer.js` returns the same summary as data.
+## Your workspace
+
+`dossier init` copies `workspace.example/` into a new folder. Make it yours by editing the files or the web UI's
+**Settings** pages (changes apply without a restart):
+
+```text
+workspace/
+├── workspace.json          name, default brand, locale, users and clearances, folder names
+├── brands/<id>/brand.json  legal name, registrations, addresses, contacts, bank accounts, letterhead, footer,
+│                           palette, fonts, signatories, strings, tax modes, series map, templateParams
+├── brands/<id>/assets/     logo, seal, signatures, fonts
+├── series.json             numbering series
+├── templates/<id>/         template overrides and new templates
+├── seeds/entities.json     initial clients, people, engagements, products…
+└── data/                   database, stored files, caches (created on first run)
+```
+
+Put your logo, seal and signatures in `brands/<id>/assets/` (or upload them in Settings); until you do, neutral grey
+placeholders print in their place. Several brands can live in one workspace; each document is issued by one brand.
+Keep the workspace in a private location and back up `data/` (the database and the stored files); never commit it to
+this repository. `docs/WORKSPACE.md` documents every file and field.
+
+## Templates
+
+Built in: `invoice`, `debit-note`, `receipt` (one shared counter; a debit note `adjusts` an invoice, a receipt `pays`
+invoices and debit notes); `offer-letter`, `internship-offer`, `internship-certificate`, `experience-certificate`,
+`relieving-letter`; `employee-final-settlement`, `ticketing-settlement-statement`, `client-final-settlement`,
+`remittance-statement`, `expense-statement`; `mou` (Markdown body, organisation and event variants);
+`board-resolution`; `proposal` and `pricing-report` (cover, contents, sections as data, fee cards and fee
+calculator tables). All amounts are computed in integer paise.
+
+Every printed string comes from the brand, the template's params or the input. To change wording:
+
+- per brand: `brand.json` `templateParams.<templateId>` replaces whole top-level params (clause lists, labels,
+  default proposal sections);
+- per workspace: `templates/<id>/template.json` and/or `templates/<id>/body.md` **without** an `index.js` inherit the
+  built-in code and replace only the metadata or the body (for example your own MoU text);
+- a new document type: a new folder `templates/<new-id>/` with `template.json` and a `body.md` (no code needed) or an
+  `index.js`.
+
+`docs/TEMPLATES.md` is the authoring guide: fields and their sources, blocks and styles, `body.md` placeholders,
+overrides, `templateParams`, numbering, warnings and a worked example.
+
+### Numbering
+
+Series live in `series.json`: a pattern of literal text and tokens (`{YYYY}`, `{YY}`, `{MM}`, `{FY}`, `{BRAND}`,
+`{CLIENT}`, `{CODE}` and one counter such as `{####}`), a `scope` that says where the counter restarts (`global`,
+`brand`, `brand+year`, `brand+year+client`, `brand+year+code`), a `start`, and `counter` to share another series'
+counter. A template names a series directly or uses the brand's `series` map. Previews never take a number; generating
+takes the next one in a transaction; regenerating keeps it. Imported numbers move the counter past them, and a number
+repeated in its series is accepted but flagged as a conflict.
+
+## Using the vault
+
+- **Web UI** (`dossier serve`): the vault tree, document pages (metadata, versions, renditions, related entities and
+  documents, status, links, new versions), upload, search, generate (a form built from the template's fields, a draft
+  preview, generate or regenerate), templates, entities (create, edit, aliases, relations) and settings (brands with
+  asset uploads and a live letterhead preview, number series, the workspace and its users).
+- **JSON API**: the same services under `/api/…` (`/api/tree`, `/api/documents[/:id]`, `/api/search?q=`,
+  `/api/templates/:id/resolve|preview|generate`, `/api/entities`, `/api/brands`, `/api/series`, `/api/workspace`,
+  `/api/upload`…). Errors are `{ code, message, details }`: `*_NOT_FOUND` 404, `FORBIDDEN` 403, duplicates, locked or
+  contended states 409, validation errors 400.
+- **Rules**: status moves forward only (Draft -> Sent | Signed | Superseded, Sent -> Signed | Paid | Superseded,
+  Signed -> Paid | Superseded, Paid -> Superseded). Stored renditions never change; a corrected or stamped file is a new
+  version. Byte-identical uploads share one stored file. Regenerating a Draft document adds a version with the same
+  number; a Sent, Signed or Paid one is locked (generate a new document and supersede the old one, or pass `force`).
+- **Search** looks a query up in document numbers, metadata and extracted text (PDF, HTML, Markdown, text), returns
+  matching entities, and adds one hop of related documents (the quotation of an invoice, the receipt that pays it…).
+- **Folder tree**: top level is who (`01 Company` … `10 Restricted`), the leaf is the kind of document; clients are
+  grouped by business line, client and engagement, finance documents by Indian financial year. Rename folders or
+  reroute types with `hierarchy` in `workspace.json`.
+- **Caches**: reads are cached in memory and dropped on every write (also writes by another process on the same
+  database); rendered files are cached on disk in `data/cache/render`.
 
 ## MCP server (Claude Code)
-
-`src/mcp.js` serves the vault to Claude Code over stdio: search, entities, templates, preview and generation, document status and links, plus the folder tree and documents as resources. Register it with:
 
 ```sh
 claude mcp add dossier --env DOSSIER_HOME=/path/to/workspace -- node /path/to/dossier/src/mcp.js
 ```
 
-It acts as `DOSSIER_USER` (default `mcp`) with that user's clearance, records its writes in the audit log as `mcp:<user>`, and picks up workspace changes (for example from the web settings) without a restart. See `docs/MCP.md` for the tool reference.
+The server speaks MCP over stdio and offers `search`, `get_entity`, `upsert_entity`, `list_templates`,
+`get_template`, `resolve_fields`, `preview_document`, `generate_document`, `link_documents`, `update_status` and
+`get_document`, plus the folder tree and documents as resources. It acts as `DOSSIER_USER` (default `mcp`) with that
+user's clearance, records its writes in the audit log as `mcp:<user>`, and picks up workspace changes without a
+restart. It can run at the same time as the web server. A typical session: "find the last invoice for Example
+Institute", "draft a receipt for it", review the preview, "generate it". See `docs/MCP.md` for the tool reference and
+the security notes.
+
+## Importing an existing folder
+
+Bring an existing document folder (for example one laid out like the vault tree) into the vault. Always start with a
+dry run, which reads and classifies everything and writes nothing:
+
+```sh
+node bin/dossier.js import /path/to/folder --dry-run        # print what would happen
+node bin/dossier.js import /path/to/folder                  # register the files
+node bin/dossier.js import /path/to/folder --index /path/to/folder/_index.csv --brand acme --json
+```
+
+The import only reads the source files; it never changes, moves or deletes them. In short:
+
+- Skipped and reported: dotfiles, `node_modules`, symbolic links, generator source folders, Restricted/Security
+  folders at any depth, index/spec files, and anything the secret scanner flags (`.pem`, `.key`, `.env`, PEM armour).
+- Deduplicated by sha256: running the import again imports nothing new; a changed file at a known path becomes a new
+  document with a `SOURCE_CHANGED` warning.
+- Classified by its folders: the top-level folder gives the group (company, people, clients, vendors…), the leaf folder
+  the document type, the folders between them become entities (created when missing; `Name (CODE)` adds an alias).
+- Numbers are parsed from the file name or text with every series pattern; counters move past them; repeats are
+  reported as conflicts.
+- Sensitivity: people and identity-document folders are Confidential, the rest Internal; files above the importing
+  user's clearance are skipped.
+
+With `--index`, a CSV (`original_path,vault_path,vault_folder,md5,size_bytes,note`) lists the files; paths outside the
+CSV's folder are refused. The summary lists counts, new entities, documents by type, numbers, conflicts, skipped files
+and warnings (`--json` for JSON).
+
+## Testing
+
+```sh
+npm test                    # everything: unit, integration, snapshot, organisation-data guard
+npm run test:unit
+npm run test:integration
+npm run test:snapshot
+UPDATE_SNAPSHOTS=1 npm run test:snapshot   # after an intended layout change; review the diff
+npm run samples [-- --template invoice] [--out dir] [--home <workspace>]
+npm run visual              # compare samples-out PDFs with test/visual/baseline
+npm run visual -- --update  # rewrite the baselines (always from the example workspace)
+```
+
+- **Unit and integration tests** use `node:test`, temporary folders and in-memory or temporary databases; they never
+  use the network or your workspace.
+- **Snapshot tests** render every template from the fake fixtures in `test/fixtures/inputs/` and compare the PDF
+  geometry (text positions, fonts, image boxes) with `test/snapshot/__snapshots__/`.
+- **Samples** (`npm run samples`) generate one final document per built-in template from the same fixtures into
+  `samples-out/` (git-ignored) and print a table of template, number, pages, bytes and a sha256 prefix. The workspace
+  (the example by default, or `--home <dir>`) is copied to a temporary folder first, so it is only read. Dates are
+  pinned, so the same code gives byte-identical files.
+- **Visual checks** (`npm run visual`) render each page of `samples-out/*.pdf` at 72 dpi with `pdftoppm` and compare it
+  with `test/visual/baseline/<template>-p<N>.png` using pixelmatch (colour threshold 0.1, anti-aliasing ignored); a page
+  fails when more than 0.1 % of its pixels differ, when its size differs, or when the page count changes. Diff images
+  go to `samples-out/visual-diff/`. Without `pdftoppm` the check is skipped with a message. `--update` regenerates the
+  samples from the example workspace in a temporary folder before writing baselines, so baselines never hold private
+  data. Run `npm run samples` first.
+- **Organisation-data guard** (`test/unit/no-org-data.test.js`, also `node scripts/org-data-guard.js`) scans `src/`,
+  `assets/`, `workspace.example/`, `test/`, `scripts/`, this README and the user docs for values shaped like real
+  Indian GSTIN, CIN, PAN and IFSC codes, 11-18 digit account numbers and `+91` phone numbers (the fake example values
+  are allowed). Point `DOSSIER_DENYLIST` at a file outside the repo with one regular expression per line
+  (case-insensitive), such as your organisation, client and people names, to check those too:
+  `DOSSIER_DENYLIST=~/dossier-denylist.txt npm test`.
+
+## Architecture
+
+```text
+bin/dossier.js, bin/dossier-mcp.js   entry points
+src/cli.js                           command table
+src/server.js, src/web/              Fastify server: routes, server-rendered views, JSON API
+src/mcp.js                           MCP server (stdio)
+src/context.js                       openContext({ home, user }) -> { config, ws, db, repo, user }
+src/workspace/                       workspace loader and schema validation
+src/db/                              node:sqlite, migrations, repository (audit log on every write)
+src/domain/                          pure rules: numbering patterns, status transitions, sensitivity, routing
+src/services/                        documents, upload, search, entities, hierarchy, templates, fields, generator,
+                                     numbering, importer, workspace files
+src/render/                          PDF primitives and frames (pdfkit), blocks, HTML and Markdown renderers
+src/templates/<id>/                  built-in templates (template.json + index.js / body.md)
+src/cache/                           in-memory memo and disk render cache
+workspace.example/                   the fake example workspace
+```
+
+The web UI, the CLI and the MCP server are thin layers over the same services (`fn(ctx, …)`), which hold every
+business rule; nothing else touches SQL. Plain JavaScript (ESM) with JSDoc, no build step. `docs/PLAN.md` describes the
+design and data model; `docs/DECISIONS.md` records the decisions and their reasons.
+
+## Security notes
+
+- **Local only, no login.** The web server listens on `127.0.0.1` and answers only requests whose `Host` is a
+  loopback name. Anyone who can reach the port acts as `DOSSIER_USER`. To listen elsewhere set `HOST` and limit names
+  with `DOSSIER_ALLOWED_HOSTS`, and put an authenticating reverse proxy in front; multi-user access is out of scope.
+- **Same-origin writes.** Every POST/PUT/PATCH/DELETE must carry an `Origin` (or `Referer`) whose host equals the
+  `Host`; a request without either is accepted only with a JSON body, a non-POST method or an `X-Dossier-Client`
+  header, none of which a cross-site page can send without a CORS preflight.
+- **Clearance.** Sensitivity is `Public < Internal < Confidential < Restricted`. A user's clearance (`workspace.json`
+  `users`, default `Confidential`) is checked on every read, list, search and write, in the web UI, the API and the MCP
+  tools; documents above it are left out of results, and opening one directly is `FORBIDDEN`. Restricted documents
+  appear only in `10 Restricted` and only for users cleared for Restricted. Clearance filters what the app returns; it
+  does not protect the workspace files from someone (or an agent) who can read the folder: see `docs/MCP.md`.
+- **Files only through documents.** Stored bytes are served only through a document the user may read; non-PDF files
+  carry `Content-Security-Policy: sandbox`, so an uploaded HTML or SVG file cannot script the app.
+- **Preview tokens.** Draft previews are written to `data/previews/<token>/` and served at `/previews/<token>/…`. The
+  token is a sha256 of the template, the input and the brand, so it cannot be guessed, but whoever has the URL can open
+  the preview; previews are not clearance-checked beyond the template check made when the preview is created.
+- **No secrets in the vault.** Uploads named `*.pem`, `*.key`, `*.env`, `.env*`, or whose bytes or text contain PEM
+  armour or `PRIVATE KEY`, are refused (`SECRET_REJECTED`). Keep keys and passwords in a password manager.
+- **Audit.** Every write is recorded in `audit_log` with the actor (`<user>`, or `mcp:<user>` for the MCP server).
+
+## Status and limitations
+
+Version 0.1. The vault, the generator with all seventeen templates, the web UI and settings, the MCP server, the caches
+and the importer are complete and covered by tests. Known limitations:
+
+- Single workspace and single acting user per process; no login or per-user sessions.
+- The HTML rendition is a web rendition with the same fonts and metrics, not a line-for-line facsimile of the PDF.
+- Text is extracted for search only from PDF, HTML, Markdown and plain-text files (no OCR).
+- Templates that used the Figtree font (portfolio, IEEE-style header) are not included.
+- Body placeholders insert values raw, so a field value can add Markdown structure (see `docs/TEMPLATES.md`).
 
 ## Documentation
 
-- `docs/PLAN.md`: architecture, data model, rules, cache layers, testing and build order.
+- `docs/WORKSPACE.md`: creating and customising a workspace (brands, assets, series, seeds, settings).
+- `docs/TEMPLATES.md`: the template authoring guide and the built-in templates.
+- `docs/MCP.md`: the MCP server: setup, tools, resources and security.
+- `docs/PLAN.md`: architecture, data model, rules, caches, testing and build order.
+- `docs/DECISIONS.md`: decisions and their reasons.
 - `docs/DISCOVERY.md`: findings from the legacy document scripts this app replaces (redacted).
-- `docs/WORKSPACE.md`: creating and customising a workspace (brands, assets, series, seeds).
-- `docs/TEMPLATES.md`: template folders, `template.json` fields and sources, the block model, the PDF/HTML/Markdown renderers and generation.
-- `docs/MCP.md`: the MCP server: setup, tools, resources and security notes.
-- `docs/DECISIONS.md`: small decisions and their reasons.
 
 ## License
 
