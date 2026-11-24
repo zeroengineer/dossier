@@ -34,6 +34,7 @@ export const routes: RouteObject[] = [
         errorElement: <RouteError />,
         children: [
           { index: true, Component: Dashboard, handle: crumb("Dashboard") },
+          { path: "dashboard", Component: Dashboard, handle: crumb("Dashboard") },
           { path: "vault/*", Component: Vault, handle: crumb("Vault") },
           {
             path: "documents",
