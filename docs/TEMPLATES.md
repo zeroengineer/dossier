@@ -102,7 +102,7 @@ Types coerce input values:
 | `type` | Coercion |
 |---|---|
 | `string` / `text` | text (`string` is trimmed) |
-| `money` | integer minor units (paise). Input numbers and strings are major units: `1500`, `"₹1,20,000.50"`, `"Rs. 500"`, `"INR 120,000"` (grouping `120,000` or `1,20,000`; `1,2,3` is rejected), rounded half up at the third decimal. Values from `computed` functions and from `<field>.<path>` into an earlier resolved field are minor units already and are not scaled (they must be integers); a path into an entity record (`client.attrs.fee`) is raw data and is scaled |
+| `money` | integer minor units (paise). Input numbers and strings are major units: `1500`, `"₹1,20,000.50"`, `"Rs. 500"`, `"INR 120,000"` (grouping `120,000` or `1,20,000`; `1,2,3` is rejected), rounded half up at the third decimal. Values from `computed` functions, and `<field>.<path>` reads of a value that was itself coerced as money earlier (a `money` field, or an array item key typed `money` such as `items.0.amount`), are minor units already and are not scaled again (they must be integers). Any other path (into an `object` field, brand data, an entity record, a constant) is raw input and is scaled once |
 | `date` | ISO `YYYY-MM-DD` from `YYYY-MM-DD[T…]`, `DD/MM/YYYY` (`-` or `.` also), or a Date |
 | `number`, `boolean` | `"1,234.5"`; `yes/no/true/false/1/0` |
 | `enum` | text that must be in `enum` |

@@ -60,6 +60,18 @@ test('a money path into an earlier field keeps the minor units of that field (st
   assert.equal(values.firstPerk, 150000);
 }));
 
+test('fieldPath money: only values coerced as money earlier are kept; everything else is scaled once', () => withCtx(async (ctx) => {
+  const { values, errors } = await resolveFields(ctx, 'sample-letter', {
+    offer: { amount: 1500.5 }, perks: [{ label: 'a', amount: 1500 }, { label: 'b', amount: 2 }],
+  }, opts);
+  assert.deepEqual(errors, []);
+  assert.equal(values.offer.amount, 1500.5, 'object fields are not coerced inside');
+  assert.equal(values.offerAmount, 150050, 'path into an object-typed field is raw input: scaled once');
+  assert.equal(values.perks[0].amount, 150000);
+  assert.equal(values.firstPerk, 150000, 'array item coerced as money: not scaled again');
+  assert.equal(values.firstRate, 9, 'path into brand data (0.09) is raw input: scaled');
+}));
+
 test('blank input (empty or whitespace) counts as not provided; required blanks are missing', () => withCtx(async (ctx) => {
   const { values, missing, errors } = await resolveFields(ctx, 'sample-letter', {
     person: '  ', joining: '', salary: ' ', date: '', taxMode: '', probationMonths: '   ', address: '', remote: '', team: '',

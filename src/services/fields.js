@@ -113,8 +113,8 @@ const TRUE = ['true', 'yes', '1', 'on'];
 const FALSE = ['false', 'no', '0', 'off', ''];
 
 /**
- * Coerce one value to a field type. Money from `computed` sources and from paths into earlier (resolved) fields is
- * already in minor units (`minor: true`).
+ * Coerce one value to a field type. Money from `computed` sources and from paths to values already coerced as money
+ * is in minor units (`minor: true`).
  * @param {string|undefined} type
  * @param {unknown} v
  * @param {{ minor?: boolean }} [opts]
@@ -228,7 +228,8 @@ export function resolveTemplateFields(ctx, template, input = {}, { brandId, toda
     return list.map((x) => (isPlainObject(x) ? String(x.id) : String(x)));
   };
 
-  const entityRoots = new Set(meta.fields.filter((f) => f.type === 'entity' || parseSource(f.source).kind === 'entity').map((f) => f.name.split('.')[0]));
+  // Value paths (`total`, `perks.0.amount`) that hold money already coerced to minor units in this resolution.
+  const minorPaths = new Set();
   for (const f of meta.fields) {
     const src = parseSource(f.source);
     const fail = (message) => errors.push({ name: f.name, message });
@@ -243,8 +244,9 @@ export function resolveTemplateFields(ctx, template, input = {}, { brandId, toda
       if (raw === undefined || raw === null) {
         raw = src.kind === 'ask' ? undefined : fromSource(src, f);
         origin = src.kind;
-        // A path into an earlier field reads resolved (already coerced) values, except inside an entity record.
-        if (src.kind === 'fieldPath' && !entityRoots.has(src.root)) origin = 'resolved';
+        // A path to a value coerced as money earlier in this resolution is minor units already; anything else read
+        // through a path (objects, brand data, entity attrs, constants) is raw input.
+        if (src.kind === 'fieldPath') origin = { path: normalisePath(src.arg) };
       }
       if ((raw === undefined || raw === null) && f.default !== undefined) {
         const dsrc = isSourceDefault(f.default) ? parseSource(f.default) : null;
@@ -271,14 +273,18 @@ export function resolveTemplateFields(ctx, template, input = {}, { brandId, toda
         }
         value = { ...s };
       } else {
-        const minor = origin === 'computed' || origin === 'resolved';
+        const minor = origin === 'computed' || (origin.path !== undefined && minorPaths.has(origin.path));
         const r = coerceValue(f.type, value, { minor });
         if (r.error) {
           fail(r.error);
           continue;
         }
         value = r.value;
-        if (f.type === 'array' && f.item) value = coerceItems(f, value, minor, errors);
+        if (f.type === 'money') minorPaths.add(f.name);
+        if (f.type === 'array' && f.item) {
+          const itemMinor = (i, key) => origin === 'computed' || (origin.path !== undefined && minorPaths.has(`${origin.path}.${i}.${key}`));
+          value = coerceItems(f, value, itemMinor, errors, minorPaths);
+        }
       }
     }
     if (isEmpty(value)) {
@@ -299,7 +305,9 @@ export function resolveTemplateFields(ctx, template, input = {}, { brandId, toda
   return { values, missing, errors };
 }
 
-function coerceItems(f, list, minor, errors) {
+const normalisePath = (p) => p.replace(/\[(\d+)\]/g, '.$1');
+
+function coerceItems(f, list, isMinor, errors, minorPaths) {
   return list.map((item, i) => {
     if (!isPlainObject(item)) {
       errors.push({ name: `${f.name}.${i}`, message: 'expected an object' });
@@ -308,9 +316,12 @@ function coerceItems(f, list, minor, errors) {
     const out = { ...item };
     for (const [key, type] of Object.entries(f.item)) {
       if (isEmpty(out[key])) continue;
-      const r = coerceValue(type, out[key], { minor });
+      const r = coerceValue(type, out[key], { minor: isMinor(i, key) });
       if (r.error) errors.push({ name: `${f.name}.${i}.${key}`, message: r.error });
-      else out[key] = r.value;
+      else {
+        out[key] = r.value;
+        if (type === 'money') minorPaths.add(`${f.name}.${i}.${key}`);
+      }
     }
     return out;
   });

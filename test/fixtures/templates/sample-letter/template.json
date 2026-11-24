@@ -29,7 +29,11 @@
     { "name": "perks", "source": "ask", "type": "array", "item": { "label": "string", "amount": "money" } },
     { "name": "team", "source": "ask", "enum": ["design", "operations"] },
     { "name": "firstPerk", "source": "perks.0.amount", "type": "money" },
-    { "name": "listedSalary", "source": "person.attrs.salary", "type": "money" }
+    { "name": "listedSalary", "source": "person.attrs.salary", "type": "money" },
+    { "name": "offer", "source": "ask", "type": "object" },
+    { "name": "offerAmount", "source": "offer.amount", "type": "money" },
+    { "name": "taxModes", "source": "brand.tax.modes" },
+    { "name": "firstRate", "source": "taxModes.1.rates.0.rate", "type": "money" }
   ],
   "relations": [{ "type": "based_on", "field": "person", "optional": true }],
   "leaf": "Offer Letters"

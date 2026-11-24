@@ -48,6 +48,8 @@ test('palette values and styleVars cannot break out of the stylesheet', () => {
   assert.match(html, /--rule: tomato;/);
   assert.match(html, /--xstyle: 1px\/stylescript;/);
   assert.match(html, /--accent: blue  body  x;/);
+  const quoted = blocksToHtml([], { brand, styleVars: { accent: `"x' /* y */ z` } });
+  assert.match(quoted, /--accent: x  y  z;/);
   assert.equal(cssColour('#1a1a1a'), '#1a1a1a');
   assert.equal(cssColour('hsla(10, 20%, 30%, 0.5)'), 'hsla(10, 20%, 30%, 0.5)');
   assert.equal(cssColour('url(x)'), 'inherit');

@@ -41,8 +41,8 @@ export function cssColour(v) {
   return typeof v === 'string' && CSS_COLOUR.test(v.trim()) ? v.trim() : 'inherit';
 }
 
-/** A styleVars value: no characters that could end the declaration, rule or style element. */
-const cssValue = (v) => String(v ?? '').replace(/[<>{};\\]/g, '');
+/** A styleVars value: no characters that could end the declaration, rule or style element, open a string or a comment. */
+const cssValue = (v) => String(v ?? '').replace(/\/\*|\*\//g, '').replace(/[<>{};\\"']/g, '');
 
 const pt = (n) => `${Math.round(n * 1000) / 1000}pt`;
 /** Inline `**bold**` to `<strong>`, newlines to `<br>`, everything escaped. */
