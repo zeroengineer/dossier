@@ -6,6 +6,7 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ### Added
 
+- Web: document page (`/documents/:id`) with PDF, HTML and Markdown preview tabs, a versions table that drives the preview, details, linked entities and relations in both directions; 403 and 404 shown as error states.
 - Logo concepts (three directions) with brief and sources in `web/brand-src/`; the owner chose concept A, "Bound D".
 - Vendored shadcn agent skill (`.claude/skills/shadcn`) for work on the web UI.
 - `npm run test:api` as an explicit name for the API and service test suite.
