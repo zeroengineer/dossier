@@ -298,6 +298,7 @@ and the importer are complete and covered by tests. Known limitations:
 - `docs/MCP.md`: the MCP server: setup, tools, resources and security.
 - `docs/PLAN.md`: architecture, data model, rules, caches, testing and build order.
 - `docs/DECISIONS.md`: decisions and their reasons.
+- `docs/BUILD_LOG.md`: how the app was built: features, reviews, rulings, incidents and open items.
 - `docs/DISCOVERY.md`: findings from the legacy document scripts this app replaces (redacted).
 
 ## License
