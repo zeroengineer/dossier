@@ -1,4 +1,3 @@
-import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import { Link } from "react-router"
@@ -40,12 +39,13 @@ function TargetDocument({ documentId }: { documentId: string }) {
 /** Upload a file as a new version of an existing document (`?documentId=`). */
 export function NewVersionForm({ meta, documentId }: { meta: Meta; documentId: string }) {
   const maxBytes = meta.limits.uploadMaxBytes
-  const { submit, pending, fileError, setFileError, submitError } = useUploadSubmit({ mode: "version", maxBytes })
-  const [file, setFile] = React.useState<File | null>(null)
+  const { file, chooseFile, submit, pending, fileError, submitError } = useUploadSubmit({ mode: "version", maxBytes })
+  const target = useDocument(documentId)
   const form = useForm<NewVersionValues>({ resolver: zodResolver(newVersionSchema), defaultValues: { note: "", makeCurrent: true } })
 
   async function onSubmit(values: NewVersionValues) {
-    await submit(file, { documentId, note: values.note, makeCurrent: values.makeCurrent })
+    if (target.isError) return
+    await submit({ documentId, note: values.note, makeCurrent: values.makeCurrent })
   }
 
   return (
@@ -63,10 +63,7 @@ export function NewVersionForm({ meta, documentId }: { meta: Meta; documentId: s
           <Field data-invalid={fileError ? true : undefined}>
             <DropZone
               file={file}
-              onFileChange={(next) => {
-                setFile(next)
-                setFileError(null)
-              }}
+              onFileChange={chooseFile}
               maxBytes={maxBytes}
               disabled={pending}
               invalid={Boolean(fileError)}
@@ -101,7 +98,8 @@ export function NewVersionForm({ meta, documentId }: { meta: Meta; documentId: s
         </CardContent>
       </Card>
 
-      <UploadFooter error={submitError} pending={pending} label="Upload version" />
+      {/* No target to add a version to while it cannot be loaded (not found, no access, server down). */}
+      <UploadFooter error={submitError} pending={pending} disabled={target.isError} label="Upload version" />
     </form>
   )
 }

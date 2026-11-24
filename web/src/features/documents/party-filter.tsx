@@ -7,18 +7,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 import { Spinner } from "@/components/ui/spinner"
+import { DEBOUNCE_MS, useDebounced } from "@/hooks/use-debounced"
 import { cn } from "@/lib/utils"
-
-const DEBOUNCE_MS = 250
-
-export function useDebounced<T>(value: T, ms: number): T {
-  const [debounced, setDebounced] = React.useState(value)
-  React.useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), ms)
-    return () => clearTimeout(t)
-  }, [value, ms])
-  return debounced
-}
 
 interface PartyFilterProps {
   value: number | undefined

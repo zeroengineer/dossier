@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api"
-import { erroredFields, formatBytes, isTooLarge, levelsWithin, toUploadFormData, uploadErrorMessage, warningMessage } from "./upload-data"
+import { erroredFields, formatBytes, isTooLarge, levelsWithin, toUploadFormData, uploadErrorMessage, warningMessage, warningTitle } from "./upload-data"
 
 const levels = ["Public", "Internal", "Confidential", "Restricted"] as const
 
@@ -46,5 +46,7 @@ describe("upload data helpers", () => {
       "Number ACM-2026-0007 is already used in series invoice-main. The document is flagged with a number conflict.",
     )
     expect(warningMessage("OTHER", null, null)).toBe("OTHER")
+    expect(warningTitle("NUMBER_CONFLICT")).toBe("Number conflict")
+    expect(warningTitle("BRAND_ASSET_MISSING")).toBe("Brand asset missing")
   })
 })

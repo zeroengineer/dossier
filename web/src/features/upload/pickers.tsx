@@ -5,10 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Spinner } from "@/components/ui/spinner"
-import { useDebounced } from "@/features/documents/party-filter"
+import { DEBOUNCE_MS, useDebounced } from "@/hooks/use-debounced"
 import { cn } from "@/lib/utils"
-
-const DEBOUNCE_MS = 250
 
 interface PickerTriggerProps extends React.ComponentProps<typeof Button> {
   label: string | undefined

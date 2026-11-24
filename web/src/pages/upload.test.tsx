@@ -64,6 +64,7 @@ describe("Upload page", { timeout: 20_000 }, () => {
     const invalidate = vi.spyOn(queryClient, "invalidateQueries")
     await findForm("Upload a new document")
 
+    expect(screen.getByLabelText("File")).toHaveAttribute("tabindex", "-1")
     await user.upload(screen.getByLabelText("File"), pdf())
     expect(screen.getByTestId("upload-file-name")).toHaveTextContent("stage-invoice.pdf")
     await pickType(user, "invoice")
@@ -104,7 +105,7 @@ describe("Upload page", { timeout: 20_000 }, () => {
       sensitivity: "Internal",
     })
     const prefixes = invalidate.mock.calls.map(([f]) => JSON.stringify(f?.queryKey))
-    expect(prefixes).toEqual(expect.arrayContaining([JSON.stringify(keys.documents.all), JSON.stringify(["dashboard"]), JSON.stringify(["tree"])]))
+    expect(prefixes).toEqual(expect.arrayContaining([JSON.stringify(keys.documents.all), JSON.stringify(["dashboard"]), JSON.stringify(["tree"]), JSON.stringify(["search"]), JSON.stringify(keys.entities.detail("3"))]))
     expect(await screen.findByText("Uploaded Venue agreement")).toBeInTheDocument()
   })
 
@@ -158,8 +159,8 @@ describe("Upload page", { timeout: 20_000 }, () => {
     await user.click(screen.getByRole("button", { name: "Upload" }))
     await waitFor(() => expect(router.state.location.pathname).toBe("/documents/DOC-000006"))
     expect(await screen.findByText("This file was already stored")).toBeInTheDocument()
-    expect(await screen.findByText("NUMBER_CONFLICT")).toBeInTheDocument()
-    expect(screen.getByText("Number ACM-2026-0007 is already used in series invoice-main. The document is flagged with a number conflict.")).toBeInTheDocument()
+    expect(await screen.findByText("Number conflict")).toBeInTheDocument()
+    expect(screen.getByText("Number ACM-2026-0007 is already used in series invoice-main. The document is flagged with a number conflict. (NUMBER_CONFLICT)")).toBeInTheDocument()
   })
 
   it("explains the size limit when the server answers 413", async () => {
@@ -174,12 +175,13 @@ describe("Upload page", { timeout: 20_000 }, () => {
     expect(router.state.location.pathname).toBe("/upload")
   })
 
-  it("refuses a file over the limit before uploading it", async () => {
+  it("refuses a file over the limit as soon as it is chosen, and does not upload it", async () => {
     const uploads = setup()
     server.use(http.get("*/api/meta", () => HttpResponse.json({ ...meta, limits: { ...meta.limits, uploadMaxBytes: 4 } })))
     const { user } = renderApp("/upload")
     await findForm("Upload a new document")
     await user.upload(screen.getByLabelText("File"), pdf())
+    expect(screen.getByText("The file is larger than the 1 KB upload limit. Choose a smaller file.")).toBeInTheDocument()
     await pickType(user, "invoice")
     await user.click(screen.getByRole("button", { name: "Upload" }))
     expect(await screen.findByText("The file is larger than the 1 KB upload limit. Choose a smaller file.")).toBeInTheDocument()
@@ -201,6 +203,9 @@ describe("Upload page", { timeout: 20_000 }, () => {
     await user.click(screen.getByRole("button", { name: "Upload" }))
     expect(await screen.findByText("INVALID_INPUT: currency must be a 3-letter ISO code like INR")).toBeInTheDocument()
     await waitFor(() => expect(screen.getByLabelText("Currency")).toHaveAttribute("aria-invalid", "true"))
+    // The full message is only in the Alert; the field gets a short pointer.
+    expect(screen.getAllByText(/currency must be a 3-letter ISO code/)).toHaveLength(1)
+    expect(screen.getByText("Check this field.")).toBeInTheDocument()
   })
 
   it("uploads a new version with a note and make-current flag only", async () => {
@@ -228,5 +233,6 @@ describe("Upload page", { timeout: 20_000 }, () => {
     renderApp("/upload?documentId=DOC-404404")
     await findForm("Upload a new version")
     expect(await screen.findByText(/DOCUMENT_NOT_FOUND/)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Upload version" })).toBeDisabled()
   })
 })

@@ -1,4 +1,3 @@
-import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { AlertCircleIcon, UploadIcon } from "lucide-react"
 import { Controller, useForm, useWatch } from "react-hook-form"
@@ -42,24 +41,19 @@ function defaultsFor(meta: Meta, me: Me): NewDocumentValues {
 /** Upload a file as a new document with its metadata. */
 export function NewDocumentForm({ meta, me }: { meta: Meta; me: Me }) {
   const maxBytes = meta.limits.uploadMaxBytes
-  const { submit, pending, fileError, setFileError, submitError } = useUploadSubmit({ mode: "document", maxBytes })
-  const [file, setFile] = React.useState<File | null>(null)
+  const { file, chooseFile, submit, pending, fileError, submitError } = useUploadSubmit({ mode: "document", maxBytes })
   const series = useUploadSeries()
   const levels = levelsWithin(meta.sensitivityLevels, me.user.clearance)
   const form = useForm<NewDocumentValues>({ resolver: zodResolver(newDocumentSchema), defaultValues: defaultsFor(meta, me) })
   const partyId = useWatch({ control: form.control, name: "partyId" })
 
   async function onSubmit(values: NewDocumentValues) {
-    const err = await submit(file, values)
+    const err = await submit(values)
     if (!err) return
     for (const name of erroredFields(err, NEW_DOCUMENT_FIELDS)) {
-      form.setError(name, { type: "server", message: err instanceof Error ? err.message : String(err) })
+      // The full server message is in the Alert below the form; the field only gets a short pointer.
+      form.setError(name, { type: "server", message: "Check this field." })
     }
-  }
-
-  function onFileChange(next: File | null) {
-    setFile(next)
-    setFileError(null)
   }
 
   return (
@@ -71,7 +65,7 @@ export function NewDocumentForm({ meta, me }: { meta: Meta; me: Me }) {
         </CardHeader>
         <CardContent>
           <Field data-invalid={fileError ? true : undefined}>
-            <DropZone file={file} onFileChange={onFileChange} maxBytes={maxBytes} disabled={pending} invalid={Boolean(fileError)} />
+            <DropZone file={file} onFileChange={chooseFile} maxBytes={maxBytes} disabled={pending} invalid={Boolean(fileError)} />
             {fileError ? <FieldError>{fileError}</FieldError> : null}
           </Field>
         </CardContent>
@@ -283,7 +277,7 @@ export function NewDocumentForm({ meta, me }: { meta: Meta; me: Me }) {
 }
 
 /** The error Alert (if any) and the submit button, shared by both upload modes. */
-export function UploadFooter({ error, pending, label = "Upload" }: { error: string | null; pending: boolean; label?: string }) {
+export function UploadFooter({ error, pending, disabled = false, label = "Upload" }: { error: string | null; pending: boolean; disabled?: boolean; label?: string }) {
   return (
     <div className="flex flex-col gap-4">
       {error ? (
@@ -294,7 +288,7 @@ export function UploadFooter({ error, pending, label = "Upload" }: { error: stri
         </Alert>
       ) : null}
       <div className="flex justify-end">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending || disabled}>
           {pending ? <Spinner data-icon="inline-start" /> : <UploadIcon data-icon="inline-start" />}
           {pending ? "Uploading…" : label}
         </Button>

@@ -61,6 +61,8 @@ export function DropZone({ file, onFileChange, maxBytes, disabled = false, inval
         id={id}
         type="file"
         aria-label="File"
+        // The visible "Choose file" button opens it, so the hidden input takes no tab stop of its own.
+        tabIndex={-1}
         className="sr-only"
         disabled={disabled}
         onChange={(e) => choose(e.currentTarget.files)}

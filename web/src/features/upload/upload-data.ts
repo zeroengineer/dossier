@@ -82,6 +82,13 @@ export function erroredFields<K extends string>(err: unknown, fields: readonly K
   return fields.filter((f) => named.has(f))
 }
 
+/** A short human label for an upload warning code (the toast title). */
+export function warningTitle(code: string): string {
+  if (code === "NUMBER_CONFLICT") return "Number conflict"
+  const words = code.toLowerCase().replace(/_/g, " ")
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
 /** A readable line for each upload warning code. */
 export function warningMessage(code: string, docNumber: string | null, series: string | null): string {
   if (code === "NUMBER_CONFLICT") {
