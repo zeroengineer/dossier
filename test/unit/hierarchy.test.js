@@ -81,7 +81,9 @@ test('the tree covers every top-level folder with the right sub-levels', () => {
   assert.deepEqual(ids(at(tree, '09/acme-labs-llp/agreements')), ['DOC-000011']);
   assert.deepEqual(ids(at(tree, '10')), ['DOC-000012']);
   assert.equal(findNode(tree, '03/events-line/demo-retail-llp/agreements'), null, 'restricted doc is not also in the client folder');
-  assert.deepEqual(at(tree, '07').documents[0], { id: 'DOC-000009', displayName: 'DOC-000009.pdf', status: 'Draft', sensitivity: 'Internal' });
+  assert.deepEqual(at(tree, '07').documents[0], {
+    id: 'DOC-000009', displayName: 'DOC-000009.pdf', type: 'Template', status: 'Draft', sensitivity: 'Internal', docDate: '2026-07-01',
+  });
 });
 
 test('restricted documents and the Restricted folder are hidden below Restricted clearance', () => {

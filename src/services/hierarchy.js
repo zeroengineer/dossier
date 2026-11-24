@@ -13,7 +13,7 @@ export const GENERAL = 'General';
 export const UNDATED = 'Undated';
 
 /**
- * @typedef {{ id: string, displayName: string, status: string, sensitivity: string }} TreeDocument
+ * @typedef {{ id: string, displayName: string, type: string, status: string, sensitivity: string, docDate: string|null }} TreeDocument
  * @typedef {{ id: string, name: string, path: string, children: TreeNode[], documents: TreeDocument[] }} TreeNode
  * @typedef {{ id: string, type: string, status: string, sensitivity: string, docDate?: string|null,
  *   displayName: string, party?: { id: number, name: string, type: string }|null,
@@ -118,7 +118,10 @@ export function assembleTree(items, { hierarchy, clearance }) {
       if (!node.index.has(s.key)) node.index.set(s.key, { ...s, node: newNode(s.name) });
       node = node.index.get(s.key).node;
     }
-    node.documents.push({ id: p.it.id, displayName: p.it.displayName, status: p.it.status, sensitivity: p.it.sensitivity });
+    node.documents.push({
+      id: p.it.id, displayName: p.it.displayName, type: p.it.type, status: p.it.status, sensitivity: p.it.sensitivity,
+      docDate: p.it.docDate ?? null,
+    });
   }
 
   root.children = [...tops.entries()].sort((a, b) => topIndex(a[0]) - topIndex(b[0])).map(([, n]) => finish(n, n.id, n.path));

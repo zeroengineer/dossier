@@ -261,3 +261,29 @@ export interface TemplateList {
   templates: TemplateSummary[]
   errors: TemplateLoadError[]
 }
+
+// vault
+
+/** One document listed in a tree folder (src/services/hierarchy.js TreeDocument). */
+export interface TreeDocument {
+  id: string
+  /** Display file name: `<date>_<party>_<type>_<number>_v<version>.<ext>`. */
+  displayName: string
+  type: string
+  status: Status
+  sensitivity: SensitivityLevel
+  docDate: string | null
+}
+
+/**
+ * `GET /api/tree?node=<id>` (src/services/hierarchy.js getNode): one folder with its whole subtree. The root has id
+ * `''` and name `''`; its children are the top-level folders. Ids are stable slugs (`03/events/acme/invoices`).
+ */
+export interface TreeNode {
+  id: string
+  name: string
+  /** Folder names joined by `/` (`03 Clients/Events/Acme Events`). */
+  path: string
+  children: TreeNode[]
+  documents: TreeDocument[]
+}

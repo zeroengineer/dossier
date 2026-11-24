@@ -61,7 +61,7 @@ test('buildTree routes stored documents using entity relations, engagements and 
     const client = getNode(ctx, '03/events-line/demo-retail-llp');
     assert.deepEqual(client.children.map((c) => c.name), ['General', 'Spring Expo 2026', 'Winter Gala 2026']);
     const leaf = getNode(ctx, '03/events-line/demo-retail-llp/spring-expo-2026/invoices-and-receipts');
-    assert.deepEqual(leaf.documents, [{ id: 'DOC-000001', displayName: '2026-07-14_DemoRetailLLP_Invoice_ACME-2026-0001_v1.pdf', status: 'Draft', sensitivity: 'Internal' }]);
+    assert.deepEqual(leaf.documents, [{ id: 'DOC-000001', displayName: '2026-07-14_DemoRetailLLP_Invoice_ACME-2026-0001_v1.pdf', type: 'Invoice', status: 'Draft', sensitivity: 'Internal', docDate: '2026-07-14' }]);
     assert.deepEqual(ids(getNode(ctx, '03/events-line/demo-retail-llp/general/proposals-and-pricing')), ['DOC-000003']);
     assert.deepEqual(getNode(ctx, '03/unassigned/solo-client').children.map((c) => c.name), ['Invoices and Receipts'], 'one engagement: no level');
     assert.deepEqual(ids(getNode(ctx, '02/jane-example/onboarding')), ['DOC-000005']);
