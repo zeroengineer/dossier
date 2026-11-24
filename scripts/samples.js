@@ -79,7 +79,11 @@ export async function generateSamples({ home = EXAMPLE_WORKSPACE, out = join(ROO
       const ctx = openContext({ home: ws, user: SAMPLE_USER, dbFile: join(tmp, `${id}.sqlite`), env: {} });
       try {
         seedEntities(ctx);
-        for (const e of fixtureEntities) upsertEntity(ctx, e);
+        // Example parties may name the example brand, which another workspace does not have: drop that link.
+        for (const e of fixtureEntities) {
+          const { brand, ...rest } = e;
+          upsertEntity(ctx, brand && ctx.ws.brands.has(brand) ? e : rest);
+        }
         await listTemplates(ctx);
         const input = JSON.parse(readFileSync(join(FIXTURES, `${id}.json`), 'utf8'));
         const r = await generateDocument(ctx, id, input, { today: SAMPLE_TODAY, creationDate: SAMPLE_CREATION_DATE });

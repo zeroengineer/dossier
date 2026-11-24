@@ -1,7 +1,7 @@
 // scripts/samples.js (npm run samples) and the pure parts of scripts/visual.js (npm run visual).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, lstatSync, readdirSync, readFileSync, renameSync, symlinkSync } from 'node:fs';
+import { existsSync, lstatSync, readdirSync, readFileSync, renameSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PNG } from 'pngjs';
 import { initWorkspace } from '../../src/workspace/index.js';
@@ -58,6 +58,22 @@ test('samples: a given workspace is only read (copied to a temp folder first)', 
     assert.equal(existsSync(join(home, 'data')), false);
     assert.equal(readFileSync(join(home, 'workspace.json'), 'utf8'), wsJson);
     assert.equal(JSON.parse(readFileSync(join(dir, 'out', MANIFEST), 'utf8')).exampleWorkspace, false);
+  } finally {
+    cleanup();
+  }
+});
+
+test('samples: a workspace without the example brand still gets the example parties (their brand is dropped)', async () => {
+  const { dir, cleanup } = tmpDir();
+  try {
+    const home = initWorkspace(join(dir, 'ws'));
+    renameSync(join(home, 'brands', 'acme'), join(home, 'brands', 'beta'));
+    const edit = (file, fn) => writeFileSync(join(home, file), fn(readFileSync(join(home, file), 'utf8')));
+    edit('brands/beta/brand.json', (t) => t.replace('"id": "acme"', '"id": "beta"'));
+    edit('workspace.json', (t) => t.replace('"defaultBrand": "acme"', '"defaultBrand": "beta"'));
+    edit('seeds/entities.json', (t) => t.replaceAll('"brand": "acme"', '"brand": "beta"'));
+    const [r] = await generateSamples({ home, out: join(dir, 'out'), templates: ['invoice'] });
+    assert.equal(r.ok, true, r.error);
   } finally {
     cleanup();
   }
