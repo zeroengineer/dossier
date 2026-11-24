@@ -121,7 +121,8 @@ export function createFormatter(locale = {}) {
       return applyPattern(dateParts(iso), pattern);
     },
     /**
-     * Amount in words, Indian system: `Rupees One Lakh Twenty Thousand Only`, `Rupees Ten and Fifty Paise Only`.
+     * Amount in words, Indian system: `Rupees One Lakh Twenty Thousand Only`, `Rupees Ten and Fifty Paise Only`,
+     * `Fifty Paise Only`, `Rupees Zero Only`.
      * @param {number} minor non-negative amount in minor units
      */
     amountInWords(minor) {
@@ -129,8 +130,8 @@ export function createFormatter(locale = {}) {
       if (minor < 0) throw new RangeError('fmt.amountInWords: amount must not be negative');
       const major = Math.floor(minor / 100);
       const paise = minor % 100;
-      const parts = [words.major, indianWords(major)];
-      if (paise) parts.push('and', twoDigits(paise), words.minor);
+      const parts = major || !paise ? [words.major, indianWords(major)] : [];
+      if (paise) parts.push(...(major ? ['and'] : []), twoDigits(paise), words.minor);
       if (words.suffix) parts.push(words.suffix);
       return parts.filter(Boolean).join(' ');
     },

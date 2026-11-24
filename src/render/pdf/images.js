@@ -93,7 +93,7 @@ export function placeImage(ctx, img, x, y, options = {}) {
   ctx._images ??= new Map();
   let pdfImage = ctx._images.get(img);
   if (!pdfImage) {
-    pdfImage = img.split ? new SplitImage(img, `I${++doc._imageCount}`) : doc.openImage(img.buffer);
+    pdfImage = img.split ? new SplitImage(img, `DI${(ctx._imageSeq = (ctx._imageSeq ?? 0) + 1)}`) : doc.openImage(img.buffer);
     ctx._images.set(img, pdfImage);
   }
   doc.image(pdfImage, x, y, options);
@@ -113,7 +113,7 @@ export function clearImageCache() {
 export function brandImages(ws, brandId) {
   return Object.freeze({
     logo: (opts = {}) => loadImage(brandAsset(ws, brandId, 'assets.logo'), opts),
-    seal: (opts = { trim: true, resizeWidth: 600 }) => loadImage(brandAsset(ws, brandId, 'assets.seal'), opts),
+    seal: (opts = {}) => loadImage(brandAsset(ws, brandId, 'assets.seal'), { trim: true, resizeWidth: 600, ...opts }),
     signature: (signatoryId, { variant = 'large', ...opts } = {}) => {
       const key = variant === 'compact' ? `signature:${signatoryId}` : `signature-large:${signatoryId}`;
       return loadImage(brandAsset(ws, brandId, key), { flattenWhite: true, ...opts });

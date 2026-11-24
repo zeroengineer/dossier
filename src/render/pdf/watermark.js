@@ -11,7 +11,8 @@ import { detachPageHooks } from './document.js';
 export function drawWatermark(ctx, opts) {
   const { doc, profile, palette } = ctx;
   const { PW, PH } = profile;
-  const o = { size: 38, opacity: 0.14, angle: -30, font: 'Bold', color: palette.label, rows: [-PH / 4.5, 0, PH / 4.5], ...opts };
+  const o = { size: 38, opacity: 0.14, angle: -30, font: 'Bold', color: palette.label, rows: [-PH / 4.5, 0, PH / 4.5],
+    ...Object.fromEntries(Object.entries(opts).filter(([, v]) => v !== undefined)) };
   if (!o.text) return;
   detachPageHooks(ctx);
   const { start, count } = doc.bufferedPageRange();

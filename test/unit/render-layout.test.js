@@ -142,3 +142,20 @@ test('createPdf validates its input and exposes brand strings through t()', asyn
     await R.finalizePdf(ctx);
   });
 });
+
+test('review fixes: bullet glyph 10.5 regardless of fontSize, watermark ignores undefined, seal options merge', async () => {
+  await withWorkspace({}, async (ws) => {
+    const ctx = await newCtx(ws);
+    ctx.doc.addPage();
+    R.richBullets(ctx, ['small text'], { fontSize: 9 });
+    const seal = await ctx.assets.seal({ resizeWidth: 300 });
+    assert.equal(seal.width, 300);
+    R.drawWatermark(ctx, { text: 'MARK', size: undefined, rows: undefined });
+    const items = await extractItems(await R.finalizePdf(ctx));
+    assert.equal(items.find((i) => i.text === '•').size, 10.5);
+    assert.equal(items.find((i) => i.text === 'small text').size, 9);
+    const marks = items.filter((i) => i.text === 'MARK');
+    assert.equal(marks.length, 3);
+    assert.ok(marks.every((i) => i.size === 38));
+  });
+});

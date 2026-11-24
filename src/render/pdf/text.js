@@ -1,6 +1,6 @@
-// Rich text: `**bold**` runs, manual justification, bullets, headers (legacy offer-letter script
+// Rich text: `**bold**` runs, manual justification, bullets, headers (legacy offer-letter script (docs/DISCOVERY.md A8 §2):
 // tokenize/groupTokens/renderParagraph/richText/richBullets/sectionHeader/clauseHeader/divider; MoU amount emphasis
-// from generate-organisation-mou.js). Defaults are the offer-letter values; every one can be overridden.
+// from the legacy v2 MoU script (docs/DISCOVERY.md A8 §12)). Defaults are the offer-letter values; every one can be overridden.
 
 /** Paragraph defaults (offer letter). Colours default to the brand palette (`body`, `ink`). */
 export const PARAGRAPH_DEFAULTS = Object.freeze({
@@ -205,14 +205,14 @@ export function richText(ctx, text, options = {}) {
 
 /** Bullet list defaults (offer letter). */
 export const BULLET_DEFAULTS = Object.freeze({
-  bullet: '•', bulletX: 5, indent: 14, bulletFont: 'BodyRegular', breakMin: 25, itemMoveDown: 0.35, moveDown: 0.45,
+  bullet: '•', bulletSize: 10.5, bulletX: 5, indent: 14, bulletFont: 'BodyRegular', breakMin: 25, itemMoveDown: 0.35, moveDown: 0.45,
 });
 
 /**
  * Bulleted list: `•` at `ML + bulletX`, text at `ML + bulletX + indent`, each item a rich paragraph.
  * @param {import('./document.js').PdfContext} ctx
  * @param {string[]} items
- * @param {Partial<typeof BULLET_DEFAULTS> & { bulletSize?: number, bulletColor?: string, keepTogether?: boolean } & object} [options]
+ * @param {Partial<typeof BULLET_DEFAULTS> & { bulletColor?: string, keepTogether?: boolean } & object} [options]
  *   paragraph options apply to the item text. `keepTogether` (MoU) breaks before an item that does not fit whole.
  */
 export function richBullets(ctx, items, options = {}) {
@@ -230,7 +230,7 @@ export function richBullets(ctx, items, options = {}) {
       doc.addPage();
     }
     const startY = doc.y;
-    doc.font(o.bulletFont).fontSize(o.bulletSize ?? p.fontSize).fillColor(o.bulletColor ?? p.fillColor)
+    doc.font(o.bulletFont).fontSize(o.bulletSize).fillColor(o.bulletColor ?? p.fillColor)
       .text(o.bullet, x, startY, { width: o.indent, lineBreak: false });
     doc.y = startY;
     renderParagraph(ctx, item, x + o.indent, width, p);

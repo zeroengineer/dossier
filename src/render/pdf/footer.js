@@ -1,4 +1,4 @@
-// Page footer post-pass (docs/DISCOVERY.md A8 "Shared footer"; legacy generate-proposal.js drawFooter + post-pass).
+// Page footer post-pass (docs/DISCOVERY.md A8 "Shared footer"; legacy proposal script drawFooter + post-pass).
 import { brandScope, detachPageHooks } from './document.js';
 import { interpolate } from '../../workspace/index.js';
 

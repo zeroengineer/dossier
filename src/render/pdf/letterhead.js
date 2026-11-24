@@ -1,4 +1,4 @@
-// Letter-family page header (docs/DISCOVERY.md A8 "Shared letterhead"; legacy generate-proposal.js drawHeader).
+// Letter-family page header (docs/DISCOVERY.md A8 "Shared letterhead"; legacy proposal script drawHeader, docs/DISCOVERY.md A8).
 import { brandScope, onPageAdded } from './document.js';
 import { interpolate } from '../../workspace/index.js';
 import { placeImage } from './images.js';

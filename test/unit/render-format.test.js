@@ -45,7 +45,8 @@ test('amountInWords: Indian grouping, zero, paise, crore', () => {
   assert.equal(fmt.amountInWords(0), 'Rupees Zero Only');
   assert.equal(fmt.amountInWords(12000000), 'Rupees One Lakh Twenty Thousand Only');
   assert.equal(fmt.amountInWords(1050), 'Rupees Ten and Fifty Paise Only');
-  assert.equal(fmt.amountInWords(50), 'Rupees Zero and Fifty Paise Only');
+  assert.equal(fmt.amountInWords(50), 'Fifty Paise Only');
+  assert.equal(fmt.amountInWords(1), 'One Paise Only');
   assert.equal(fmt.amountInWords(1050000), 'Rupees Ten Thousand Five Hundred Only');
   assert.equal(fmt.amountInWords(10000001), 'Rupees One Lakh and One Paise Only');
   assert.equal(fmt.amountInWords(12345678900), 'Rupees Twelve Crore Thirty Four Lakh Fifty Six Thousand Seven Hundred Eighty Nine Only');
