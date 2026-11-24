@@ -105,6 +105,29 @@ test('SeriesFileSchema rejects a bad scope, duplicate ids and an unknown counter
   assert.match(formatIssues(ctr.error), /0\.counter/);
 });
 
+test('SeriesFileSchema validates patterns and shared-counter scopes', () => {
+  const tok = SeriesFileSchema.safeParse([{ id: 'a', pattern: 'A-{PREFIX}-{##}' }, { id: 'b', pattern: 'B-{YYYY}' }]);
+  assert.equal(tok.success, false);
+  assert.match(formatIssues(tok.error), /0\.pattern.*unknown token \{PREFIX\}/);
+  assert.match(formatIssues(tok.error), /1\.pattern.*exactly one counter/);
+  const scope = SeriesFileSchema.safeParse([
+    { id: 'inv', pattern: 'I-{YYYY}-{####}' },
+    { id: 'dn', pattern: 'D-{YYYY}-{####}', scope: 'brand', counter: 'inv' },
+  ]);
+  assert.equal(scope.success, false);
+  assert.match(formatIssues(scope.error), /1\.scope.*shares the counter of "inv"/);
+  const year = SeriesFileSchema.safeParse([
+    { id: 'inv', pattern: 'I-{YYYY}-{####}' },
+    { id: 'dn', pattern: 'D-{FY}-{####}', counter: 'inv' },
+  ]);
+  assert.equal(year.success, false);
+  assert.match(formatIssues(year.error), /1\.pattern.*same year/);
+  assert.equal(SeriesFileSchema.safeParse([
+    { id: 'inv', pattern: 'I-{YYYY}-{####}' },
+    { id: 'rec', pattern: 'R-{YY}-{####}', counter: 'inv' },
+  ]).success, true);
+});
+
 test('SeedsSchema defaults and validates kinds, roles and relation endpoints', () => {
   assert.deepEqual(SeedsSchema.parse({}), { entities: [], relations: [] });
   const ok = SeedsSchema.parse({

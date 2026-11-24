@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { normaliseName } from '../domain/canonical.js';
 import { parseRouteValue } from '../domain/routing.js';
+import { patternTokens, yearBasis } from '../domain/numbering.js';
 
 export const CLEARANCES = ['Public', 'Internal', 'Confidential', 'Restricted'];
 export const ENTITY_KINDS = ['company', 'group_entity', 'person', 'client', 'vendor', 'product', 'business_line', 'engagement', 'financial_year'];
@@ -138,8 +139,28 @@ export const SeriesFileSchema = z.array(SeriesSchema).superRefine((list, ctx) =>
     if (ids.has(s.id)) ctx.addIssue({ code: 'custom', path: [i, 'id'], message: `duplicate series id "${s.id}"` });
     ids.add(s.id);
   });
+  const validPattern = new Set();
   list.forEach((s, i) => {
-    if (s.counter && !ids.has(s.counter)) ctx.addIssue({ code: 'custom', path: [i, 'counter'], message: `unknown series "${s.counter}"` });
+    try {
+      patternTokens(s.pattern);
+      validPattern.add(s);
+    } catch (err) {
+      ctx.addIssue({ code: 'custom', path: [i, 'pattern'], message: err.message });
+    }
+  });
+  list.forEach((s, i) => {
+    if (!s.counter) return;
+    const owner = list.find((o) => o.id === s.counter);
+    if (!owner) {
+      ctx.addIssue({ code: 'custom', path: [i, 'counter'], message: `unknown series "${s.counter}"` });
+      return;
+    }
+    // Sharers must build the same counter keys as the owner, or the shared counter silently splits.
+    if (owner.scope !== s.scope) {
+      ctx.addIssue({ code: 'custom', path: [i, 'scope'], message: `shares the counter of "${owner.id}", so its scope must be "${owner.scope}"` });
+    } else if (validPattern.has(s) && validPattern.has(owner) && s.scope.includes('year') && yearBasis(s.pattern) !== yearBasis(owner.pattern)) {
+      ctx.addIssue({ code: 'custom', path: [i, 'pattern'], message: `shares the counter of "${owner.id}", so it must count by the same year ({YYYY} or {FY})` });
+    }
   });
 }).transform((list) => list.map((s) => ({ ...s, counter: s.counter ?? s.id })));
 

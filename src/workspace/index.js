@@ -188,21 +188,27 @@ export function brandAsset(ws, brandId, key) {
   throw new Error(`brandAsset: unknown asset key "${key}"`);
 }
 
+/** A placeholder name kept as written by interpolate() when it does not resolve (numbering tokens). */
+const UPPERCASE_TOKEN = /^[A-Z][A-Z0-9_]*$/;
+
 /**
  * Replace `{a.b.c}` placeholders with values from `scope`; missing or non-scalar values become ''.
- * Only identifier paths are replaced, so numbering tokens like `{####}` are left alone.
+ * Only identifier paths are replaced, so numbering tokens like `{####}` are left alone. An all-uppercase single name
+ * that does not resolve (`{YYYY}`, `{FY}`, `{CODE}`, `{CLIENT}`, …) is also kept as written, so numbering tokens
+ * survive; it is still replaced when `scope` has a value under that name.
  * @param {string|undefined|null} str
  * @param {object} scope
  * @returns {string}
  */
 export function interpolate(str, scope) {
   if (str == null) return '';
-  return String(str).replace(/\{([A-Za-z_$][\w$]*(?:\.[\w$]+)*)\}/g, (_, path) => {
+  return String(str).replace(/\{([A-Za-z_$][\w$]*(?:\.[\w$]+)*)\}/g, (token, path) => {
     let v = scope;
     for (const part of path.split('.')) {
       if (v == null || typeof v !== 'object') { v = undefined; break; }
       v = v[part];
     }
+    if (v === undefined && UPPERCASE_TOKEN.test(path)) return token;
     return typeof v === 'string' || typeof v === 'number' || typeof v === 'bigint' || typeof v === 'boolean' ? String(v) : '';
   });
 }

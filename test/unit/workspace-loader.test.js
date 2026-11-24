@@ -135,6 +135,15 @@ test('interpolate replaces {a.b.c} paths and blanks missing ones', () => {
   assert.equal(interpolate(undefined, scope), '');
 });
 
+test('interpolate keeps unresolved all-uppercase tokens (numbering tokens) and blanks other misses', () => {
+  const scope = { legalName: 'Acme', CODE: 'EV', nested: { YYYY: '1999' }, ZERO: 0, OBJ: {} };
+  assert.equal(interpolate('ACM-{YYYY}-{FY}-{YY}-{MM}-{####}', scope), 'ACM-{YYYY}-{FY}-{YY}-{MM}-{####}');
+  assert.equal(interpolate('FSS/{CLIENT}/{YYYY}/{###} for {legalName}', scope), 'FSS/{CLIENT}/{YYYY}/{###} for Acme');
+  assert.equal(interpolate('Q-{CODE}', scope), 'Q-EV');
+  assert.equal(interpolate('{ZERO}|{OBJ}|{BRAND_2}', scope), '0||{BRAND_2}');
+  assert.equal(interpolate('{Yyyy}|{yyyy}|{nested.YYYY}|{nested.MM}|{MISSING.PATH}', scope), '||1999||');
+});
+
 test('brandAsset falls back to placeholders and built-in fonts when brand files are missing', () => {
   const brand = minimalBrand('acme', {
     assets: { logo: 'assets/logo.png', seal: 'assets/seal.png' },
