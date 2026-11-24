@@ -16,6 +16,12 @@ describe("documents search params", () => {
     })
   })
 
+  it("drops a status that is not a document status", () => {
+    expect(parseDocumentsSearch(new URLSearchParams("status=Lost")).status).toBeUndefined()
+    expect(parseDocumentsSearch(new URLSearchParams("status=sent")).status).toBeUndefined()
+    expect(parseDocumentsSearch(new URLSearchParams("status=Superseded")).status).toBe("Superseded")
+  })
+
   it("writes only non-default values and round-trips", () => {
     const s = parseDocumentsSearch(new URLSearchParams("status=Paid&page=2"))
     expect(toSearchParams(s).toString()).toBe("status=Paid&page=2")

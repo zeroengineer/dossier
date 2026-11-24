@@ -169,15 +169,26 @@ describe("Documents table", { timeout: 20_000 }, () => {
     expect(screen.getByText("0 rows")).toBeInTheDocument()
   })
 
+  it("moves a page past the end to the last page", async () => {
+    const seen = recordListRequests()
+    const { router } = renderApp("/documents?page=99&status=Sent")
+    await waitFor(() => expect(search(router).get("page")).toBe("3"))
+    expect(search(router).get("status")).toBe("Sent")
+    expect(await findCell("Invoice 43")).toBeInTheDocument()
+    expect(screen.getByText("Page 3 of 3")).toBeInTheDocument()
+    expect(screen.queryByText(/No documents/)).not.toBeInTheDocument()
+    expect(seen.at(-1)?.get("offset")).toBe("40")
+  })
+
   it("shows the API error with a retry", async () => {
     server.use(
       http.get("*/api/documents", () =>
-        HttpResponse.json({ code: "INVALID_INPUT", message: 'Unknown status "Lost"', details: {} }, { status: 400 }),
+        HttpResponse.json({ code: "INVALID_INPUT", message: "type must be a non-empty string", details: {} }, { status: 400 }),
       ),
     )
-    renderApp("/documents?status=Lost")
-    const alert = await screen.findByRole("alert")
-    expect(within(alert).getByText('INVALID_INPUT: Unknown status "Lost"')).toBeInTheDocument()
+    renderApp("/documents?type=Invoice")
+    const alert = await screen.findByRole("alert", {}, { timeout: 10_000 })
+    expect(within(alert).getByText("INVALID_INPUT: type must be a non-empty string")).toBeInTheDocument()
     expect(within(alert).getByRole("button", { name: "Retry" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Reset" })).toBeInTheDocument()
   })

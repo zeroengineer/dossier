@@ -16,12 +16,16 @@ export interface DocumentsSearch {
 /** URL parameters that filter (everything but paging). */
 export const FILTER_PARAMS = ["type", "status", "partyId", "from", "to"] as const
 
+/** Every document status (src/domain/status.js STATUSES); anything else in the URL is dropped. */
+const STATUSES: readonly Status[] = ["Draft", "Sent", "Signed", "Paid", "Superseded"]
+const isStatus = (v: string | undefined): v is Status => v !== undefined && (STATUSES as readonly string[]).includes(v)
+
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 const POSITIVE = /^[1-9]\d*$/
 
 /**
- * Read the table state from the URL. Malformed values are dropped (the server stays the judge of what a valid
- * filter is: an unknown type or status just matches nothing or answers an error shown in the table).
+ * Read the table state from the URL. Malformed values (an unknown status, a non-numeric party, a bad date) are
+ * dropped; an unknown type just matches nothing.
  */
 export function parseDocumentsSearch(params: URLSearchParams): DocumentsSearch {
   const text = (key: string) => {
@@ -31,11 +35,12 @@ export function parseDocumentsSearch(params: URLSearchParams): DocumentsSearch {
   const partyId = text("partyId")
   const from = text("from")
   const to = text("to")
+  const status = text("status")
   const page = text("page")
   const size = text("size")
   return {
     type: text("type"),
-    status: text("status") as Status | undefined,
+    status: isStatus(status) ? status : undefined,
     partyId: partyId && POSITIVE.test(partyId) ? Number(partyId) : undefined,
     from: from && DATE.test(from) ? from : undefined,
     to: to && DATE.test(to) ? to : undefined,

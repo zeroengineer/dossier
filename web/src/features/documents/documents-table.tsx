@@ -70,10 +70,21 @@ export function DocumentsTable() {
     })
   }
 
+  // A page past the end (a hand-edited URL, documents gone since): go to the last page, replacing the history entry.
+  // Only on data for the current query, not the previous page kept on screen while it loads.
+  const total = query.data?.total
+  const lastPage = total === undefined ? undefined : Math.max(1, Math.ceil(total / search.size))
+  const pastEnd = !query.isPlaceholderData && lastPage !== undefined && search.page > lastPage
+  React.useEffect(() => {
+    if (pastEnd && lastPage !== undefined) setSearchParams(toSearchParams({ ...search, page: lastPage }), { replace: true })
+  })
+
   const filtered = hasFilters(search)
   const rows: DocumentSummary[] = query.isError ? [] : (query.data?.documents ?? [])
   const empty = query.isError ? (
     <ErrorState error={query.error} title="Could not load documents" onRetry={() => void query.refetch()} className="border-none" />
+  ) : pastEnd || (total ?? 0) > 0 ? (
+    "No documents on this page."
   ) : filtered ? (
     "No documents match these filters."
   ) : (
