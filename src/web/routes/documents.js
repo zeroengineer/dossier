@@ -81,10 +81,11 @@ export default async function documentRoutes(app, { ctx }) {
     return seeOther(reply, `${docPath(req.params.id)}?saved=1`);
   });
 
-  // Rendition bytes, gated by the document's sensitivity (readRendition).
+  // Rendition bytes, gated by the document's sensitivity (readRendition) before any 304. The URL follows the current
+  // version, so the browser revalidates every time (private, no-cache) against the blob's sha256.
   const rendition = (req, reply) => {
     const out = readRendition(ctx, req.params.id, { kind: req.params.kind, versionNo: versionOf(req.query.version) });
-    return sendFile(reply, out, { download: req.query.download !== undefined });
+    return sendFile(reply, out, { download: req.query.download !== undefined, req, etag: out.sha256, cacheControl: 'private, no-cache' });
   };
   app.get('/documents/:id/renditions/:kind', rendition);
 

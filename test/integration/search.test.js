@@ -242,6 +242,7 @@ test('a database migrated before search existed is indexed when 002 is applied; 
   const again = open();
   assert.deepEqual(ids(search(again, { q: 'harbour' }).hits).sort(), [id, gone]);
   again.db.prepare('DELETE FROM documents WHERE id = ?').run(gone);
+  again.repo.bump('search_index'); // raw SQL bypasses the repo: mark the write so cached query results are dropped
   assert.deepEqual(ids(search(again, { q: 'harbour' }).hits), [id]);
   assert.equal(again.db.prepare('SELECT count(*) AS n FROM search_index').get().n, 1);
 }));

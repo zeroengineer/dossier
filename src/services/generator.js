@@ -18,6 +18,7 @@ import { getEntity } from './entities.js';
 import { effectiveParams, resolveTemplateFields, todayIso } from './fields.js';
 import { allocateNumber, peekNumber } from './numbering.js';
 import { getTemplate } from './templates.js';
+import { renderCached } from '../cache/renderCache.js';
 
 /** Watermark text drawn on every page of a preview PDF. */
 export const DRAFT_WATERMARK = 'DRAFT — NOT NUMBERED';
@@ -196,6 +197,40 @@ export async function renderRenditions(ctx, template, values, { brand, number = 
   return out;
 }
 
+/**
+ * renderRenditions through the disk render cache (cache/renderCache.js). The key covers the template (id, version,
+ * hash), the canonical values and input, the brand's config hash and the asset files the render used, the workspace
+ * settings, number, draft flag and `creationDate`, the shared render code and the pdfkit/fontkit/sharp versions, so a
+ * hit is byte-identical to a fresh render. Values that have no canonical JSON form are rendered without the cache.
+ * @param {object} ctx
+ * @param {object} template from getTemplate
+ * @param {Record<string, unknown>} values
+ * @param {{ brand: string, number?: string|null, draft?: boolean, creationDate: Date, input?: object }} opts
+ * @returns {ReturnType<typeof renderRenditions>}
+ */
+export async function renderWithCache(ctx, template, values, opts) {
+  const render = () => renderRenditions(ctx, template, values, opts);
+  let valuesJson;
+  let inputJson;
+  try {
+    valuesJson = canonicalJson(values);
+    inputJson = canonicalJson(opts.input ?? {});
+  } catch {
+    return render();
+  }
+  const draft = Boolean(opts.draft);
+  return renderCached(ctx, {
+    template, brandId: opts.brand, valuesJson, inputJson, number: draft ? null : opts.number ?? null, draft,
+    creationDate: opts.creationDate,
+  }, render);
+}
+
+/** Creation date of a preview PDF: midnight UTC of the preview's `today`, so previews of one day are reproducible. */
+function previewCreationDate(day) {
+  const d = new Date(`${day}T00:00:00Z`);
+  return Number.isNaN(d.getTime()) ? new Date(`${todayIso()}T00:00:00Z`) : d;
+}
+
 // ---------- preview ----------
 
 function writeAtomic(file, buffer) {
@@ -212,7 +247,8 @@ function writeAtomic(file, buffer) {
 /**
  * Render a draft: every rendition with the number shown as "DRAFT" and a "DRAFT — NOT NUMBERED" watermark on every
  * PDF page, written to `<dataDir>/previews/<token>/preview.<ext>`. No document, number or audit row is written (the
- * template registry row is upserted as on any template load).
+ * template registry row is upserted as on any template load). The PDF creation date is midnight UTC of `today`, so
+ * the same draft previewed twice on one day gives the same bytes and is served from the render cache.
  * @param {object} ctx
  * @param {string} templateId
  * @param {Record<string, unknown>} [input]
@@ -226,11 +262,12 @@ export async function previewDocument(ctx, templateId, input = {}, { brandId, di
   const template = await getTemplate(ctx, templateId, { dirs });
   checkClearance(ctx, template.meta);
   const bid = brandIdOf(ctx, brandId);
-  const { values, missing, errors: fieldErrors } = resolveTemplateFields(ctx, template, input, { brandId: bid, today });
+  const day = today ?? todayIso();
+  const { values, missing, errors: fieldErrors } = resolveTemplateFields(ctx, template, input, { brandId: bid, today: day });
   const errors = [...fieldErrors, ...engagementErrors(template.meta, values)];
   if (missing.length || errors.length) return { ok: false, missing, errors };
-  const rendered = await renderRenditions(ctx, template, values, {
-    brand: bid, draft: true, creationDate: new Date(), input,
+  const rendered = await renderWithCache(ctx, template, values, {
+    brand: bid, draft: true, creationDate: previewCreationDate(day), input,
   });
   const token = tokenOf(ctx, template, input, bid);
   const dir = join(ctx.config.dataDir, 'previews', token);
@@ -441,7 +478,10 @@ function checkRelationTargets(ctx, targets, selfId) {
  * @param {string} templateId
  * @param {Record<string, unknown>} [input]
  * @param {{ brandId?: string, status?: string, documentId?: string, force?: boolean, dirs?: string[], today?: string,
- *   note?: string }} [opts]
+ *   note?: string, creationDate?: Date|string }} [opts] creationDate: the PDF creation date (default now). It is part
+ *   of the render cache key, so only a repeated generation with the same creation date (and everything else equal)
+ *   is served from the cache.
+ * The renditions go through the render cache (renderWithCache); the blobs are stored either way.
  * @returns {Promise<{ documentId: string, number: string|null, versionNo: number,
  *   renditions: Array<{ kind: string, sha256: string, filename: string, bytes: number }>,
  *   warnings: Array<{ code: 'PLACEHOLDER_EMPTY', name: string, message: string }> }>}
@@ -451,6 +491,9 @@ export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
   checkInput(input);
   const { documentId, dirs, today, note, force = false } = opts;
   if (typeof force !== 'boolean') throw new DossierError('INVALID_INPUT', 'force must be a boolean', { force });
+  if (opts.creationDate !== undefined && Number.isNaN(new Date(opts.creationDate).getTime())) {
+    throw new DossierError('INVALID_INPUT', 'creationDate must be a valid date', { creationDate: String(opts.creationDate) });
+  }
   const inputJson = canonicalJson(input);
   const template = await getTemplate(ctx, templateId, { dirs });
   const { meta } = template;
@@ -522,8 +565,8 @@ export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
     const nextVersion = existing
       ? ctx.db.prepare('SELECT COALESCE(MAX(version_no), 0) + 1 AS n FROM versions WHERE document_id = ?').get(existing.id).n
       : 1;
-    const creationDate = new Date();
-    const rendered = await renderRenditions(ctx, template, values, { brand: bid, number, draft: false, creationDate, input });
+    const creationDate = opts.creationDate === undefined ? new Date() : new Date(opts.creationDate);
+    const rendered = await renderWithCache(ctx, template, values, { brand: bid, number, draft: false, creationDate, input });
     const renditions = [];
     for (const r of rendered) {
       const extracted = r.kind === 'pdf' ? await extractText(r.buffer, { mime: r.mime })

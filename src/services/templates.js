@@ -7,6 +7,7 @@ import { DossierError } from '../errors.js';
 import { nowIso } from '../db/index.js';
 import { REPO_ROOT } from '../paths.js';
 import { parseSource, validateTemplateMeta } from '../workspace/templateSchema.js';
+import { memoOf, WS } from '../cache/memo.js';
 
 /** Folder of the templates shipped with Dossier. */
 export const BUILTIN_TEMPLATES_DIR = join(REPO_ROOT, 'src', 'templates');
@@ -134,12 +135,41 @@ function readFolder(ctx, folder, name, source, base) {
 const hasTemplateFiles = (folder) => readdirSync(folder).some((f) => f === 'index.js' || f === 'body.md' || NAMED_BODY.test(f));
 
 /**
+ * A cheap signature of the template folders: relative path, size and mtime of every file and folder below each
+ * source folder (no file is read). A changed signature makes `scan` read and validate the folders again.
+ */
+function foldersFingerprint(list) {
+  const parts = [];
+  for (const { dir, source } of list) {
+    parts.push(`${source}:${dir}`);
+    if (!existsSync(dir)) continue;
+    for (const rel of readdirSync(dir, { recursive: true }).map(String).sort()) {
+      if (rel.split(/[\\/]/).includes('node_modules')) continue;
+      try {
+        const st = statSync(join(dir, rel));
+        parts.push(`${rel}:${st.isDirectory() ? 'd' : st.size}:${st.mtimeMs}`);
+      } catch {
+        parts.push(`${rel}:-`);
+      }
+    }
+  }
+  return createHash('sha256').update(parts.join('\n')).digest('hex');
+}
+
+/**
  * Map of template id -> entry, or `{ id, source, path, error }` (a DossierError) when that folder does not load.
  * A broken folder replaces what it would override: requesting its id fails instead of silently using the built-in.
+ * Memoised per context on the folders' fingerprint, the workspace configuration (series) and the `templates` table
+ * version; the entries are shared, so callers copy what they hand out.
  */
 function scan(ctx, dirs) {
+  const list = sources(ctx, dirs);
+  return memoOf(ctx)(`templates\u0000${foldersFingerprint(list)}`, ['templates', WS], () => scanFolders(ctx, list));
+}
+
+function scanFolders(ctx, list) {
   const found = new Map();
-  for (const { dir, source } of sources(ctx, dirs)) {
+  for (const { dir, source } of list) {
     if (!existsSync(dir)) continue;
     for (const name of readdirSync(dir).sort()) {
       const folder = join(dir, name);
@@ -179,7 +209,7 @@ function register(ctx, entries) {
   });
 }
 
-const publicEntry = ({ hasModule, body, bodies, modulePath, moduleHash, ...rest }) => rest;
+const publicEntry = ({ hasModule, body, bodies, modulePath, moduleHash, ...rest }) => ({ ...rest, meta: structuredClone(rest.meta) });
 
 /**
  * Every available template: built-ins, then extra folders (`opts.dirs`, else `ctx.templateDirs`, else
@@ -247,9 +277,9 @@ export async function getTemplate(ctx, id, { dirs } = {}) {
       throw invalid(`${t.path}/template.json`, `fields.${i}.source: index.js exports no computed.${src.arg}()`);
     }
   });
-  const out = { id: t.id, meta: t.meta, module, hash: t.hash, source: t.source, path: t.path };
+  const out = { id: t.id, meta: structuredClone(t.meta), module, hash: t.hash, source: t.source, path: t.path };
   if (t.inherits) out.inherits = t.inherits;
   if (t.body !== undefined) out.body = t.body;
-  if (Object.keys(t.bodies).length) out.bodies = t.bodies;
+  if (Object.keys(t.bodies).length) out.bodies = { ...t.bodies };
   return out;
 }

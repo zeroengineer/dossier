@@ -159,6 +159,7 @@ test('getEntity by id or name/alias, with relations in both directions and docum
   ctx.db.exec(`INSERT INTO documents (id, type, party_id, party_type) VALUES ('DOC-000001', 'invoice', ${acmeClient.id}, 'Client')`);
   ctx.db.exec(`INSERT INTO documents (id, type, issuing_entity_id) VALUES ('DOC-000002', 'invoice', ${acme.id})`);
   ctx.db.exec(`INSERT INTO document_entities (document_id, entity_id, role) VALUES ('DOC-000002', ${acme.id}, 'issuer'), ('DOC-000001', ${acme.id}, 'named')`);
+  ctx.repo.bump('documents'); // raw SQL bypasses the repo: mark the write so memoised entity views are rebuilt
   assert.equal(getEntity(ctx, acme.id).documentCount, 2);
   assert.equal(getEntity(ctx, acmeClient.id).documentCount, 1);
 }));

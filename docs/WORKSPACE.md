@@ -20,6 +20,7 @@ Environment:
 | `DOSSIER_USER` | OS user name | local user id; its clearance comes from `workspace.json` `users` |
 | `PORT` | `4400` | HTTP port |
 | `DOSSIER_TEMPLATE_DIRS` | none | extra template folders (separated like `PATH`), loaded after the built-ins and before the workspace's `templates/` |
+| `DOSSIER_RENDER_CACHE_MB` | `500` | size bound of the rendered-file cache in `data/cache/render` (least recently used entries are removed first); `0` turns it off. `dossier cache clear` empties it |
 
 ## Layout
 

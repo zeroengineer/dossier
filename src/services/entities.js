@@ -2,6 +2,7 @@ import { normaliseName } from '../domain/canonical.js';
 import { DossierError } from '../errors.js';
 import { nowIso } from '../db/index.js';
 import { reindexEntityDocuments } from './searchIndex.js';
+import { memoOf } from '../cache/memo.js';
 import { ENTITY_KINDS, ENTITY_RELATION_ROLES, SeedsSchema, formatIssues } from '../workspace/schemas.js';
 
 export { normaliseName };
@@ -10,6 +11,8 @@ export { normaliseName };
 export const ENTITY_CHANGED = 'entity:changed';
 
 const MAX_LIMIT = 500;
+/** Tables an entity view is built from (memo dependencies): the entity, its relations and its document count. */
+const ENTITY_DEPS = ['entities', 'entity_relations', 'documents', 'document_entities'];
 
 /**
  * @typedef {{ id: number, kind: string, name: string, key: string, brand: string|null, attrs: Record<string, unknown>,
@@ -293,7 +296,8 @@ function mergeAttrs(base, patch) {
  * @returns {Entity} throws ENTITY_NOT_FOUND, or ENTITY_AMBIGUOUS when a name matches entities of several kinds
  */
 export function getEntity(ctx, idOrName, { kind } = {}) {
-  return fullEntity(ctx, resolveRow(ctx, idOrName, kind));
+  const key = `entity\u0000${typeof idOrName}\u0000${String(idOrName)}\u0000${kind ?? ''}`;
+  return structuredClone(memoOf(ctx)(key, ENTITY_DEPS, () => fullEntity(ctx, resolveRow(ctx, idOrName, kind))));
 }
 
 /**
@@ -308,6 +312,11 @@ export function getEntity(ctx, idOrName, { kind } = {}) {
 export function findEntities(ctx, { q = '', kind, limit = 50 } = {}) {
   if (kind !== undefined && kind !== null) checkKind(kind);
   if (!Number.isSafeInteger(limit) || limit < 1 || limit > MAX_LIMIT) throw invalid(`limit must be an integer from 1 to ${MAX_LIMIT}`, { limit });
+  const memoKey = `entities\u0000${JSON.stringify([q, kind ?? null, limit])}`;
+  return structuredClone(memoOf(ctx)(memoKey, ['entities'], () => matchEntities(ctx, q, kind, limit)));
+}
+
+function matchEntities(ctx, q, kind, limit) {
   const key = normaliseName(q);
   const esc = key.replace(/[\\%_]/g, (c) => `\\${c}`);
   const aliasLike = (p) => `EXISTS (SELECT 1 FROM entity_aliases a WHERE a.entity_id = e.id AND a.alias_key LIKE ${p} ESCAPE '\\')`;

@@ -5,6 +5,7 @@ import { openContext } from './context.js';
 import { getNode } from './services/hierarchy.js';
 import { reindexAll } from './services/searchIndex.js';
 import { seedEntities } from './services/entities.js';
+import { clearRenderCache, renderCacheDir } from './cache/renderCache.js';
 
 /**
  * Command table. Each entry: `usage` (shown in help), `summary`, and `run(args, io) -> exit code`.
@@ -111,6 +112,17 @@ export const commands = {
       } finally {
         ctx.close();
       }
+      return 0;
+    },
+  },
+  cache: {
+    usage: 'cache clear',
+    summary: 'delete the rendered-file cache (<workspace>/data/cache/render); it refills as documents are rendered',
+    run(args, io) {
+      if (args[0] !== 'clear' || args.length > 1) throw new Error(args.length ? `unknown cache command "${args.join(' ')}" (expected: cache clear)` : 'expected: cache clear');
+      const config = loadConfig(io.env, io.cwd);
+      const { files, bytes } = clearRenderCache({ config });
+      io.stdout.write(`Cleared ${files} cached file${files === 1 ? '' : 's'} (${(bytes / (1024 * 1024)).toFixed(1)} MB) from ${renderCacheDir({ config })}\n`);
       return 0;
     },
   },

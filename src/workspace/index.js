@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
@@ -164,6 +165,22 @@ function findInBrandDirs(ws, brandId, relPath) {
   return null;
 }
 
+/** Sets of `[brandId, key]` lookups made by brandAsset while a trackBrandAssets callback runs. */
+const assetTracking = new AsyncLocalStorage();
+
+/**
+ * Run `fn` and record every brandAsset lookup made during it (including in async continuations), so a caller can
+ * tell which asset files a render used (the render cache keys on their hashes).
+ * @template T
+ * @param {() => Promise<T>|T} fn
+ * @returns {Promise<{ result: T, used: Array<[string, string]> }>} used: distinct `[brandId, key]` pairs, in order
+ */
+export async function trackBrandAssets(fn) {
+  const used = new Map();
+  const result = await assetTracking.run(used, fn);
+  return { result, used: [...used.values()] };
+}
+
 /**
  * Absolute path of a brand asset, falling back to the shipped placeholders / built-in Manrope when the brand file is missing.
  * Keys: `assets.logo`, `assets.seal`, `assets.watermark` (null when unset/missing), `signature:<signatoryId>`,
@@ -174,6 +191,8 @@ function findInBrandDirs(ws, brandId, relPath) {
  * @returns {string|null}
  */
 export function brandAsset(ws, brandId, key) {
+  const used = assetTracking.getStore();
+  if (used) used.set(`${brandId}\u0000${key}`, [brandId, key]);
   const brand = ws.brands.get(brandId);
   if (!brand) throw new Error(`brandAsset: unknown brand "${brandId}"`);
   const [kind, arg] = key.split(':');

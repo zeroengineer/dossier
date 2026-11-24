@@ -6,7 +6,8 @@ import { brandAsset } from '../../workspace/index.js';
 import { FONT_WEIGHTS } from '../../workspace/schemas.js';
 import { readBlobForUser } from '../../services/documents.js';
 import { DossierError } from '../../errors.js';
-import { sendFile } from '../http.js';
+import { fileHash } from '../../cache/renderCache.js';
+import { CACHE_PRIVATE_IMMUTABLE, CACHE_PUBLIC_IMMUTABLE, sendFile } from '../http.js';
 
 const MIME = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.gif': 'image/gif',
@@ -28,9 +29,34 @@ function assetFile(ctx, brandId, key) {
   return file;
 }
 
-function sendAsset(reply, file) {
-  reply.header('Cache-Control', 'private, max-age=300');
-  return sendFile(reply, { buffer: readFileSync(file), filename: basename(file), mime: MIME[extname(file).toLowerCase()] ?? 'application/octet-stream' });
+/**
+ * Send a brand asset with `ETag` = the file's sha256. The URL names a slot (logo, a signatory, a font weight), not the
+ * content, so it is only cached for good (`public, immutable`) when the request carries `?v=` with a prefix (12 or
+ * more hex digits) of that hash, as the pages emit; otherwise browsers revalidate (`public, no-cache`, then 304).
+ */
+function sendAsset(req, reply, file) {
+  const hash = fileHash(file);
+  const v = typeof req.query.v === 'string' ? req.query.v.toLowerCase() : '';
+  const pinned = /^[0-9a-f]{12,64}$/.test(v) && hash.startsWith(v);
+  return sendFile(reply, { buffer: readFileSync(file), filename: basename(file), mime: MIME[extname(file).toLowerCase()] ?? 'application/octet-stream' },
+    { req, etag: hash, cacheControl: pinned ? CACHE_PUBLIC_IMMUTABLE : 'public, no-cache' });
+}
+
+/**
+ * Version tag for a brand asset URL (`?v=`): the first 12 hex digits of the file's sha256, or null when the asset
+ * does not resolve to a file.
+ * @param {object} ctx
+ * @param {string} brandId
+ * @param {string} key brandAsset key, e.g. `assets.logo`
+ * @returns {string|null}
+ */
+export function assetVersion(ctx, brandId, key) {
+  try {
+    const file = brandAsset(ctx.ws, brandId, key);
+    return file ? fileHash(file)?.slice(0, 12) ?? null : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -38,20 +64,20 @@ function sendAsset(reply, file) {
  * @param {{ ctx: object }} opts
  */
 export default async function assetRoutes(app, { ctx }) {
-  app.get('/assets/brands/:brandId/logo', (req, reply) => sendAsset(reply, assetFile(ctx, req.params.brandId, 'assets.logo')));
+  app.get('/assets/brands/:brandId/logo', (req, reply) => sendAsset(req, reply, assetFile(ctx, req.params.brandId, 'assets.logo')));
 
   app.get('/assets/brands/:brandId/signatures/:signatoryId', (req, reply) => {
     const { brandId, signatoryId } = req.params;
-    return sendAsset(reply, assetFile(ctx, brandId, `signature:${signatoryId}`));
+    return sendAsset(req, reply, assetFile(ctx, brandId, `signature:${signatoryId}`));
   });
 
   // The HTML renderer links a brand font by its file name; a weight name (`bold`) works too.
   app.get('/assets/brands/:brandId/fonts/:font', (req, reply) => {
     const { brandId, font } = req.params;
-    if (FONT_WEIGHTS.includes(font)) return sendAsset(reply, assetFile(ctx, brandId, `font:${font}`));
+    if (FONT_WEIGHTS.includes(font)) return sendAsset(req, reply, assetFile(ctx, brandId, `font:${font}`));
     for (const w of FONT_WEIGHTS) {
       const file = assetFile(ctx, brandId, `font:${w}`);
-      if (basename(file) === font) return sendAsset(reply, file);
+      if (basename(file) === font) return sendAsset(req, reply, file);
     }
     throw notFound(`font "${font}" for brand "${brandId}"`);
   });
@@ -62,12 +88,16 @@ export default async function assetRoutes(app, { ctx }) {
     if (!/^[0-9a-f]{64}$/.test(token) || !/^preview\.(pdf|html|md)$/.test(file)) throw notFound('preview');
     const path = join(ctx.config.dataDir, 'previews', token, file);
     if (!existsSync(path)) throw notFound('preview');
-    return sendFile(reply, { buffer: readFileSync(path), filename: file, mime: MIME[extname(file)] });
+    // The token names the draft's input, not its bytes (a preview made on another day differs), so revalidate.
+    return sendFile(reply, { buffer: readFileSync(path), filename: file, mime: MIME[extname(file)] },
+      { req, etag: fileHash(path), cacheControl: 'private, no-cache' });
   });
 
-  // Blobs only through a rendition of a document the user may read (FORBIDDEN otherwise).
+  // Blobs only through a rendition of a document the user may read (FORBIDDEN otherwise, also for a conditional
+  // request: the check runs before the 304). Content-addressed, so cached for good, but only privately: a shared
+  // cache must never hand a gated file to another user.
   app.get('/blobs/:sha256/:filename', (req, reply) => {
     const out = readBlobForUser(ctx, req.params.sha256, { filename: req.params.filename });
-    return sendFile(reply, out, { download: req.query.download !== undefined });
+    return sendFile(reply, out, { download: req.query.download !== undefined, req, etag: out.sha256, cacheControl: CACHE_PRIVATE_IMMUTABLE });
   });
 }

@@ -31,3 +31,11 @@ test('loadConfig reads DOSSIER_TEMPLATE_DIRS as a PATH-style list resolved again
   const cfg = loadConfig({ DOSSIER_TEMPLATE_DIRS: `extra${delimiter}/abs/templates${delimiter}` }, '/srv/app');
   assert.deepEqual(cfg.templateDirs, [resolve('/srv/app/extra'), resolve('/abs/templates')]);
 });
+
+test('loadConfig reads DOSSIER_RENDER_CACHE_MB (default 500, 0 turns the cache off, invalid values ignored)', () => {
+  assert.equal(loadConfig({}, '/srv/app').renderCacheMb, 500);
+  assert.equal(loadConfig({ DOSSIER_RENDER_CACHE_MB: '0' }, '/srv/app').renderCacheMb, 0);
+  assert.equal(loadConfig({ DOSSIER_RENDER_CACHE_MB: '12.5' }, '/srv/app').renderCacheMb, 12.5);
+  assert.equal(loadConfig({ DOSSIER_RENDER_CACHE_MB: '-3' }, '/srv/app').renderCacheMb, 500);
+  assert.equal(loadConfig({ DOSSIER_RENDER_CACHE_MB: 'lots' }, '/srv/app').renderCacheMb, 500);
+});

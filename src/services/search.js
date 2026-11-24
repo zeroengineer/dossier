@@ -2,7 +2,9 @@ import { DossierError } from '../errors.js';
 import { STATUSES } from '../domain/status.js';
 import { accessibleLevels } from '../domain/sensitivity.js';
 import { summaryOf } from './documentQueries.js';
-import { findEntities, normaliseName } from './entities.js';
+import { ENTITY_CHANGED, findEntities, normaliseName } from './entities.js';
+import { DOCUMENT_CHANGED } from './documents.js';
+import { Lru } from '../cache/lru.js';
 import { expandRelated } from './searchExpand.js';
 
 const invalid = (message, details = {}) => new DossierError('INVALID_INPUT', message, details);
@@ -14,6 +16,42 @@ const OPTIONS = ['q', 'types', 'status', 'partyId', 'from', 'to', 'limit', 'expa
 const BM25 = 'bm25(search_index, 0.0, 10.0, 10.0, 5.0, 1.0)';
 const METADATA_COLUMNS = '{title number parties}';
 const BODY_COLUMN = 4;
+/** Recent query results kept per database connection. */
+export const SEARCH_CACHE_MAX = 256;
+
+/** Query-result caches by repo (one per connection; derived contexts with another user share it, clearance is keyed). */
+const caches = new WeakMap();
+
+/**
+ * The query cache of a context's repo: an LRU of SEARCH_CACHE_MAX results, cleared on `document:changed` and
+ * `entity:changed` events, when another process committed (`PRAGMA data_version`), and when the search index or the
+ * workspace configuration changed without such an event (a reindex, a reload).
+ * @param {object} ctx
+ * @returns {{ lru: Lru<string, object>, valid: (ctx: object) => boolean }}
+ */
+export function searchCacheOf(ctx) {
+  let c = caches.get(ctx.repo);
+  if (!c) {
+    const lru = new Lru(SEARCH_CACHE_MAX);
+    const clear = () => lru.clear();
+    ctx.repo.events.on(DOCUMENT_CHANGED, clear);
+    ctx.repo.events.on(ENTITY_CHANGED, clear);
+    let stamp = null;
+    c = {
+      lru,
+      /** Clear the cache when the connection-wide stamp moved; false while a transaction is open (bypass). */
+      valid(current) {
+        if (ctx.db.inTx()) return false;
+        const now = `${ctx.db.dataVersion()}|${ctx.repo.version('search_index')}|${current.ws.configHash}`;
+        if (now !== stamp) lru.clear();
+        stamp = now;
+        return true;
+      },
+    };
+    caches.set(ctx.repo, c);
+  }
+  return c;
+}
 
 /**
  * @typedef {import('./documentQueries.js').DocumentSummary} DocumentSummary
@@ -51,6 +89,19 @@ export function search(ctx, opts = {}) {
   if (typeof expand !== 'boolean') throw invalid('expand must be a boolean', { expand });
   const filter = buildFilter(ctx, opts);
 
+  const cache = searchCacheOf(ctx);
+  if (!cache.valid(ctx)) return runSearch(ctx, opts, filter);
+  const key = JSON.stringify([ctx.user.clearance, ...Object.keys(opts).sort().map((k) => [k, opts[k]])]);
+  let result = cache.lru.get(key);
+  if (!result) {
+    result = runSearch(ctx, opts, filter);
+    cache.lru.set(key, result);
+  }
+  return structuredClone(result);
+}
+
+function runSearch(ctx, opts, filter) {
+  const { q, limit = 20, expand = true } = opts;
   const text = q.replace(/\p{Cc}/gu, ' ').trim();
   if (text === '') return { hits: [], related: [], entities: [] };
 

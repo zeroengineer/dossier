@@ -12,6 +12,7 @@ import { renderBrandPreview } from '../../render/brandPreview.js';
 import { applyBrandSection, BRAND_SECTIONS, newBrandBody, seriesFromForm, workspaceFromForm } from '../settingsForms.js';
 import { brandPage, brandsPage, seriesPage, settingsPage, workspacePage } from '../views/settings.js';
 import { errorReply, readMultipart, seeOther, sendFile, sendPage, shellOf } from '../http.js';
+import { assetVersion } from './assets.js';
 
 /** `builtin:<Family>-<Style>` names of the bundled fonts. */
 function builtinFonts() {
@@ -82,6 +83,7 @@ export default async function settingsRoutes(app, { ctx }) {
       parent: b.parent,
       resolved: b.resolved,
       configHash: b.configHash,
+      logoVersion: assetVersion(ctx, id, 'assets.logo'),
       seriesIds: [...ctx.ws.series.keys()],
       builtinFonts: builtinFonts(),
       ...extra,

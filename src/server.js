@@ -47,8 +47,11 @@ export function buildServer(ctx, { allowedHosts = LOOPBACK_HOSTS, logger = false
     }
   });
   app.register(fastifyMultipart, { limits: { fileSize: fileSizeLimit, files: 1, fields: 100 }, throwFileSizeLimit: true });
-  app.register(fastifyStatic, { root: FONTS_DIR, prefix: '/assets/fonts/', decorateReply: false, index: false, list: false });
-  app.register(fastifyStatic, { root: join(REPO_ROOT, 'src', 'web', 'public'), prefix: '/static/', decorateReply: false, index: false, list: false });
+  // Shipped fonts and the app's CSS/JS keep their names across releases, so browsers revalidate them
+  // (`public, max-age=0`; the plugin's ETag / Last-Modified give a 304) instead of caching them for good.
+  const statics = { decorateReply: false, index: false, list: false, maxAge: 0 };
+  app.register(fastifyStatic, { root: FONTS_DIR, prefix: '/assets/fonts/', ...statics });
+  app.register(fastifyStatic, { root: join(REPO_ROOT, 'src', 'web', 'public'), prefix: '/static/', ...statics });
 
   // Host check (DNS rebinding) and same-origin check for state-changing requests (CSRF); see crossSiteReason.
   app.addHook('onRequest', async (req, reply) => {
@@ -61,6 +64,8 @@ export function buildServer(ctx, { allowedHosts = LOOPBACK_HOSTS, logger = false
   });
 
   app.addHook('onSend', async (req, reply, payload) => {
+    // Pages, API JSON, redirects and errors are never stored; file routes set their own Cache-Control.
+    if (!reply.hasHeader('cache-control')) reply.header('Cache-Control', 'no-store');
     reply.header('X-Content-Type-Options', 'nosniff');
     reply.header('Referrer-Policy', 'same-origin');
     const type = String(reply.getHeader('content-type') ?? '');

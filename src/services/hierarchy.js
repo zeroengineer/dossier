@@ -1,5 +1,6 @@
 import { extname } from 'node:path';
 import { DossierError } from '../errors.js';
+import { memoOf, WS } from '../cache/memo.js';
 import { accessibleLevels, canAccess } from '../domain/sensitivity.js';
 import { displayFileName } from '../domain/naming.js';
 import { PARTY_TOP, TOP_KEYS, financialYear, idSegment, leafIn, routeFor, routingConfig } from '../domain/routing.js';
@@ -170,13 +171,19 @@ function loadItems(ctx) {
 }
 
 /**
- * The folder tree as a view over metadata (PLAN B3), for the acting user's clearance.
+ * The folder tree as a view over metadata (PLAN B3), for the acting user's clearance. Memoised per context and
+ * clearance until one of its tables is written (or another process writes, see cache/memo.js).
  * @param {object} ctx
  * @returns {TreeNode} root node; its children are the top-level folders in configured order
  */
 export function buildTree(ctx) {
-  return assembleTree(loadItems(ctx), { hierarchy: ctx.ws.config.hierarchy, clearance: ctx.user.clearance });
+  const clearance = ctx.user.clearance;
+  return structuredClone(memoOf(ctx)(`tree\u0000${clearance}`, TREE_DEPS,
+    () => assembleTree(loadItems(ctx), { hierarchy: ctx.ws.config.hierarchy, clearance })));
 }
+
+/** Tables the tree is built from (memo dependencies), plus the workspace configuration (hierarchy settings). */
+const TREE_DEPS = ['documents', 'entities', 'document_entities', 'entity_relations', 'versions', 'renditions', WS];
 
 /**
  * Find a node by id in a tree.

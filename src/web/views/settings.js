@@ -115,12 +115,12 @@ ${error && !errors ? notice('error', `${error.code}: ${error.message}`) : errorN
 
 /**
  * The brand editor: one form per section, the asset uploads and a live letterhead preview.
- * @param {{ shell: object, id: string, own: object, parent: object|null, resolved: object|null, configHash?: string,
+ * @param {{ shell: object, id: string, own: object, parent: object|null, resolved: object|null, configHash?: string, logoVersion?: string|null,
  *   errors?: Array<{ file?: string, path: string, message: string }>|null, failedSection?: string|null, error?: object|null,
  *   saved?: string|null, seriesIds: string[], builtinFonts: string[] }} p
  */
 export function brandPage(p) {
-  const { shell, id, own, parent, resolved, configHash = '', errors = null, failedSection = null, error = null, saved = null, seriesIds, builtinFonts } = p;
+  const { shell, id, own, parent, resolved, configHash = '', logoVersion = null, errors = null, failedSection = null, error = null, saved = null, seriesIds, builtinFonts } = p;
   const file = `brands/${id}/brand.json`;
   const inv = invalidNames(errors, file);
   const inherits = Boolean(own.inheritsFrom);
@@ -223,7 +223,7 @@ ${FONT_WEIGHTS.map((w) => html`<tr><td>${w}</td><td>${control({ type: 'select', 
 </form>`;
 
   const assets = sectionForm('assets', 'Images', html`
-${resolved ? html`<p><img class="logo" src="/assets/brands/${id}/logo?v=${configHash.slice(0, 12)}" alt="Current logo of ${id}"></p>` : ''}
+${resolved ? html`<p><img class="logo" src="/assets/brands/${id}/logo${logoVersion ? `?v=${logoVersion}` : ''}" alt="Current logo of ${id}"></p>` : ''}
 ${scalarInput('Logo path', 'assets.logo')}
 ${scalarInput('Seal path', 'assets.seal')}
 ${scalarInput('Watermark path', 'assets.watermark')}`,

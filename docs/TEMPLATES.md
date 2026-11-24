@@ -257,7 +257,12 @@ lines, `---` dividers and `<!-- page break -->`.
   Generations of the same series in one process are queued, so they never race for a number; `NUMBER_CONTENDED`
   (after 3 re-renders) only happens when other processes keep taking the number.
 - `renderRenditions(ctx, template, values, { brand, number, draft, creationDate })` renders without touching the
-  database; the returned array has a `warnings` property.
+  database; the returned array has a `warnings` property. `renderWithCache` (same arguments) goes through the disk
+  render cache (`<dataDir>/cache/render`, docs/PLAN.md B9); previews and generations use it, and a cache hit is
+  byte-identical to a fresh render. Its key covers the template, the resolved values and input, the brand config hash,
+  the hashes of the brand asset files the render looked up, the workspace settings, number, draft flag, creation date,
+  the shared render code and the pdfkit/fontkit/sharp versions. A template must read its data from `values`, `env` and
+  brand assets (through `brandAsset`); anything else it reads (other files, the clock, the database) is not in the key.
 - `warnings` (preview and generate): one `{ code: 'PLACEHOLDER_EMPTY', name, message }` per body placeholder that had
   no value and printed as empty text (`name` is the placeholder path, e.g. `partnerSignatory.name`). Generation still
   succeeds; the UI and the MCP agent show them. Guard optional values in a body with `{{#if path}}…{{/if}}` (an `#if`
@@ -283,7 +288,7 @@ Templates see `values.number` and `env.number` (null in a preview and for unnumb
 (true only in a preview). `env.draft` is the switch for printing DRAFT: print `env.draft ? 'DRAFT' : values.number ?? ''`,
 never `values.number ?? 'DRAFT'`, so a final document of an unnumbered template does not say DRAFT. A `body.md` is
 filled with `number` = `DRAFT` in previews and `''` when a final document has no number (use `{{#if number}}`). Preview PDFs carry the vector watermark
-`DRAFT — NOT NUMBERED` on every page. Final renditions use `creationDate` = now. Blocks templates are drawn with the
+`DRAFT — NOT NUMBERED` on every page. Preview PDFs are dated midnight UTC of the preview's `today`, final renditions use `creationDate` = now (or the `creationDate` option). Blocks templates are drawn with the
 letterhead, the blocks and the footers; a `renderPdf` template draws everything itself (the generator only adds the
 draft watermark and finalises the file). HTML renditions are standalone (fonts and images embedded).
 

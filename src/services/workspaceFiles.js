@@ -4,7 +4,7 @@
 // and the context's workspace is reloaded so the next request sees the change without a restart.
 import { createHash, randomBytes } from 'node:crypto';
 import { createRequire } from 'node:module';
-import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeSync } from 'node:fs';
+import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeSync } from 'node:fs';
 import { dirname, join, posix } from 'node:path';
 import sharp from 'sharp';
 import { DossierError } from '../errors.js';
@@ -13,6 +13,7 @@ import { clearanceFor, loadWorkspace, WorkspaceError } from '../workspace/index.
 import { CLEARANCES, FONT_WEIGHTS } from '../workspace/schemas.js';
 import { clearImageCache } from '../render/pdf/images.js';
 import { listTemplateErrors } from './templates.js';
+import { memoOf, WS } from '../cache/memo.js';
 
 const PDFDocument = createRequire(import.meta.url)('pdfkit');
 
@@ -164,6 +165,16 @@ function assertBrandId(id) {
  */
 export function getBrandFile(ctx, id) {
   if (!ctx.ws.brands.has(id)) throw new DossierError('BRAND_NOT_FOUND', `No brand "${id}" in the workspace`, { brandId: id });
+  // Memoised on the workspace configuration and the brand file's size and mtime (a hand edit not yet reloaded counts).
+  let stamp = '-';
+  try {
+    const st = statSync(join(ctx.ws.home, brandRel(id)));
+    stamp = `${st.size}:${st.mtimeMs}`;
+  } catch { /* missing: readRaw reports it */ }
+  return structuredClone(memoOf(ctx)(`brand\u0000${id}\u0000${stamp}`, [WS], () => brandFile(ctx, id)));
+}
+
+function brandFile(ctx, id) {
   const file = readRaw(ctx, brandRel(id));
   if (file === undefined) throw new DossierError('BRAND_NOT_FOUND', `No brand "${id}" in the workspace`, { brandId: id });
   const resolved = ctx.ws.brands.get(id);

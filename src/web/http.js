@@ -150,20 +150,45 @@ export function contentDisposition(type, filename) {
   return `${type}; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
 }
 
+/** Cache-Control of content-addressed files a gated user may read: kept a year, never by a shared cache. */
+export const CACHE_PRIVATE_IMMUTABLE = 'private, max-age=31536000, immutable';
+/** Cache-Control of content-addressed files anyone may read (brand assets requested with their content hash). */
+export const CACHE_PUBLIC_IMMUTABLE = 'public, max-age=31536000, immutable';
+
+/**
+ * True when an `If-None-Match` header names `etag` (a bare hash, compared as the strong tag `"<etag>"`; weak `W/`
+ * tags compare by value, `*` matches anything).
+ * @param {string|string[]|undefined} header
+ * @param {string} etag
+ * @returns {boolean}
+ */
+export function etagMatches(header, etag) {
+  if (!header) return false;
+  const want = `"${etag}"`;
+  return String(header).split(',').map((t) => t.trim()).some((t) => t === '*' || t.replace(/^W\//, '') === want);
+}
+
 /**
  * Send stored bytes. PDFs are shown inline (the browser viewer); every other type gets `Content-Security-Policy:
  * sandbox` so an uploaded HTML or SVG file cannot run script with this site's origin. `download` forces an attachment.
+ * With `etag` (the file's sha256) the reply carries `ETag: "<etag>"` and, when the request's `If-None-Match` names
+ * it, is an empty 304. Callers check access before calling, so a 304 is only ever sent to a user who may read the
+ * file. `cacheControl` defaults to `private, no-store`.
  * @param {import('fastify').FastifyReply} reply
  * @param {{ buffer: Buffer, filename: string, mime: string }} file
- * @param {{ download?: boolean }} [opts]
+ * @param {{ download?: boolean, etag?: string, cacheControl?: string, req?: import('fastify').FastifyRequest }} [opts]
  */
-export function sendFile(reply, { buffer, filename, mime }, { download = false } = {}) {
+export function sendFile(reply, { buffer, filename, mime }, { download = false, etag, cacheControl = 'private, no-store', req } = {}) {
+  reply.header('Cache-Control', cacheControl);
+  if (etag) {
+    reply.header('ETag', `"${etag}"`);
+    if (etagMatches(req?.headers['if-none-match'], etag)) return reply.code(304).send();
+  }
   const type = String(mime || 'application/octet-stream');
   const textual = /^text\//.test(type) && !/charset=/i.test(type);
   reply.header('Content-Type', textual ? `${type}; charset=utf-8` : type);
   reply.header('Content-Disposition', contentDisposition(download ? 'attachment' : 'inline', filename));
   reply.header('X-Content-Type-Options', 'nosniff');
-  reply.header('Cache-Control', 'private, no-store');
   if (type !== 'application/pdf') reply.header('Content-Security-Policy', 'sandbox');
   return reply.send(buffer);
 }
