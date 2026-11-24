@@ -19,7 +19,8 @@ const FORMAT = 1;
  * Dossier (or editing a built-in template's shared helper) never serves a render made by other code.
  */
 export const RENDER_CODE_PATHS = Object.freeze([
-  'src/render', 'src/templates', 'src/workspace', 'src/domain', 'src/services/generator.js', 'src/paths.js',
+  'src/render', 'src/templates', 'src/workspace', 'src/domain', 'src/services/generator.js', 'src/services/fields.js',
+  'src/paths.js',
 ]);
 
 const require = createRequire(import.meta.url);

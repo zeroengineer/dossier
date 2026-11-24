@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, utimesSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import sharp from 'sharp';
 import { tmpDir } from '../helpers/tmp.js';
 import { initWorkspace } from '../../src/workspace/index.js';
@@ -11,7 +11,7 @@ import { getTemplate } from '../../src/services/templates.js';
 import { resolveTemplateFields } from '../../src/services/fields.js';
 import { readRendition } from '../../src/services/documents.js';
 import { generateDocument, previewDocument, renderWithCache } from '../../src/services/generator.js';
-import { evictRenderCache, renderCacheDir, renderRuntime } from '../../src/cache/renderCache.js';
+import { RENDER_CODE_PATHS, evictRenderCache, renderCacheDir, renderRuntime } from '../../src/cache/renderCache.js';
 import { main } from '../../src/cli.js';
 
 sharp.cache(false);
@@ -218,3 +218,26 @@ test('dossier cache clear empties the render cache', () => withCtx(async (ctx, h
   assert.equal(await main(['cache', 'purge'], io), 1);
   assert.match(out.join(''), /expected: cache clear/);
 }));
+
+test('every module the render layer and templates import is part of the render code hash', () => {
+  const root = join(import.meta.dirname, '..', '..');
+  const files = [];
+  const walk = (d) => {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      const p = join(d, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (p.endsWith('.js')) files.push(p);
+    }
+  };
+  for (const p of ['src/render', 'src/templates']) walk(join(root, p));
+  const outside = new Set();
+  for (const f of files) {
+    for (const m of readFileSync(f, 'utf8').matchAll(/from '(\.[^']+)'/g)) {
+      const r = relative(root, resolve(dirname(f), m[1])).split('\\').join('/');
+      if (!RENDER_CODE_PATHS.some((c) => r === c || r.startsWith(`${c}/`))) outside.add(r);
+    }
+  }
+  // errors.js only defines the error class; it never shapes rendered bytes.
+  assert.deepEqual([...outside].sort(), ['src/errors.js']);
+  assert.ok(RENDER_CODE_PATHS.includes('src/services/fields.js'), 'proposalTemplate imports coerceMoney from services/fields.js');
+});
