@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react"
+import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
 import { emptySearchResult, searchResult } from "@/test/fixtures-search"
@@ -44,8 +44,9 @@ describe("CommandPalette", () => {
 
   it("searches once after typing stops, with limit 8, and groups Documents and Entities", async () => {
     const urls = recordSearches()
-    const { user, dialog, input } = await openPalette()
-    await user.type(input, "acme")
+    const { dialog, input } = await openPalette()
+    // Keystrokes in quick succession (user.type can leave gaps above 200 ms on a loaded test machine).
+    for (const value of ["a", "ac", "acm", "acme"]) fireEvent.change(input, { target: { value } })
 
     const docs = await waitFor(() => group(dialog, "Documents"))
     expect(urls).toHaveLength(1)
@@ -74,7 +75,12 @@ describe("CommandPalette", () => {
   })
 
   it("never opens a previous query's result while the next one is pending", async () => {
-    recordSearches()
+    // The second query never answers, so its results stay pending however slow the test machine is.
+    server.use(
+      http.get("*/api/search", ({ request }) =>
+        new URL(request.url).searchParams.get("q") === "acme" ? HttpResponse.json(searchResult) : new Promise<never>(() => {}),
+      ),
+    )
     const { user, dialog, input, router } = await openPalette()
     await user.type(input, "acme")
     await waitFor(() =>
