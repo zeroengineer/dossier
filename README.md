@@ -66,12 +66,23 @@ The folder tree is generated from metadata, never stored: `node bin/dossier.js t
 
 Built-in templates: `invoice`, `debit-note` and `receipt` (the legacy invoice layout; tax lines from the brand's `tax.modes`, one shared counter through the brand `series` map). A debit note can name the invoice it `adjusts`; a receipt lists the invoices and debit notes it `pays`. The letter family: `offer-letter` (with the salary annexure), `internship-offer`, `internship-certificate`, `experience-certificate` and `relieving-letter` (the legacy letter layouts; certificates numbered in the `hr-cert` series, offer letters unnumbered unless the brand maps a series; clause lists and other wording replaceable per brand with `templateParams` or per document). The statements: `employee-final-settlement`, `ticketing-settlement-statement` (ticket sales, platform fee with GST, net settlement), `client-final-settlement` (numbered `FSS/{CLIENT}/{YYYY}/{###}`, `settles` invoices), `remittance-statement` (optionally `pays` documents) and `expense-statement`; amounts are computed in paise and the engagement, when given, is stored on the document. `mou` is Markdown-bodied (an organisation-wide and an event body, neutral clauses; the legacy v2 MoU layout with signature cards and an optional draft watermark) and `board-resolution` prints a certified board resolution with director lists. `proposal` (numbered in the `quotation` series, one counter per `{CODE}` (scope `brand+year+code`), the code from the engagement or client) and `pricing-report` (`report` series) draw the legacy gen-2 proposal and pricing report layouts: cover, contents with page numbers and sections given as data (`sections: [{ title, blocks, subsections? }]`, default content in the template params), with fee cards, a fixed-price card, the two-column sign-off from brand signatories and fee calculator tables (Delegate Paid / Organiser Paid, rates as params, exact paise maths). A workspace folder `templates/<id>/` without `index.js` reuses the built-in module with its own `body.md` and/or `template.json`, so private wording never needs a copy of the code. See "Built-in templates" in `docs/TEMPLATES.md`.
 
+## MCP server (Claude Code)
+
+`src/mcp.js` serves the vault to Claude Code over stdio: search, entities, templates, preview and generation, document status and links, plus the folder tree and documents as resources. Register it with:
+
+```sh
+claude mcp add dossier --env DOSSIER_HOME=/path/to/workspace -- node /path/to/dossier/src/mcp.js
+```
+
+It acts as `DOSSIER_USER` (default `mcp`) with that user's clearance, records its writes in the audit log as `mcp:<user>`, and picks up workspace changes (for example from the web settings) without a restart. See `docs/MCP.md` for the tool reference.
+
 ## Documentation
 
 - `docs/PLAN.md`: architecture, data model, rules, cache layers, testing and build order.
 - `docs/DISCOVERY.md`: findings from the legacy document scripts this app replaces (redacted).
 - `docs/WORKSPACE.md`: creating and customising a workspace (brands, assets, series, seeds).
 - `docs/TEMPLATES.md`: template folders, `template.json` fields and sources, the block model, the PDF/HTML/Markdown renderers and generation.
+- `docs/MCP.md`: the MCP server: setup, tools, resources and security notes.
 - `docs/DECISIONS.md`: small decisions and their reasons.
 
 ## License
