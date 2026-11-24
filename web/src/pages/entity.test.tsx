@@ -1,6 +1,6 @@
-import { configure, screen, waitFor, within } from "@testing-library/react"
+import { screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { acmeDocuments } from "@/test/fixtures-entities"
 import { renderApp } from "@/test/render"
 import { server } from "@/test/server"
@@ -15,16 +15,11 @@ beforeEach(() => {
     http.get("*/api/documents", ({ request }) => {
       const params = new URL(request.url).searchParams
       documentQueries.push(params)
-      return HttpResponse.json({ documents: params.get("entityId") === "1" ? acmeDocuments : [] })
+      const documents = params.get("entityId") === "1" ? acmeDocuments : []
+      return HttpResponse.json({ documents, total: documents.length })
     }),
   )
 })
-// Lazy route chunks and dialogs can take over a second to appear on a loaded machine (parallel suites): allow
-// 5 s per query and 20 s per test.
-// Vitest isolates test files, so this only affects this file.
-configure({ asyncUtilTimeout: 5000 })
-vi.setConfig({ testTimeout: 20_000, hookTimeout: 20_000 })
-
 // The page is a lazy route chunk: load it once up front so the first test does not race its cold import.
 beforeAll(async () => {
   await import("@/pages/entity")
@@ -76,8 +71,17 @@ describe("Entity page", () => {
     const docs = within(await screen.findByText("Documents", { selector: "[data-slot=card-title]" }).then((h) => h.closest<HTMLElement>("[data-slot=card]")!))
     expect(await docs.findByRole("link", { name: "Event services invoice" })).toHaveAttribute("href", "/documents/DOC-000001")
     expect(docs.getByRole("link", { name: "Venue confirmation letter" })).toBeInTheDocument()
-    expect(docs.getByText("1 more document refers to this entity but is not listed (above your clearance).")).toBeInTheDocument()
+    expect(docs.getByText("1 more document refers to this entity above your clearance.")).toBeInTheDocument()
+    expect(docs.queryByText(/Showing the latest/)).not.toBeInTheDocument()
     expect(documentQueries.some((p) => p.get("entityId") === "1" && p.get("limit") === "100")).toBe(true)
+  })
+
+  it("says how many visible documents are past the first page, apart from those above the clearance", async () => {
+    // 152 visible documents, 2 returned: none above the clearance (documentCount 3 is below the visible total).
+    server.use(http.get("*/api/documents", () => HttpResponse.json({ documents: acmeDocuments, total: 152 })))
+    renderApp("/entities/1")
+    expect(await screen.findByText(/Showing the latest 2 of 152 documents\. 150 more are not listed here\./)).toBeInTheDocument()
+    expect(screen.queryByText(/above your clearance/)).not.toBeInTheDocument()
   })
 
   it("says so when there are no relations or documents", async () => {

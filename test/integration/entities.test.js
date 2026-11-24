@@ -6,7 +6,7 @@ import { writeWorkspace } from '../helpers/workspace.js';
 import { initWorkspace } from '../../src/workspace/index.js';
 import { openContext } from '../../src/context.js';
 import {
-  upsertEntity, getEntity, findEntities, relateEntities, unrelateEntities, seedEntities, entityDocumentCount,
+  upsertEntity, getEntity, findEntities, relateEntities, unrelateEntities, seedEntities, entityDocumentCount, entityDocumentCounts,
 } from '../../src/services/entities.js';
 import { listDocuments } from '../../src/services/documentQueries.js';
 
@@ -176,6 +176,9 @@ test('getEntity by id or name/alias, with relations in both directions and docum
   assert.equal(getEntity(ctx, acmeClient.id).documentCount, 1);
   assert.equal(entityDocumentCount(ctx, acme.id), 2);
   assert.equal(entityDocumentCount(ctx, jordan.id), 0);
+  // One grouped query for many ids gives the same figures (each document counted once per entity).
+  assert.deepEqual([...entityDocumentCounts(ctx, [acme.id, acmeClient.id, jordan.id])], [[acme.id, 2], [acmeClient.id, 1], [jordan.id, 0]]);
+  assert.equal(entityDocumentCounts(ctx, []).size, 0);
 
   // listDocuments({ entityId }) finds every document the count covers (any reference), and nothing else.
   assert.deepEqual(listDocuments(ctx, { entityId: acme.id }).map((d) => d.id).sort(), ['DOC-000001', 'DOC-000002']);

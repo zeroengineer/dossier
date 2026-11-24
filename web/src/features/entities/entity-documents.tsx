@@ -1,6 +1,6 @@
 import type { ColumnDef } from "@tanstack/react-table"
 import { Link, useNavigate } from "react-router"
-import { ENTITY_DOCUMENTS_LIMIT, useEntityDocuments } from "@/api/entities"
+import { useEntityDocuments } from "@/api/entities"
 import type { DocumentSummary, EntityDetail } from "@/api/types"
 import { DataTable, DataTableColumnHeader } from "@/components/data-table"
 import { DateText } from "@/components/date-text"
@@ -53,7 +53,9 @@ export function EntityDocuments({ entity }: { entity: EntityDetail }) {
   const navigate = useNavigate()
   const { data, isPending, isError, error, refetch } = useEntityDocuments(entity.id)
   const documents = data?.documents ?? []
-  const hidden = data ? entity.documentCount - documents.length : 0
+  // `total` counts what the user may see; documentCount counts everything (clearance is not applied to it).
+  const pastLimit = data ? Math.max(0, data.total - documents.length) : 0
+  const aboveClearance = data ? Math.max(0, entity.documentCount - data.total) : 0
 
   return (
     <Card>
@@ -77,10 +79,16 @@ export function EntityDocuments({ entity }: { entity: EntityDetail }) {
             showPagination={documents.length > 20}
           />
         )}
-        {hidden > 0 ? (
+        {pastLimit > 0 ? (
           <p className="text-sm text-muted-foreground">
-            {hidden} more {hidden === 1 ? "document refers" : "documents refer"} to this entity but {hidden === 1 ? "is" : "are"} not
-            listed (above your clearance{documents.length >= ENTITY_DOCUMENTS_LIMIT ? ` or beyond the first ${ENTITY_DOCUMENTS_LIMIT}` : ""}).
+            Showing the latest {documents.length} of {data?.total} documents. {pastLimit} more {pastLimit === 1 ? "is" : "are"} not
+            listed here.
+          </p>
+        ) : null}
+        {aboveClearance > 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {aboveClearance} more {aboveClearance === 1 ? "document refers" : "documents refer"} to this entity above your
+            clearance.
           </p>
         ) : null}
       </CardContent>

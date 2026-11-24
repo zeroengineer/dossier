@@ -1,15 +1,9 @@
-import { configure, screen, waitFor, within } from "@testing-library/react"
+import { screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeAll, describe, expect, it } from "vitest"
 import type { EntityInput } from "@/api/types"
 import { renderApp } from "@/test/render"
 import { server } from "@/test/server"
-
-// Lazy route chunks and dialogs can take over a second to appear on a loaded machine (parallel suites): allow
-// 5 s per query and 20 s per test.
-// Vitest isolates test files, so this only affects this file.
-configure({ asyncUtilTimeout: 5000 })
-vi.setConfig({ testTimeout: 20_000, hookTimeout: 20_000 })
 
 // The page is a lazy route chunk: load it once up front so the first test does not race its cold import.
 beforeAll(async () => {

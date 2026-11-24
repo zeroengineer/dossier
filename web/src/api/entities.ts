@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { request } from "@/lib/api"
 import { keys } from "@/lib/keys"
-import type { DocumentSummary, EntityDetail, EntityInput, EntityList, EntityRelation } from "./types"
+import type { DocumentList, EntityDetail, EntityInput, EntityList, EntityRelation } from "./types"
 
 /** Largest `limit` `GET /api/entities` accepts; the entities page loads the whole list (client-side table). */
 export const ENTITY_LIST_LIMIT = 500
@@ -42,12 +42,15 @@ export function useEntity(id: string) {
   return useQuery({ queryKey: entityKeys.detail(id), queryFn: ({ signal }) => fetchEntity(id, signal), enabled: id !== "" })
 }
 
-/** Documents referencing the entity in any role that the user may see (`GET /api/documents?entityId=`). */
+/**
+ * The first documents referencing the entity in any role that the user may see (`GET /api/documents?entityId=`),
+ * with `total`: every such document the user may see.
+ */
 export function useEntityDocuments(id: number | undefined) {
   return useQuery({
     queryKey: entityKeys.documents(id ?? 0),
     queryFn: ({ signal }) =>
-      request<{ documents: DocumentSummary[] }>("/api/documents", { query: { entityId: id, limit: ENTITY_DOCUMENTS_LIMIT }, signal }),
+      request<DocumentList>("/api/documents", { query: { entityId: id, limit: ENTITY_DOCUMENTS_LIMIT }, signal }),
     enabled: id !== undefined,
   })
 }

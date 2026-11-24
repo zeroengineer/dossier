@@ -383,6 +383,34 @@ describe('generate in the browser', () => {
 });
 
 describe('access control', () => {
+  test('GET /api/documents?entityId= lists documents referencing the entity, without those above the clearance', async () => {
+    const vendor = (await api('POST', '/api/entities', { kind: 'vendor', name: 'Example Stage Rentals' })).json();
+    const other = (await api('POST', '/api/entities', { kind: 'vendor', name: 'Example Sound Hire' })).json();
+    const asParty = createDocument(ctx, { type: 'Purchase Order', title: 'Stage rental order', partyId: vendor.id, sensitivity: 'Internal' });
+    const asIssuer = createDocument(ctx, { type: 'Letter', title: 'Issued letter', issuingEntityId: vendor.id, sensitivity: 'Public' });
+    const linked = createDocument(ctx, {
+      type: 'Contract', title: 'Confidential stage contract', sensitivity: 'Confidential', entities: [{ entityId: vendor.id, role: 'named' }],
+    });
+    createDocument(ctx, { type: 'Purchase Order', title: 'Sound order', partyId: other.id, sensitivity: 'Internal' });
+
+    const all = await api('GET', `/api/documents?entityId=${vendor.id}`);
+    assert.equal(all.statusCode, 200);
+    assert.deepEqual(all.json().documents.map((d) => d.id).sort(), [asParty.id, asIssuer.id, linked.id].sort());
+    assert.equal(all.json().total, 3);
+    const listed = (await api('GET', `/api/entities?kind=vendor&q=${encodeURIComponent('Example Stage Rentals')}`)).json().entities;
+    assert.equal(listed[0].documentCount, 3, 'the list count covers every reference');
+    assert.equal((await api('GET', `/api/entities/${vendor.id}`)).json().documentCount, 3);
+
+    const intern = await internApp.inject({ url: `/api/documents?entityId=${vendor.id}` });
+    assert.equal(intern.statusCode, 200);
+    assert.deepEqual(intern.json().documents.map((d) => d.id).sort(), [asParty.id, asIssuer.id].sort(), 'the Confidential one is excluded');
+    assert.equal(intern.json().total, 2);
+
+    const bad = await api('GET', '/api/documents?entityId=abc');
+    assert.equal(bad.statusCode, 400);
+    assert.equal(bad.json().code, 'INVALID_INPUT');
+  });
+
   test('renditions and blobs above the user clearance are 403', async () => {
     const sha = (await api('GET', `/api/documents/${secret.id}`)).json().renditions[0].sha256;
     assert.equal((await app.inject({ url: `/blobs/${sha}/minutes.pdf` })).statusCode, 200);

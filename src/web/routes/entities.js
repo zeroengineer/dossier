@@ -1,4 +1,4 @@
-import { entityDocumentCount, findEntities, getEntity, relateEntities, upsertEntity } from '../../services/entities.js';
+import { entityDocumentCounts, findEntities, getEntity, relateEntities, upsertEntity } from '../../services/entities.js';
 import { ENTITY_KINDS, ENTITY_RELATION_ROLES } from '../../domain/enums.js';
 import { DossierError, isDossierError } from '../../errors.js';
 import { entitiesPage, entityPage } from '../views/entities.js';
@@ -94,11 +94,12 @@ export default async function entityRoutes(app, { ctx }) {
   });
 
   // ----- JSON API
-  // Each row carries `documentCount` (same figure as the detail view) for the entity list's table.
-  app.get('/api/entities', (req) => ({
-    entities: findEntities(ctx, { q: String(req.query.q ?? ''), kind: req.query.kind || undefined, limit: limitOf(req.query.limit) })
-      .map((e) => ({ ...e, documentCount: entityDocumentCount(ctx, e.id) })),
-  }));
+  // Each row carries `documentCount` (same query as the detail view, one statement for every row).
+  app.get('/api/entities', (req) => {
+    const entities = findEntities(ctx, { q: String(req.query.q ?? ''), kind: req.query.kind || undefined, limit: limitOf(req.query.limit) });
+    const counts = entityDocumentCounts(ctx, entities.map((e) => e.id));
+    return { entities: entities.map((e) => ({ ...e, documentCount: counts.get(e.id) ?? 0 })) };
+  });
   app.get('/api/entities/:id', (req) => getEntity(ctx, /^\d+$/.test(req.params.id) ? Number(req.params.id) : req.params.id, { kind: req.query.kind || undefined }));
   app.post('/api/entities', (req, reply) => {
     const body = req.body ?? {};
