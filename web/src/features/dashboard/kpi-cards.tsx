@@ -11,14 +11,16 @@ import { deltaOf, headlineInvoiced, type Delta } from "./figures"
 
 const DELTA_ICON = { up: TrendingUpIcon, down: TrendingDownIcon, flat: MinusIcon } as const
 
-/** Change against the previous period: green up, red down (the only accent), muted when flat. */
+/**
+ * Change against the previous period: green up, red down (the only accent), muted when flat. `label` (what it is
+ * compared with) follows the visible percentage as screen-reader text.
+ */
 function DeltaBadge({ delta, label }: { delta: Delta; label: string }) {
   const Icon = DELTA_ICON[delta.direction]
   const sign = delta.direction === "up" ? "+" : delta.direction === "down" ? "−" : ""
   return (
     <Badge
       variant="outline"
-      aria-label={label}
       data-direction={delta.direction}
       className={cn(
         "tabular-nums",
@@ -30,6 +32,7 @@ function DeltaBadge({ delta, label }: { delta: Delta; label: string }) {
       <Icon data-icon="inline-start" />
       {sign}
       {delta.percent}%
+      {label ? <span className="sr-only"> {label}</span> : null}
     </Badge>
   )
 }
@@ -85,7 +88,7 @@ export function KpiCards({ data }: { data: DashboardSummary }) {
         label="Documents"
         value={num(kpis.documents)}
         delta={docDelta}
-        deltaLabel={`${num(previous.documents)} in ${prevPeriod}`}
+        deltaLabel={`vs ${prevPeriod} (${num(previous.documents)})`}
         caption={`In the last ${days} days · ${num(previous.documents)} ${previous.documents === 1 ? "document" : "documents"} in ${prevPeriod}`}
       />
       <KpiCard
@@ -99,7 +102,7 @@ export function KpiCards({ data }: { data: DashboardSummary }) {
         label="Amount invoiced"
         value={formatMoney(headline?.amountMinor ?? 0, currency, locale)}
         delta={invoicedDelta}
-        deltaLabel={prevSame ? `${formatMoney(prevSame.amountMinor, currency, locale)} in ${prevPeriod}` : undefined}
+        deltaLabel={prevSame ? `vs ${prevPeriod} (${formatMoney(prevSame.amountMinor, currency, locale)})` : undefined}
         caption={
           others.length
             ? `Also ${others.map((o) => formatMoney(o.amountMinor, o.currency, locale)).join(", ")}`

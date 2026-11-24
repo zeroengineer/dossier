@@ -39,16 +39,19 @@ export interface ChartPoint {
   count: number
 }
 
-/** The timeline as chart points: one per day, or one per 7-day bucket (from the range start) for the 90-day view. */
+/**
+ * The timeline as chart points: one per day, or one per 7-day bucket for the 90-day view. Buckets are anchored at the
+ * range end, so only the oldest bucket can be short and the latest week is always complete.
+ */
 export function chartPoints(timeline: Array<{ date: string; count: number }>, days: DashboardDays): ChartPoint[] {
   if (days < 90) return timeline.map((t) => ({ date: t.date, end: t.date, count: t.count }))
   const out: ChartPoint[] = []
-  for (let i = 0; i < timeline.length; i += 7) {
-    const week = timeline.slice(i, i + 7)
+  for (let end = timeline.length; end > 0; end -= 7) {
+    const week = timeline.slice(Math.max(0, end - 7), end)
     const first = week[0]
     const last = week.at(-1)
     if (!first || !last) continue
-    out.push({ date: first.date, end: last.date, count: week.reduce((s, t) => s + t.count, 0) })
+    out.unshift({ date: first.date, end: last.date, count: week.reduce((s, t) => s + t.count, 0) })
   }
   return out
 }

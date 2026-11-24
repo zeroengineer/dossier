@@ -30,7 +30,8 @@ export function WarningsCard({ warnings }: { warnings: DashboardWarning[] }) {
           <ul className="flex flex-col gap-2" aria-label="Warnings">
             {warnings.map((w, i) => (
               <li key={`${w.code}:${w.href}:${i}`}>
-                <Alert>
+                {/* Static list items, not live announcements: drop the shared Alert's role="alert". */}
+                <Alert role={undefined}>
                   <TriangleAlertIcon />
                   <AlertTitle>{titleOf(w.code)}</AlertTitle>
                   <AlertDescription>

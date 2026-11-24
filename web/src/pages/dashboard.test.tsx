@@ -18,7 +18,8 @@ function trackDays() {
   return seen
 }
 
-describe("Dashboard page", () => {
+// Above LOAD so a slow first lazy render fails on the assertion, not the test timeout.
+describe("Dashboard page", { timeout: 15_000 }, () => {
   afterEach(() => server.events.removeAllListeners())
 
   it("shows the KPI cards from /api/dashboard", async () => {
@@ -34,10 +35,10 @@ describe("Dashboard page", () => {
   it("shows delta pills only from the previous period the API sends", async () => {
     renderApp("/dashboard")
     const documents = await screen.findByTestId("kpi-documents", undefined, LOAD)
-    const up = within(documents).getByLabelText("2 in the previous 30 days")
+    const up = within(documents).getByText("vs the previous 30 days (2)").closest("[data-direction]")
     expect(up).toHaveTextContent("+50%")
     expect(up).toHaveAttribute("data-direction", "up")
-    const down = within(screen.getByTestId("kpi-invoiced")).getByLabelText(/in the previous 30 days/)
+    const down = within(screen.getByTestId("kpi-invoiced")).getByText("vs the previous 30 days (₹25,000.00)").closest("[data-direction]")
     expect(down).toHaveTextContent("−50%")
     expect(down).toHaveAttribute("data-direction", "down")
     // Drafts and conflicts are all-time figures without a previous period: no pill.
@@ -78,6 +79,8 @@ describe("Dashboard page", () => {
     renderApp("/dashboard")
     expect(await screen.findByText("acme:2026", undefined, LOAD)).toBeInTheDocument()
     const warnings = screen.getByRole("list", { name: "Warnings" })
+    // Static list items: not announced as live alerts.
+    expect(within(warnings).queryByRole("alert")).toBeNull()
     expect(within(warnings).getByText("Number conflict")).toBeInTheDocument()
     expect(within(warnings).getByRole("link", { name: /Fix/ })).toHaveAttribute("href", "/documents/DOC-000003")
   })
