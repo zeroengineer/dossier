@@ -6,6 +6,8 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ### Added
 
+- Dashboard page: KPI cards with change against the previous period, documents-over-time chart (weekly for 90 days), recent documents, series counters and workspace warnings; 7/30/90-day range kept in `?days=`.
+- Documents page: server-paged table with type, status, party and date-range filters kept in the URL, column visibility, and correction of out-of-range pages; `GET /api/documents` now also returns `total`.
 - Vault page: resizable folder tree that loads folders from `/api/tree` as they are expanded, deep links `/vault/<node id>`, breadcrumb and a documents table per folder. Tree documents (web API, MCP tree resource and CLI) now include `type` and `docDate`.
 - Templates page: every template with category, type, version, numbering, renditions, sensitivity and source (built-in, workspace or inherited), filters, a Generate action per row, and an alert listing template folders that failed to load.
 - Settings API for the web app: `GET /api/series/usage`, `GET /api/brands/:id/assets` (effective file per slot with `source`, `present`, `version` and a pinned url), `GET /api/brands/:id/file` (download as `<id>.json`), `GET /api/brands/:id/preview.pdf`; asset routes for the seal, watermark and large signatures.
