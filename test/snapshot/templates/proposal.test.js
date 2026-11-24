@@ -139,3 +139,46 @@ test('proposal: default sections; bad sections and rates are field errors', () =
   const badFees = resolveTemplateFields(ctx, t, { ...rest, fees: { gstPercent: 120 } }, { brandId: 'acme' });
   assert.match(badFees.errors.map((e) => e.message).join(), /gstPercent must be a number from 0 to 100/);
 }));
+
+test('proposal: a long contents list continues on further pages above the footer band', () => withExampleCtx(async (ctx) => {
+  const sections = Array.from({ length: 45 }, (_, i) => ({ title: `Section ${i + 1}`, blocks: [{ type: 'paragraph', text: 'Text.' }] }));
+  const { pdf } = await renderFixture(ctx, ID, { input: { ...fixtureInput(ID), sections }, number: NUMBER });
+  const items = await extractItems(pdf);
+  // pdfjs joins the number and the title into one item when they are close ("10. Section 10").
+  const entries = items.filter((i) => /^(?:\d+\.\s*)?Section \d+$/.test(i.text) && i.size === 11.5)
+    .map((i) => ({ ...i, text: i.text.replace(/^\d+\.\s*/, ''), joined: /^\d/.test(i.text) }));
+  assert.equal(entries.length, 45);
+  const pagesUsed = [...new Set(entries.map((e) => e.page))];
+  assert.deepEqual(pagesUsed, [2, 3], 'contents on pages 2 and 3');
+  for (const e of entries) {
+    assert.ok(e.y + 11.5 * 1.366 <= PH - MB - 10, `${e.text} at ${e.y} reaches the footer band`);
+    const num = e.joined || items.find((i) => i.page === e.page && i.y === e.y && i.x === ML && /^\d+\.$/.test(i.text));
+    assert.ok(num, `${e.text}: number on the same line`);
+    const page = items.find((i) => i.page === e.page && i.y === e.y && i.x > PW / 2 && /^\d+$/.test(i.text));
+    assert.ok(page, `${e.text}: page number on the same line`);
+  }
+  const s45 = entries.find((e) => e.text === 'Section 45');
+  const h = items.find((i) => i.text === '45. Section 45' && i.size === 18);
+  assert.equal(items.find((i) => i.page === s45.page && i.y === s45.y && i.x > PW / 2 && /^\d+$/.test(i.text)).text, String(h.page));
+  assert.equal(items.find((i) => i.text === '1. Section 1' && i.size === 18).page, 4, 'sections start after the contents pages');
+}));
+
+test('proposal: malformed fee tables and bold rows are field errors; Markdown keeps bold rows in place', () => withExampleCtx(async (ctx) => {
+  const { getTemplate } = await import('../../../src/services/templates.js');
+  const { resolveTemplateFields } = await import('../../../src/services/fields.js');
+  const t = await getTemplate(ctx, ID);
+  const errorsOf = (input) => resolveTemplateFields(ctx, t, input, { brandId: 'acme' }).errors.map((e) => e.message).join('\n');
+  const one = (block) => ({ ...fixtureInput(ID), sections: [{ title: 'A', blocks: [block] }] });
+  const meta = structuredClone(t.meta);
+  meta.params.feeTables = { ...meta.params.feeTables, broken: { rows: [] }, noRows: { columns: [{ label: 'A' }, { label: 'B' }] }, short: { columns: [{ label: 'A' }, { label: 'B' }], rows: [{ label: 'x', values: ['base', 'base'] }] } };
+  const bad = { ...t, meta };
+  const errs = (kind) => resolveTemplateFields(ctx, bad, one({ type: 'custom', name: 'feeTable', data: { kind } }), { brandId: 'acme' }).errors.map((e) => e.message).join();
+  assert.match(errs('broken'), /params\.feeTables\.broken\.columns must be a list of at least 2 column objects/);
+  assert.match(errs('noRows'), /params\.feeTables\.noRows\.rows must be a non-empty list/);
+  assert.match(errs('short'), /rows\.0\.values must list one metric per value column \(1\)/);
+  const table = { type: 'table', columns: ['A', 'B'], rows: [['a', '1'], ['b', '2'], ['c', '3']], boldRows: [1, 3] };
+  assert.match(errorsOf(one(table)), /boldRows must be a list of row indices from 0 to 2/);
+  const { md, html } = await renderFixture(ctx, ID, { input: one({ ...table, boldRows: [1], totalRows: [['t', '6']] }), number: NUMBER });
+  assert.match(md, /\| a \| 1 \|\n\| \*\*b\*\* \| \*\*2\*\* \|\n\| c \| 3 \|\n\| \*\*t\*\* \| \*\*6\*\* \|/);
+  assert.match(html, /<td><strong>b<\/strong><\/td>/);
+}));

@@ -453,15 +453,15 @@
         "blocks": [
           {
             "type": "paragraph",
-            "text": "The following charges apply to paid events. For this illustration, the base ticket price is {examplePrice}."
+            "text": "Each paid ticket carries the charges below. The worked example uses a ticket priced at {examplePrice}."
           },
           {
             "type": "bullets",
             "items": [
-              "Platform Fee: {platformPercent}% of the base ticket price.",
-              "GST on Platform Fee: {gstPercent}% of the platform fee.",
-              "Payment Gateway Fee: {gatewayPercent}% of the processed transaction amount.",
-              "GST on Payment Gateway Fee: {gatewayGstPercent}% of the payment gateway fee."
+              "Platform fee: {platformPercent}% of the ticket price.",
+              "GST of {gstPercent}% charged on the platform fee.",
+              "Payment gateway fee: {gatewayPercent}% of the amount the gateway processes.",
+              "GST of {gatewayGstPercent}% charged on the payment gateway fee."
             ]
           },
           {
@@ -520,7 +520,7 @@
           },
           {
             "type": "paragraph",
-            "text": "Figures are for a base ticket price of {examplePrice}. Free events have no charges under either model."
+            "text": "All amounts above assume a {examplePrice} ticket; a free event costs nothing under either model."
           }
         ]
       },

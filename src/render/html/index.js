@@ -191,7 +191,7 @@ function blockHtml(b, ctx) {
       const cls = (c) => (c.align === 'right' || c.align === 'center' ? ` class="${c.align}"` : '');
       const width = (c) => (c.width ? ` style="width: ${pt(c.width)}"` : '');
       const head = b.header === false ? '' : `<thead><tr>${t.columns.map((c) => `<th${cls(c)}${width(c)}>${escapeHtml(c.label)}</th>`).join('')}</tr></thead>`;
-      const row = (r, total) => `<tr${total ? ' class="total"' : ''}>${t.columns.map((c) => `<td${cls(c)}>${escapeHtml(r[c.key])}</td>`).join('')}</tr>`;
+      const row = (r, total) => `<tr${total ? ' class="total"' : ''}>${t.columns.map((c) => `<td${cls(c)}>${inline(r[c.key])}</td>`).join('')}</tr>`;
       return `<table class="data">${head}<tbody>${t.rows.map((r) => row(r, false)).join('')}${t.totalRows.map((r) => row(r, true)).join('')}</tbody></table>`;
     }
     case 'keyValue':

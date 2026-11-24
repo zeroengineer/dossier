@@ -24,7 +24,7 @@
         { "type": "custom", "name": "feeCard", "data": { "label": "DOMESTIC FEE", "title": "Per domestic registration" } },
         { "type": "custom", "name": "feeCard", "data": { "label": "INTERNATIONAL", "title": "Per international registration", "rates": { "gatewayPercent": 3 } } },
         { "type": "heading", "level": 2, "text": "Commercial Notes" },
-        { "type": "bullets", "items": ["Applies only to registrations completed through the platform.", "Custom integrations are quoted separately."] }
+        { "type": "bullets", "items": ["Covers registrations made on the platform.", "Integrations are priced on request."] }
       ],
       "subsections": [
         {

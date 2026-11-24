@@ -93,3 +93,19 @@ test('pricing report: tier tables, rates from the fees field, examplePrice', () 
   near(t2.x + t2.width, PW - ML - 10, 'last tier column takes the rest');
   assert.ok(items.some((i) => i.text === '₹500.00'), 'examplePrice is the delegatePaid base');
 }));
+
+test('pricing report: a table longer than a page continues with its header', () => withExampleCtx(async (ctx) => {
+  const rows = Array.from({ length: 40 }, (_, i) => [`Row ${i + 1}`, String(i)]);
+  const input = { ...fixtureInput(ID), sections: [{ title: 'Long', blocks: [{ type: 'table', columns: [{ label: 'Item', width: 300 }, { label: 'Value', align: 'right' }], rows }] }] };
+  const { pdf } = await renderFixture(ctx, ID, { input, number: NUMBER });
+  const items = await extractItems(pdf);
+  const cells = items.filter((i) => /^Row \d+$/.test(i.text));
+  assert.equal(cells.length, 40);
+  for (const c of cells) assert.ok(c.y + 24 - 6 <= PH - MB - 10, `${c.text} below the content area`);
+  const pages = [...new Set(cells.map((c) => c.page))];
+  assert.equal(pages.length, 2);
+  const heads = items.filter((i) => i.text === 'Item' && i.font === 'Manrope-Bold');
+  assert.deepEqual(heads.map((h) => h.page), pages, 'header repeated');
+  const first2 = cells.find((c) => c.page === pages[1]);
+  assert.equal(first2.y, heads[1].y + 24);
+}));

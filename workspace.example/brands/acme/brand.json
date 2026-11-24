@@ -88,9 +88,9 @@
     "statement": "ops",
     "mou": "md",
     "board-resolution": "md",
-    "proposal": "md",
-    "proposalContact": "ops"
+    "proposal": "md"
   },
+  "projectContact": "ops",
   "strings": {
     "confidential": "Confidential",
     "invoiceDeclaration": "We declare that this invoice shows the actual price of the services described and that all particulars are true and correct.",

@@ -562,37 +562,37 @@
   },
   {
    "page": 3,
-   "text": "The following charges apply to paid events. For this illustration, the base ticket price is ₹1,000.00.",
+   "text": "Each paid ticket carries the charges below. The worked example uses a ticket priced at ₹1,000.00.",
    "x": 37.5,
    "y": 308,
    "baseline": 320,
    "size": 11.5,
    "font": "Manrope-Regular",
-   "width": 509
+   "width": 511
   },
   {
    "page": 3,
-   "text": "• Platform Fee: 2% of the base ticket price.",
+   "text": "• Platform fee: 2% of the ticket price.",
    "x": 37.5,
    "y": 336.5,
    "baseline": 348.5,
    "size": 11.5,
    "font": "Manrope-Regular",
-   "width": 229.5
+   "width": 199.5
   },
   {
    "page": 3,
-   "text": "• GST on Platform Fee: 18% of the platform fee.",
+   "text": "• GST of 18% charged on the platform fee.",
    "x": 37.5,
    "y": 358.5,
    "baseline": 371,
    "size": 11.5,
    "font": "Manrope-Regular",
-   "width": 251
+   "width": 225
   },
   {
    "page": 3,
-   "text": "• Payment Gateway Fee: 2% of the processed transaction amount.",
+   "text": "• Payment gateway fee: 2% of the amount the gateway processes.",
    "x": 37.5,
    "y": 381,
    "baseline": 393,
@@ -602,13 +602,13 @@
   },
   {
    "page": 3,
-   "text": "• GST on Payment Gateway Fee: 18% of the payment gateway fee.",
+   "text": "• GST of 18% charged on the payment gateway fee.",
    "x": 37.5,
    "y": 403,
    "baseline": 415.5,
    "size": 11.5,
    "font": "Manrope-Regular",
-   "width": 349
+   "width": 273.5
   },
   {
    "page": 3,
@@ -1532,13 +1532,13 @@
   },
   {
    "page": 5,
-   "text": "Figures are for a base ticket price of ₹1,000.00. Free events have no charges under either model.",
+   "text": "All amounts above assume a ₹1,000.00 ticket; a free event costs nothing under either model.",
    "x": 37.5,
    "y": 258,
    "baseline": 270.5,
    "size": 11.5,
    "font": "Manrope-Regular",
-   "width": 503
+   "width": 486
   },
   {
    "page": 5,

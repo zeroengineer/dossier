@@ -525,7 +525,7 @@
               ],
               [
                 "Payment Gateway Fee",
-                "{gatewayPercent}% of (amount paid + platform fee + GST on platform fee)"
+                "{gatewayPercent}% of the payment, the platform fee and its GST"
               ],
               [
                 "GST on Payment Gateway Fee",
@@ -544,7 +544,7 @@
           {
             "type": "bullets",
             "items": [
-              "The commercial terms apply only to registrations completed through the platform.",
+              "These rates cover registrations made on the platform; registrations handled elsewhere are outside this proposal.",
               "Custom development, integrations or services outside the scope above will be quoted separately.",
               "GST is charged as per the prevailing regulations.",
               "{company} may update platform features, pricing or service terms with prior notice."
@@ -695,7 +695,7 @@
     {
       "name": "projectContact",
       "label": "Project contact",
-      "source": "brand.defaultSignatory.proposalContact",
+      "source": "brand.projectContact",
       "type": "string",
       "help": "Brand signatory id printed as the project contact in the sign-off"
     },

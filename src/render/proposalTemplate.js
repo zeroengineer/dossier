@@ -41,7 +41,22 @@ function checkFeeTable(data, params, at) {
   const def = params.feeTables?.[data.kind];
   if (!isPlainObject(def)) throw new Error(`${at}: feeTable kind "${data.kind}" is not defined in params.feeTables (known: ${Object.keys(params.feeTables ?? {}).join(', ')})`);
   const layout = def.layout ?? 'metrics';
-  if (!FEE_LAYOUTS.includes(layout)) throw new Error(`${at}: feeTables.${data.kind}.layout must be one of ${FEE_LAYOUTS.join(', ')}`);
+  const where = `params.feeTables.${data.kind}`;
+  if (!FEE_LAYOUTS.includes(layout)) throw new Error(`${at}: ${where}.layout must be one of ${FEE_LAYOUTS.join(', ')}`);
+  const minColumns = layout === 'perBase' ? 1 : 2;
+  if (!Array.isArray(def.columns) || def.columns.length < minColumns || !def.columns.every(isPlainObject)) {
+    throw new Error(`${at}: ${where}.columns must be a list of at least ${minColumns} column objects ({ label, width?, align? })`);
+  }
+  if (layout !== 'perBase' && (!Array.isArray(def.rows) || def.rows.length === 0 || !def.rows.every(isPlainObject))) {
+    throw new Error(`${at}: ${where}.rows must be a non-empty list of row objects ({ label, ${layout === 'tiers' ? 'value' : 'values'} })`);
+  }
+  if (layout === 'metrics') {
+    def.rows.forEach((r, i) => {
+      if (!Array.isArray(r.values) || r.values.length !== def.columns.length - 1) {
+        throw new Error(`${at}: ${where}.rows.${i}.values must list one metric per value column (${def.columns.length - 1})`);
+      }
+    });
+  }
   const metric = (m, where) => {
     if (!FEE_METRICS.includes(m)) throw new Error(`${at}: feeTables.${data.kind}${where}: unknown metric "${m}" (known: ${FEE_METRICS.join(', ')})`);
   };
@@ -67,8 +82,11 @@ function checkBlocks(blocks, at, values, params) {
   blocks.forEach((b, i) => {
     const where = `${at}.blocks[${i}]`;
     if (b.type === 'signature') throw new Error(`${where}: signature blocks are not used here (use { "type": "custom", "name": "signOff" })`);
-    if (b.type === 'table' && b.boldRows !== undefined && !(Array.isArray(b.boldRows) && b.boldRows.every(Number.isInteger))) {
-      throw new Error(`${where}: boldRows must be a list of row indices`);
+    if (b.type === 'table' && b.boldRows !== undefined) {
+      const n = b.rows.length;
+      if (!(Array.isArray(b.boldRows) && b.boldRows.every((i) => Number.isInteger(i) && i >= 0 && i < n))) {
+        throw new Error(`${where}: boldRows must be a list of row indices from 0 to ${n - 1}`);
+      }
     }
     if (b.type !== 'custom') return;
     if (!PROPOSAL_CUSTOM_BLOCKS.includes(b.name)) throw new Error(`${where}: unknown custom block "${b.name}" (known: ${PROPOSAL_CUSTOM_BLOCKS.join(', ')})`);
@@ -384,12 +402,16 @@ function outputBlocks(b) {
     const m = b.model;
     const keyed = (cells) => Object.fromEntries(cells.map((c, i) => [`c${i}`, c]));
     const total = new Set(m.total);
-    const bold = new Set(m.bold.filter((i) => !total.has(i)));
+    const bold = new Set(m.bold);
+    // Total rows that end the table stay total rows; any other bold or total row keeps its place, marked bold.
+    let tail = m.rows.length;
+    while (tail > 0 && total.has(tail - 1)) tail--;
+    const marked = (cells, i) => (bold.has(i) ? cells.map((x) => (x ? `**${x}**` : x)) : cells);
     return [{
       type: 'table',
       columns: m.columns.map((c, i) => ({ key: `c${i}`, label: c.label, width: c.width, align: c.align ?? 'left' })),
-      rows: m.rows.filter((_, i) => !total.has(i)).map((cells, i) => keyed(bold.has(i) ? cells.map((x) => (x ? `**${x}**` : x)) : cells)),
-      totalRows: m.rows.filter((_, i) => total.has(i)).map(keyed),
+      rows: m.rows.slice(0, tail).map((cells, i) => keyed(marked(cells, i))),
+      totalRows: m.rows.slice(tail).map(keyed),
     }];
   }
   if (b.type === 'pageBreak' && b.minSpace !== undefined) return [];

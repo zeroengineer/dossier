@@ -285,10 +285,19 @@ function fixedTable(ctx, f, t, style) {
       x += widths[i];
     });
   };
-  doc.rect(profile.ML, y, profile.CW, rowH).fill(col(ctx, s.header.fill));
-  cellsAt(t.columns.map((c) => c.label), y, s.header, s.header.color);
-  y += rowH;
+  const header = () => {
+    doc.rect(profile.ML, y, profile.CW, rowH).fill(col(ctx, s.header.fill));
+    cellsAt(t.columns.map((c) => c.label), y, s.header, s.header.color);
+    y += rowH;
+  };
+  header();
   t.rows.forEach((cells, idx) => {
+    // A table longer than a page (it did not fit after the break above) continues on the next page with its header.
+    if (y + rowH > profile.PH - profile.MB - (profile.CP ?? 0)) {
+      doc.addPage();
+      y = doc.y;
+      header();
+    }
     if (t.total.includes(idx)) {
       doc.rect(profile.ML, y, profile.CW, rowH).fill(col(ctx, s.total.fill));
       cellsAt(cells, y, s.total, s.total.color);
@@ -494,14 +503,21 @@ function contentsPage(ctx, f, contents, pages, entriesOut) {
   const s = f.contents;
   doc.addPage();
   heading(ctx, f, 1, contents.title, { pages });
+  const textW = CW - s.textX - s.rightPad;
   for (const e of contents.entries) {
+    // A long contents list continues on further pages (after the letterhead); each entry's number, title and page
+    // number are drawn at the y and on the page recorded here.
+    const st = e.sub ? s.sub : s.entry;
+    setFont(ctx, st);
+    const h = doc.heightOfString(e.text, { width: textW, lineGap: st.lineGap }) + (e.sub ? 0 : s.ruleDy);
+    if (needsBreak(ctx, h)) doc.addPage();
     const y = doc.y;
     entriesOut.push({ y, key: e.key, sub: e.sub, page: ctx.pageNumber });
     if (e.sub) {
-      setFont(ctx, s.sub).text(e.text, ML + s.textX, y, { width: CW - s.textX - s.rightPad, lineGap: s.sub.lineGap });
+      setFont(ctx, s.sub).text(e.text, ML + s.textX, y, { width: textW, lineGap: s.sub.lineGap });
     } else {
       setFont(ctx, s.entry).text(e.num, ML, y, { width: s.numberWidth, lineGap: s.entry.lineGap })
-        .text(e.text, ML + s.textX, y, { width: CW - s.textX - s.rightPad, lineGap: s.entry.lineGap });
+        .text(e.text, ML + s.textX, y, { width: textW, lineGap: s.entry.lineGap });
       doc.moveTo(ML, doc.y + s.ruleDy).lineTo(PW - MR, doc.y + s.ruleDy).strokeColor(col(ctx, s.rule.color)).lineWidth(s.rule.width).stroke();
     }
     doc.moveDown(e.sub ? s.subAfter : s.after);
