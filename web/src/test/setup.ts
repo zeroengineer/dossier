@@ -1,7 +1,11 @@
 import "@testing-library/jest-dom/vitest"
-import { cleanup } from "@testing-library/react"
+import { cleanup, configure } from "@testing-library/react"
 import { afterAll, afterEach, beforeAll } from "vitest"
 import { server } from "./server"
+
+// Pages are lazy route chunks; the first one a test file loads is transformed cold, which can take over the default
+// 1 s under a full parallel run. Give findBy/waitFor room so first-load tests do not flake.
+configure({ asyncUtilTimeout: 5000 })
 
 beforeAll(() => server.listen({ onUnhandledFrame: "error" }))
 afterEach(() => {
