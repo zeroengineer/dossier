@@ -6,6 +6,7 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ### Added
 
+- Search page (`/search?q=`) with Matched, Related and Entities sections and highlighted snippets; the ⌘K palette now shows live document and entity results (debounced `/api/search`, 8 per query), a Create group with one item per template, and a "Search for …" fallback. Results from an earlier query can never be opened while the next one loads.
 - Document actions: a status menu limited to the allowed transitions, with every change confirmed (Superseded as destructive); Regenerate, Upload new version and Download; an edit-details dialog with number-conflict warnings; add a link through document search; remove links with confirmation.
 - Dashboard page: KPI cards with change against the previous period, documents-over-time chart (weekly for 90 days), recent documents, series counters and workspace warnings; 7/30/90-day range kept in `?days=`.
 - Documents page: server-paged table with type, status, party and date-range filters kept in the URL, column visibility, and correction of out-of-range pages; `GET /api/documents` now also returns `total`.
