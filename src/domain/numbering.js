@@ -10,6 +10,9 @@ import { DossierError } from '../errors.js';
 /** Tokens a pattern may use besides the counter. */
 export const NUMBER_TOKENS = ['YYYY', 'YY', 'MM', 'FY', 'CLIENT', 'CODE', 'BRAND'];
 
+/** Counter scopes (`series.json` `scope`). */
+const SCOPES = ['global', 'brand', 'brand+year', 'brand+year+client', 'brand+year+code'];
+
 /** Prefix of every numbering row in `sequences` (keeps them apart from the `doc-id` counter). */
 export const SCOPE_KEY_PREFIX = 'num:';
 
@@ -235,25 +238,28 @@ export function yearBasis(pattern) {
 }
 
 /**
- * The `sequences` key of a series for some vars: `num:<counter>[:<BRAND>][:<year>][:<CLIENT>]` by scope
- * (`global`, `brand`, `brand+year`, `brand+year+client`). Series sharing a counter share keys. The year part is the
+ * The `sequences` key of a series for some vars: `num:<counter>[:<BRAND>][:<year>][:<CLIENT>|:C=<CODE>]` by scope
+ * (`global`, `brand`, `brand+year`, `brand+year+client`, `brand+year+code`: one counter per `{CODE}`, e.g. quotations
+ * per client/product code). Series sharing a counter share keys. The year part is the
  * calendar year when the pattern has `{YYYY}`, else `FY<fy>` when it has `{FY}`, else the calendar year of the date.
  * @param {{ pattern: string, scope: string, counter?: string, id: string }} series
- * @param {{ date?: string|Date, year?: number, fy?: string, brand?: string, client?: string }} vars
+ * @param {{ date?: string|Date, year?: number, fy?: string, brand?: string, client?: string, code?: string }} vars
  * @returns {string}
  */
 export function scopeKey(series, vars = {}) {
   const basis = yearBasis(series.pattern);
   const r = resolver(vars);
   const scope = series.scope ?? 'brand+year';
-  if (!['global', 'brand', 'brand+year', 'brand+year+client'].includes(scope)) {
+  if (!SCOPES.includes(scope)) {
     throw new DossierError('INVALID_INPUT', `Unknown series scope "${scope}"`, { scope });
   }
   const parts = [`${SCOPE_KEY_PREFIX}${series.counter ?? series.id}`];
   if (scope !== 'global') parts.push(r.codeVar('BRAND'));
-  if (scope === 'brand+year' || scope === 'brand+year+client') {
+  if (scope.startsWith('brand+year')) {
     parts.push(basis === 'fy' ? `FY${r.fy()}` : String(r.year()));
   }
   if (scope === 'brand+year+client') parts.push(r.codeVar('CLIENT'));
+  // `C=` keeps code keys apart from client keys of a series that later changes scope.
+  if (scope === 'brand+year+code') parts.push(`C=${r.codeVar('CODE')}`);
   return parts.join(':');
 }

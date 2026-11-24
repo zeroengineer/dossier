@@ -101,6 +101,9 @@ test('scopeKey follows scope and shared counter id', () => {
   assert.equal(scopeKey(series('{#}', 'brand'), vars), 'num:s:ACME');
   assert.equal(scopeKey(series('{YYYY}-{#}'), vars), 'num:s:ACME:2026');
   assert.equal(scopeKey(series('{YYYY}-{#}', 'brand+year+client'), vars), 'num:s:ACME:2026:DEMO-RETAIL');
+  assert.equal(scopeKey(series('{CODE}-{YYYY}-{#}', 'brand+year+code'), { ...vars, code: 'exc 26' }), 'num:s:ACME:2026:C=EXC-26');
+  assert.throws(() => scopeKey(series('{#}', 'brand+year+code'), { brand: 'acme', year: 2026 }), code('NUMBER_VAR_MISSING'));
+  assert.throws(() => scopeKey(series('{#}', 'brand+day'), vars), code('INVALID_INPUT'));
   assert.equal(scopeKey(series('DN-{YYYY}-{#}', 'brand+year', 'dn', 'inv'), vars), 'num:inv:ACME:2026');
 });
 

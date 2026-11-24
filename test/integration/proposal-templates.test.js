@@ -19,11 +19,13 @@ test('proposal and pricing-report load as built-ins without errors', () => withE
   assert.deepEqual(listTemplateErrors(ctx), []);
 }));
 
-test('proposal: quotation numbers use {CODE} (engagement, else client, else the code field; one brand+year counter); party and engagement stored', () => withExampleCtx(async (ctx) => {
+test('proposal: quotation numbers use {CODE} (engagement, else client, else the code field; one counter per code); party and engagement stored', () => withExampleCtx(async (ctx) => {
   const a = await generateDocument(ctx, 'proposal', fixtureInput('proposal'));
   const b = await generateDocument(ctx, 'proposal', { ...fixtureInput('proposal'), engagement: undefined, sections: undefined });
   const c = await generateDocument(ctx, 'proposal', { ...fixtureInput('proposal'), code: 'CUSTOM' });
-  assert.deepEqual([a.number, b.number, c.number], ['ACM-Q-EXC26-2026-01', 'ACM-Q-EISS-2026-02', 'ACM-Q-CUSTOM-2026-03']);
+  assert.deepEqual([a.number, b.number, c.number], ['ACM-Q-EXC26-2026-01', 'ACM-Q-EISS-2026-01', 'ACM-Q-CUSTOM-2026-01']);
+  const a2 = await generateDocument(ctx, 'proposal', fixtureInput('proposal'));
+  assert.equal(a2.number, 'ACM-Q-EXC26-2026-02', 'the EXC26 counter continues independently');
   assert.deepEqual(a.warnings, []);
   const doc = getDocument(ctx, a.documentId);
   assert.deepEqual([doc.type, doc.party.type, doc.party.name, doc.docDate], ['Proposal', 'Client', 'Example Institute of Sample Studies', '2026-11-13']);

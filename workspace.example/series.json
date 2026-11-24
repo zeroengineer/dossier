@@ -2,7 +2,7 @@
   { "id": "invoice-main", "pattern": "ACM-{YYYY}-{####}", "scope": "brand+year", "start": 1 },
   { "id": "debit-note", "pattern": "ACM-DN-{YYYY}-{####}", "scope": "brand+year", "counter": "invoice-main" },
   { "id": "receipt", "pattern": "ACM-REC-{YYYY}-{####}", "scope": "brand+year", "counter": "invoice-main" },
-  { "id": "quotation", "pattern": "ACM-Q-{CODE}-{YYYY}-{##}", "scope": "brand+year" },
+  { "id": "quotation", "pattern": "ACM-Q-{CODE}-{YYYY}-{##}", "scope": "brand+year+code" },
   { "id": "report", "pattern": "ACM-REP-{YYYY}-{###}", "scope": "brand+year" },
   { "id": "hr-cert", "pattern": "ACM/HR/{YYYY}/EXP-{###}", "scope": "brand+year" },
   { "id": "settlement", "pattern": "FSS/{CLIENT}/{YYYY}/{###}", "scope": "brand+year+client" },

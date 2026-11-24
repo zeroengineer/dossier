@@ -83,6 +83,14 @@ test('BrandSchema rejects a tax.defaultMode that is not a declared mode', () => 
   assert.match(formatIssues(r.error), /tax\.defaultMode/);
 });
 
+test('BrandSchema: projectContact must name a signatory', () => {
+  const sig = { id: 'ops', name: 'Alex Example', title: 'Officer' };
+  assert.equal(BrandSchema.parse(minimalBrand('acme', { signatories: [sig], projectContact: 'ops' })).projectContact, 'ops');
+  const r = BrandSchema.safeParse(minimalBrand('acme', { signatories: [sig], projectContact: 'nobody' }));
+  assert.equal(r.success, false);
+  assert.match(formatIssues(r.error), /projectContact: unknown signatory "nobody"/);
+});
+
 test('SeriesFileSchema fills start and counter defaults', () => {
   const s = SeriesFileSchema.parse([
     { id: 'inv', pattern: 'X-{YYYY}-{####}', scope: 'brand+year' },
@@ -104,6 +112,13 @@ test('SeriesFileSchema rejects a bad scope, duplicate ids and an unknown counter
   const ctr = SeriesFileSchema.safeParse([{ id: 'a', pattern: 'A', scope: 'global', counter: 'zzz' }]);
   assert.equal(ctr.success, false);
   assert.match(formatIssues(ctr.error), /0\.counter/);
+});
+
+test('SeriesFileSchema: brand+year+code needs {CODE} in the pattern', () => {
+  assert.equal(SeriesFileSchema.safeParse([{ id: 'q', pattern: 'Q-{CODE}-{YYYY}-{##}', scope: 'brand+year+code' }]).success, true);
+  const bad = SeriesFileSchema.safeParse([{ id: 'q', pattern: 'Q-{YYYY}-{##}', scope: 'brand+year+code' }]);
+  assert.equal(bad.success, false);
+  assert.match(formatIssues(bad.error), /0\.scope: scope brand\+year\+code needs a \{CODE\} token/);
 });
 
 test('SeriesFileSchema validates patterns and shared-counter scopes', () => {

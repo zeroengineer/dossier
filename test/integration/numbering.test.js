@@ -15,6 +15,7 @@ const SERIES = [
   { id: 'settlement', pattern: 'FSS/{CLIENT}/{YYYY}/{###}', scope: 'brand+year+client' },
   { id: 'fy-series', pattern: 'ACM/{FY}/{###}', scope: 'brand+year', start: 100 },
   { id: 'global', pattern: '{BRAND}-{#}', scope: 'global' },
+  { id: 'quote-code', pattern: 'ACM-QC-{CODE}-{YYYY}-{##}', scope: 'brand+year+code' },
 ];
 
 function setup(dir) {
@@ -140,6 +141,17 @@ test('registerExisting parses legacy numbers and seeds past them', () => withCtx
   assert.equal(allocateNumber(ctx, 'invoice-main', { ...d, brandId: 'beta' }).number, 'ACM-2026-0010');
   assert.throws(() => registerExisting(ctx, 'invoice-main', 'ACM-DN-2026-0001'), code('NUMBER_UNPARSEABLE'));
   assert.throws(() => registerExisting(ctx, 'nope', 'X'), code('SERIES_UNKNOWN'));
+}));
+
+test('brand+year+code: each {CODE} keeps its own counter; registerExisting seeds the parsed code', () => withCtx((ctx) => {
+  const d = { date: '2026-07-28' };
+  const n = (code) => allocateNumber(ctx, 'quote-code', { ...d, code }).number;
+  assert.deepEqual([n('EISS'), n('EISS'), n('SSP'), n('eiss')], ['ACM-QC-EISS-2026-01', 'ACM-QC-EISS-2026-02', 'ACM-QC-SSP-2026-01', 'ACM-QC-EISS-2026-03']);
+  const r = registerExisting(ctx, 'quote-code', 'ACM-QC-DEMO-2026-17');
+  assert.deepEqual([r.scopeKey, r.next], ['num:quote-code:ACME:2026:C=DEMO', 18]);
+  assert.deepEqual([n('DEMO'), n('SSP')], ['ACM-QC-DEMO-2026-18', 'ACM-QC-SSP-2026-02']);
+  assert.equal(allocateNumber(ctx, 'quote-code', { date: '2027-01-02', code: 'EISS' }).number, 'ACM-QC-EISS-2027-01');
+  assert.throws(() => allocateNumber(ctx, 'quote-code', d), code('NUMBER_VAR_MISSING'));
 }));
 
 test('two connections on one file: sequential allocations continue the same counter', () => {

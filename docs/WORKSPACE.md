@@ -80,6 +80,7 @@ The folder name must equal `id`. Paths in `brand.json` are relative to the brand
 | `assets.watermark` | none | image path |
 | `signatories` | `[]` | `[{ id, name, title, titleLong?, signature?, signatureLarge?, email?, phone? }]`; `signature` is the compact image (invoices), `signatureLarge` the letter-family image (falls back to `signature`) |
 | `defaultSignatory` | `{}` | `{ "<templateId or category>": "<signatoryId>" }` |
+| `projectContact` | none | signatory id printed as the project contact in proposal sign-offs (must be one of `signatories`) |
 | `strings` | `{}` | free text used by templates, e.g. `confidential`, `invoiceDeclaration`, `thankYou`, `forCompany` |
 | `tax.modes` | one mode `none` | `[{ id, label, rates: [{ label, rate }] }]`, rate as a fraction (`0.09`) |
 | `tax.defaultMode` | `none` | must be one of `tax.modes` |
@@ -117,11 +118,11 @@ If a referenced file is missing, Dossier uses a neutral grey placeholder from `a
 |---|---|---|
 | `id` | required | unique |
 | `pattern` | required | literal text plus tokens: `{YYYY}`, `{YY}`, `{MM}` (from the document date), `{FY}` (Indian financial year, April-March, e.g. `2026-27`), `{BRAND}` (brand id), `{CLIENT}` (client code), `{CODE}` (asked per document), and exactly one counter `{#…#}`, zero-padded and never truncated (`{###}` = 3 digits, `1234` stays `1234`). Any other `{…}` is an error |
-| `scope` | `brand+year` | where the counter restarts: `global`, `brand`, `brand+year`, `brand+year+client` |
+| `scope` | `brand+year` | where the counter restarts: `global`, `brand`, `brand+year`, `brand+year+client`, `brand+year+code` (one counter per `{CODE}`, e.g. quotations `ACM-Q-EISS-2026-01`, `-02` and `ACM-Q-SSP-2026-01`) |
 | `start` | `1` | first number; a series that shares another's counter uses that series' `start` |
 | `counter` | own id | share another series' counter (e.g. invoices, debit notes and receipts on one sequence) |
 
-`{BRAND}`, `{CLIENT}` and `{CODE}` values are uppercased and reduced to `A-Z`, `0-9` and `-` (spaces and `_` become `-`). The year of a year-scoped counter is the calendar year when the pattern has `{YYYY}`, else the financial year when it has `{FY}`, else the calendar year of the document date; so a `{FY}` series restarts in April. `counter` must name a series that owns its counter (no chains), and a series that shares a counter must have the owner's `scope` and count by the same kind of year, otherwise the workspace does not load. `{CODE}` does not split a counter; `{CLIENT}` does only with scope `brand+year+client`.
+`{BRAND}`, `{CLIENT}` and `{CODE}` values are uppercased and reduced to `A-Z`, `0-9` and `-` (spaces and `_` become `-`). The year of a year-scoped counter is the calendar year when the pattern has `{YYYY}`, else the financial year when it has `{FY}`, else the calendar year of the document date; so a `{FY}` series restarts in April. `counter` must name a series that owns its counter (no chains), and a series that shares a counter must have the owner's `scope` and count by the same kind of year, otherwise the workspace does not load. `{CLIENT}` splits a counter only with scope `brand+year+client`, and `{CODE}` only with scope `brand+year+code` (which then needs a code for every number; `registerExisting` seeds the counter of the code it parses).
 
 ## seeds/entities.json
 

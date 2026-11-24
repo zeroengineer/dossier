@@ -7,7 +7,7 @@ import { CLEARANCES, ENTITY_KINDS, ENTITY_RELATION_ROLES } from '../domain/enums
 
 // Re-exported for existing importers; defined in src/domain/enums.js.
 export { CLEARANCES, ENTITY_KINDS, ENTITY_RELATION_ROLES };
-export const SERIES_SCOPES = ['global', 'brand', 'brand+year', 'brand+year+client'];
+export const SERIES_SCOPES = ['global', 'brand', 'brand+year', 'brand+year+client', 'brand+year+code'];
 export const FONT_WEIGHTS = ['regular', 'medium', 'semibold', 'bold', 'extrabold', 'light', 'extralight'];
 
 /** Default brand palette (DISCOVERY A2, neutral family). */
@@ -106,6 +106,8 @@ export const BrandSchema = z.object({
   assets: z.object({ logo: nonEmpty.default('assets/logo.png'), seal: text.optional(), watermark: text.optional() }).prefault({}),
   signatories: z.array(SignatorySchema).default([]),
   defaultSignatory: z.record(z.string(), id).default({}),
+  // Signatory printed as the project contact in proposal sign-offs.
+  projectContact: id.optional(),
   strings: z.record(z.string(), text).default({}),
   tax: z.object({
     modes: z.array(TaxModeSchema).min(1).default([{ id: 'none', label: 'No tax', rates: [] }]),
@@ -128,6 +130,9 @@ export const BrandSchema = z.object({
   for (const [key, sid] of Object.entries(b.defaultSignatory)) {
     if (!seen.has(sid)) ctx.addIssue({ code: 'custom', path: ['defaultSignatory', key], message: `unknown signatory "${sid}"` });
   }
+  if (b.projectContact !== undefined && !seen.has(b.projectContact)) {
+    ctx.addIssue({ code: 'custom', path: ['projectContact'], message: `unknown signatory "${b.projectContact}"` });
+  }
 });
 
 // ---------- series.json ----------
@@ -149,8 +154,11 @@ export const SeriesFileSchema = z.array(SeriesSchema).superRefine((list, ctx) =>
   const validPattern = new Set();
   list.forEach((s, i) => {
     try {
-      patternTokens(s.pattern);
+      const tokens = patternTokens(s.pattern);
       validPattern.add(s);
+      if (s.scope === 'brand+year+code' && !tokens.some((t) => t.token === 'CODE')) {
+        ctx.addIssue({ code: 'custom', path: [i, 'scope'], message: 'scope brand+year+code needs a {CODE} token in the pattern' });
+      }
     } catch (err) {
       ctx.addIssue({ code: 'custom', path: [i, 'pattern'], message: err.message });
     }
