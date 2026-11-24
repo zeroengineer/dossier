@@ -113,8 +113,8 @@ describe("AppShell", () => {
   })
 
   it("renders placeholder pages with their title and an empty state", async () => {
-    renderApp("/templates")
-    expect(await screen.findByRole("heading", { level: 1, name: "Templates" })).toBeInTheDocument()
+    renderApp("/settings/numbering")
+    expect(await screen.findByRole("heading", { level: 1, name: "Numbering" })).toBeInTheDocument()
     expect(screen.getByText("This page is being built")).toBeInTheDocument()
   })
 

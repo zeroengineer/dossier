@@ -216,4 +216,47 @@ export interface DocumentDetail extends DocumentSummary {
   relations: DocumentRelation[]
   createdBy: string | null
   createdAt: string
+
+// templates
+
+/** Where a template comes from (src/services/templates.js): shipped with Dossier, or the workspace's `templates/`. */
+export type TemplateSource = "builtin" | "workspace"
+
+/** `numbering` of a template.json: `series` is a series id, or `"brand"` for the brand's own series for the template. */
+export interface TemplateNumbering {
+  series: string
+  required?: boolean
+}
+
+/** One row of `GET /api/templates` (src/web/routes/templates.js entrySummary). */
+export interface TemplateSummary {
+  id: string
+  version: number
+  type: string
+  title: string
+  category: string
+  source: TemplateSource
+  description: string | null
+  sensitivity: SensitivityLevel
+  renditions: string[]
+  numbering: TemplateNumbering | null
+  /** Present (true) on a workspace override that reuses a built-in template's module. */
+  inherits?: true
+}
+
+/** A template folder that does not load (src/services/templates.js errorEntry). */
+export interface TemplateLoadError {
+  id: string
+  source: TemplateSource
+  /** Server path of the template folder. */
+  path: string
+  code: string
+  message: string
+  details: Record<string, unknown>
+}
+
+/** `GET /api/templates`. Templates sorted by id; folders that fail to load are listed in `errors` instead. */
+export interface TemplateList {
+  templates: TemplateSummary[]
+  errors: TemplateLoadError[]
 }
