@@ -2,7 +2,7 @@ import { DossierError } from '../errors.js';
 import { STATUSES } from '../domain/status.js';
 import { accessibleLevels } from '../domain/sensitivity.js';
 import { summaryOf } from './documentQueries.js';
-import { findEntities } from './entities.js';
+import { findEntities, normaliseName } from './entities.js';
 import { expandRelated } from './searchExpand.js';
 
 const invalid = (message, details = {}) => new DossierError('INVALID_INPUT', message, details);
@@ -55,7 +55,8 @@ export function search(ctx, opts = {}) {
   if (text === '') return { hits: [], related: [], entities: [] };
 
   const hits = rankHits([...numberMatches(ctx, text, filter, limit), ...ftsMatches(ctx, text, filter, limit)], limit);
-  const entities = findEntities(ctx, { q: text, limit: ENTITY_LIMIT });
+  // findEntities lists everything for an empty key, so a punctuation-only query must not reach it.
+  const entities = normaliseName(text) === '' ? [] : findEntities(ctx, { q: text, limit: ENTITY_LIMIT });
   const related = expand
     ? expandRelated(ctx, { hitIds: hits.map((h) => h.row.id), entityIds: entities.map((e) => e.id), filter, limit })
     : [];

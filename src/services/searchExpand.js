@@ -18,22 +18,20 @@ export const EXPAND_ROLES = Object.freeze(['party', 'signatory', 'named']);
  * @param {object} ctx
  * @param {string[]} hitIds
  * @param {DocFilter} filter
- * @returns {RelatedRow[]}
+ * @returns {Generator<RelatedRow>} rows are read lazily, so a caller that stops early stops the query
  */
-function viaDocuments(ctx, hitIds, filter) {
+function* viaDocuments(ctx, hitIds, filter) {
   const stmt = ctx.db.prepare(
     'SELECT d.*, x.type AS via_type FROM ('
     + 'SELECT id, to_doc AS other, type FROM document_relations WHERE from_doc = :hit '
     + 'UNION ALL SELECT id, from_doc AS other, type FROM document_relations WHERE to_doc = :hit'
     + `) x JOIN documents d ON d.id = x.other WHERE ${filter.sql} ORDER BY x.id`,
   );
-  const out = [];
   for (const hit of hitIds) {
-    for (const row of stmt.all({ ...filter.params, hit })) {
-      out.push({ row, via: { kind: 'document', relation: row.via_type, from: hit } });
+    for (const row of stmt.iterate({ ...filter.params, hit })) {
+      yield { row, via: { kind: 'document', relation: row.via_type, from: hit } };
     }
   }
-  return out;
 }
 
 /**
@@ -41,9 +39,9 @@ function viaDocuments(ctx, hitIds, filter) {
  * @param {object} ctx
  * @param {number[]} entityIds
  * @param {DocFilter} filter
- * @returns {RelatedRow[]}
+ * @returns {Generator<RelatedRow>} rows are read lazily, so a caller that stops early stops the query
  */
-function viaEntities(ctx, entityIds, filter) {
+function* viaEntities(ctx, entityIds, filter) {
   const stmt = ctx.db.prepare(
     'SELECT d.*, x.role AS via_role FROM ('
     + "SELECT id AS doc, 'party' AS role, 0 AS ord FROM documents WHERE party_id = :entity "
@@ -53,13 +51,11 @@ function viaEntities(ctx, entityIds, filter) {
     + `) x JOIN documents d ON d.id = x.doc WHERE ${filter.sql} `
     + 'ORDER BY d.doc_date IS NULL, d.doc_date DESC, d.id DESC, x.ord',
   );
-  const out = [];
   for (const entity of entityIds) {
-    for (const row of stmt.all({ ...filter.params, entity })) {
-      out.push({ row, via: { kind: 'entity', relation: row.via_role, from: entity } });
+    for (const row of stmt.iterate({ ...filter.params, entity })) {
+      yield { row, via: { kind: 'entity', relation: row.via_role, from: entity } };
     }
   }
-  return out;
 }
 
 /**
@@ -73,11 +69,16 @@ function viaEntities(ctx, entityIds, filter) {
 export function expandRelated(ctx, { hitIds, entityIds, filter, limit }) {
   const seen = new Set(hitIds);
   const out = [];
-  for (const r of [...viaDocuments(ctx, hitIds, filter), ...viaEntities(ctx, entityIds, filter)]) {
+  // Both sources are lazy: reading stops as soon as `limit` documents are collected.
+  for (const r of chain(viaDocuments(ctx, hitIds, filter), viaEntities(ctx, entityIds, filter))) {
     if (seen.has(r.row.id)) continue;
     seen.add(r.row.id);
     out.push(r);
     if (out.length >= limit) break;
   }
   return out;
+}
+
+function* chain(...sources) {
+  for (const source of sources) yield* source;
 }

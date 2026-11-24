@@ -245,3 +245,28 @@ test('a database migrated before search existed is indexed when 002 is applied; 
   assert.deepEqual(ids(search(again, { q: 'harbour' }).hits), [id]);
   assert.equal(again.db.prepare('SELECT count(*) AS n FROM search_index').get().n, 1);
 }));
+
+test('a punctuation-only query matches no entities and expands nothing', () => withCtx((ctx) => {
+  paperTrail(ctx);
+  const person = upsertEntity(ctx, { kind: 'person', name: 'Jordan Placeholder' });
+  createDocument(ctx, { type: 'Agreement', title: 'Services', entities: [{ entityId: person.id, role: 'signatory' }] });
+  for (const q of ['*', '...', '-', '"', '+', '%', '( )']) {
+    assert.deepEqual(search(ctx, { q }), { hits: [], related: [], entities: [] }, `query ${JSON.stringify(q)}`);
+  }
+}));
+
+test('related documents stop at the limit', () => withCtx((ctx) => {
+  const client = upsertEntity(ctx, { kind: 'client', name: 'Demo Retail LLP' });
+  const invoice = createDocument(ctx, { type: 'Invoice', docNumber: 'INV-9', numberSeries: 'inv' }).id;
+  const receipts = [];
+  for (let i = 0; i < 5; i++) {
+    const r = createDocument(ctx, { type: 'Receipt', partyId: client.id, docDate: `2026-08-0${i + 1}` }).id;
+    linkDocuments(ctx, r, invoice, 'pays');
+    receipts.push(r);
+  }
+  const res = search(ctx, { q: 'INV-9', limit: 3 });
+  assert.deepEqual(ids(res.hits), [invoice]);
+  assert.deepEqual(ids(res.related), receipts.slice(0, 3));
+  const byEntity = search(ctx, { q: 'Demo Retail', limit: 2 });
+  assert.ok(byEntity.related.length <= 2);
+}));
