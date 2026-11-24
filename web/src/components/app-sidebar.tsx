@@ -118,7 +118,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="gap-3">
-        <Link to="/" className="flex items-center gap-2 px-1 pt-1 group-data-[collapsible=icon]:px-0" aria-label="Dossier home">
+        <Link to="/" className="flex items-center gap-1.5 px-1 pt-1 text-sidebar-foreground group-data-[collapsible=icon]:px-0" aria-label="Dossier home">
           <LogoMark />
           <LogoWordmark className="group-data-[collapsible=icon]:hidden" />
         </Link>

@@ -20,6 +20,10 @@ before(async () => {
   writeFileSync(join(dist, 'index.html'), INDEX);
   writeFileSync(join(dist, 'app', 'x.js'), 'console.log(1);\n');
   writeFileSync(join(dist, 'favicon.ico'), Buffer.from([0, 0, 1, 0]));
+  mkdirSync(join(dist, 'brand'));
+  writeFileSync(join(dist, 'brand', 'icon-192.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  writeFileSync(join(dist, 'brand', 'favicon.svg'), '<svg xmlns="http://www.w3.org/2000/svg"/>');
+  writeFileSync(join(dist, 'site.webmanifest'), '{"name":"Dossier"}');
   app = buildServer(ctx, { spaDir: dist });
   bare = buildServer(ctx, { spaDir: join(tmp.dir, 'no-dist') });
 });
@@ -99,6 +103,24 @@ describe('SPA serving', () => {
     const idx = await app.inject({ url: '/index.html' });
     assert.equal(idx.statusCode, 200);
     assert.equal(idx.headers['content-security-policy'], SPA_CSP);
+  });
+
+  test('brand icons and the web manifest are served from the build, revalidated, never the web app', async () => {
+    for (const [url, type] of [['/brand/icon-192.png', /^image\/png/], ['/brand/favicon.svg', /^image\/svg\+xml/], ['/site.webmanifest', /^application\/manifest\+json/]]) {
+      const r = await app.inject({ url });
+      assert.equal(r.statusCode, 200, url);
+      assert.match(r.headers['content-type'], type, url);
+      assert.equal(r.headers['cache-control'], 'public, max-age=0', url);
+      assert.ok(r.headers.etag || r.headers['last-modified'], `${url} has a validator`);
+      assert.notEqual(r.body, INDEX, url);
+    }
+    for (const url of ['/brand/missing.png', '/brand/sub/x.svg']) {
+      const r = await app.inject({ url });
+      assert.equal(r.statusCode, 404, url);
+      assert.notEqual(r.body, INDEX, url);
+    }
+    assert.equal((await bare.inject({ url: '/site.webmanifest' })).statusCode, 404);
+    assert.equal((await bare.inject({ url: '/brand/icon-192.png' })).statusCode, 404);
   });
 
   test('a missing build answers 503 with a one-line page and never crashes', async () => {

@@ -1,0 +1,5 @@
+<svg fill="#000000" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title"><title>Dossier</title>
+  <title id="title">Dossier</title>
+  <path id="bowl" fill="#000000" fill-rule="evenodd" d="M96 24H122A104 104 0 0 1 122 232H96V188H122A60 60 0 0 0 122 68H96Z"/>
+  <path id="accent" fill="#000000" fill-rule="evenodd" d="M42 16H74A6 6 0 0 1 80 22V234A6 6 0 0 1 74 240H42A6 6 0 0 1 36 234V22A6 6 0 0 1 42 16Z"/>
+</svg>
