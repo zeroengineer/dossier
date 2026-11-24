@@ -18,13 +18,17 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ApiError } from "@/lib/api"
 import { folderCrumbs, vaultHref } from "./paths"
 
+const documentHref = (id: string) => `/documents/${encodeURIComponent(id)}`
+
 const columns: ColumnDef<TreeDocument>[] = [
   {
     accessorKey: "displayName",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
     cell: ({ row }) => (
       <div className="flex min-w-0 flex-col">
-        <span className="truncate font-medium">{row.original.displayName}</span>
+        <Link to={documentHref(row.original.id)} className="truncate font-medium underline-offset-4 hover:underline">
+          {row.original.displayName}
+        </Link>
         <span className="text-xs text-muted-foreground">{row.original.id}</span>
       </div>
     ),
@@ -120,7 +124,7 @@ export function FolderDocuments({ nodeId }: { nodeId: string }) {
           columns={columns}
           data={folder.documents}
           getRowId={(d) => d.id}
-          onRowClick={(d) => void navigate(`/documents/${encodeURIComponent(d.id)}`)}
+          onRowClick={(d) => void navigate(documentHref(d.id))}
         />
       ) : (
         <EmptyFolder folder={folder} />

@@ -63,6 +63,7 @@ describe("Vault page", () => {
 
     const row = screen.getByText("2026-07-14_ExampleClientLLP_Invoice_ACM-2026-0001_v1.pdf").closest("tr")
     if (!row) throw new Error("no row")
+    expect(within(row).getByRole("link", { name: /ACM-2026-0001/ })).toHaveAttribute("href", "/documents/DOC-000001")
     expect(within(row).getByText("Sent")).toBeInTheDocument()
     expect(within(row).getByText("Invoice")).toBeInTheDocument()
     expect(within(row).getByText("Internal")).toBeInTheDocument()
