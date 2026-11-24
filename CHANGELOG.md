@@ -6,6 +6,7 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ### Added
 
+- Document actions: a status menu limited to the allowed transitions, with every change confirmed (Superseded as destructive); Regenerate, Upload new version and Download; an edit-details dialog with number-conflict warnings; add a link through document search; remove links with confirmation.
 - Dashboard page: KPI cards with change against the previous period, documents-over-time chart (weekly for 90 days), recent documents, series counters and workspace warnings; 7/30/90-day range kept in `?days=`.
 - Documents page: server-paged table with type, status, party and date-range filters kept in the URL, column visibility, and correction of out-of-range pages; `GET /api/documents` now also returns `total`.
 - Vault page: resizable folder tree that loads folders from `/api/tree` as they are expanded, deep links `/vault/<node id>`, breadcrumb and a documents table per folder. Tree documents (web API, MCP tree resource and CLI) now include `type` and `docDate`.
