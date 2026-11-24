@@ -311,3 +311,39 @@ test('generate rejects BigInt input with INVALID_INPUT before anything is writte
   await assert.rejects(generateDocument(ctx, 'test-note', { ...INPUT, total: 5n }), code('INVALID_INPUT'));
   assert.equal(count(ctx, 'SELECT COUNT(*) AS n FROM documents'), 0);
 }));
+
+test('regenerating keeps an engagement set on the document by hand when the template has no engagement field', async () => {
+  const { withExampleCtx, fixtureInput } = await import('../helpers/templateRender.js');
+  const { getEntity } = await import('../../src/services/entities.js');
+  const { updateMetadata } = await import('../../src/services/documents.js');
+  await withExampleCtx(async (ctx) => {
+    const inv = await generateDocument(ctx, 'invoice', fixtureInput('invoice'));
+    const eng = getEntity(ctx, 'Example Fest 2026 - Sample College', { kind: 'engagement' });
+    updateMetadata(ctx, inv.documentId, { engagementId: eng.id });
+    const again = await generateDocument(ctx, 'invoice', fixtureInput('invoice'), { documentId: inv.documentId });
+    assert.equal(again.versionNo, 2);
+    assert.equal(ctx.db.prepare('SELECT engagement_id FROM documents WHERE id = ?').get(inv.documentId).engagement_id, eng.id);
+  });
+});
+
+test('an engagement that belongs to another client is a field error (preview and generate)', async () => {
+  const { withExampleCtx, fixtureInput } = await import('../helpers/templateRender.js');
+  const { getEntity, relateEntities } = await import('../../src/services/entities.js');
+  await withExampleCtx(async (ctx) => {
+    const id = (name, kind) => getEntity(ctx, name, { kind }).id;
+    relateEntities(ctx, id('Example Fest 2026 - Sample College', 'engagement'), id('Example Institute of Sample Studies', 'client'), 'engagement_of');
+    relateEntities(ctx, id('Sample Annual Meet 2026', 'engagement'), id('Sample Society of Placeholders', 'client'), 'engagement_of');
+    const wrong = { ...fixtureInput('client-final-settlement'), engagement: 'Sample Annual Meet 2026' };
+    const p = await previewDocument(ctx, 'client-final-settlement', wrong);
+    assert.equal(p.ok, false);
+    assert.deepEqual(p.errors.map((e) => e.name), ['engagement']);
+    assert.match(p.errors[0].message, /belongs to "Sample Society of Placeholders", not to "Example Institute of Sample Studies"/);
+    await assert.rejects(generateDocument(ctx, 'client-final-settlement', wrong),
+      (err) => err?.code === 'FIELDS_INVALID' && err.details.errors[0].name === 'engagement');
+    const before = ctx.db.prepare('SELECT COUNT(*) AS n FROM documents').get().n;
+    assert.equal(before, 0, 'nothing generated');
+    // The engagement of the party itself is accepted and stored.
+    const ok = await generateDocument(ctx, 'client-final-settlement', fixtureInput('client-final-settlement'));
+    assert.equal(ctx.db.prepare('SELECT engagement_id FROM documents WHERE id = ?').get(ok.documentId).engagement_id, id('Example Fest 2026 - Sample College', 'engagement'));
+  });
+});

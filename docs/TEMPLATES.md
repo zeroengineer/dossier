@@ -235,7 +235,7 @@ What the generator fills in:
 |---|---|
 | number | series `numbering.series`, or `brand.series[<templateId>]` when it is `"brand"`; date = `values.date`; `{CLIENT}` = `values.clientCode`, else the party's `attrs.code`; `{CODE}` = `values.numberCode` (else `values.code`) |
 | party | the first field whose value is an entity of kind `partyKind` (party type `partyType`) |
-| engagement | the first field whose value is an entity of kind `engagement` (none: no engagement) |
+| engagement | the first field whose value is an entity of kind `engagement`; without one the document's engagement is left as it is (a regeneration keeps one set by hand). An engagement with `engagement_of` relations must belong to the party, else that field is invalid (`FIELDS_INVALID`, or `errors` in a preview) |
 | amount | `values.total` (minor units) in the locale's `currencyCode` |
 | date | `values.date` |
 | title | `<template title> - <party name>` |

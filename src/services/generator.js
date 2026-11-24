@@ -187,7 +187,8 @@ export async function previewDocument(ctx, templateId, input = {}, { brandId, di
   const template = await getTemplate(ctx, templateId, { dirs });
   checkClearance(ctx, template.meta);
   const bid = brandIdOf(ctx, brandId);
-  const { values, missing, errors } = resolveTemplateFields(ctx, template, input, { brandId: bid, today });
+  const { values, missing, errors: fieldErrors } = resolveTemplateFields(ctx, template, input, { brandId: bid, today });
+  const errors = [...fieldErrors, ...engagementErrors(template.meta, values)];
   if (missing.length || errors.length) return { ok: false, missing, errors };
   const rendered = await renderRenditions(ctx, template, values, {
     brand: bid, draft: true, creationDate: new Date(), input,
@@ -264,15 +265,34 @@ function seriesFor(ctx, meta, bid) {
   return sid;
 }
 
-/** The first field value that is an engagement entity (stored as the document's engagement), else null. */
+/**
+ * The first field holding an engagement entity (stored as the document's engagement): `{ field, entity }`, else null.
+ */
 function engagementOf(meta, values) {
   for (const f of meta.fields) {
     const src = parseSource(f.source);
     if (src.kind !== 'entity' && f.type !== 'entity') continue;
     const v = getPath(values, f.name);
-    if (isPlainObject(v) && v.kind === 'engagement' && Number.isSafeInteger(v.id)) return v;
+    if (isPlainObject(v) && v.kind === 'engagement' && Number.isSafeInteger(v.id)) return { field: f.name, entity: v };
   }
   return null;
+}
+
+/**
+ * Field errors for an engagement that belongs to another client: when the engagement has `engagement_of` relations,
+ * one of them must point at the document's party.
+ * @returns {Array<{ name: string, message: string }>}
+ */
+function engagementErrors(meta, values) {
+  const hit = engagementOf(meta, values);
+  const party = partyOf(meta, values);
+  if (!hit || !party) return [];
+  const owners = (hit.entity.relations ?? []).filter((r) => r.role === 'engagement_of' && r.direction === 'out').map((r) => r.entity);
+  if (!owners.length || owners.some((o) => o.id === party.id)) return [];
+  return [{
+    name: hit.field,
+    message: `engagement "${hit.entity.name}" belongs to ${owners.map((o) => `"${o.name}"`).join(', ')}, not to "${party.name}"`,
+  }];
 }
 
 /**
@@ -410,7 +430,9 @@ export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
   const status = statusFor(existing, opts.status, force);
   const bid = brandIdOf(ctx, opts.brandId ?? existing?.issuing_brand_id ?? undefined);
 
-  const { values, missing, errors } = resolveTemplateFields(ctx, template, input, { brandId: bid, today });
+  const resolved = resolveTemplateFields(ctx, template, input, { brandId: bid, today });
+  const { values, missing } = resolved;
+  const errors = [...resolved.errors, ...engagementErrors(meta, values)];
   const rel = relationTargets(meta, values);
   const allMissing = [...missing, ...rel.missing.filter((m) => !missing.some((x) => x.name === m.name))];
   if (allMissing.length) {
@@ -422,7 +444,7 @@ export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
   checkRelationTargets(ctx, rel.targets, existing?.id);
 
   const party = partyOf(meta, values);
-  const engagement = engagementOf(meta, values);
+  const engagement = engagementOf(meta, values)?.entity;
   const signer = signatoryEntity(ctx, meta, values);
   const issuer = issuerOf(ctx, bid);
   const docDate = typeof values.date === 'string' ? values.date : null;
@@ -434,7 +456,8 @@ export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
     title: documentTitle(meta, values),
     partyId: party?.id ?? null,
     partyType: party ? meta.partyType : null,
-    engagementId: engagement?.id ?? null,
+    // Only a resolved engagement field sets it, so regenerating never clears an engagement set on the document by hand.
+    ...(engagement ? { engagementId: engagement.id } : {}),
     issuingBrandId: bid,
     issuingEntityId: issuer,
     docDate,
