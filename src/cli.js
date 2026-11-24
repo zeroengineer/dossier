@@ -5,6 +5,7 @@ import { openContext } from './context.js';
 import { getNode } from './services/hierarchy.js';
 import { reindexAll } from './services/searchIndex.js';
 import { seedEntities } from './services/entities.js';
+import { importFolder } from './services/importer.js';
 import { clearRenderCache, renderCacheDir } from './cache/renderCache.js';
 
 /**
@@ -126,6 +127,36 @@ export const commands = {
       return 0;
     },
   },
+  import: {
+    usage: 'import <folder> [--index <csv>] [--dry-run] [--brand <id>] [--json]',
+    summary: 'register an existing document folder (or the files an index CSV lists) into the vault; source files are only read',
+    async run(args, io) {
+      const opts = {};
+      const rest = [];
+      let json = false;
+      for (let i = 0; i < args.length; i++) {
+        const a = args[i];
+        if (a === '--index' || a === '--brand') {
+          const v = args[++i];
+          if (v === undefined) throw new Error(`${a} needs a value`);
+          if (a === '--index') opts.index = resolve(io.cwd, v);
+          else opts.brandId = v;
+        } else if (a === '--dry-run') opts.dryRun = true;
+        else if (a === '--json') json = true;
+        else if (a.startsWith('--')) throw new Error(`unknown option ${a}`);
+        else rest.push(a);
+      }
+      if (rest.length !== 1) throw new Error('expected: import <folder> [--index <csv>] [--dry-run] [--brand <id>] [--json]');
+      const ctx = openContext({ home: loadConfig(io.env, io.cwd).home, env: io.env });
+      try {
+        const summary = await importFolder(ctx, { ...opts, folder: resolve(io.cwd, rest[0]) });
+        io.stdout.write(json ? `${JSON.stringify(summary, null, 2)}\n` : renderImportSummary(summary));
+      } finally {
+        ctx.close();
+      }
+      return 0;
+    },
+  },
   help: {
     usage: 'help',
     summary: 'show this help',
@@ -163,6 +194,37 @@ export function renderTree(node, { documents = true } = {}) {
     walk(node, 0);
   }
   return `${lines.join('\n')}\n`;
+}
+
+/**
+ * Plain-text summary table of an import (see importer.importFolder).
+ * @param {import('./services/importer.js').ImportSummary} s
+ * @returns {string}
+ */
+export function renderImportSummary(s) {
+  const rows = [
+    ['Files', s.files],
+    [s.dryRun ? 'Would import' : 'Imported', s.imported],
+    ['Already in vault', s.existing],
+    ['Duplicates (deduped)', s.deduped],
+    ['New entities', s.newEntities.length],
+    ['Numbers parsed', s.numbers.length],
+    ['Number conflicts', s.conflicts.length],
+    ['Skipped', s.skipped.length],
+    ['Warnings', s.warnings.length],
+  ];
+  const table = (list) => {
+    const w = Math.max(0, ...list.map(([k]) => String(k).length));
+    return list.map(([k, v]) => `  ${String(k).padEnd(w)}  ${v}`).join('\n');
+  };
+  const parts = [`Import of ${s.folder}${s.index ? ` (index ${s.index})` : ''}${s.dryRun ? ' -- dry run: nothing was written' : ''}`, table(rows)];
+  const byType = Object.entries(s.byType).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  if (byType.length) parts.push(`Documents by type\n${table(byType)}`);
+  if (s.newEntities.length) parts.push(`New entities\n${s.newEntities.map((e) => `  ${e.kind}: ${e.name}`).join('\n')}`);
+  if (s.conflicts.length) parts.push(`Number conflicts\n${s.conflicts.map((c) => `  ${c.number} (${c.series}): ${c.path} -- also ${c.conflictsWith.join(', ')}`).join('\n')}`);
+  if (s.skipped.length) parts.push(`Skipped\n${s.skipped.map((x) => `  ${x.path}: ${x.reason}`).join('\n')}`);
+  if (s.warnings.length) parts.push(`Warnings\n${s.warnings.map((x) => `  ${x.path}: ${x.message}`).join('\n')}`);
+  return `${parts.join('\n\n')}\n`;
 }
 
 function usage() {

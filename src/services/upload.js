@@ -21,7 +21,7 @@ const EXT_MIME = {
 const GENERIC_MIME = 'application/octet-stream';
 
 /** Keys of `meta` that steer the upload itself rather than describe the document. */
-const VERSION_KEYS = ['note', 'makeCurrent'];
+const VERSION_KEYS = ['note', 'makeCurrent', 'inputJson'];
 
 /**
  * Upload one file into the vault. Without `meta.documentId` a document is created from `meta` (createDocument
@@ -30,15 +30,18 @@ const VERSION_KEYS = ['note', 'makeCurrent'];
  * `pdf`/`html`/`md` rendition when the extension matches, all backed by one content-addressed blob. Text is extracted
  * (src/extract) and stored once in `document_text` against the `original` rendition. Files that look like secrets
  * (by name, bytes or extracted text) are refused with SECRET_REJECTED before anything is stored. A document number
- * already used in its series is accepted and reported as `warnings: ['NUMBER_CONFLICT']`.
+ * already used in its series is accepted and reported as `warnings: ['NUMBER_CONFLICT']`. `meta.inputJson` is stored on
+ * the version (e.g. where an imported file came from). A caller that already extracted the text (the importer) passes
+ * it as `extracted` so the file is not parsed twice.
  * Document creation and the version are one transaction: a failure leaves no half-made document behind.
  * @param {object} ctx
  * @param {{ buffer: Buffer|Uint8Array, filename: string, mime?: string|null,
- *   meta?: { documentId?: string, note?: string, makeCurrent?: boolean } & Record<string, unknown> }} file
+ *   meta?: { documentId?: string, note?: string, makeCurrent?: boolean, inputJson?: object } & Record<string, unknown>,
+ *   extracted?: { text: string, pageCount?: number } }} file
  * @returns {Promise<{ document: object, version: import('./documentQueries.js').VersionView, deduped: boolean,
  *   warnings: string[] }>} `deduped` is true when a blob with the same sha256 was already stored
  */
-export async function uploadFile(ctx, { buffer, filename, mime = null, meta = {} } = {}) {
+export async function uploadFile(ctx, { buffer, filename, mime = null, meta = {}, extracted = null } = {}) {
   if (!(buffer instanceof Uint8Array)) throw invalid('An upload needs the file bytes as a Buffer');
   if (typeof filename !== 'string' || baseName(filename) === '') throw invalid('An upload needs a file name', { filename });
   if (mime !== null && mime !== undefined && (typeof mime !== 'string' || mime.trim() === '')) throw invalid('mime must be a string', { mime });
@@ -47,7 +50,7 @@ export async function uploadFile(ctx, { buffer, filename, mime = null, meta = {}
   const name = baseName(filename);
   const ext = extname(name).toLowerCase();
   const fileMime = mime && mime.trim() !== GENERIC_MIME ? mime.trim() : (EXT_MIME[ext] ?? mime?.trim() ?? GENERIC_MIME);
-  const { documentId, note, makeCurrent, ...docMeta } = meta;
+  const { documentId, note, makeCurrent, inputJson, ...docMeta } = meta;
   if (documentId !== undefined) {
     const extra = Object.keys(docMeta);
     if (extra.length) throw invalid(`With documentId only ${VERSION_KEYS.join(' and ')} may be given (got "${extra[0]}")`, { field: extra[0] });
@@ -55,7 +58,7 @@ export async function uploadFile(ctx, { buffer, filename, mime = null, meta = {}
 
   // Refuse secrets by name and bytes before spending time on extraction, then again on the extracted text.
   checkSecret(name, buffer, null);
-  const { text, pageCount } = await extractText(buffer, { mime: fileMime, filename: name });
+  const { text, pageCount } = extracted ?? await extractText(buffer, { mime: fileMime, filename: name });
   checkSecret(name, buffer, text);
 
   const renditions = [{ kind: 'original', buffer, filename: name, mime: fileMime, pageCount, extractedText: text || undefined }];
@@ -68,6 +71,7 @@ export async function uploadFile(ctx, { buffer, filename, mime = null, meta = {}
     renditions: renditions.map((r) => Object.fromEntries(Object.entries(r).filter(([, v]) => v !== undefined))),
     ...(note !== undefined ? { note } : {}),
     ...(makeCurrent !== undefined ? { makeCurrent } : {}),
+    ...(inputJson !== undefined ? { inputJson } : {}),
   };
 
   const { id, version, deduped } = ctx.repo.tx(() => {

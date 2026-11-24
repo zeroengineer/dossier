@@ -263,3 +263,31 @@ export function scopeKey(series, vars = {}) {
   if (scope === 'brand+year+code') parts.push(`C=${r.codeVar('CODE')}`);
   return parts.join(':');
 }
+
+/**
+ * Find numbers of a pattern inside free text (a file name, extracted text). A match must not be glued to a letter or
+ * digit before it or a digit after it. With `looseSeparators`, a literal `/` in the pattern also matches `-` or `_`
+ * (file names cannot hold `/`, so `ACM/HR/2026/EXP-004` is often saved as `ACM-HR-2026-EXP-004`). Each hit is given
+ * back in the pattern's own form (`number`, separators restored, digits as written) with the vars parseNumber reads.
+ * @param {string} pattern
+ * @param {string} text
+ * @param {{ looseSeparators?: boolean }} [opts]
+ * @returns {Array<{ number: string, index: number, length: number, vars: object }>} in text order
+ */
+export function findNumbers(pattern, text, { looseSeparators = false } = {}) {
+  if (typeof text !== 'string' || text === '') return [];
+  const parts = patternTokens(pattern);
+  const literal = (s) => [...s].map((ch) => (looseSeparators && ch === '/' ? '[/_-]' : escapeRe(ch))).join('');
+  const source = parts
+    .map((p) => ('literal' in p ? literal(p.literal) : p.token === '#' ? `(\\d{${p.width},})` : TOKEN_SOURCE[p.token]))
+    .join('');
+  const re = new RegExp(`(?<![A-Za-z0-9])${source}(?![0-9])`, 'g');
+  const out = [];
+  for (const m of text.matchAll(re)) {
+    let g = 1;
+    const number = parts.map((p) => ('literal' in p ? p.literal : m[g++])).join('');
+    const vars = parseNumber(pattern, number);
+    if (vars) out.push({ number, index: m.index, length: m[0].length, vars });
+  }
+  return out;
+}

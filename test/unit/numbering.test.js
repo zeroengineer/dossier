@@ -143,3 +143,16 @@ test('an explicit fy must look like 2026-27 with consecutive years', () => {
 test('parseNumber: adjacent hyphenated code tokens resolve greedily', () => {
   assert.deepEqual(parseNumber('{CLIENT}-{CODE}-{#}', 'A-B-C-1'), { client: 'A-B', code: 'C', seq: 1 });
 });
+
+test('findNumbers finds pattern numbers in free text, optionally with / written as - or _', async () => {
+  const { findNumbers } = await import('../../src/domain/numbering.js');
+  const hits = findNumbers('ACM-{YYYY}-{####}', 'Invoice ACM-2026-0131, not XACM-2026-0001 nor ACM-2026-01312x');
+  assert.deepEqual(hits.map((h) => h.number), ['ACM-2026-0131', 'ACM-2026-01312']);
+  assert.deepEqual(hits[0].vars, { year: 2026, seq: 131 });
+  assert.equal(hits[0].index, 8);
+  assert.deepEqual(findNumbers('ACM/HR/{YYYY}/EXP-{###}', '2026-01-01_ACM-HR-2026-EXP-004.pdf'), []);
+  const loose = findNumbers('ACM/HR/{YYYY}/EXP-{###}', '2026-01-01_ACM-HR-2026-EXP-004.pdf', { looseSeparators: true });
+  assert.deepEqual(loose.map((h) => h.number), ['ACM/HR/2026/EXP-004']);
+  assert.deepEqual(findNumbers('FSS/{CLIENT}/{YYYY}/{###}', 'FSS_EISS_2026_001', { looseSeparators: true })[0].vars, { client: 'EISS', year: 2026, seq: 1 });
+  assert.deepEqual(findNumbers('ACM-{YYYY}-{####}', ''), []);
+});

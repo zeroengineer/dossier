@@ -227,6 +227,17 @@ export function listTemplates(ctx, { dirs } = {}) {
 }
 
 /**
+ * Like listTemplates, without upserting the registry rows: for read-only callers (e.g. a dry-run import) that must not
+ * write to the database.
+ * @param {object} ctx
+ * @param {{ dirs?: string[] }} [opts]
+ * @returns {TemplateEntry[]} sorted by id
+ */
+export function peekTemplates(ctx, { dirs } = {}) {
+  return [...scan(ctx, dirs).values()].filter((t) => !t.error).sort((a, b) => (a.id < b.id ? -1 : 1)).map(publicEntry);
+}
+
+/**
  * Template folders that failed to load (bad JSON, schema errors, unknown series…), which listTemplates leaves out.
  * @param {object} ctx
  * @param {{ dirs?: string[] }} [opts]

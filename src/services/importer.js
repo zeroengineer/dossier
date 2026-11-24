@@ -1,0 +1,619 @@
+import { createHash } from 'node:crypto';
+import { existsSync, lstatSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path';
+import { DossierError } from '../errors.js';
+import { normaliseName } from '../domain/canonical.js';
+import { findNumbers } from '../domain/numbering.js';
+import { DEFAULT_LEAF, DEFAULT_ROUTES, LEAF_MAP, TOP_KEYS, TOP_LEAVES, TOP_LEVEL, leafIn, routingConfig } from '../domain/routing.js';
+import { secretReason } from '../domain/secrets.js';
+import { LEVELS, canAccess } from '../domain/sensitivity.js';
+import { extractText } from '../extract/index.js';
+import { findEntities, relateEntities, upsertEntity, getEntity } from './entities.js';
+import { registerExisting } from './numbering.js';
+import { peekTemplates } from './templates.js';
+import { uploadFile } from './upload.js';
+
+/**
+ * Legacy import (PLAN build step 22): register an existing document folder, or the files listed in an index CSV,
+ * into the vault. Source files are only read, never changed, moved or deleted.
+ *
+ * Classification uses the folder path below the import root: the top-level folder ("03 Clients", or legacy names
+ * such as "04 Products" or "06 Vendors - Invoices Received", matched on the name after the number) selects the party
+ * kind; the leaf folder selects the document type through the routing table read backwards; folder names between
+ * them become entities (business line / client / engagement, person, vendor, product, group entity). Nothing about
+ * any organisation is hard-coded: names come from the folders and the workspace.
+ */
+
+/** Default sensitivity per kind of folder; override with `opts.sensitivity`. */
+export const DEFAULT_IMPORT_SENSITIVITY = Object.freeze({ default: 'Internal', people: 'Confidential', identity: 'Confidential' });
+
+/** Folder names that hold identity documents (passports, ID cards, KYC); override with `opts.identityPattern`. */
+export const IDENTITY_FOLDER_RE = /\bidentity\b|\bkyc\b/i;
+
+/** Folder names (after the number prefix) that hold the legacy generator's source code. */
+const GENERATOR_SOURCE_RE = /\bgenerator\s+(source|code|scripts?)\b|\bsource\s+code\b|^(generator|src|scripts)$/i;
+
+/** Generic alternative names of the top-level slots, besides the configured and default folder names. */
+const TOP_ALIASES = Object.freeze({
+  company: ['company', 'corporate'],
+  people: ['people', 'team', 'hr', 'human resources', 'employees', 'staff'],
+  clients: ['clients', 'customers'],
+  vendors: ['vendors', 'suppliers'],
+  products: ['products'],
+  finance: ['finance', 'accounts'],
+  templates: ['templates'],
+  references: ['references', 'reference'],
+  group: ['group entities', 'group entity', 'group companies'],
+  restricted: ['restricted', 'security'],
+});
+
+/** Entity kind of the party named by folders in each top-level slot (slots without one have no party). */
+const PARTY_KIND = Object.freeze({ people: 'person', clients: 'client', vendors: 'vendor', products: 'product', group: 'group_entity' });
+
+/** Index CSV columns (the format of the legacy `_index.csv`). */
+export const INDEX_COLUMNS = Object.freeze(['original_path', 'vault_path', 'vault_folder', 'md5', 'size_bytes', 'note']);
+
+const invalid = (message, details = {}) => new DossierError('INVALID_INPUT', message, details);
+const toPosix = (p) => p.split(sep).join('/');
+const stripNumber = (name) => String(name).replace(/^\d+\s*[-._)]?\s*/, '').trim();
+const key = (s) => normaliseName(s);
+
+/**
+ * @typedef {{
+ *   dryRun: boolean, folder: string, index: string|null, brandId: string,
+ *   files: number, imported: number, existing: number, deduped: number,
+ *   newEntities: { kind: string, name: string }[],
+ *   byType: Record<string, number>,
+ *   numbers: { path: string, number: string, series: string, from: 'filename'|'text' }[],
+ *   conflicts: { path: string, number: string, series: string, conflictsWith: string[] }[],
+ *   duplicates: { path: string, of: string|null, reason: string }[],
+ *   skipped: { path: string, reason: string }[],
+ *   warnings: { path: string, message: string }[],
+ *   documents: { path: string, id: string|null, type: string, party: string|null, partyKind: string|null,
+ *     sensitivity: string, number: string|null, series: string|null }[],
+ * }} ImportSummary
+ *   `files` counts every file looked at (skipped folders count as one skipped entry, not their files);
+ *   `imported` documents created (or, in a dry run, that would be); `existing` files whose bytes are already in the
+ *   vault; `deduped` identical copies within the import (and index rows recorded as identical copies).
+ */
+
+/**
+ * Import a folder of existing documents (or the files an index CSV lists) into the vault.
+ *
+ * - Folder mode walks `folder`, skipping dotfiles, `node_modules`, symbolic links, generator source folders (a name
+ *   like "Generator Source" or a folder holding `package.json`) and the Restricted top-level folder.
+ * - Index mode (`index`) reads a CSV with the columns {@link INDEX_COLUMNS}; `vault_path` is relative to the CSV's
+ *   folder unless absolute, rows with an empty `vault_path` (identical copies the index did not copy) are reported as
+ *   duplicates, and the same skip rules apply to each path.
+ * - Each file is hashed: bytes already in the vault are left alone (re-running imports nothing new), a second copy
+ *   within the run is a duplicate. Files the secret scanner flags are skipped. Every workspace series pattern is
+ *   tried against the file name, then the extracted text; a hit sets the number and series and seeds the counter
+ *   forward (`registerExisting`); a number already used in its series is filed with the conflict flag and reported.
+ * - `dryRun` reads and classifies everything but writes nothing (no entities, counters, blobs or documents).
+ * @param {object} ctx
+ * @param {{ folder: string, index?: string|null, dryRun?: boolean, brandId?: string,
+ *   sensitivity?: { default?: string, people?: string, identity?: string }, identityPattern?: RegExp }} opts
+ * @returns {Promise<ImportSummary>}
+ */
+export async function importFolder(ctx, opts = {}) {
+  if (opts === null || typeof opts !== 'object') throw invalid('importFolder needs options');
+  if (typeof opts.folder !== 'string' || opts.folder.trim() === '') throw invalid('An import needs a folder');
+  const folder = resolve(opts.folder);
+  if (!existsSync(folder) || !statSync(folder).isDirectory()) throw invalid(`Not a folder: ${folder}`, { folder });
+  const index = opts.index ? resolve(opts.index) : null;
+  if (index && (!existsSync(index) || !statSync(index).isFile())) throw invalid(`No index file at ${index}`, { index });
+  const brandId = opts.brandId ?? ctx.ws.config.defaultBrand;
+  if (!ctx.ws.brands.has(brandId)) throw new DossierError('BRAND_NOT_FOUND', `No brand "${brandId}" in the workspace`, { brandId });
+  const sensitivity = { ...DEFAULT_IMPORT_SENSITIVITY, ...(opts.sensitivity ?? {}) };
+  for (const [k, v] of Object.entries(sensitivity)) {
+    if (!LEVELS.includes(v) || v === 'Restricted') throw invalid(`sensitivity.${k} must be Public, Internal or Confidential`, { [k]: v });
+  }
+  const identityRe = opts.identityPattern ?? IDENTITY_FOLDER_RE;
+  if (!(identityRe instanceof RegExp)) throw invalid('identityPattern must be a RegExp');
+
+  const dryRun = opts.dryRun === true;
+  const summary = {
+    dryRun, folder, index, brandId, files: 0, imported: 0, existing: 0, deduped: 0, newEntities: [], byType: {},
+    numbers: [], conflicts: [], duplicates: [], skipped: [], warnings: [], documents: [],
+  };
+  const env = {
+    ctx, folder, dryRun, brandId, sensitivity, identityRe, summary,
+    cfg: routingConfig(ctx.ws.config.hierarchy),
+    typeNames: typeNames(ctx),
+    typesBySeries: typesBySeries(ctx, brandId),
+    entityCache: new Map(),
+    seen: new Map(), // sha256 -> path imported in this run
+    numbersSeen: new Map(), // `${series}\u0000${number}` -> path (dry run conflict detection)
+  };
+  env.leafIndex = leafIndex(env);
+
+  const entries = index ? readIndex(env, index) : walkFolder(env);
+  for (const entry of entries) {
+    summary.files++;
+    try {
+      await importOne(env, entry);
+    } catch (e) {
+      summary.skipped.push({ path: entry.rel, reason: `error: ${e.code ?? e.name}: ${e.message}` });
+    }
+  }
+  summary.newEntities.sort((a, b) => a.kind.localeCompare(b.kind) || a.name.localeCompare(b.name));
+  return summary;
+}
+
+// ---------- file lists ----------
+
+/** Why a directory is not imported (null when it is). `rel` is its path below the import root. */
+function dirSkipReason(env, rel, abs) {
+  const name = rel.split('/').pop();
+  if (name.startsWith('.')) return 'hidden folder';
+  if (name === 'node_modules') return 'node_modules';
+  if (GENERATOR_SOURCE_RE.test(stripNumber(name))) return 'generator source code';
+  if (abs && existsSync(`${abs}/package.json`)) return 'generator source code (package.json)';
+  if (!rel.includes('/') && matchTop(env, name)?.slot === 'restricted') return 'restricted folder (never imported)';
+  return null;
+}
+
+function walkFolder(env) {
+  const out = [];
+  const walk = (abs, rel) => {
+    for (const name of readdirSync(abs).sort()) {
+      const childAbs = `${abs}/${name}`;
+      const childRel = rel ? `${rel}/${name}` : name;
+      const st = lstatSync(childAbs);
+      if (st.isSymbolicLink()) { env.summary.skipped.push({ path: childRel, reason: 'symbolic link' }); continue; }
+      if (st.isDirectory()) {
+        const reason = dirSkipReason(env, childRel, childAbs);
+        if (reason) env.summary.skipped.push({ path: `${childRel}/`, reason });
+        else walk(childAbs, childRel);
+        continue;
+      }
+      if (!st.isFile()) continue;
+      if (name.startsWith('.')) { env.summary.skipped.push({ path: childRel, reason: 'hidden file' }); continue; }
+      out.push({ rel: childRel, abs: childAbs });
+    }
+  };
+  walk(env.folder, '');
+  return out;
+}
+
+/**
+ * Parse CSV text (RFC 4180: quoted fields, doubled quotes, CRLF or LF, optional BOM) into rows of strings.
+ * @param {string} text
+ * @returns {string[][]}
+ */
+export function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let quoted = false;
+  const s = text.replace(/^﻿/, '');
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (quoted) {
+      if (c === '"' && s[i + 1] === '"') { field += '"'; i++; } else if (c === '"') quoted = false;
+      else field += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && s[i + 1] === '\n') i++;
+      row.push(field); field = '';
+      if (row.length > 1 || row[0] !== '') rows.push(row);
+      row = [];
+    } else field += c;
+  }
+  row.push(field);
+  if (row.length > 1 || row[0] !== '') rows.push(row);
+  return rows;
+}
+
+function readIndex(env, index) {
+  const [header = [], ...rows] = parseCsv(readFileSync(index, 'utf8'));
+  const col = Object.fromEntries(header.map((h, i) => [h.trim(), i]));
+  if (col.vault_path === undefined) {
+    throw invalid(`${index}: the index needs a vault_path column (columns: ${INDEX_COLUMNS.join(', ')})`, { index });
+  }
+  const base = dirname(index);
+  const out = [];
+  for (const r of rows) {
+    const get = (c) => (col[c] === undefined ? '' : (r[col[c]] ?? '').trim());
+    const vaultPath = get('vault_path');
+    const note = get('note');
+    if (vaultPath === '') {
+      env.summary.files++;
+      env.summary.deduped++;
+      env.summary.duplicates.push({ path: get('original_path') || '(no path)', of: null, reason: note || 'not copied by the index (no vault_path)' });
+      continue;
+    }
+    const abs = isAbsolute(vaultPath) ? vaultPath : resolve(base, vaultPath);
+    const inside = relative(env.folder, abs);
+    const rel = inside && !inside.startsWith('..') && !isAbsolute(inside) ? toPosix(inside) : toPosix(vaultPath).replace(/^\/+/, '');
+    // The same skip rules as a folder walk, applied to every folder on the path.
+    const segs = rel.split('/');
+    let reason = null;
+    for (let i = 1; i < segs.length && !reason; i++) {
+      const dirRel = segs.slice(0, i).join('/');
+      reason = dirSkipReason(env, dirRel, inside.startsWith('..') ? null : resolve(env.folder, dirRel));
+    }
+    if (!reason && segs.at(-1).startsWith('.')) reason = 'hidden file';
+    if (reason) {
+      env.summary.files++;
+      env.summary.skipped.push({ path: rel, reason });
+      continue;
+    }
+    out.push({ rel, abs, md5: get('md5').toLowerCase(), note });
+  }
+  return out;
+}
+
+// ---------- one file ----------
+
+async function importOne(env, entry) {
+  const { ctx, summary } = env;
+  const { rel, abs } = entry;
+  if (!existsSync(abs) || !statSync(abs).isFile()) {
+    summary.skipped.push({ path: rel, reason: 'file not found' });
+    return;
+  }
+  const filename = rel.split('/').pop();
+  const buffer = readFileSync(abs);
+  if (entry.md5 && createHash('md5').update(buffer).digest('hex') !== entry.md5) {
+    summary.warnings.push({ path: rel, message: 'md5 differs from the index (file changed since the index was written)' });
+  }
+
+  const early = secretReason({ filename, buffer });
+  if (early) { summary.skipped.push({ path: rel, reason: `secret (${early})` }); return; }
+
+  const sha = createHash('sha256').update(buffer).digest('hex');
+  const inVault = ctx.db.prepare(
+    'SELECT v.document_id AS id FROM renditions r JOIN versions v ON v.id = r.version_id WHERE r.blob_sha256 = ? ORDER BY v.document_id LIMIT 1',
+  ).get(sha);
+  // An identical copy of a file this run imported first (it is in the vault by now, unless this is a dry run).
+  if (env.seen.has(sha)) {
+    summary.deduped++;
+    summary.duplicates.push({ path: rel, of: env.seen.get(sha), reason: 'identical copy' });
+    return;
+  }
+  if (inVault) { summary.existing++; return; }
+
+  const extracted = await extractText(buffer, { filename });
+  const late = secretReason({ filename, buffer, text: extracted.text });
+  if (late) { summary.skipped.push({ path: rel, reason: `secret (${late})` }); return; }
+
+  const c = classify(env, rel);
+  const found = parseDocNumber(env, filename, extracted.text);
+  const type = chooseType(env, c, filename, found);
+  const docDate = dateIn(filename);
+  const level = c.sensitivity;
+  if (!canAccess(ctx.user.clearance, level)) {
+    summary.skipped.push({ path: rel, reason: `needs ${level} clearance (user "${ctx.user.id}" has ${ctx.user.clearance})` });
+    return;
+  }
+
+  // Entities (created now, or only counted in a dry run).
+  const party = c.party ? ensureEntity(env, c.party.kind, c.party.name) : null;
+  const businessLine = c.businessLine ? ensureEntity(env, 'business_line', c.businessLine) : null;
+  const engagement = c.engagement ? ensureEntity(env, 'engagement', c.engagement) : null;
+  if (!env.dryRun) {
+    if (party && businessLine && c.party.kind === 'client') relateOnce(ctx, party.id, businessLine.id, 'belongs_to_business_line');
+    if (engagement && party && c.party.kind === 'client') relateOnce(ctx, engagement.id, party.id, 'engagement_of');
+  }
+
+  // Number conflicts: an existing document, or an earlier file of this run, with the same series and number.
+  let conflictsWith = [];
+  if (found) {
+    summary.numbers.push({ path: rel, number: found.number, series: found.series, from: found.from });
+    const numKey = `${found.series}\u0000${found.number}`;
+    conflictsWith = ctx.db.prepare('SELECT id FROM documents WHERE number_series = ? AND doc_number = ? ORDER BY id')
+      .all(found.series, found.number).map((r) => r.id);
+    if (env.dryRun && env.numbersSeen.has(numKey)) conflictsWith.push(env.numbersSeen.get(numKey));
+    env.numbersSeen.set(numKey, rel);
+  }
+
+  const title = filename.slice(0, filename.length - extname(filename).length).replace(/\s*\[from [^\]]*\]\s*$/i, '').trim() || filename;
+  let id = null;
+  if (!env.dryRun) {
+    const meta = {
+      type,
+      title,
+      sensitivity: level,
+      ...(party ? { partyId: party.id } : {}),
+      ...(businessLine ? { businessLineId: businessLine.id } : {}),
+      ...(engagement ? { engagementId: engagement.id } : {}),
+      ...(docDate ? { docDate } : {}),
+      ...(found ? { numberSeries: found.series, docNumber: found.number, issuingBrandId: env.brandId } : {}),
+      note: `Imported from ${rel}`,
+      inputJson: { import: { source_path: rel, source_folder: rel.includes('/') ? rel.slice(0, rel.lastIndexOf('/')) : '', ...(entry.note ? { index_note: entry.note } : {}) } },
+    };
+    const res = await uploadFile(ctx, { buffer, filename, meta, extracted });
+    id = res.document.id;
+    if (found) {
+      try {
+        registerExisting(ctx, found.series, found.number, { brandId: env.brandId, ...(docDate ? { date: docDate } : {}) });
+      } catch (e) {
+        summary.warnings.push({ path: rel, message: `counter not seeded for ${found.number}: ${e.message}` });
+      }
+    }
+  }
+  if (found && conflictsWith.length) summary.conflicts.push({ path: rel, number: found.number, series: found.series, conflictsWith });
+
+  env.seen.set(sha, rel);
+  summary.imported++;
+  summary.byType[type] = (summary.byType[type] ?? 0) + 1;
+  summary.documents.push({
+    path: rel, id, type, party: party?.name ?? null, partyKind: c.party?.kind ?? null, sensitivity: level,
+    number: found?.number ?? null, series: found?.series ?? null,
+  });
+}
+
+// ---------- classification ----------
+
+/**
+ * Which top-level slot a folder name stands for: configured or default names and generic aliases, compared on the
+ * name after the number ("04 Products" -> products), a "<slot> - <leaf>" name ("06 Vendors - Invoices Received"), or
+ * the name of a group entity already in the master list ("07 <group entity>").
+ * @returns {{ slot: string, leaf?: string, entity?: { kind: string, name: string } } | null}
+ */
+function matchTop(env, name) {
+  const part = stripNumber(name);
+  const whole = key(part);
+  const [head, ...rest] = part.split(/\s+-\s+/);
+  const headKey = key(head);
+  for (let i = 0; i < TOP_KEYS.length; i++) {
+    const slot = TOP_KEYS[i];
+    const names = new Set([key(stripNumber(env.cfg.topLevel[i])), key(stripNumber(TOP_LEVEL[i])), ...TOP_ALIASES[slot]]);
+    if (names.has(whole)) return { slot };
+    if (rest.length && names.has(headKey)) return { slot, leaf: rest.join(' - ').trim() };
+  }
+  if (findExisting(env.ctx, 'group_entity', part)) return { slot: 'group', entity: { kind: 'group_entity', name: part } };
+  return null;
+}
+
+/** Leaf name (lower-cased key) -> per slot, the types routed there, in routing-table order. */
+function leafIndex(env) {
+  const { cfg } = env;
+  const index = new Map(); // `${slot}\u0000${leafKey}` -> types
+  const add = (slot, leaf, type) => {
+    if (!leaf) return;
+    const k = `${slot}\u0000${key(leaf)}`;
+    const list = index.get(k) ?? [];
+    if (!list.includes(type)) list.push(type);
+    index.set(k, list);
+  };
+  const types = [...cfg.routes.entries()];
+  // Exact route leaves first, then the leaves they are translated to in each slot.
+  for (const slot of TOP_KEYS) {
+    for (const [t, r] of types) {
+      const type = displayType(env, t);
+      if (r.top === slot) add(slot, r.leaf, type);
+      else if (r.top === null && (r.override || !TOP_LEAVES[slot] || TOP_LEAVES[slot].includes(r.leaf))) add(slot, r.leaf, type);
+    }
+    for (const [t, r] of types) {
+      if (r.top !== null || r.override) continue;
+      const mapped = leafIn(slot, r.leaf);
+      if (mapped && mapped !== DEFAULT_LEAF) add(slot, mapped, displayType(env, t));
+    }
+  }
+  return index;
+}
+
+/** Routing keys are lower case; give back the type as written in the default table or the workspace routing. */
+const displayType = (env, typeKey) => env.typeNames.get(typeKey) ?? typeKey;
+
+const routeKey = (t) => String(t).trim().replace(/\s+/g, ' ').toLowerCase();
+
+/** Normalised routing key -> the type's spelling (workspace routing wins over the default table). */
+function typeNames(ctx) {
+  const names = [...Object.keys(DEFAULT_ROUTES), ...Object.keys(ctx.ws.config.hierarchy?.routing ?? {})];
+  return new Map(names.map((t) => [routeKey(t), t.trim().replace(/\s+/g, ' ')]));
+}
+
+/** Types whose leaf in `slot` is the folder name `seg` (or whose name is the folder name, e.g. "MoU", "Invoices"). */
+function leafTypes(env, slot, seg) {
+  const k = key(seg);
+  if (k === key(DEFAULT_LEAF)) return { leaf: true, types: [] };
+  const byLeaf = slot ? env.leafIndex.get(`${slot}\u0000${k}`) : null;
+  if (byLeaf?.length) return { leaf: true, types: byLeaf };
+  const singular = k.endsWith('s') ? k.slice(0, -1) : k;
+  const named = [...env.cfg.routes.keys()].filter((t) => key(t) === k || key(t) === singular).map((t) => displayType(env, t));
+  if (named.length) return { leaf: true, types: named };
+  if (slot && (TOP_LEAVES[slot]?.some((l) => key(l) === k) || Object.keys(LEAF_MAP[slot] ?? {}).some((l) => key(l) === k))) {
+    return { leaf: true, types: [] };
+  }
+  return { leaf: false, types: [] };
+}
+
+/** Types whose route ends up in `slot` (used when a party folder has no leaf folder). */
+function slotTypes(env, slot) {
+  const out = [];
+  for (const [k, list] of env.leafIndex) if (k.startsWith(`${slot}\u0000`)) for (const t of list) if (!out.includes(t)) out.push(t);
+  return out;
+}
+
+/**
+ * Split a file's folder path into slot, party, business line, engagement, leaf and sensitivity.
+ * @returns {{ slot: string|null, party: { kind: string, name: string }|null, businessLine: string|null,
+ *   engagement: string|null, leaf: string|null, leafTypes: string[], sensitivity: string }}
+ */
+function classify(env, rel) {
+  const dirs = rel.split('/').slice(0, -1);
+  const identity = dirs.some((d) => env.identityRe.test(d));
+  const top = dirs.length ? matchTop(env, dirs[0]) : null;
+  const slot = top?.slot ?? null;
+  const out = { slot, party: null, businessLine: null, engagement: null, leaf: top?.leaf ?? null, leafTypes: [], identity };
+  if (top?.leaf) out.leafTypes = leafTypes(env, slot, top.leaf).types;
+  let level = slot === 'people' ? env.sensitivity.people : env.sensitivity.default;
+  if (identity) level = higher(level, env.sensitivity.identity);
+  out.sensitivity = level;
+  if (!slot) return out;
+
+  // Folders that are neither parties nor leaves: identity collections, financial-year folders.
+  const segs = dirs.slice(1).filter((d) => !env.identityRe.test(d) && !/^FY\s?\d{4}/i.test(d));
+  const leafAt = segs.findIndex((s) => leafTypes(env, slot, s).leaf);
+  if (leafAt >= 0) {
+    out.leaf = segs[leafAt];
+    out.leafTypes = leafTypes(env, slot, segs[leafAt]).types;
+  }
+  const pre = leafAt >= 0 ? segs.slice(0, leafAt) : segs;
+  const kind = PARTY_KIND[slot];
+  if (!kind) return out;
+  if (top.entity) {
+    out.party = top.entity;
+    return out;
+  }
+  if (slot === 'clients') {
+    if (pre.length === 1) out.party = { kind, name: pre[0] };
+    else if (pre.length >= 2) {
+      const firstIsClient = findExisting(env.ctx, 'client', pre[0]) && !findExisting(env.ctx, 'business_line', pre[0]);
+      if (firstIsClient) {
+        out.party = { kind, name: pre[0] };
+        out.engagement = pre[1];
+      } else {
+        out.businessLine = pre[0];
+        out.party = { kind, name: pre[1] };
+        out.engagement = pre[2] ?? null;
+      }
+    }
+    return out;
+  }
+  if (pre.length) out.party = { kind, name: pre[0] };
+  return out;
+}
+
+const higher = (a, b) => (LEVELS.indexOf(a) >= LEVELS.indexOf(b) ? a : b);
+
+/** Document type of a classified file: leaf candidates narrowed by the number's series, then by the file name. */
+function chooseType(env, c, filename, found) {
+  const seriesTypes = found ? env.typesBySeries.get(found.series) ?? [] : [];
+  if (c.leafTypes.length) {
+    return c.leafTypes.find((t) => seriesTypes.includes(t)) ?? keywordType(c.leafTypes, filename) ?? c.leafTypes[0];
+  }
+  if (c.leaf) return keywordType(slotTypes(env, c.slot), filename) ?? DEFAULT_LEAF;
+  if (c.slot === 'templates') return 'Template';
+  if (c.slot === 'references') return 'Reference';
+  if (!c.slot) return DEFAULT_LEAF;
+  const candidates = slotTypes(env, c.slot);
+  return keywordType(candidates, filename) ?? candidates.find((t) => seriesTypes.includes(t)) ?? DEFAULT_LEAF;
+}
+
+/** The longest type name that appears as words in the file name ("…_debit_note_…" -> Debit Note), or null. */
+function keywordType(types, filename) {
+  const words = ` ${key(filename.replace(/\.[^.]+$/, '').replace(/[_.]+/g, ' ').replace(/-/g, ' '))} `;
+  const compact = words.replace(/\s+/g, '');
+  const sorted = [...types].sort((a, b) => b.length - a.length);
+  for (const t of sorted) {
+    const tk = key(t.replace(/-/g, ' '));
+    if (words.includes(` ${tk} `) || words.includes(` ${tk}s `)) return t;
+    if (tk.includes(' ') && compact.includes(tk.replace(/\s+/g, ''))) return t;
+  }
+  return null;
+}
+
+/** First valid ISO date (YYYY-MM-DD) in a file name, or null. */
+function dateIn(filename) {
+  for (const m of filename.matchAll(/(?<!\d)(\d{4})-(\d{2})-(\d{2})(?!\d)/g)) {
+    const iso = `${m[1]}-${m[2]}-${m[3]}`;
+    const d = new Date(`${iso}T00:00:00Z`);
+    if (!Number.isNaN(d.getTime()) && d.toISOString().startsWith(iso)) return iso;
+  }
+  return null;
+}
+
+// ---------- numbers ----------
+
+/** Series id -> document types of the templates numbered in it (for this brand). Read-only. */
+function typesBySeries(ctx, brandId) {
+  const map = new Map();
+  const brand = ctx.ws.brands.get(brandId);
+  for (const t of peekTemplates(ctx)) {
+    const n = t.meta.numbering;
+    if (!n || !t.meta.type) continue;
+    const sid = n.series === 'brand' ? brand.series?.[t.id] : n.series;
+    if (!sid) continue;
+    const list = map.get(sid) ?? [];
+    if (!list.includes(t.meta.type)) list.push(t.meta.type);
+    map.set(sid, list);
+  }
+  return map;
+}
+
+/**
+ * The document number in a file: every workspace series is tried against the file name (with `/` matching `-` or `_`)
+ * and then the extracted text. In the name the longest hit wins; in the text the first one (a document's own number
+ * comes before the numbers it refers to), ties going to the longer match, then to series order.
+ * @returns {{ series: string, number: string, from: 'filename'|'text' } | null}
+ */
+function parseDocNumber(env, filename, text) {
+  const series = [...env.ctx.ws.series.values()];
+  const best = (source, loose, better) => {
+    let pick = null;
+    for (const s of series) {
+      for (const hit of findNumbers(s.pattern, source, { looseSeparators: loose })) {
+        if (!pick || better(hit, pick)) pick = { ...hit, series: s.id };
+      }
+    }
+    return pick;
+  };
+  const name = best(filename, true, (a, b) => a.length > b.length);
+  if (name) return { series: name.series, number: name.number, from: 'filename' };
+  const inText = best(text ?? '', false, (a, b) => a.index < b.index || (a.index === b.index && a.length > b.length));
+  return inText ? { series: inText.series, number: inText.number, from: 'text' } : null;
+}
+
+// ---------- entities ----------
+
+/** Folder name -> canonical name and aliases: "Example Institute (EI)" -> name "Example Institute", alias "EI". */
+export function folderEntityName(raw) {
+  const s = String(raw).trim().replace(/\s+/g, ' ');
+  const m = /^(.*\S)\s*\(([^()]+)\)$/.exec(s);
+  if (m && /[\p{L}\p{N}]/u.test(m[1])) return { name: m[1].trim(), aliases: [m[2].trim()] };
+  return { name: s, aliases: [] };
+}
+
+/** Id of the entity of `kind` whose name or an alias equals `name` (after normalisation), or null. */
+function findExisting(ctx, kind, name) {
+  const k = key(name);
+  if (!k) return null;
+  const hit = findEntities(ctx, { q: name, kind, limit: 500 })
+    .find((e) => key(e.name) === k || e.aliases.some((a) => key(a) === k));
+  return hit?.id ?? null;
+}
+
+/**
+ * The entity a folder names: found by name or alias, else created (canonical name plus the alias in brackets). An
+ * alias match adds the folder's name as an alias. In a dry run nothing is written and new entities are only counted.
+ * @returns {{ id: number|null, name: string }}
+ */
+function ensureEntity(env, kind, raw) {
+  const cacheKey = `${kind}\u0000${key(raw)}`;
+  if (env.entityCache.has(cacheKey)) return env.entityCache.get(cacheKey);
+  const { ctx } = env;
+  const { name, aliases } = folderEntityName(raw);
+  const free = (n) => findExisting(ctx, kind, n) === null;
+  let result;
+  const byName = findExisting(ctx, kind, name);
+  const aliasHit = aliases.find((a) => !free(a));
+  if (byName !== null) {
+    if (!env.dryRun) {
+      for (const a of aliases.filter(free)) upsertEntity(ctx, { kind, name: a, aliasOf: byName });
+    }
+    result = { id: byName, name: getEntity(ctx, byName).name };
+  } else if (aliasHit) {
+    const id = findExisting(ctx, kind, aliasHit);
+    // aliasOf by name: resolved within this kind (the alias may also name an entity of another kind).
+    if (!env.dryRun) upsertEntity(ctx, { kind, name, aliasOf: aliasHit });
+    result = { id, name: getEntity(ctx, id).name };
+  } else {
+    env.summary.newEntities.push({ kind, name });
+    result = env.dryRun
+      ? { id: null, name }
+      : { id: upsertEntity(ctx, { kind, name, aliases: aliases.filter(free) }).id, name };
+  }
+  env.entityCache.set(cacheKey, result);
+  return result;
+}
+
+/** Relate two entities unless `from` already has a relation with that role (a client keeps its business line). */
+function relateOnce(ctx, from, to, role) {
+  const has = ctx.db.prepare('SELECT 1 FROM entity_relations WHERE from_id = ? AND role = ?').get(from, role);
+  if (!has) relateEntities(ctx, from, to, role);
+}
