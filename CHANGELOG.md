@@ -31,6 +31,10 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
   build time.
 - Scripts: `npm run build` (builds `web/dist`), `npm run dev:web` (Vite with a proxy to the server),
   `npm run test:web` (Vitest + Testing Library + MSW) and `npm run typecheck`.
+- Shared web building blocks for the remaining pages: more shadcn components (table, tabs, chart, resizable, select,
+  popover, calendar, combobox, field, checkbox, switch, toggle group, alert dialog and others), a reusable data table
+  (TanStack Table: sorting, faceted filters, column visibility, pagination, client or server side), the dashboard API
+  types, and react-hook-form, zod, date-fns and Recharts.
 
 ### Changed
 
