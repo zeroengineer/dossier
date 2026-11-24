@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { appendFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { appendFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -11,7 +11,7 @@ import { openContext } from '../../src/context.js';
 import { seedEntities, findEntities, getEntity, upsertEntity } from '../../src/services/entities.js';
 import { getDocument } from '../../src/services/documents.js';
 import { peekNumber } from '../../src/services/numbering.js';
-import { importFolder, parseCsv, folderEntityName } from '../../src/services/importer.js';
+import { importFolder, parseCsv, folderEntityName, isRestrictedName } from '../../src/services/importer.js';
 import { main } from '../../src/cli.js';
 
 const FIXTURES = fileURLToPath(new URL('../fixtures/import/', import.meta.url));
@@ -373,5 +373,35 @@ test('renditions.blob_sha256 is indexed (the importer looks files up by hash)', 
   assert.ok(indexes.includes('renditions_blob'));
   const cols = ctx.db.prepare("SELECT name FROM pragma_index_info('renditions_blob')").all().map((r) => r.name);
   assert.deepEqual(cols, ['blob_sha256']);
+}));
+
+// ---------- fix round 2 ----------
+
+test('Restricted is matched as a word after format characters and a number prefix', () => setup(async ({ ctx, vault }) => {
+  const restricted = ['Restricted-Security', 'Restricted_Security', 'Restricted Security', 'Restricted (HR)', 'Restricted Files',
+    'Restricted\u200B', '\u200B07 Restricted', '12. RESTRICTED', 'Restricted\u2013Payroll', '\uFF32estricted'];
+  const allowed = ['Unrestricted Templates', 'Restrictedness Notes'];
+  for (const n of restricted) assert.equal(isRestrictedName(n), true, n);
+  for (const n of allowed) assert.equal(isRestrictedName(n), false, n);
+  for (const n of [...restricted, ...allowed]) {
+    mkdirSync(join(vault, '08 References', n), { recursive: true });
+    writeFileSync(join(vault, '08 References', n, 'file.md'), `# ${n} (fixture)`);
+  }
+  const s = await importFolder(ctx, { folder: vault, dryRun: true });
+  for (const n of restricted) assert.ok(!s.documents.some((d) => d.path === `08 References/${n}/file.md`), n);
+  for (const n of allowed) assert.ok(s.documents.some((d) => d.path === `08 References/${n}/file.md`), n);
+  const csv = await importFolder(ctx, { folder: vault, dryRun: true, index: writeIndex(vault, restricted.map((n) => [`08 References/${n}/file.md`])) });
+  assert.deepEqual(csv.skipped.map((x) => x.reason), restricted.map(() => 'restricted folder (never imported)'));
+}));
+
+test('an absolute CSV path under the resolved root is accepted when the root was given through an alias', () => setup(async ({ ctx, vault }) => {
+  // On macOS the temp folder is /var/... and resolves to /private/var/...; elsewhere both spellings are the same.
+  const real = realpathSync(vault);
+  const index = writeIndex(vault, [[join(real, '05 Templates', 'letter-template.md')], [join(vault, '08 References', 'style-guide.md')]]);
+  const s = await importFolder(ctx, { folder: vault, index });
+  assert.deepEqual(s.skipped, []);
+  assert.equal(s.imported, 2);
+  assert.equal(docByPath(s, 'letter-template.md').path, '05 Templates/letter-template.md');
+  assert.equal(docByPath(s, 'letter-template.md').type, 'Template');
 }));
 

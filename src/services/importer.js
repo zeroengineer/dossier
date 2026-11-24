@@ -40,10 +40,15 @@ const CODE_FILE_RE = /\.(js|mjs|cjs|py)$/i;
 /** Root-level files of a legacy vault that describe it rather than belong in it (folder mode). */
 const ROOT_SPEC_RE = /^_.*\.csv$|HIERARCHY.*\.md$/i;
 
-/** A folder name that marks restricted content at any depth: "Restricted", "10 Restricted", "Restricted - Security". */
-const isRestrictedName = (name) => {
-  const k = key(stripNumber(name));
-  return k === 'restricted' || k.startsWith('restricted - ');
+/**
+ * A folder name that marks restricted content at any depth: after format characters (zero-width spaces…) and an
+ * optional number prefix are removed, the normalised name starts with the word "restricted" not followed by a letter
+ * ("Restricted", "10 Restricted", "Restricted-Security", "Restricted_Security", "Restricted (HR)", "Restricted Files").
+ * "Unrestricted …" does not start with it, and "Restrictedness …" is a different word, so both import.
+ */
+export const isRestrictedName = (name) => {
+  const k = key(stripNumber(String(name).replace(/\p{Cf}/gu, '')).replace(/\p{Cf}/gu, ''));
+  return /^restricted(?!\p{L})/u.test(k);
 };
 
 /** Generic alternative names of the top-level slots, besides the configured and default folder names. */
@@ -274,8 +279,13 @@ function readIndex(env, index) {
     // symbolic link, and no parent folder that resolves outside it.
     if (vaultPath.split(/[\\/]/).includes('..')) { skip(vaultPath, 'outside import root'); continue; }
     const abs = isAbsolute(vaultPath) ? resolve(vaultPath) : resolve(base, vaultPath);
-    const lexical = relative(base, abs);
-    if (lexical === '' || lexical.startsWith('..') || isAbsolute(lexical)) { skip(vaultPath, 'outside import root'); continue; }
+    // Lexically inside the root as given or as it resolves (`/var/…` and `/private/var/…` are the same folder).
+    const within = (root) => {
+      const r = relative(root, abs);
+      return r === '' || r.startsWith('..') || isAbsolute(r) ? null : r;
+    };
+    const lexical = within(base) ?? within(realRoot);
+    if (lexical === null) { skip(vaultPath, 'outside import root'); continue; }
     const rel = toPosix(lexical);
     let st;
     try {
