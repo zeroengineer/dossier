@@ -26,6 +26,8 @@ export DOSSIER_HOME=$PWD/workspace
 
 The example workspace uses the fake brand "Acme Events Private Limited" and neutral placeholder images. Customise it as described in `docs/WORKSPACE.md`.
 
+PDF geometry snapshots live in `test/snapshot/__snapshots__/`; after an intended layout change, refresh them with `UPDATE_SNAPSHOTS=1 npm run test:snapshot` and review the diff.
+
 ## Vault rules
 
 - Every document has one ID (`DOC-000001`). Each version holds up to one rendition per kind (`pdf`, `html`, `md`, `original`); exactly one version is current.

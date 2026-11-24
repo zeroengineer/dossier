@@ -10,6 +10,7 @@ test('WorkspaceSchema fills locale, users and hierarchy defaults', () => {
   assert.deepEqual(ws.locale, {
     currencySymbol: '₹', currencyCode: 'INR', numberLocale: 'en-IN',
     dateFormats: { short: 'DD/MM/YYYY', long: 'D MMMM YYYY', us: 'MMMM D, YYYY' },
+    currencyWords: { major: 'Rupees', minor: 'Paise', suffix: 'Only' },
   });
   assert.equal(ws.users.demo.clearance, 'Confidential');
   assert.deepEqual(ws.hierarchy, {});

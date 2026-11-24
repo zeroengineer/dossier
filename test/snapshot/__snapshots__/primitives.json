@@ -1,0 +1,474 @@
+{
+ "items": [
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 1,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 1,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 1,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 1,
+   "text": "Email: hello@example.com | www.example.com",
+   "x": 386.5,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 171
+  },
+  {
+   "page": 1,
+   "text": "TERMS OF ENGAGEMENT",
+   "x": 37.5,
+   "y": 115.5,
+   "baseline": 133.5,
+   "size": 17,
+   "font": "Manrope-Bold",
+   "width": 200.5
+  },
+  {
+   "page": 1,
+   "text": "1. Scope",
+   "x": 37.5,
+   "y": 164,
+   "baseline": 176.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 47.5
+  },
+  {
+   "page": 1,
+   "text": "This agreement is made between the parties named above and sets out the",
+   "x": 37.5,
+   "y": 189,
+   "baseline": 200.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 381.5
+  },
+  {
+   "page": 1,
+   "text": "terms of engagement",
+   "x": 422.5,
+   "y": 189,
+   "baseline": 200.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 112
+  },
+  {
+   "page": 1,
+   "text": ", the",
+   "x": 535,
+   "y": 189,
+   "baseline": 200.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 23
+  },
+  {
+   "page": 1,
+   "text": "schedule of deliverables, the fees payable and the obligations of each party for the duration of the",
+   "x": 37.5,
+   "y": 208,
+   "baseline": 219,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 1,
+   "text": "engagement. Each party confirms that it has read and understood these terms and agrees to be bound by",
+   "x": 37.5,
+   "y": 227,
+   "baseline": 238,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 1,
+   "text": "them in full.",
+   "x": 37.5,
+   "y": 245.5,
+   "baseline": 257,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 55.5
+  },
+  {
+   "page": 1,
+   "text": "•",
+   "x": 42.5,
+   "y": 274,
+   "baseline": 285,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 1,
+   "text": "First item with",
+   "x": 56.5,
+   "y": 274,
+   "baseline": 285,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 67.5
+  },
+  {
+   "page": 1,
+   "text": "bold",
+   "x": 126,
+   "y": 274,
+   "baseline": 285,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 22.5
+  },
+  {
+   "page": 1,
+   "text": "words",
+   "x": 150.5,
+   "y": 274,
+   "baseline": 285,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 29.5
+  },
+  {
+   "page": 1,
+   "text": "•",
+   "x": 42.5,
+   "y": 297.5,
+   "baseline": 309,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 1,
+   "text": "Second item",
+   "x": 56.5,
+   "y": 297.5,
+   "baseline": 309,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 60.5
+  },
+  {
+   "page": 1,
+   "text": "Earnings",
+   "x": 47.5,
+   "y": 361.5,
+   "baseline": 371.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 40.5
+  },
+  {
+   "page": 1,
+   "text": "Monthly",
+   "x": 339.5,
+   "y": 361.5,
+   "baseline": 371.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 38
+  },
+  {
+   "page": 1,
+   "text": "Annual",
+   "x": 515.5,
+   "y": 361.5,
+   "baseline": 371.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 32.5
+  },
+  {
+   "page": 1,
+   "text": "Basic",
+   "x": 47.5,
+   "y": 383.5,
+   "baseline": 393.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 23.5
+  },
+  {
+   "page": 1,
+   "text": "10,000",
+   "x": 347,
+   "y": 383.5,
+   "baseline": 393.5,
+   "size": 9.5,
+   "font": "Manrope-Medium",
+   "width": 30.5
+  },
+  {
+   "page": 1,
+   "text": "1,20,000",
+   "x": 509.5,
+   "y": 383.5,
+   "baseline": 393.5,
+   "size": 9.5,
+   "font": "Manrope-Medium",
+   "width": 38
+  },
+  {
+   "page": 1,
+   "text": "Gross",
+   "x": 47.5,
+   "y": 405.5,
+   "baseline": 415.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 26.5
+  },
+  {
+   "page": 1,
+   "text": "10,000",
+   "x": 345.5,
+   "y": 405.5,
+   "baseline": 415.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 32
+  },
+  {
+   "page": 1,
+   "text": "1,20,000",
+   "x": 507.5,
+   "y": 405.5,
+   "baseline": 415.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 40
+  },
+  {
+   "page": 1,
+   "text": "hello@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 138.5
+  },
+  {
+   "page": 1,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 1,
+   "text": "Page 1 of 2",
+   "x": 521.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 36
+  },
+  {
+   "page": 2,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 2,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 2,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 2,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 2,
+   "text": "Email: hello@example.com | www.example.com",
+   "x": 386.5,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 171
+  },
+  {
+   "page": 2,
+   "text": "Amount: ₹1,20,000 (Rupees One Lakh Twenty Thousand Only).",
+   "x": 37.5,
+   "y": 110,
+   "baseline": 121,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 300.5
+  },
+  {
+   "page": 2,
+   "text": "FOR Acme Events Private Limited",
+   "x": 37.5,
+   "y": 158,
+   "baseline": 168.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 150.5
+  },
+  {
+   "page": 2,
+   "text": "Sam Sample",
+   "x": 37.5,
+   "y": 259,
+   "baseline": 270,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 59.5
+  },
+  {
+   "page": 2,
+   "text": "Managing Director",
+   "x": 37.5,
+   "y": 273,
+   "baseline": 283,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 77.5
+  },
+  {
+   "page": 2,
+   "text": "Authorized Signatory",
+   "x": 37.5,
+   "y": 285,
+   "baseline": 295,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 87.5
+  },
+  {
+   "page": 2,
+   "text": "hello@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 138.5
+  },
+  {
+   "page": 2,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 2,
+   "text": "Page 2 of 2",
+   "x": 520.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  }
+ ],
+ "images": [
+  {
+   "page": 1,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 2,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 2,
+   "x": 37.5,
+   "y": 182,
+   "width": 66.5,
+   "height": 55
+  },
+  {
+   "page": 2,
+   "x": 470,
+   "y": 170.5,
+   "width": 83.5,
+   "height": 83.5
+  }
+ ]
+}

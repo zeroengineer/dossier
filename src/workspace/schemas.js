@@ -43,6 +43,11 @@ export const WorkspaceSchema = z.object({
       long: text.default('D MMMM YYYY'),
       us: text.default('MMMM D, YYYY'),
     }).prefault({}),
+    currencyWords: z.object({
+      major: text.default('Rupees'),
+      minor: text.default('Paise'),
+      suffix: text.default('Only'),
+    }).prefault({}),
   }).prefault({}),
   users: z.record(z.string(), z.object({ clearance: z.enum(CLEARANCES).default('Confidential') }).prefault({})).default({}),
   hierarchy: z.object({

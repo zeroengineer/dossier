@@ -50,7 +50,8 @@ brands/acme/brand.json: invalid:
 | `locale.currencySymbol` | `₹` | |
 | `locale.currencyCode` | `INR` | ISO 4217 |
 | `locale.numberLocale` | `en-IN` | used for number formatting |
-| `locale.dateFormats.short` / `.long` / `.us` | `DD/MM/YYYY` / `D MMMM YYYY` / `MMMM D, YYYY` | |
+| `locale.dateFormats.short` / `.long` / `.us` | `DD/MM/YYYY` / `D MMMM YYYY` / `MMMM D, YYYY` | tokens `YYYY`, `MMMM`, `MMM`, `MM`, `M`, `DD`, `Do` (31st), `D`; other characters are copied |
+| `locale.currencyWords.major` / `.minor` / `.suffix` | `Rupees` / `Paise` / `Only` | amounts in words use the Indian system (Thousand, Lakh, Crore): `Rupees One Lakh Twenty Thousand Only`, `Rupees Ten and Fifty Paise Only` |
 | `users.<userId>.clearance` | `Confidential` | `Public`, `Internal`, `Confidential` or `Restricted`; users not listed get `Confidential` |
 | `hierarchy.topLevel` | built-in names | exactly 10 top-level folder names, in order |
 | `hierarchy.routing` | built-in table (`src/domain/routing.js`) | `{ "<docType>": "<route>" }` overrides, type matched case-insensitively. A plain leaf name (`"Agreements"`) files the type inside the party's folder; a value starting with a top-level name (`"06 Finance/Bank Statements"`, `"08 References"`) files it in that folder (finance folders add the financial year). Overrides are used as given (built-in routes are limited to each folder's leaf set, else `Other`). The Restricted folder is not a valid target: only Restricted sensitivity places a document there |
