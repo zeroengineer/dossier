@@ -6,6 +6,7 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ### Added
 
+- Entities pages: tabs per kind, searchable table with document counts, create/edit dialog (aliases tag input, brand, attributes JSON), entity detail with relations, add-relation dialog with entity search, and linked documents; `GET /api/entities` rows include `documentCount`; `GET /api/documents` accepts `entityId` (any reference to the entity).
 - Generate: a template picker grouped by category with search, and a dynamic form per template (all field types, list rows, entity combobox, brand select defaulting to the sidebar brand) in a two-pane layout ready for the live preview. Switching brand clears choices the new brand does not offer.
 - Upload page (`/upload`): drag-and-drop or choose a file, with type, title, party, party type, number and series, dates, amount, currency, status and a sensitivity no higher than your clearance; `?documentId=` uploads a new version with a note and a make-current option. Shows deduplicated files and number-conflict warnings, and refuses files over the upload limit as soon as they are chosen.
 - Search page (`/search?q=`) with Matched, Related and Entities sections and highlighted snippets; the ⌘K palette now shows live document and entity results (debounced `/api/search`, 8 per query), a Create group with one item per template, and a "Search for …" fallback. Results from an earlier query can never be opened while the next one loads.
