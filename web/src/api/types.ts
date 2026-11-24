@@ -401,3 +401,26 @@ export interface SearchResult {
   related: SearchRelated[]
   entities: SearchEntity[]
 }
+
+// upload
+
+/** One numbering series of `GET /api/series` (the workspace's series.json as stored). */
+export interface UploadSeries {
+  id: string
+  pattern: string
+  scope: string
+  start?: number
+  /** Another series whose counter this one shares. */
+  counter?: string
+}
+
+/** `POST /api/upload` → 201 (src/services/upload.js uploadFile). */
+export interface UploadResult {
+  /** The created document, or the document that got the new version. */
+  document: DocumentDetail
+  version: DocumentVersion
+  /** True when a file with the same bytes (sha256) was already stored; the stored copy is reused. */
+  deduped: boolean
+  /** Warning codes, e.g. NUMBER_CONFLICT when the number is already used in its series. */
+  warnings: string[]
+}
