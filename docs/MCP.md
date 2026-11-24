@@ -29,17 +29,19 @@ diagnostics go to stderr. The server stops when the client closes stdin.
 **Workspace changes apply without a restart.** Before each tool call and resource read the server compares the size
 and modification time of `workspace.json`, `series.json`, `seeds/entities.json` and every `brands/<id>/brand.json`
 with the last load. When they changed it reloads the workspace, recomputes the user's clearance and updates the brand
-rows. Saves from the web settings therefore apply to the next MCP call. A file that does not load (a broken hand
-edit) is reported on stderr and the previous workspace stays in use until the files change again. Templates are read
+rows. Saves from the web settings therefore apply to the next MCP call. If a file stops loading (a broken hand edit),
+the server fails closed. Every tool call and resource read returns `WORKSPACE_INVALID`, naming the file, until the
+files load again. It does not keep working with the old workspace, because the old clearance may no longer be right.
+The error is also reported on stderr. Templates are read
 from disk on every call anyway. The server caches no database data, so documents and entities written by the web
 server are visible at once.
 
 ## Results and errors
 
-Every tool returns one text item holding JSON. The same object is in `structuredContent`. File contents are never
-returned, only absolute paths to the files (previews under `<workspace>/data/previews/<token>/`, filed renditions in
+Every tool returns one text item holding JSON. The same object is in `structuredContent`. The tools never return
+file contents, only absolute paths to the files (previews under `<workspace>/data/previews/<token>/`, filed renditions in
 the content-addressed blob store `<workspace>/data/blobs/<2 hex>/<sha256>`). Claude Code can open those paths
-itself. Blob files have no extension; the rendition's `filename` and `kind` tell what they hold. Treat them as
+itself if it has read access to the workspace's `data` folder (see "Security"). Blob files have no extension; the rendition's `filename` and `kind` tell what they hold. Treat them as
 read-only, because one blob can back several documents.
 
 A failure is a result with `isError: true` and this content:
@@ -52,8 +54,10 @@ A failure is a result with `isError: true` and this content:
 
 `code` is the service's stable error code (`INVALID_INPUT`, `FIELDS_MISSING`, `FIELDS_INVALID`, `FORBIDDEN`,
 `*_NOT_FOUND`, `ENTITY_DUPLICATE`, `ENTITY_AMBIGUOUS`, `STATUS_LOCKED`, `INVALID_STATUS_TRANSITION`,
-`NUMBER_CONTENDED`, …). `hint` says what to do next. Arguments that fail the tool's schema are `INVALID_INPUT`, an
-unknown tool is `TOOL_NOT_FOUND`, and an unexpected failure is `INTERNAL` with no internals (the stack trace goes to
+`NUMBER_CONTENDED`, `WORKSPACE_INVALID`, …). `hint` says what to do next. Arguments that fail the tool's schema are
+`INVALID_INPUT`. That includes unknown or misspelled keys: every tool's schema has `additionalProperties: false`, so
+`documentId` instead of `document_id` is refused rather than ignored. An unknown tool is `TOOL_NOT_FOUND`, any other
+refusal by the MCP layer is `MCP_ERROR`, and an unexpected failure is `INTERNAL` with no internals (the stack trace goes to
 stderr).
 
 ## Tools
@@ -187,15 +191,22 @@ with roles and related documents in both directions.
 
 ## Security
 
-- **Clearance.** The server acts as one local user, `DOSSIER_USER` (default `mcp`). Its clearance comes from
-  `workspace.json` `users` (`Confidential` when the user is not listed). Documents above it are left out of search,
-  the tree and related lists. `get_document` on such a document gives `FORBIDDEN`, and so does previewing or generating
-  from a template above it. To limit what Claude can read, list the MCP user with a lower clearance, for example
-  `"mcp": { "clearance": "Internal" }`. A change to `users` applies to the next call.
+- **Clearance filters tool results. It does not isolate the agent.** The server acts as one local user,
+  `DOSSIER_USER` (default `mcp`). Its clearance comes from `workspace.json` `users` (`Confidential` when the user is
+  not listed). The tools leave documents above that clearance out of search, the tree and related lists. `get_document`
+  on such a document gives `FORBIDDEN`, and so does previewing or generating from a template above it. A change to
+  `users` applies to the next call. Setting a lower clearance for the MCP user, for example
+  `"mcp": { "clearance": "Internal" }`, therefore limits what the tools return. It does **not** limit an agent that can
+  read the workspace files directly: `data/blobs/` holds every rendition, `data/dossier.sqlite` holds all metadata and
+  extracted text, and the brand and workspace files sit next to them. Claude Code can read any file its operating-system
+  user can read. For real isolation, run Claude Code where it cannot read the workspace folder: a working directory
+  outside it with file permissions that deny it, or a different operating-system user. The MCP server must still be
+  able to read it. When the agent cannot read `data/`, use the documents' paths through `get_document` only as
+  references.
 - **Audit.** Every write (documents, versions, status, links, entities, numbers) is recorded in `audit_log` with the
   actor `mcp:<user>`, so MCP changes are distinct from changes made in the web UI or the CLI.
-- **No secrets.** The tools never return file bytes, environment variables or configuration outside the workspace data
-  you could already read. Do not put credentials in entity attributes or inputs: they are stored and audited in
+- **No secrets.** The tools never return file bytes or environment variables, and they return no configuration
+  beyond the workspace data the user's clearance allows. Do not put credentials in entity attributes or inputs: they are stored and audited in
   plain text. Files that look like keys (`.pem`, `.key`, `.env`, PEM armour) are refused by the vault
   (`SECRET_REJECTED`).
 - **Local only.** stdio means the server is reachable only by the process that started it. There is no network

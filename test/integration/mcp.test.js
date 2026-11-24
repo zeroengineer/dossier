@@ -10,7 +10,7 @@ import { fixtureInput } from '../helpers/templateRender.js';
 import { initWorkspace } from '../../src/workspace/index.js';
 import { openContext } from '../../src/context.js';
 import { seedEntities } from '../../src/services/entities.js';
-import { createMcpServer, errorPayload } from '../../src/mcp.js';
+import { LIFECYCLE, createMcpServer, errorPayload } from '../../src/mcp.js';
 import { DossierError } from '../../src/errors.js';
 import { REPO_ROOT } from '../../src/paths.js';
 
@@ -193,6 +193,28 @@ describe('MCP server (in-memory transport)', () => {
     assert.equal(actor, 'mcp:demo');
   });
 
+  test('unknown keys are refused: a misspelled documentId creates no document and uses no number', async () => {
+    for (const t of (await client.listTools()).tools) assert.equal(t.inputSchema.additionalProperties, false, t.name);
+    const target = await ok('generate_document', { template_id: 'debit-note', input: fixtureInput('debit-note') });
+    const count = () => ctx.db.prepare('SELECT COUNT(*) AS n FROM documents').get().n;
+    const counters = () => JSON.stringify(ctx.db.prepare('SELECT * FROM sequences ORDER BY scope_key').all());
+    const [docsBefore, seqBefore] = [count(), counters()];
+    const bad = await err('generate_document', { template_id: 'debit-note', input: fixtureInput('debit-note'), documentId: target.documentId });
+    assert.equal(bad.code, 'INVALID_INPUT');
+    assert.match(bad.message, /documentId/);
+    assert.equal(count(), docsBefore);
+    assert.equal(counters(), seqBefore);
+    assert.equal((await err('list_templates', { extra: 1 })).code, 'INVALID_INPUT');
+  });
+
+  test('lifecycle wording comes from domain/status.js', async () => {
+    const tool = (await client.listTools()).tools.find((t) => t.name === 'update_status');
+    assert.ok(tool.description.includes(LIFECYCLE));
+    assert.equal(LIFECYCLE, 'Draft -> Sent, Signed or Superseded; Sent -> Signed, Paid or Superseded; Signed -> Paid or Superseded; '
+      + 'Paid -> Superseded; Superseded is final');
+    assert.ok(errorPayload(new DossierError('INVALID_STATUS_TRANSITION', 'x')).hint.includes(LIFECYCLE));
+  });
+
   test('schema violations and unknown tools come back as { code, message, hint }', async () => {
     const bad = await err('search', { q: 5 });
     assert.equal(bad.code, 'INVALID_INPUT');
@@ -209,6 +231,7 @@ describe('MCP server (in-memory transport)', () => {
     const doc = await client.readResource({ uri: 'dossier://document/DOC-000001' });
     assert.equal(JSON.parse(doc.contents[0].text).id, 'DOC-000001');
     await assert.rejects(client.readResource({ uri: 'dossier://document/DOC-999999' }), /DOCUMENT_NOT_FOUND/);
+    await assert.rejects(client.readResource({ uri: 'dossier://document/%E0%A4' }), /INVALID_INPUT/);
   });
 
   test('workspace edits on disk are picked up by the next call (clearance, brand)', async () => {
@@ -222,10 +245,16 @@ describe('MCP server (in-memory transport)', () => {
     assert.equal((await ok('list_templates')).templates.find((t) => t.id === 'debit-note').usable, false);
     assert.ok(logs.some((m) => /reloaded/.test(m)));
 
-    // A file that no longer loads keeps the last good workspace (and says so on stderr).
+    // A file that no longer loads fails closed: every call is WORKSPACE_INVALID until the files load again.
     writeFileSync(wsFile, '{ broken');
-    assert.equal((await err('preview_document', { template_id: 'debit-note', input: fixtureInput('debit-note') })).code, 'FORBIDDEN');
-    assert.ok(logs.some((m) => /does not load/.test(m)));
+    const broken = await err('search', { q: 'anything' });
+    assert.equal(broken.code, 'WORKSPACE_INVALID');
+    assert.equal(broken.details.file, 'workspace.json');
+    assert.ok(logs.some((m) => /does not load; refusing/.test(m)));
+    const logged = logs.length;
+    assert.equal((await err('list_templates')).code, 'WORKSPACE_INVALID', 'still refused without a file change');
+    assert.equal(logs.length, logged, 'logged once per change, not per call');
+    await assert.rejects(client.readResource({ uri: 'dossier://tree' }), /WORKSPACE_INVALID/);
 
     writeFileSync(wsFile, original);
     const brandFile = join(home, 'brands', 'acme', 'brand.json');

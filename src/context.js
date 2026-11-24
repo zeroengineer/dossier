@@ -38,6 +38,7 @@ export function openContext({ home, user, actor, dbFile, env = process.env } = {
       config,
       ws,
       wsFingerprint: fingerprint,
+      wsError: null,
       db,
       repo,
       user: { id: config.user, clearance: clearanceFor(ws, config.user) },
@@ -105,25 +106,29 @@ export function workspaceFingerprint(home) {
  * Reload `ctx.ws` when the workspace files changed on disk since the last load (for long-lived processes such as the
  * MCP server, which do not see saves made by another process). Compares `workspaceFingerprint` first, so an unchanged
  * workspace costs a few `stat` calls. On a change the workspace is loaded and validated; when its `configHash`
- * differs, `ctx.ws` is replaced, `ctx.user.clearance` recomputed and the brand rows synced. A workspace that no longer
- * loads leaves `ctx.ws` as it was; the error is returned (not thrown) and not retried until the files change again.
+ * differs, `ctx.ws` is replaced, `ctx.user.clearance` recomputed and the brand rows synced.
+ * A workspace that no longer loads leaves `ctx.ws` as it was and is remembered in `ctx.wsError`: every later call
+ * returns that error (without re-reading the files) until the files change and load again. Callers must refuse to work
+ * while `error` is set (fail closed: the old clearance may no longer be right).
  * @param {ReturnType<typeof openContext>} ctx
- * @returns {{ reloaded: boolean, error?: Error }}
+ * @returns {{ reloaded: boolean, changed: boolean, error?: Error }} changed: the files differed from the last check
  */
 export function refreshWorkspace(ctx) {
   const home = ctx.ws.home;
   const fingerprint = workspaceFingerprint(home);
-  if (fingerprint === ctx.wsFingerprint) return { reloaded: false };
+  if (fingerprint === ctx.wsFingerprint) return ctx.wsError ? { reloaded: false, changed: false, error: ctx.wsError } : { reloaded: false, changed: false };
   ctx.wsFingerprint = fingerprint;
   let ws;
   try {
     ws = loadWorkspace(home);
   } catch (error) {
-    return { reloaded: false, error };
+    ctx.wsError = error;
+    return { reloaded: false, changed: true, error };
   }
-  if (ws.configHash === ctx.ws.configHash) return { reloaded: false };
+  ctx.wsError = null;
+  if (ws.configHash === ctx.ws.configHash) return { reloaded: false, changed: true };
   ctx.ws = ws;
   if (ctx.user) ctx.user.clearance = clearanceFor(ws, ctx.user.id);
   syncBrands(ctx.repo, ws);
-  return { reloaded: true };
+  return { reloaded: true, changed: true };
 }

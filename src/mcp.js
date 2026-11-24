@@ -7,9 +7,9 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { loadConfig } from './config.js';
 import { openContext, refreshWorkspace } from './context.js';
-import { isDossierError } from './errors.js';
+import { DossierError, isDossierError } from './errors.js';
 import { canAccess } from './domain/sensitivity.js';
-import { STATUSES } from './domain/status.js';
+import { STATUSES, TRANSITIONS } from './domain/status.js';
 import { DOCUMENT_RELATION_TYPES, ENTITY_KINDS } from './domain/enums.js';
 import { search } from './services/search.js';
 import { getEntity, upsertEntity } from './services/entities.js';
@@ -25,6 +25,12 @@ export const DEFAULT_MCP_USER = 'mcp';
 
 const VERSION = '0.1.0';
 
+const orList = (xs) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} or ${xs.at(-1)}` : xs[0]);
+
+/** The lifecycle in words, from domain/status.js: "Draft -> Sent, Signed or Superseded; …; Superseded is final". */
+export const LIFECYCLE = Object.entries(TRANSITIONS)
+  .map(([from, to]) => (to.length ? `${from} -> ${orList(to)}` : `${from} is final`)).join('; ');
+
 /** What to do next, by error code (a service's own `details.hint` wins). */
 const HINTS = {
   INVALID_INPUT: 'Check the arguments against the tool schema and the message.',
@@ -32,15 +38,16 @@ const HINTS = {
   FIELDS_INVALID: 'Fix the values listed in details.errors.',
   FORBIDDEN: 'The MCP user (DOSSIER_USER) lacks the clearance for this; a user with a higher clearance must do it.',
   STATUS_LOCKED: 'Generate a new document and link it to the old one with type "supersedes", or regenerate with force: true.',
-  INVALID_STATUS_TRANSITION: 'Allowed moves: Draft -> Sent or Signed, Sent -> Signed or Paid, Signed -> Paid, any -> Superseded (final). get_document shows the current status.',
+  INVALID_STATUS_TRANSITION: `Allowed moves: ${LIFECYCLE}. get_document shows the current status.`,
   ENTITY_DUPLICATE: 'That name already belongs to entity details.existingId: use that entity, or pass alias_of to add the name as its alias.',
   ENTITY_AMBIGUOUS: 'Pass kind to say which entity you mean (details.candidates lists them).',
   NUMBER_CONTENDED: 'Another process kept taking the next number; call generate_document again.',
   TEMPLATE_INVALID: 'The template folder is broken; list_templates reports load errors under "errors".',
   TEMPLATE_SYNTAX: 'The template body has a syntax error; fix the template folder.',
   SECRET_REJECTED: 'Keys and credentials never belong in the vault; remove them.',
-  WORKSPACE_INVALID: 'Fix the workspace file named in the details, then retry.',
+  WORKSPACE_INVALID: 'A workspace file does not load (details.file names it); fix it, then retry. Nothing runs until it loads.',
   TOOL_NOT_FOUND: 'Call tools/list for the available tools.',
+  MCP_ERROR: 'The MCP request itself was refused; see the message.',
   INTERNAL: 'Unexpected failure; the MCP server log (stderr) has the details.',
 };
 
@@ -89,6 +96,9 @@ function documentView(ctx, id) {
   };
 }
 
+/** Tool arguments: a strict object, so a misspelled key (e.g. `documentId`) is INVALID_INPUT instead of ignored. */
+const args = (shape) => z.strictObject(shape);
+
 const status = z.enum(/** @type {[string, ...string[]]} */ ([...STATUSES]));
 const stringOrList = z.union([z.string(), z.array(z.string())]);
 const input = z.record(z.string(), z.unknown()).describe('Field values by field name (dotted names may be nested objects); see get_template');
@@ -105,13 +115,18 @@ export function createMcpServer(ctx, { log = stderrLog } = {}) {
   const server = new McpServer({ name: 'dossier', version: VERSION }, {
     instructions: 'Dossier document vault: search filed documents, look up entities (clients, people, companies), and '
       + 'fill templates. To make a document: list_templates -> get_template -> resolve_fields (shows missing fields) -> '
-      + 'preview_document (draft files, no number used) -> generate_document (allocates the number, files the document).',
+      + 'preview_document (draft files, no number used) -> generate_document (allocates the number, files the document). '
+      + 'Results are filtered by the server user\'s clearance; that filter applies to these tools only.',
   });
 
+  // Fail closed: while the workspace files do not load, nothing runs (the old clearance may no longer be right).
   const refresh = () => {
     const r = refreshWorkspace(ctx);
     if (r.reloaded) log('workspace changed on disk; reloaded');
-    if (r.error) log(`workspace changed on disk but does not load; keeping the previous version: ${r.error.message}`);
+    if (!r.error) return;
+    if (r.changed) log(`workspace changed on disk but does not load; refusing tool calls until it does: ${r.error.message}`);
+    throw new DossierError('WORKSPACE_INVALID', `The workspace does not load: ${r.error.message}`,
+      { file: r.error.file ?? null });
   };
 
   /** Wrap a handler: refresh the workspace, run it, map errors to `{ code, message, hint }`. */
@@ -127,8 +142,12 @@ export function createMcpServer(ctx, { log = stderrLog } = {}) {
 
   // Input that fails the schema, or an unknown tool, is reported by the SDK through createToolError: give it the
   // same `{ code, message, hint }` shape as every other error.
+  if (typeof server.createToolError !== 'function') {
+    log('this @modelcontextprotocol/sdk has no McpServer#createToolError; schema errors will not use the { code, message, hint } shape');
+  }
   server.createToolError = (message) => {
-    const code = /Tool \S+ (not found|disabled)/.test(message) ? 'TOOL_NOT_FOUND' : 'INVALID_INPUT';
+    const code = /Tool \S+ (not found|disabled)/.test(message) ? 'TOOL_NOT_FOUND'
+      : /Input validation error|Invalid arguments for tool/.test(message) ? 'INVALID_INPUT' : 'MCP_ERROR';
     return fail({ code, message, hint: HINTS[code], details: {} });
   };
 
@@ -136,23 +155,23 @@ export function createMcpServer(ctx, { log = stderrLog } = {}) {
     title: 'Search documents',
     description: 'Search filed documents by number, title, party names/aliases and extracted text. Returns ranked hits '
       + '(document summary, match kind, snippet), related documents one hop away, and matching entities. Only documents '
-      + 'within the MCP user\'s clearance are returned.',
-    inputSchema: {
+      + 'within the MCP user\'s clearance are returned (clearance filters tool results; it is not a file-system sandbox).',
+    inputSchema: args({
       q: z.string().describe('Words to find (all must match), or a document number / id'),
       types: stringOrList.optional().describe('Document type(s), e.g. "Invoice"'),
       status: z.union([status, z.array(status)]).optional().describe('Status filter'),
       limit: z.number().int().min(1).max(200).optional().describe('Max hits (default 20)'),
-    },
+    }),
   }, tool(({ q, types, status: st, limit }) => search(ctx, defined({ q, types, status: st, limit }))));
 
   server.registerTool('get_entity', {
     title: 'Get entity',
     description: 'One entity of the master list (client, person, company, vendor, product, engagement…) by id, name or '
       + 'alias, with aliases, attributes, relations and the number of documents referencing it.',
-    inputSchema: {
+    inputSchema: args({
       id_or_name: z.union([z.string(), z.number().int()]).describe('Entity id, or a name or alias'),
       kind: z.enum(/** @type {[string, ...string[]]} */ ([...ENTITY_KINDS])).optional().describe('Restrict a name lookup to one kind'),
-    },
+    }),
   }, tool(({ id_or_name: ref, kind }) => getEntity(ctx, ref, defined({ kind }))));
 
   server.registerTool('upsert_entity', {
@@ -160,20 +179,20 @@ export function createMcpServer(ctx, { log = stderrLog } = {}) {
     description: 'Create an entity, or update the one of the same kind and name: aliases are added (never removed), '
       + 'attrs are merged (null deletes a key). A name or alias already used by another entity is ENTITY_DUPLICATE; '
       + 'pass alias_of (that entity\'s id or name) to add the name and aliases as aliases of it instead.',
-    inputSchema: {
+    inputSchema: args({
       kind: z.enum(/** @type {[string, ...string[]]} */ ([...ENTITY_KINDS])),
       name: z.string(),
       aliases: z.array(z.string()).optional(),
       attrs: z.record(z.string(), z.unknown()).optional().describe('e.g. { "address": ["line 1", "line 2"], "email": "…" }'),
       alias_of: z.union([z.string(), z.number().int()]).optional().describe('Existing entity (id or name) to add these names to'),
-    },
+    }),
   }, tool(({ kind, name, aliases, attrs, alias_of: aliasOf }) => upsertEntity(ctx, defined({ kind, name, aliases, attrs, aliasOf }))));
 
   server.registerTool('list_templates', {
     title: 'List templates',
     description: 'Every document template (id, type, title, category, sensitivity, renditions, numbering). `usable` is '
       + 'false when the template is above the MCP user\'s clearance. `errors` lists template folders that failed to load.',
-    inputSchema: {},
+    inputSchema: args({}),
   }, tool(() => ({
     templates: listTemplates(ctx).map((t) => ({
       id: t.id, version: t.version, type: t.type, title: t.title, category: t.category, source: t.source,
@@ -187,7 +206,7 @@ export function createMcpServer(ctx, { log = stderrLog } = {}) {
     title: 'Get template',
     description: 'One template: the fields to fill (name, label, type, required, help, choices, row keys of lists), '
       + 'effective params for the brand, numbering and renditions.',
-    inputSchema: { id: z.string(), brand_id: brandId },
+    inputSchema: args({ id: z.string(), brand_id: brandId }),
   }, tool(async ({ id, brand_id: bid }) => {
     const t = await getTemplate(ctx, id);
     const fields = formFields(ctx, t, defined({ brandId: bid }));
@@ -204,7 +223,7 @@ export function createMcpServer(ctx, { log = stderrLog } = {}) {
     title: 'Resolve fields',
     description: 'Fill a template\'s fields from input, entities, brand and defaults without rendering. Returns the '
       + 'resolved values, `missing` required fields and `errors` (bad values, unknown entities).',
-    inputSchema: { template_id: z.string(), input, brand_id: brandId },
+    inputSchema: args({ template_id: z.string(), input, brand_id: brandId }),
   }, tool(({ template_id: tid, input: inp, brand_id: bid }) => resolveFields(ctx, tid, inp, defined({ brandId: bid }))));
 
   server.registerTool('preview_document', {
@@ -212,7 +231,7 @@ export function createMcpServer(ctx, { log = stderrLog } = {}) {
     description: 'Render a draft (number shown as DRAFT, watermarked) to files and return their paths, sizes and '
       + 'warnings (placeholders that printed empty). Nothing is filed and no number is used. With missing or invalid '
       + 'fields returns ok: false with `missing` and `errors`.',
-    inputSchema: { template_id: z.string(), input, brand_id: brandId },
+    inputSchema: args({ template_id: z.string(), input, brand_id: brandId }),
   }, tool(async ({ template_id: tid, input: inp, brand_id: bid }) => {
     const r = await previewDocument(ctx, tid, inp, defined({ brandId: bid }));
     if (!r.ok) {
@@ -235,7 +254,7 @@ export function createMcpServer(ctx, { log = stderrLog } = {}) {
     description: 'Render and file a document: allocates the next number of its series, stores every rendition and '
       + 'returns the document id, number, version, file paths and warnings. With document_id, regenerates that '
       + 'document as its next version (keeps its number); a Sent, Signed or Paid document needs force: true.',
-    inputSchema: {
+    inputSchema: args({
       template_id: z.string(),
       input,
       brand_id: brandId,
@@ -243,7 +262,7 @@ export function createMcpServer(ctx, { log = stderrLog } = {}) {
       document_id: z.string().optional().describe('Regenerate this document (DOC-000001) instead of creating one'),
       force: z.boolean().optional().describe('With document_id: allow regenerating a Sent/Signed/Paid document'),
       note: z.string().optional().describe('Version note'),
-    },
+    }),
   }, tool(async (a) => {
     const r = await generateDocument(ctx, a.template_id, a.input, defined({
       brandId: a.brand_id, status: a.status, documentId: a.document_id, force: a.force, note: a.note,
@@ -262,24 +281,24 @@ export function createMcpServer(ctx, { log = stderrLog } = {}) {
     title: 'Link documents',
     description: 'Relate two documents: from_id --type--> to_id (e.g. a receipt "pays" an invoice, a new document '
       + '"supersedes" an old one).',
-    inputSchema: {
+    inputSchema: args({
       from_id: z.string(),
       to_id: z.string(),
       type: z.enum(/** @type {[string, ...string[]]} */ ([...DOCUMENT_RELATION_TYPES])),
-    },
+    }),
   }, tool(({ from_id: from, to_id: to, type }) => linkDocuments(ctx, from, to, type)));
 
   server.registerTool('update_status', {
     title: 'Update status',
-    description: 'Move a document along its lifecycle: Draft -> Sent or Signed, Sent -> Signed or Paid, Signed -> Paid, any -> Superseded (final).',
-    inputSchema: { document_id: z.string(), status },
+    description: `Move a document along its lifecycle: ${LIFECYCLE}.`,
+    inputSchema: args({ document_id: z.string(), status }),
   }, tool(({ document_id: id, status: st }) => updateStatus(ctx, id, st)));
 
   server.registerTool('get_document', {
     title: 'Get document',
     description: 'Full metadata of one document: party, number, dates, amount, status, versions with renditions '
       + '(file paths, not bytes), related entities and related documents.',
-    inputSchema: { id: z.string().describe('Document id, e.g. DOC-000001') },
+    inputSchema: args({ id: z.string().describe('Document id, e.g. DOC-000001') }),
   }, tool(({ id }) => documentView(ctx, id)));
 
   /** Resource reads share the refresh and turn errors into readable JSON. */
@@ -304,9 +323,18 @@ export function createMcpServer(ctx, { log = stderrLog } = {}) {
     title: 'Document',
     description: 'Full metadata of one document (same as get_document)',
     mimeType: 'application/json',
-  }, (uri, { id }) => resource(uri.href, () => documentView(ctx, decodeURIComponent(String(id)))));
+  }, (uri, { id }) => resource(uri.href, () => documentView(ctx, decodeId(id))));
 
   return server;
+}
+
+/** A resource URI's `{id}`, percent-decoded; malformed escapes are INVALID_INPUT. */
+function decodeId(id) {
+  try {
+    return decodeURIComponent(String(id));
+  } catch {
+    throw new DossierError('INVALID_INPUT', `Malformed document id in URI: "${id}"`, { id: String(id) });
+  }
 }
 
 /** @param {string} message */
