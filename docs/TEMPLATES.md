@@ -467,3 +467,61 @@ Params (interpolated with the brand plus `{company}`, `{companyUpper}`, `{addres
 `certification` (`title`, `forLine`, `sealTitle`, `sealSub`), `footer`, `frame` (`BOARD_RESOLUTION_FRAME`). Fields:
 `date`, `address` (default the brand's registered address), `bank`, `directors` (`[{ name, role }]`, required),
 `certifiers` (director names; default the first two), `resolutions` (replaces the params list for one document).
+
+### Proposals and reports: `proposal`, `pricing-report`
+
+The legacy gen-2 proposals and the pricing reports (docs/DISCOVERY.md A8 §13-14; module `src/render/proposalTemplate.js`,
+frame `src/render/pdf/proposalFrame.js`, calculator `src/render/feeCalculator.js`). Layout profile `letter`
+(37.5/100/39, CP 10), letterhead on every page, brand footer, category `proposal` / `report`, party a `client`, optional
+`engagement` (stored on the document; its name fills `{event}`) and `product` (its name fills `{product}`, default the
+brand's short name). Checked against harness copies of the legacy proposal and report scripts (their own helper
+functions, fed the same strings): identical text positions, image boxes and pixel-identical pages.
+
+| Part | Layout (`PROPOSAL_FRAME` / `REPORT_FRAME`, deep-merged with `params.frame`) |
+|---|---|
+| cover `details` (proposal default) | title `SemiBold 24` centred (lineGap 8), subtitle `Bold 16`, description `Regular 11.5` inset 40, meta `Regular 10.5`; divider at `PH-MB-45-(26+rows×22)-22`; "Proposal Details" `Bold 13`; rows 22 apart, label `SemiBold 11` + `:` in 150, value `Regular 11`. A value with several lines continues on unlabelled rows |
+| cover `stacked` | the older gen-2 cover: divider at y 560, "Submitted To / By" (`params.cover.parties`), upper-case `SemiBold 10` labels over `Regular 11.5` values |
+| cover `report` (report default) | centred title, subtitle `Regular 14`, Prepared for / by, divider, "Document Details" and the detail lines (`Regular 11`), vertically centred by the legacy height estimate |
+| contents | `h1` "Contents"; entries `SemiBold 11.5` (number at ML, title at ML+22, rule `#f0f0f0`), sub-entries `Regular 11`; page numbers written in a post-pass, right-aligned `Regular 11.5 / 11 #aaa` |
+| sections | first section on a new page; later ones after a divider (skipped within 110 pt of the bottom) or on a new page (`newPage`); `breakMin` adds a page when fewer points remain; heading `h1` `ExtraBold 18` (break < 100), subsections `h2` `Bold 13` (< 70), heading blocks level 3 `SemiBold 12` (< 55) |
+| text | proposal: justified `**bold**` paragraphs 11.5 / lineGap 2.5, bullets 11.5 / 1.5 at ML+14; report: plain pdfkit paragraphs and bullets with the same sizes |
+| tables | proposal (`table.mode: auto`): pad 8/6, size 9.5 (block `style.size`), header `SemiBold` white on ink, rows `#f9f9f9/#fff`, the last bold row a black bar and the bold row right above it `#d9d9d9`; `table.border` strokes cells (older variant). Report (`fixed`): rows 24, text at +10/+6, header `Bold 10`, total rows black `Bold 10` |
+| fee card | h84 ink card with shadow; label `SemiBold 8.5`, value `ExtraBold 36`, title `Bold 11.5` and text `Regular 9.5` at +120 |
+| price card | h108; amount `ExtraBold 32`, tax label `Regular 8` at +72, title/text at +195, words `SemiBold 9.5` at +84 |
+| sign-off | `PROJECT CONTACT` / `AUTHORIZED SIGNATORY` columns `CW/2-10` wide, rows 20 apart (`Name:`, `Designation:`, `Email:`, `Phone:` from the brand signatory), vertical rule between two columns; one column when the contact is the signatory or unset |
+
+Sections are data: the `sections` field, else `params.sections` (so a workspace replaces the default content with
+`brand.templateParams.<id>.sections` or its own `templates/<id>/template.json`):
+`[{ title, blocks?, subsections?: [{ title, blocks?, breakMin?, divider?, toc? }], level?, newPage?, breakMin?, divider?, toc? }]`.
+Headings and contents lines are `params.headings` (`section` `{n}. {title}`, `subsection` `{n}  {title}`,
+`contentsSubsection` `{n} {title}`, `subsectionsInContents`; the report prints unnumbered headings and lists only
+sections). Blocks are the shared block model (`signature` is not used; a `pageBreak` may set `minSpace`; a table may
+list `boldRows`; `totalRows` are bold, and in reports black) plus `custom` blocks:
+
+| `name` | `data` |
+|---|---|
+| `feeCard` | `label`, `value`, `title`, `text` over `params.feeCard` (`{platformPercent}%` …); `rates` for this card |
+| `priceCard` | `amount` (major units, default the `price` field), `label`, `title`, `text`, `taxLabel`, `words` over `params.priceCard` (`In words: {amountWords} ({taxLabel})`; `{amountWords}` without the currency word) |
+| `feeTable` | `kind` (a key of `params.feeTables`: `registrations`, `comparison`, `delegatePaid`, `organiserPaid`, `summary`, `tiers`, `tierSummary`), `base` or `bases` (major units; default the `examplePrice` field), `rates`, `currency` (a prefix such as `USD `; default the locale symbol) |
+| `signOff` | none: the `signOff` computed field |
+
+`params.feeTables.<kind>`: `layout` `metrics` (rows `{ label, values: [metric per value column], bold?, total? }`),
+`tiers` (one value column per base, `{base}` in the column label; rows `{ label, value }`) or `perBase` (one row per
+base; columns `{ label, width, value }`). Metrics: `base`, `platformFee`, `platformGst`, `processed`, `gatewayFee`,
+`gatewayGst`, `delegateTotal`, `totalCharges`, `received`, `orgGatewayFee`, `orgGatewayGst`, `orgCharges`, `orgNet`
+(`ticketCharges`: integer paise, each percentage rounded half up; see docs/DECISIONS.md). Rates: `params.fees`
+(`platformPercent` 2, `gstPercent` 18, `gatewayPercent` 2, `gatewayGstPercent` 18), the `fees` field, then the
+block's `rates`.
+
+Text is interpolated with the brand (`{contact.*}`), every field formatted for print, `{company}`, `{companyUpper}`,
+`{client}`, `{event}`, `{product}`, `{date}` (`params.dateStyle`: proposal `long`, report `us`), `{number}`, `{code}`,
+the rates, `{price}`, `{priceWords}`, `{examplePrice}`. A placeholder in section text that prints empty is a
+`PLACEHOLDER_EMPTY` warning (`env.warnings`); cover lines that print empty are left out silently.
+
+Fields. Proposal: `client`, `engagement`, `product`, `code` (`{CODE}`; default the engagement's `attrs.code`, else
+the client's), `date`, `coverTitle`, `subtitle` (default the engagement), `description`, `coverNote`, `proposalType`,
+`preparedFor` (lines; default the client), `event`, `price`, `fees`, `projectContact` (a brand signatory id, default
+`brand.defaultSignatory.proposalContact`), `signatory` (default `brand.defaultSignatory.proposal`), `sections`.
+Report: `client`, `engagement`, `product`, `date`, `coverTitle`, `subtitle`, `preparedFor`, `clientLine` (after
+`Client:`), `event`, `examplePrice` (1000), `fees`, `projectContact`, `signatory`, `sections`. Malformed sections,
+unknown custom blocks or fee table kinds, bad amounts or rates and a price card without an amount are field errors.

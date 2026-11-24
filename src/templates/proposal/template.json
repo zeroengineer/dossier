@@ -1,0 +1,725 @@
+{
+  "id": "proposal",
+  "version": 1,
+  "type": "Proposal",
+  "title": "Proposal",
+  "description": "Service proposal or quotation for a client: cover with the proposal details, contents with page numbers, and sections given as data (paragraphs, bullets, tables, fee cards, a fixed-price card, fee calculator tables, the sign-off).",
+  "category": "proposal",
+  "layoutProfile": "letter",
+  "partyType": "Client",
+  "partyKind": "client",
+  "sensitivity": "Internal",
+  "renditions": [
+    "pdf",
+    "html",
+    "md"
+  ],
+  "numbering": {
+    "series": "brand",
+    "required": true
+  },
+  "contact": "default",
+  "params": {
+    "dateStyle": "long",
+    "cover": {
+      "style": "details",
+      "title": "Service Proposal",
+      "subtitle": "{event}",
+      "description": "",
+      "meta": "",
+      "detailsTitle": "Proposal Details",
+      "details": [
+        {
+          "label": "Proposal Type",
+          "value": "{proposalType}"
+        },
+        {
+          "label": "Quotation Number",
+          "value": "{number}"
+        },
+        {
+          "label": "Date",
+          "value": "{date}"
+        },
+        {
+          "label": "Prepared For",
+          "value": "{preparedFor}"
+        },
+        {
+          "label": "Submitted By",
+          "value": "{company}"
+        }
+      ],
+      "parties": [
+        {
+          "label": "Submitted To",
+          "value": "{preparedForFirst}"
+        },
+        {
+          "label": "Submitted By",
+          "value": "{company}"
+        }
+      ]
+    },
+    "contents": {
+      "title": "Contents"
+    },
+    "headings": {
+      "section": "{n}. {title}",
+      "subsection": "{n}  {title}",
+      "contents": "{title}",
+      "contentsSubsection": "{n} {title}",
+      "subsectionsInContents": true
+    },
+    "fees": {
+      "platformPercent": 2,
+      "gstPercent": 18,
+      "gatewayPercent": 2,
+      "gatewayGstPercent": 18
+    },
+    "feeCard": {
+      "label": "PLATFORM FEE",
+      "value": "{platformPercent}%",
+      "title": "Per paid registration",
+      "text": "{platformPercent}% platform fee and {gatewayPercent}% payment gateway fee on each paid registration (exclusive of GST)."
+    },
+    "priceCard": {
+      "label": "TOTAL AMOUNT",
+      "taxLabel": "Including GST",
+      "title": "Fixed quotation",
+      "text": "A one-time fee covering the platform and the services described in this proposal.",
+      "words": "In words: {amountWords} ({taxLabel})"
+    },
+    "signOff": {
+      "contactHeading": "PROJECT CONTACT",
+      "signatoryHeading": "AUTHORIZED SIGNATORY",
+      "rows": [
+        {
+          "label": "Name:",
+          "value": "{name}"
+        },
+        {
+          "label": "Designation:",
+          "value": "{title}"
+        },
+        {
+          "label": "Email:",
+          "value": "{email}"
+        },
+        {
+          "label": "Phone:",
+          "value": "{phone}"
+        }
+      ]
+    },
+    "feeTables": {
+      "registrations": {
+        "layout": "perBase",
+        "columns": [
+          {
+            "label": "Base Price",
+            "width": 85,
+            "value": "base"
+          },
+          {
+            "label": "Platform\nFee ({platformPercent}%)",
+            "width": 75,
+            "value": "platformFee"
+          },
+          {
+            "label": "GST on\nPlatform Fee",
+            "width": 75,
+            "value": "platformGst"
+          },
+          {
+            "label": "PG Fee\n({gatewayPercent}% of Base+PF+PF GST)",
+            "width": 65,
+            "value": "gatewayFee"
+          },
+          {
+            "label": "GST on\nGateway Fee",
+            "width": 65,
+            "value": "gatewayGst"
+          },
+          {
+            "label": "Total\nCharges",
+            "width": 80,
+            "value": "totalCharges"
+          },
+          {
+            "label": "Total Paid\nby Delegate",
+            "width": 75,
+            "value": "delegateTotal"
+          }
+        ]
+      },
+      "comparison": {
+        "columns": [
+          {
+            "label": "Particulars",
+            "width": 210
+          },
+          {
+            "label": "Delegate Paid",
+            "width": 155,
+            "align": "right"
+          },
+          {
+            "label": "Organiser Paid",
+            "align": "right"
+          }
+        ],
+        "rows": [
+          {
+            "label": "Base Ticket Price",
+            "values": [
+              "base",
+              "base"
+            ],
+            "bold": true
+          },
+          {
+            "label": "Platform Fee ({platformPercent}%)",
+            "values": [
+              "platformFee",
+              "platformFee"
+            ]
+          },
+          {
+            "label": "GST on Platform Fee ({gstPercent}%)",
+            "values": [
+              "platformGst",
+              "platformGst"
+            ]
+          },
+          {
+            "label": "Amount Processed by Payment Gateway",
+            "values": [
+              "processed",
+              "base"
+            ],
+            "bold": true
+          },
+          {
+            "label": "Payment Gateway Fee ({gatewayPercent}%)",
+            "values": [
+              "gatewayFee",
+              "orgGatewayFee"
+            ]
+          },
+          {
+            "label": "GST on Payment Gateway Fee ({gatewayGstPercent}%)",
+            "values": [
+              "gatewayGst",
+              "orgGatewayGst"
+            ]
+          },
+          {
+            "label": "Final Amount Paid by Delegate",
+            "values": [
+              "delegateTotal",
+              "base"
+            ],
+            "total": true
+          },
+          {
+            "label": "Amount Received by Organiser",
+            "values": [
+              "received",
+              "orgNet"
+            ],
+            "total": true
+          }
+        ]
+      },
+      "delegatePaid": {
+        "columns": [
+          {
+            "label": "Description",
+            "width": 340
+          },
+          {
+            "label": "Amount",
+            "align": "right"
+          }
+        ],
+        "rows": [
+          {
+            "label": "Base Ticket Price",
+            "values": [
+              "base"
+            ]
+          },
+          {
+            "label": "Platform Fee",
+            "values": [
+              "platformFee"
+            ]
+          },
+          {
+            "label": "GST on Platform Fee",
+            "values": [
+              "platformGst"
+            ]
+          },
+          {
+            "label": "Payment Gateway Fee",
+            "values": [
+              "gatewayFee"
+            ]
+          },
+          {
+            "label": "GST on Payment Gateway Fee",
+            "values": [
+              "gatewayGst"
+            ]
+          },
+          {
+            "label": "Final Amount Paid by Delegate",
+            "values": [
+              "delegateTotal"
+            ],
+            "total": true
+          },
+          {
+            "label": "Amount Received by Organiser",
+            "values": [
+              "received"
+            ],
+            "total": true
+          }
+        ]
+      },
+      "organiserPaid": {
+        "columns": [
+          {
+            "label": "Description",
+            "width": 340
+          },
+          {
+            "label": "Amount",
+            "align": "right"
+          }
+        ],
+        "rows": [
+          {
+            "label": "Amount Paid by Delegate",
+            "values": [
+              "base"
+            ]
+          },
+          {
+            "label": "Platform Fee",
+            "values": [
+              "platformFee"
+            ]
+          },
+          {
+            "label": "GST on Platform Fee",
+            "values": [
+              "platformGst"
+            ]
+          },
+          {
+            "label": "Payment Gateway Fee",
+            "values": [
+              "orgGatewayFee"
+            ]
+          },
+          {
+            "label": "GST on Payment Gateway Fee",
+            "values": [
+              "orgGatewayGst"
+            ]
+          },
+          {
+            "label": "Amount Received by Organiser (Net)",
+            "values": [
+              "orgNet"
+            ],
+            "total": true
+          }
+        ]
+      },
+      "summary": {
+        "columns": [
+          {
+            "label": "Metric",
+            "width": 210
+          },
+          {
+            "label": "Delegate Paid",
+            "width": 155,
+            "align": "right"
+          },
+          {
+            "label": "Organiser Paid",
+            "align": "right"
+          }
+        ],
+        "rows": [
+          {
+            "label": "Amount Paid by Delegate",
+            "values": [
+              "delegateTotal",
+              "base"
+            ],
+            "bold": true
+          },
+          {
+            "label": "Amount Received by Organiser",
+            "values": [
+              "received",
+              "orgNet"
+            ],
+            "bold": true
+          },
+          {
+            "label": "Platform Revenue",
+            "values": [
+              "platformFee",
+              "platformFee"
+            ]
+          }
+        ]
+      },
+      "tiers": {
+        "layout": "tiers",
+        "columns": [
+          {
+            "label": "Particulars",
+            "width": 210
+          },
+          {
+            "label": "{base} Ticket",
+            "width": 155,
+            "align": "right"
+          }
+        ],
+        "rows": [
+          {
+            "label": "Base Ticket Price",
+            "value": "base",
+            "bold": true
+          },
+          {
+            "label": "Platform Fee ({platformPercent}%)",
+            "value": "platformFee"
+          },
+          {
+            "label": "GST on Platform Fee ({gstPercent}%)",
+            "value": "platformGst"
+          },
+          {
+            "label": "Amount Processed by Payment Gateway",
+            "value": "processed",
+            "bold": true
+          },
+          {
+            "label": "Payment Gateway Fee ({gatewayPercent}%)",
+            "value": "gatewayFee"
+          },
+          {
+            "label": "GST on Payment Gateway Fee ({gatewayGstPercent}%)",
+            "value": "gatewayGst"
+          }
+        ]
+      },
+      "tierSummary": {
+        "layout": "tiers",
+        "columns": [
+          {
+            "label": "Metric",
+            "width": 210
+          },
+          {
+            "label": "{base} Ticket",
+            "width": 155,
+            "align": "right"
+          }
+        ],
+        "rows": [
+          {
+            "label": "Base Ticket Price",
+            "value": "base"
+          },
+          {
+            "label": "Final Paid by Delegate",
+            "value": "delegateTotal",
+            "bold": true
+          },
+          {
+            "label": "Received by Organiser (Net)",
+            "value": "received",
+            "bold": true
+          },
+          {
+            "label": "Platform Revenue",
+            "value": "platformFee"
+          }
+        ]
+      }
+    },
+    "sections": [
+      {
+        "title": "Overview",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "This proposal sets out how **{company}** will support **{client}** with {product}: the scope of the services, the commercial terms and the conditions that apply."
+          },
+          {
+            "type": "paragraph",
+            "text": "The services are delivered through a single platform for registrations, payments, participant communication, check-in and reporting, with support from our team throughout the engagement."
+          }
+        ]
+      },
+      {
+        "title": "Scope of Services",
+        "blocks": [
+          {
+            "type": "bullets",
+            "items": [
+              "Set-up and configuration of the registration pages and categories.",
+              "Online payment collection with automatic confirmation and receipts.",
+              "Participant communication by email before, during and after the event.",
+              "Check-in, attendance records and exportable reports.",
+              "Support from our team for the duration of the engagement."
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Commercials",
+        "blocks": [
+          {
+            "type": "custom",
+            "name": "feeCard"
+          },
+          {
+            "type": "heading",
+            "level": 3,
+            "text": "Fee Components"
+          },
+          {
+            "type": "table",
+            "columns": [
+              {
+                "label": "Component",
+                "width": 280
+              },
+              {
+                "label": "Charges",
+                "width": 240,
+                "align": "right"
+              }
+            ],
+            "rows": [
+              [
+                "Platform Fee",
+                "{platformPercent}% of the amount paid by the participant"
+              ],
+              [
+                "GST on Platform Fee",
+                "{gstPercent}%"
+              ],
+              [
+                "Payment Gateway Fee",
+                "{gatewayPercent}% of (amount paid + platform fee + GST on platform fee)"
+              ],
+              [
+                "GST on Payment Gateway Fee",
+                "{gatewayGstPercent}%"
+              ]
+            ],
+            "style": {
+              "size": 10.5
+            }
+          }
+        ]
+      },
+      {
+        "title": "Terms & Conditions",
+        "blocks": [
+          {
+            "type": "bullets",
+            "items": [
+              "The commercial terms apply only to registrations completed through the platform.",
+              "Custom development, integrations or services outside the scope above will be quoted separately.",
+              "GST is charged as per the prevailing regulations.",
+              "{company} may update platform features, pricing or service terms with prior notice."
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Contact Information",
+        "blocks": [
+          {
+            "type": "heading",
+            "level": 2,
+            "text": "{product}",
+            "style": {
+              "font": "Bold",
+              "size": 14,
+              "before": 0,
+              "after": 0.35,
+              "breakMin": null,
+              "lineGap": 0
+            }
+          },
+          {
+            "type": "paragraph",
+            "text": "{company}"
+          },
+          {
+            "type": "bullets",
+            "items": [
+              "Website: {contact.website}",
+              "Email: {contact.email}"
+            ]
+          },
+          {
+            "type": "custom",
+            "name": "signOff"
+          }
+        ]
+      }
+    ],
+    "footer": {}
+  },
+  "fields": [
+    {
+      "name": "brand",
+      "source": "brand",
+      "required": true
+    },
+    {
+      "name": "client",
+      "label": "Client",
+      "source": "entity:client",
+      "required": true
+    },
+    {
+      "name": "engagement",
+      "label": "Engagement",
+      "source": "entity:engagement",
+      "help": "The event or project; its name fills {event}"
+    },
+    {
+      "name": "product",
+      "label": "Product",
+      "source": "entity:product",
+      "help": "Its name fills {product} (default: the brand's short name)"
+    },
+    {
+      "name": "code",
+      "label": "Quotation code",
+      "source": "computed:code",
+      "type": "string",
+      "required": true,
+      "help": "{CODE} of the quotation number (default: the engagement's code, else the client's)"
+    },
+    {
+      "name": "date",
+      "label": "Date",
+      "source": "today",
+      "type": "date",
+      "required": true
+    },
+    {
+      "name": "coverTitle",
+      "label": "Cover title",
+      "source": "ask",
+      "type": "string",
+      "help": "Default: params.cover.title"
+    },
+    {
+      "name": "subtitle",
+      "label": "Cover subtitle",
+      "source": "ask",
+      "type": "string",
+      "help": "Default: the engagement's name"
+    },
+    {
+      "name": "description",
+      "label": "Cover description",
+      "source": "ask",
+      "type": "string"
+    },
+    {
+      "name": "coverNote",
+      "label": "Cover note",
+      "source": "ask",
+      "type": "string",
+      "help": "A line under the description, e.g. venue and dates"
+    },
+    {
+      "name": "proposalType",
+      "label": "Proposal type",
+      "source": "ask",
+      "type": "string"
+    },
+    {
+      "name": "preparedFor",
+      "label": "Prepared for",
+      "source": "ask",
+      "type": "text",
+      "help": "Lines; default: the client's name"
+    },
+    {
+      "name": "event",
+      "label": "Event name",
+      "source": "ask",
+      "type": "string",
+      "help": "Overrides the engagement's name in {event}"
+    },
+    {
+      "name": "price",
+      "label": "Quoted price",
+      "source": "ask",
+      "type": "money",
+      "help": "Amount of the price card"
+    },
+    {
+      "name": "fees",
+      "label": "Fee rates",
+      "source": "ask",
+      "type": "object",
+      "help": "{ platformPercent, gstPercent, gatewayPercent, gatewayGstPercent } over params.fees"
+    },
+    {
+      "name": "rates",
+      "source": "computed:rates"
+    },
+    {
+      "name": "projectContact",
+      "label": "Project contact",
+      "source": "brand.defaultSignatory.proposalContact",
+      "type": "string",
+      "help": "Brand signatory id printed as the project contact in the sign-off"
+    },
+    {
+      "name": "signatory",
+      "label": "Authorised signatory",
+      "source": "signatory",
+      "required": true
+    },
+    {
+      "name": "signOff",
+      "source": "computed:signOff"
+    },
+    {
+      "name": "sections",
+      "label": "Sections",
+      "source": "ask",
+      "type": "array",
+      "help": "[{ title, blocks, subsections?: [{ title, blocks }] }]; default: params.sections"
+    },
+    {
+      "name": "sectionList",
+      "source": "computed:sections"
+    }
+  ],
+  "relations": []
+}

@@ -122,15 +122,17 @@ export function createFormatter(locale = {}) {
     },
     /**
      * Amount in words, Indian system: `Rupees One Lakh Twenty Thousand Only`, `Rupees Ten and Fifty Paise Only`,
-     * `Fifty Paise Only`, `Rupees Zero Only`.
+     * `Fifty Paise Only`, `Rupees Zero Only`; with `currency: false` the major currency word is left out
+     * (`Seven Thousand Five Hundred Only`, as the legacy price cards print it).
      * @param {number} minor non-negative amount in minor units
+     * @param {{ currency?: boolean }} [opts]
      */
-    amountInWords(minor) {
+    amountInWords(minor, { currency = true } = {}) {
       checkMinor(minor, 'fmt.amountInWords');
       if (minor < 0) throw new RangeError('fmt.amountInWords: amount must not be negative');
       const major = Math.floor(minor / 100);
       const paise = minor % 100;
-      const parts = major || !paise ? [words.major, indianWords(major)] : [];
+      const parts = major || !paise ? [currency ? words.major : '', indianWords(major)] : [];
       if (paise) parts.push(...(major ? ['and'] : []), twoDigits(paise), words.minor);
       if (words.suffix) parts.push(words.suffix);
       return parts.filter(Boolean).join(' ');

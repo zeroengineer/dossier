@@ -115,7 +115,8 @@ export function placeholderWarnings(names) {
 
 /**
  * Render a template's renditions (no database access). Templates see `values.number` (null for a draft) and `env`
- * `{ ctx, brand, meta, params, fmt, input, number, draft, markdown }` (`markdown`: the filled body, see bodyFor). PDF: the module's `renderPdf(pdfCtx, values, env)`, else
+ * `{ ctx, brand, meta, params, fmt, input, number, draft, markdown, warnings }` (`markdown`: the filled body, see bodyFor;
+ * `warnings`: a list the template may push `{ code, name, message }` onto). PDF: the module's `renderPdf(pdfCtx, values, env)`, else
  * its blocks through letterhead + renderBlocksPdf + footers; a draft gets the vector watermark on every page. HTML:
  * `renderHtml(values, env)` else `blocksToHtml` (standalone). Markdown: the filled body else `blocksToMarkdown`.
  * Blocks come from `blocks(values, env)`, else from the filled body.
@@ -134,7 +135,7 @@ export async function renderRenditions(ctx, template, values, { brand, number = 
   const v = { ...values, number: shownNumber };
   const env = {
     ctx, brand: brandObj, meta, params: effectiveParams(meta, brandObj), fmt: createFormatter(ctx.ws.config.locale), input,
-    number: shownNumber, draft,
+    number: shownNumber, draft, warnings: [],
   };
   const title = documentTitle(meta, values);
   const contact = meta.contact ?? 'default';
@@ -183,7 +184,15 @@ export async function renderRenditions(ctx, template, values, { brand, number = 
       out.push({ kind, buffer: Buffer.from(md, 'utf8'), mime: MIME.md });
     }
   }
-  out.warnings = placeholderWarnings(placeholders);
+  // Templates may push their own `{ code, name, message }` warnings (e.g. PLACEHOLDER_EMPTY for section text) onto
+  // env.warnings; one per code and name.
+  const seen = new Set();
+  out.warnings = [...placeholderWarnings(placeholders), ...env.warnings].filter((w) => {
+    const key = `${w.code}\0${w.name}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   return out;
 }
 

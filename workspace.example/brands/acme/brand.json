@@ -87,7 +87,9 @@
     "employee-final-settlement": "md",
     "statement": "ops",
     "mou": "md",
-    "board-resolution": "md"
+    "board-resolution": "md",
+    "proposal": "md",
+    "proposalContact": "ops"
   },
   "strings": {
     "confidential": "Confidential",

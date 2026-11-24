@@ -1,0 +1,75 @@
+{
+  "client": "Example Institute of Sample Studies",
+  "engagement": "Example Conference 2026 - Sample College",
+  "product": "Acme Tickets",
+  "date": "2026-11-13",
+  "coverTitle": "{product} - Service Proposal",
+  "description": "Second Example Conference on Sample Systems and Placeholder Methods",
+  "coverNote": "Sample College, Example City  |  5-6 September 2026",
+  "proposalType": "Conference Registration, Ticketing & Check-In",
+  "preparedFor": "Convener - Example Conference 2026\nExample Institute of Sample Studies",
+  "price": 7500,
+  "sections": [
+    {
+      "title": "Platform Overview",
+      "blocks": [
+        { "type": "paragraph", "text": "**{product}** is an example event platform covering registration, payment collection, check-in, certificates and reporting for **{event}**." },
+        { "type": "paragraph", "text": "This proposal describes how the platform and the team of {company} will support the organising committee from the opening of registrations to the closing reports." }
+      ]
+    },
+    {
+      "title": "Commercial Model",
+      "blocks": [
+        { "type": "heading", "level": 2, "text": "Platform Fees" },
+        { "type": "custom", "name": "feeCard", "data": { "label": "DOMESTIC FEE", "title": "Per domestic registration" } },
+        { "type": "custom", "name": "feeCard", "data": { "label": "INTERNATIONAL", "title": "Per international registration", "rates": { "gatewayPercent": 3 } } },
+        { "type": "heading", "level": 2, "text": "Commercial Notes" },
+        { "type": "bullets", "items": ["Applies only to registrations completed through the platform.", "Custom integrations are quoted separately."] }
+      ],
+      "subsections": [
+        {
+          "title": "Pricing Calculation Tables",
+          "blocks": [
+            { "type": "heading", "level": 3, "text": "Domestic Registration" },
+            { "type": "custom", "name": "feeTable", "data": { "kind": "registrations", "bases": [4720, 5900, 7080, 8260] } },
+            { "type": "heading", "level": 3, "text": "International Registration" },
+            { "type": "custom", "name": "feeTable", "data": { "kind": "registrations", "bases": [250, 300], "currency": "USD ", "rates": { "gatewayPercent": 3 } } }
+          ]
+        },
+        {
+          "title": "Registration Categories",
+          "blocks": [
+            { "type": "table", "columns": [{ "label": "Category", "width": 280 }, { "label": "Member", "width": 120, "align": "right" }, { "label": "Non-Member", "width": 120, "align": "right" }],
+              "rows": [["Student", "₹6,000", "₹7,000"], ["Professional", "₹7,000", "₹8,000"], ["Attendee Only", "₹2,000", "₹2,500"]],
+              "totalRows": [["Subtotal", "₹15,000", "₹17,500"], ["Total", "₹32,500", ""]], "style": { "size": 10 } }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Commercials",
+      "breakMin": 180,
+      "blocks": [
+        { "type": "heading", "level": 2, "text": "Quotation" },
+        { "type": "custom", "name": "priceCard", "data": { "title": "Fixed Quotation" } },
+        { "type": "heading", "level": 3, "text": "Note" },
+        { "type": "paragraph", "text": "Payment gateway charges are not part of the quoted amount: **{gatewayPercent}% per domestic transaction** (excluding GST)." }
+      ]
+    },
+    {
+      "title": "Terms & Conditions",
+      "blocks": [
+        { "type": "bullets", "items": ["The quoted amount of {price} is a fixed fee and includes GST.", "{company} may update platform features with prior notice."] }
+      ]
+    },
+    {
+      "title": "Contact Information",
+      "blocks": [
+        { "type": "heading", "level": 2, "text": "{product}", "style": { "font": "Bold", "size": 14, "before": 0, "after": 0.35, "breakMin": null, "lineGap": 0 } },
+        { "type": "paragraph", "text": "A product of {company}" },
+        { "type": "bullets", "items": ["Website: {contact.website}", "Email: {contact.email}"] },
+        { "type": "custom", "name": "signOff" }
+      ]
+    }
+  ]
+}

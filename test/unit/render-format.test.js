@@ -44,6 +44,8 @@ test('date styles come from the workspace locale', () => {
 test('amountInWords: Indian grouping, zero, paise, crore', () => {
   assert.equal(fmt.amountInWords(0), 'Rupees Zero Only');
   assert.equal(fmt.amountInWords(12000000), 'Rupees One Lakh Twenty Thousand Only');
+  assert.equal(fmt.amountInWords(750000, { currency: false }), 'Seven Thousand Five Hundred Only');
+  assert.equal(fmt.amountInWords(1050, { currency: false }), 'Ten and Fifty Paise Only');
   assert.equal(fmt.amountInWords(1050), 'Rupees Ten and Fifty Paise Only');
   assert.equal(fmt.amountInWords(50), 'Fifty Paise Only');
   assert.equal(fmt.amountInWords(1), 'One Paise Only');

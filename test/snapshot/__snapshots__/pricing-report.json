@@ -1,0 +1,1651 @@
+{
+ "items": [
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 1,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 1,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 1,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 1,
+   "text": "Email: hello@example.com | www.example.com",
+   "x": 386.5,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 171
+  },
+  {
+   "page": 1,
+   "text": "Ticket Pricing Models",
+   "x": 176,
+   "y": 320,
+   "baseline": 345.5,
+   "size": 24,
+   "font": "Manrope-SemiBold",
+   "width": 243.5
+  },
+  {
+   "page": 1,
+   "text": "Workshops, Classes & Events",
+   "x": 203.5,
+   "y": 380.5,
+   "baseline": 395.5,
+   "size": 14,
+   "font": "Manrope-Regular",
+   "width": 188.5
+  },
+  {
+   "page": 1,
+   "text": "Prepared for",
+   "x": 263.5,
+   "y": 412,
+   "baseline": 424.5,
+   "size": 12,
+   "font": "Manrope-Regular",
+   "width": 68
+  },
+  {
+   "page": 1,
+   "text": "Sample Society of Placeholders",
+   "x": 206,
+   "y": 432,
+   "baseline": 445,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 183
+  },
+  {
+   "page": 1,
+   "text": "Prepared by",
+   "x": 267.5,
+   "y": 478.5,
+   "baseline": 490.5,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 60.5
+  },
+  {
+   "page": 1,
+   "text": "ACME EVENTS PRIVATE LIMITED",
+   "x": 215,
+   "y": 497.5,
+   "baseline": 509.5,
+   "size": 11,
+   "font": "Manrope-Bold",
+   "width": 165
+  },
+  {
+   "page": 1,
+   "text": "Document Details",
+   "x": 245.5,
+   "y": 558.5,
+   "baseline": 571.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 104
+  },
+  {
+   "page": 1,
+   "text": "Report Number: ACM-REP-2026-001",
+   "x": 205.5,
+   "y": 585,
+   "baseline": 596.5,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 184
+  },
+  {
+   "page": 1,
+   "text": "Date: October 29, 2026",
+   "x": 239,
+   "y": 605,
+   "baseline": 617,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 117.5
+  },
+  {
+   "page": 1,
+   "text": "Client: Sample Society of Placeholders, Example Town",
+   "x": 162,
+   "y": 625.5,
+   "baseline": 637,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 271.5
+  },
+  {
+   "page": 1,
+   "text": "hello@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 138.5
+  },
+  {
+   "page": 1,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 1,
+   "text": "Page 1 of 5",
+   "x": 521.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 36
+  },
+  {
+   "page": 2,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 2,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 2,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 2,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 2,
+   "text": "Email: hello@example.com | www.example.com",
+   "x": 386.5,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 171
+  },
+  {
+   "page": 2,
+   "text": "Contents",
+   "x": 37.5,
+   "y": 113.5,
+   "baseline": 132.5,
+   "size": 18,
+   "font": "Manrope-ExtraBold",
+   "width": 83.5
+  },
+  {
+   "page": 2,
+   "text": "1.",
+   "x": 37.5,
+   "y": 152,
+   "baseline": 164.5,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 7.5
+  },
+  {
+   "page": 2,
+   "text": "Overview",
+   "x": 59.5,
+   "y": 152,
+   "baseline": 164.5,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 50.5
+  },
+  {
+   "page": 2,
+   "text": "2.",
+   "x": 37.5,
+   "y": 177.5,
+   "baseline": 190,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 10
+  },
+  {
+   "page": 2,
+   "text": "Charge Calculation",
+   "x": 59.5,
+   "y": 177.5,
+   "baseline": 190,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 105.5
+  },
+  {
+   "page": 2,
+   "text": "3.",
+   "x": 37.5,
+   "y": 203,
+   "baseline": 215,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 10
+  },
+  {
+   "page": 2,
+   "text": "Pricing Model: Delegate Paid",
+   "x": 59.5,
+   "y": 203,
+   "baseline": 215,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 156
+  },
+  {
+   "page": 2,
+   "text": "4.",
+   "x": 37.5,
+   "y": 228,
+   "baseline": 240.5,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 10
+  },
+  {
+   "page": 2,
+   "text": "Pricing Model: Organiser Paid",
+   "x": 59.5,
+   "y": 228,
+   "baseline": 240.5,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 160
+  },
+  {
+   "page": 2,
+   "text": "5.",
+   "x": 37.5,
+   "y": 253.5,
+   "baseline": 266,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 10
+  },
+  {
+   "page": 2,
+   "text": "Summary",
+   "x": 59.5,
+   "y": 253.5,
+   "baseline": 266,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 52
+  },
+  {
+   "page": 2,
+   "text": "6.",
+   "x": 37.5,
+   "y": 279,
+   "baseline": 291,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 10.5
+  },
+  {
+   "page": 2,
+   "text": "Notes",
+   "x": 59.5,
+   "y": 279,
+   "baseline": 291,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 32.5
+  },
+  {
+   "page": 2,
+   "text": "hello@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 138.5
+  },
+  {
+   "page": 2,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 2,
+   "text": "Page 2 of 5",
+   "x": 520,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 2,
+   "text": "3",
+   "x": 551.5,
+   "y": 152,
+   "baseline": 164.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 6.5
+  },
+  {
+   "page": 2,
+   "text": "3",
+   "x": 551.5,
+   "y": 177.5,
+   "baseline": 190,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 6.5
+  },
+  {
+   "page": 2,
+   "text": "4",
+   "x": 551,
+   "y": 203,
+   "baseline": 215,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 2,
+   "text": "4",
+   "x": 551,
+   "y": 228,
+   "baseline": 240.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 7
+  },
+  {
+   "page": 2,
+   "text": "5",
+   "x": 551,
+   "y": 253.5,
+   "baseline": 266,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 6.5
+  },
+  {
+   "page": 2,
+   "text": "5",
+   "x": 551,
+   "y": 279,
+   "baseline": 291,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 6.5
+  },
+  {
+   "page": 3,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 3,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 3,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 3,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 3,
+   "text": "Email: hello@example.com | www.example.com",
+   "x": 386.5,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 171
+  },
+  {
+   "page": 3,
+   "text": "Overview",
+   "x": 37.5,
+   "y": 113.5,
+   "baseline": 132.5,
+   "size": 18,
+   "font": "Manrope-ExtraBold",
+   "width": 82.5
+  },
+  {
+   "page": 3,
+   "text": "This document sets out the ticket pricing models available to Sample Society of Placeholders for",
+   "x": 37.5,
+   "y": 152,
+   "baseline": 164.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 521
+  },
+  {
+   "page": 3,
+   "text": "events run on Acme Tickets, with the charges that apply to paid tickets.",
+   "x": 37.5,
+   "y": 170.5,
+   "baseline": 182.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 376
+  },
+  {
+   "page": 3,
+   "text": "Free events carry no platform or payment gateway charges. For paid events the organiser chooses,",
+   "x": 37.5,
+   "y": 199,
+   "baseline": 211,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 3,
+   "text": "event by event, whether the participant or the organiser bears the charges.",
+   "x": 37.5,
+   "y": 217,
+   "baseline": 229.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 395.5
+  },
+  {
+   "page": 3,
+   "text": "Charge Calculation",
+   "x": 37.5,
+   "y": 269,
+   "baseline": 288,
+   "size": 18,
+   "font": "Manrope-ExtraBold",
+   "width": 171.5
+  },
+  {
+   "page": 3,
+   "text": "The following charges apply to paid events. For this illustration, the base ticket price is ₹1,000.00.",
+   "x": 37.5,
+   "y": 308,
+   "baseline": 320,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 509
+  },
+  {
+   "page": 3,
+   "text": "• Platform Fee: 2% of the base ticket price.",
+   "x": 37.5,
+   "y": 336.5,
+   "baseline": 348.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 229.5
+  },
+  {
+   "page": 3,
+   "text": "• GST on Platform Fee: 18% of the platform fee.",
+   "x": 37.5,
+   "y": 358.5,
+   "baseline": 371,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 251
+  },
+  {
+   "page": 3,
+   "text": "• Payment Gateway Fee: 2% of the processed transaction amount.",
+   "x": 37.5,
+   "y": 381,
+   "baseline": 393,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 355
+  },
+  {
+   "page": 3,
+   "text": "• GST on Payment Gateway Fee: 18% of the payment gateway fee.",
+   "x": 37.5,
+   "y": 403,
+   "baseline": 415.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 349
+  },
+  {
+   "page": 3,
+   "text": "Particulars",
+   "x": 47.5,
+   "y": 438.5,
+   "baseline": 449,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 53
+  },
+  {
+   "page": 3,
+   "text": "Delegate Paid",
+   "x": 325.5,
+   "y": 438.5,
+   "baseline": 449,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 67
+  },
+  {
+   "page": 3,
+   "text": "Organiser Paid",
+   "x": 477,
+   "y": 438.5,
+   "baseline": 449,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 70.5
+  },
+  {
+   "page": 3,
+   "text": "Base Ticket Price",
+   "x": 47.5,
+   "y": 462.5,
+   "baseline": 472.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 78.5
+  },
+  {
+   "page": 3,
+   "text": "₹1,000.00",
+   "x": 346,
+   "y": 462.5,
+   "baseline": 472.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 46.5
+  },
+  {
+   "page": 3,
+   "text": "₹1,000.00",
+   "x": 501,
+   "y": 462.5,
+   "baseline": 472.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 46.5
+  },
+  {
+   "page": 3,
+   "text": "Platform Fee (2%)",
+   "x": 47.5,
+   "y": 486.5,
+   "baseline": 496.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 79
+  },
+  {
+   "page": 3,
+   "text": "₹20.00",
+   "x": 361.5,
+   "y": 486.5,
+   "baseline": 496.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 31
+  },
+  {
+   "page": 3,
+   "text": "₹20.00",
+   "x": 517,
+   "y": 486.5,
+   "baseline": 496.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 31
+  },
+  {
+   "page": 3,
+   "text": "GST on Platform Fee (18%)",
+   "x": 47.5,
+   "y": 510.5,
+   "baseline": 520.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 115.5
+  },
+  {
+   "page": 3,
+   "text": "₹3.60",
+   "x": 367.5,
+   "y": 510.5,
+   "baseline": 520.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 25
+  },
+  {
+   "page": 3,
+   "text": "₹3.60",
+   "x": 522.5,
+   "y": 510.5,
+   "baseline": 520.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 25
+  },
+  {
+   "page": 3,
+   "text": "Amount Processed by Payment Gateway",
+   "x": 47.5,
+   "y": 534.5,
+   "baseline": 544.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 184
+  },
+  {
+   "page": 3,
+   "text": "₹1,023.60",
+   "x": 347.5,
+   "y": 534.5,
+   "baseline": 544.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 45
+  },
+  {
+   "page": 3,
+   "text": "₹1,000.00",
+   "x": 501,
+   "y": 534.5,
+   "baseline": 544.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 46.5
+  },
+  {
+   "page": 3,
+   "text": "Payment Gateway Fee (2%)",
+   "x": 47.5,
+   "y": 558.5,
+   "baseline": 568.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 120
+  },
+  {
+   "page": 3,
+   "text": "₹20.47",
+   "x": 363,
+   "y": 558.5,
+   "baseline": 568.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 29.5
+  },
+  {
+   "page": 3,
+   "text": "₹20.00",
+   "x": 517,
+   "y": 558.5,
+   "baseline": 568.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 31
+  },
+  {
+   "page": 3,
+   "text": "GST on Payment Gateway Fee (18%)",
+   "x": 47.5,
+   "y": 582.5,
+   "baseline": 592.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 156.5
+  },
+  {
+   "page": 3,
+   "text": "₹3.68",
+   "x": 367.5,
+   "y": 582.5,
+   "baseline": 592.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 25
+  },
+  {
+   "page": 3,
+   "text": "₹3.60",
+   "x": 522.5,
+   "y": 582.5,
+   "baseline": 592.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 25
+  },
+  {
+   "page": 3,
+   "text": "Final Amount Paid by Delegate",
+   "x": 47.5,
+   "y": 606.5,
+   "baseline": 617,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 145.5
+  },
+  {
+   "page": 3,
+   "text": "₹1,047.75",
+   "x": 347,
+   "y": 606.5,
+   "baseline": 617,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 45.5
+  },
+  {
+   "page": 3,
+   "text": "₹1,000.00",
+   "x": 498.5,
+   "y": 606.5,
+   "baseline": 617,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 49
+  },
+  {
+   "page": 3,
+   "text": "Amount Received by Organiser",
+   "x": 47.5,
+   "y": 630.5,
+   "baseline": 641,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 148.5
+  },
+  {
+   "page": 3,
+   "text": "₹1,000.00",
+   "x": 343.5,
+   "y": 630.5,
+   "baseline": 641,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 49
+  },
+  {
+   "page": 3,
+   "text": "₹952.80",
+   "x": 508,
+   "y": 630.5,
+   "baseline": 641,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 39.5
+  },
+  {
+   "page": 3,
+   "text": "hello@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 138.5
+  },
+  {
+   "page": 3,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 3,
+   "text": "Page 3 of 5",
+   "x": 520.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 4,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 4,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 4,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 4,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 4,
+   "text": "Email: hello@example.com | www.example.com",
+   "x": 386.5,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 171
+  },
+  {
+   "page": 4,
+   "text": "Pricing Model: Delegate Paid",
+   "x": 37.5,
+   "y": 113.5,
+   "baseline": 132.5,
+   "size": 18,
+   "font": "Manrope-ExtraBold",
+   "width": 253
+  },
+  {
+   "page": 4,
+   "text": "Under this model the participant pays the ticket price together with all platform and payment",
+   "x": 37.5,
+   "y": 152,
+   "baseline": 164.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 4,
+   "text": "gateway charges, and the organiser receives the full ticket price.",
+   "x": 37.5,
+   "y": 170.5,
+   "baseline": 182.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 339
+  },
+  {
+   "page": 4,
+   "text": "Description",
+   "x": 47.5,
+   "y": 205,
+   "baseline": 215.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 56.5
+  },
+  {
+   "page": 4,
+   "text": "Amount",
+   "x": 509,
+   "y": 205,
+   "baseline": 215.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 38.5
+  },
+  {
+   "page": 4,
+   "text": "Base Ticket Price",
+   "x": 47.5,
+   "y": 229,
+   "baseline": 239,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 74.5
+  },
+  {
+   "page": 4,
+   "text": "₹1,000.00",
+   "x": 505,
+   "y": 229,
+   "baseline": 239,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 43
+  },
+  {
+   "page": 4,
+   "text": "Platform Fee",
+   "x": 47.5,
+   "y": 253,
+   "baseline": 263,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 55
+  },
+  {
+   "page": 4,
+   "text": "₹20.00",
+   "x": 517,
+   "y": 253,
+   "baseline": 263,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 31
+  },
+  {
+   "page": 4,
+   "text": "GST on Platform Fee",
+   "x": 47.5,
+   "y": 277,
+   "baseline": 287,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 88
+  },
+  {
+   "page": 4,
+   "text": "₹3.60",
+   "x": 522.5,
+   "y": 277,
+   "baseline": 287,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 25
+  },
+  {
+   "page": 4,
+   "text": "Payment Gateway Fee",
+   "x": 47.5,
+   "y": 301,
+   "baseline": 311,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 96
+  },
+  {
+   "page": 4,
+   "text": "₹20.47",
+   "x": 518,
+   "y": 301,
+   "baseline": 311,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 29.5
+  },
+  {
+   "page": 4,
+   "text": "GST on Payment Gateway Fee",
+   "x": 47.5,
+   "y": 325,
+   "baseline": 335,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 4,
+   "text": "₹3.68",
+   "x": 523,
+   "y": 325,
+   "baseline": 335,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 25
+  },
+  {
+   "page": 4,
+   "text": "Final Amount Paid by Delegate",
+   "x": 47.5,
+   "y": 349,
+   "baseline": 359.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 145.5
+  },
+  {
+   "page": 4,
+   "text": "₹1,047.75",
+   "x": 502.5,
+   "y": 349,
+   "baseline": 359.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 45.5
+  },
+  {
+   "page": 4,
+   "text": "Amount Received by Organiser",
+   "x": 47.5,
+   "y": 373,
+   "baseline": 383.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 148.5
+  },
+  {
+   "page": 4,
+   "text": "₹1,000.00",
+   "x": 498.5,
+   "y": 373,
+   "baseline": 383.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 49
+  },
+  {
+   "page": 4,
+   "text": "Pricing Model: Organiser Paid",
+   "x": 37.5,
+   "y": 420,
+   "baseline": 434,
+   "size": 13,
+   "font": "Manrope-Bold",
+   "width": 184.5
+  },
+  {
+   "page": 4,
+   "text": "Under this model the participant pays only the ticket price, and the organiser bears the platform",
+   "x": 37.5,
+   "y": 448,
+   "baseline": 460.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 520
+  },
+  {
+   "page": 4,
+   "text": "and payment gateway charges.",
+   "x": 37.5,
+   "y": 466.5,
+   "baseline": 478.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 164
+  },
+  {
+   "page": 4,
+   "text": "Description",
+   "x": 47.5,
+   "y": 500.5,
+   "baseline": 511.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 56.5
+  },
+  {
+   "page": 4,
+   "text": "Amount",
+   "x": 509,
+   "y": 500.5,
+   "baseline": 511.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 38.5
+  },
+  {
+   "page": 4,
+   "text": "Amount Paid by Delegate",
+   "x": 47.5,
+   "y": 524.5,
+   "baseline": 535,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 109
+  },
+  {
+   "page": 4,
+   "text": "₹1,000.00",
+   "x": 505,
+   "y": 524.5,
+   "baseline": 535,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 43
+  },
+  {
+   "page": 4,
+   "text": "Platform Fee",
+   "x": 47.5,
+   "y": 548.5,
+   "baseline": 559,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 55
+  },
+  {
+   "page": 4,
+   "text": "₹20.00",
+   "x": 517,
+   "y": 548.5,
+   "baseline": 559,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 31
+  },
+  {
+   "page": 4,
+   "text": "GST on Platform Fee",
+   "x": 47.5,
+   "y": 572.5,
+   "baseline": 583,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 88
+  },
+  {
+   "page": 4,
+   "text": "₹3.60",
+   "x": 522.5,
+   "y": 572.5,
+   "baseline": 583,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 25
+  },
+  {
+   "page": 4,
+   "text": "Payment Gateway Fee",
+   "x": 47.5,
+   "y": 596.5,
+   "baseline": 607,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 96
+  },
+  {
+   "page": 4,
+   "text": "₹20.00",
+   "x": 517,
+   "y": 596.5,
+   "baseline": 607,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 31
+  },
+  {
+   "page": 4,
+   "text": "GST on Payment Gateway Fee",
+   "x": 47.5,
+   "y": 620.5,
+   "baseline": 631,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 4,
+   "text": "₹3.60",
+   "x": 522.5,
+   "y": 620.5,
+   "baseline": 631,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 25
+  },
+  {
+   "page": 4,
+   "text": "Amount Received by Organiser (Net)",
+   "x": 47.5,
+   "y": 644.5,
+   "baseline": 655.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 177
+  },
+  {
+   "page": 4,
+   "text": "₹952.80",
+   "x": 508,
+   "y": 644.5,
+   "baseline": 655.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 39.5
+  },
+  {
+   "page": 4,
+   "text": "hello@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 138.5
+  },
+  {
+   "page": 4,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 4,
+   "text": "Page 4 of 5",
+   "x": 520,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 5,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 5,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 5,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 5,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 5,
+   "text": "Email: hello@example.com | www.example.com",
+   "x": 386.5,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 171
+  },
+  {
+   "page": 5,
+   "text": "Summary",
+   "x": 37.5,
+   "y": 113.5,
+   "baseline": 132.5,
+   "size": 18,
+   "font": "Manrope-ExtraBold",
+   "width": 84.5
+  },
+  {
+   "page": 5,
+   "text": "Metric",
+   "x": 47.5,
+   "y": 158,
+   "baseline": 169,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 31.5
+  },
+  {
+   "page": 5,
+   "text": "Delegate Paid",
+   "x": 325.5,
+   "y": 158,
+   "baseline": 169,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 67
+  },
+  {
+   "page": 5,
+   "text": "Organiser Paid",
+   "x": 477,
+   "y": 158,
+   "baseline": 169,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 70.5
+  },
+  {
+   "page": 5,
+   "text": "Amount Paid by Delegate",
+   "x": 47.5,
+   "y": 182,
+   "baseline": 192.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 115
+  },
+  {
+   "page": 5,
+   "text": "₹1,047.75",
+   "x": 349.5,
+   "y": 182,
+   "baseline": 192.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 43
+  },
+  {
+   "page": 5,
+   "text": "₹1,000.00",
+   "x": 501,
+   "y": 182,
+   "baseline": 192.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 46.5
+  },
+  {
+   "page": 5,
+   "text": "Amount Received by Organiser",
+   "x": 47.5,
+   "y": 206,
+   "baseline": 216.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 141
+  },
+  {
+   "page": 5,
+   "text": "₹1,000.00",
+   "x": 346,
+   "y": 206,
+   "baseline": 216.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 46.5
+  },
+  {
+   "page": 5,
+   "text": "₹952.80",
+   "x": 510,
+   "y": 206,
+   "baseline": 216.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 37.5
+  },
+  {
+   "page": 5,
+   "text": "Platform Revenue",
+   "x": 47.5,
+   "y": 230,
+   "baseline": 240.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 77.5
+  },
+  {
+   "page": 5,
+   "text": "₹20.00",
+   "x": 361.5,
+   "y": 230,
+   "baseline": 240.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 31
+  },
+  {
+   "page": 5,
+   "text": "₹20.00",
+   "x": 517,
+   "y": 230,
+   "baseline": 240.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 31
+  },
+  {
+   "page": 5,
+   "text": "Figures are for a base ticket price of ₹1,000.00. Free events have no charges under either model.",
+   "x": 37.5,
+   "y": 258,
+   "baseline": 270.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 503
+  },
+  {
+   "page": 5,
+   "text": "Notes",
+   "x": 37.5,
+   "y": 310,
+   "baseline": 329.5,
+   "size": 18,
+   "font": "Manrope-ExtraBold",
+   "width": 52.5
+  },
+  {
+   "page": 5,
+   "text": "• Free events are hosted at no cost to the organiser or the participants.",
+   "x": 37.5,
+   "y": 349,
+   "baseline": 361.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 379.5
+  },
+  {
+   "page": 5,
+   "text": "• Paid events carry a 2% platform fee plus 18% GST, and a 2% payment gateway fee plus 18% GST.",
+   "x": 37.5,
+   "y": 371.5,
+   "baseline": 383.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 514
+  },
+  {
+   "page": 5,
+   "text": "• The organiser may choose the Delegate Paid or the Organiser Paid model for each event.",
+   "x": 37.5,
+   "y": 393.5,
+   "baseline": 406,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 477.5
+  },
+  {
+   "page": 5,
+   "text": "hello@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 138.5
+  },
+  {
+   "page": 5,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 5,
+   "text": "Page 5 of 5",
+   "x": 520,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  }
+ ],
+ "images": [
+  {
+   "page": 1,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 2,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 3,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 4,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 5,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  }
+ ]
+}

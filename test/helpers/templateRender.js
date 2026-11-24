@@ -30,7 +30,7 @@ export async function withExampleCtx(fn) {
     initWorkspace(home);
     ctx = openContext({ home, user: 'demo', dbFile: ':memory:', env: {} });
     const seeds = JSON.parse(readFileSync(join(home, 'seeds', 'entities.json'), 'utf8'));
-    for (const e of seeds.entities.filter((x) => ['client', 'person', 'engagement'].includes(x.kind))) upsertEntity(ctx, e);
+    for (const e of seeds.entities.filter((x) => ['client', 'person', 'engagement', 'product'].includes(x.kind))) upsertEntity(ctx, e);
     return await fn(ctx, home);
   } finally {
     ctx?.close();

@@ -1,0 +1,2371 @@
+{
+ "items": [
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 1,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 1,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 1,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 1,
+   "text": "Email: hello@example.com | www.example.com",
+   "x": 386.5,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 171
+  },
+  {
+   "page": 1,
+   "text": "Acme Tickets - Service Proposal",
+   "x": 115.5,
+   "y": 284,
+   "baseline": 309.5,
+   "size": 24,
+   "font": "Manrope-SemiBold",
+   "width": 364.5
+  },
+  {
+   "page": 1,
+   "text": "Example Conference 2026 - Sample College",
+   "x": 129,
+   "y": 334.5,
+   "baseline": 352,
+   "size": 16,
+   "font": "Manrope-Bold",
+   "width": 337
+  },
+  {
+   "page": 1,
+   "text": "Second Example Conference on Sample Systems and Placeholder Methods",
+   "x": 100,
+   "y": 365.5,
+   "baseline": 378,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 395.5
+  },
+  {
+   "page": 1,
+   "text": "Sample College, Example City | 5-6 September 2026",
+   "x": 171,
+   "y": 390.5,
+   "baseline": 401.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 253
+  },
+  {
+   "page": 1,
+   "text": "Proposal Details",
+   "x": 37.5,
+   "y": 600,
+   "baseline": 613.5,
+   "size": 13,
+   "font": "Manrope-Bold",
+   "width": 102.5
+  },
+  {
+   "page": 1,
+   "text": "Proposal Type:",
+   "x": 37.5,
+   "y": 625.5,
+   "baseline": 637.5,
+   "size": 11,
+   "font": "Manrope-SemiBold",
+   "width": 77
+  },
+  {
+   "page": 1,
+   "text": "Conference Registration, Ticketing & Check-In",
+   "x": 187.5,
+   "y": 625.5,
+   "baseline": 637.5,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 234
+  },
+  {
+   "page": 1,
+   "text": "Quotation Number:",
+   "x": 37.5,
+   "y": 647.5,
+   "baseline": 659.5,
+   "size": 11,
+   "font": "Manrope-SemiBold",
+   "width": 101
+  },
+  {
+   "page": 1,
+   "text": "ACM-Q-EXC26-2026-01",
+   "x": 187.5,
+   "y": 647.5,
+   "baseline": 659.5,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 121
+  },
+  {
+   "page": 1,
+   "text": "Date:",
+   "x": 37.5,
+   "y": 669.5,
+   "baseline": 681.5,
+   "size": 11,
+   "font": "Manrope-SemiBold",
+   "width": 28.5
+  },
+  {
+   "page": 1,
+   "text": "13 November 2026",
+   "x": 187.5,
+   "y": 669.5,
+   "baseline": 681.5,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 92.5
+  },
+  {
+   "page": 1,
+   "text": "Prepared For:",
+   "x": 37.5,
+   "y": 691.5,
+   "baseline": 703.5,
+   "size": 11,
+   "font": "Manrope-SemiBold",
+   "width": 70
+  },
+  {
+   "page": 1,
+   "text": "Convener - Example Conference 2026",
+   "x": 187.5,
+   "y": 691.5,
+   "baseline": 703.5,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 191.5
+  },
+  {
+   "page": 1,
+   "text": "Example Institute of Sample Studies",
+   "x": 187.5,
+   "y": 713.5,
+   "baseline": 725.5,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 182
+  },
+  {
+   "page": 1,
+   "text": "Submitted By:",
+   "x": 37.5,
+   "y": 735.5,
+   "baseline": 747.5,
+   "size": 11,
+   "font": "Manrope-SemiBold",
+   "width": 73.5
+  },
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 187.5,
+   "y": 735.5,
+   "baseline": 747.5,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 142.5
+  },
+  {
+   "page": 1,
+   "text": "hello@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 138.5
+  },
+  {
+   "page": 1,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 1,
+   "text": "Page 1 of 5",
+   "x": 521.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 36
+  },
+  {
+   "page": 2,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 2,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 2,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 2,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 2,
+   "text": "Email: hello@example.com | www.example.com",
+   "x": 386.5,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 171
+  },
+  {
+   "page": 2,
+   "text": "Contents",
+   "x": 37.5,
+   "y": 113.5,
+   "baseline": 132.5,
+   "size": 18,
+   "font": "Manrope-ExtraBold",
+   "width": 83.5
+  },
+  {
+   "page": 2,
+   "text": "1.",
+   "x": 37.5,
+   "y": 152,
+   "baseline": 164.5,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 7.5
+  },
+  {
+   "page": 2,
+   "text": "Platform Overview",
+   "x": 59.5,
+   "y": 152,
+   "baseline": 164.5,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 100.5
+  },
+  {
+   "page": 2,
+   "text": "2.",
+   "x": 37.5,
+   "y": 177.5,
+   "baseline": 190,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 10
+  },
+  {
+   "page": 2,
+   "text": "Commercial Model",
+   "x": 59.5,
+   "y": 177.5,
+   "baseline": 190,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 102
+  },
+  {
+   "page": 2,
+   "text": "2.1 Pricing Calculation Tables",
+   "x": 59.5,
+   "y": 203,
+   "baseline": 214.5,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 144.5
+  },
+  {
+   "page": 2,
+   "text": "2.2 Registration Categories",
+   "x": 59.5,
+   "y": 225,
+   "baseline": 237,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 138.5
+  },
+  {
+   "page": 2,
+   "text": "3.",
+   "x": 37.5,
+   "y": 247.5,
+   "baseline": 259.5,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 10
+  },
+  {
+   "page": 2,
+   "text": "Commercials",
+   "x": 59.5,
+   "y": 247.5,
+   "baseline": 259.5,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 72
+  },
+  {
+   "page": 2,
+   "text": "4.",
+   "x": 37.5,
+   "y": 273,
+   "baseline": 285,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 10
+  },
+  {
+   "page": 2,
+   "text": "Terms & Conditions",
+   "x": 59.5,
+   "y": 273,
+   "baseline": 285,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 106.5
+  },
+  {
+   "page": 2,
+   "text": "5.",
+   "x": 37.5,
+   "y": 298,
+   "baseline": 310.5,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 10
+  },
+  {
+   "page": 2,
+   "text": "Contact Information",
+   "x": 59.5,
+   "y": 298,
+   "baseline": 310.5,
+   "size": 11.5,
+   "font": "Manrope-SemiBold",
+   "width": 112
+  },
+  {
+   "page": 2,
+   "text": "hello@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 138.5
+  },
+  {
+   "page": 2,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 2,
+   "text": "Page 2 of 5",
+   "x": 520,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 2,
+   "text": "3",
+   "x": 551.5,
+   "y": 152,
+   "baseline": 164.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 6.5
+  },
+  {
+   "page": 2,
+   "text": "3",
+   "x": 551.5,
+   "y": 177.5,
+   "baseline": 190,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 6.5
+  },
+  {
+   "page": 2,
+   "text": "3",
+   "x": 551.5,
+   "y": 203,
+   "baseline": 214.5,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 6
+  },
+  {
+   "page": 2,
+   "text": "4",
+   "x": 551.5,
+   "y": 225,
+   "baseline": 237,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 6.5
+  },
+  {
+   "page": 2,
+   "text": "5",
+   "x": 551,
+   "y": 247.5,
+   "baseline": 259.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 6.5
+  },
+  {
+   "page": 2,
+   "text": "5",
+   "x": 551,
+   "y": 273,
+   "baseline": 285,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 6.5
+  },
+  {
+   "page": 2,
+   "text": "5",
+   "x": 551,
+   "y": 298,
+   "baseline": 310.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 6.5
+  },
+  {
+   "page": 3,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 3,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 3,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 3,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 3,
+   "text": "Email: hello@example.com | www.example.com",
+   "x": 386.5,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 171
+  },
+  {
+   "page": 3,
+   "text": "1. Platform Overview",
+   "x": 37.5,
+   "y": 113.5,
+   "baseline": 132.5,
+   "size": 18,
+   "font": "Manrope-ExtraBold",
+   "width": 180.5
+  },
+  {
+   "page": 3,
+   "text": "Acme Tickets",
+   "x": 37.5,
+   "y": 152,
+   "baseline": 164.5,
+   "size": 11.5,
+   "font": "Manrope-Bold",
+   "width": 76.5
+  },
+  {
+   "page": 3,
+   "text": "is an example event platform covering registration, payment collection, check-in,",
+   "x": 118,
+   "y": 152,
+   "baseline": 164.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 439.5
+  },
+  {
+   "page": 3,
+   "text": "certificates and reporting for",
+   "x": 37.5,
+   "y": 170.5,
+   "baseline": 182.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 152
+  },
+  {
+   "page": 3,
+   "text": "Example Conference 2026 - Sample College",
+   "x": 192,
+   "y": 170.5,
+   "baseline": 182.5,
+   "size": 11.5,
+   "font": "Manrope-Bold",
+   "width": 242
+  },
+  {
+   "page": 3,
+   "text": ".",
+   "x": 434,
+   "y": 170.5,
+   "baseline": 182.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 3
+  },
+  {
+   "page": 3,
+   "text": "This proposal describes how the platform and the team of Acme Events Private Limited will support",
+   "x": 37.5,
+   "y": 199,
+   "baseline": 211,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 3,
+   "text": "the organising committee from the opening of registrations to the closing reports.",
+   "x": 37.5,
+   "y": 217,
+   "baseline": 229.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 431
+  },
+  {
+   "page": 3,
+   "text": "2. Commercial Model",
+   "x": 37.5,
+   "y": 269,
+   "baseline": 288,
+   "size": 18,
+   "font": "Manrope-ExtraBold",
+   "width": 185
+  },
+  {
+   "page": 3,
+   "text": "Platform Fees",
+   "x": 37.5,
+   "y": 313,
+   "baseline": 326.5,
+   "size": 13,
+   "font": "Manrope-Bold",
+   "width": 86.5
+  },
+  {
+   "page": 3,
+   "text": "DOMESTIC FEE",
+   "x": 55.5,
+   "y": 361,
+   "baseline": 370,
+   "size": 8.5,
+   "font": "Manrope-SemiBold",
+   "width": 59
+  },
+  {
+   "page": 3,
+   "text": "2%",
+   "x": 55.5,
+   "y": 373,
+   "baseline": 411.5,
+   "size": 36,
+   "font": "Manrope-ExtraBold",
+   "width": 54
+  },
+  {
+   "page": 3,
+   "text": "Per domestic registration",
+   "x": 157.5,
+   "y": 361,
+   "baseline": 373,
+   "size": 11.5,
+   "font": "Manrope-Bold",
+   "width": 142.5
+  },
+  {
+   "page": 3,
+   "text": "2% platform fee and 2% payment gateway fee on each paid registration (exclusive of",
+   "x": 157.5,
+   "y": 379,
+   "baseline": 389,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 366.5
+  },
+  {
+   "page": 3,
+   "text": "GST).",
+   "x": 157.5,
+   "y": 393.5,
+   "baseline": 403.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 24.5
+  },
+  {
+   "page": 3,
+   "text": "INTERNATIONAL",
+   "x": 55.5,
+   "y": 463,
+   "baseline": 472,
+   "size": 8.5,
+   "font": "Manrope-SemiBold",
+   "width": 64.5
+  },
+  {
+   "page": 3,
+   "text": "2%",
+   "x": 55.5,
+   "y": 475,
+   "baseline": 513.5,
+   "size": 36,
+   "font": "Manrope-ExtraBold",
+   "width": 54
+  },
+  {
+   "page": 3,
+   "text": "Per international registration",
+   "x": 157.5,
+   "y": 463,
+   "baseline": 475,
+   "size": 11.5,
+   "font": "Manrope-Bold",
+   "width": 162.5
+  },
+  {
+   "page": 3,
+   "text": "2% platform fee and 3% payment gateway fee on each paid registration (exclusive of",
+   "x": 157.5,
+   "y": 481,
+   "baseline": 491,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 366.5
+  },
+  {
+   "page": 3,
+   "text": "GST).",
+   "x": 157.5,
+   "y": 495.5,
+   "baseline": 505.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 24.5
+  },
+  {
+   "page": 3,
+   "text": "Commercial Notes",
+   "x": 37.5,
+   "y": 547.5,
+   "baseline": 561.5,
+   "size": 13,
+   "font": "Manrope-Bold",
+   "width": 116
+  },
+  {
+   "page": 3,
+   "text": "• Applies only to registrations completed through the platform.",
+   "x": 37.5,
+   "y": 575.5,
+   "baseline": 588,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 336.5
+  },
+  {
+   "page": 3,
+   "text": "• Custom integrations are quoted separately.",
+   "x": 37.5,
+   "y": 598,
+   "baseline": 610,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 243.5
+  },
+  {
+   "page": 3,
+   "text": "2.1 Pricing Calculation Tables",
+   "x": 37.5,
+   "y": 649,
+   "baseline": 663,
+   "size": 13,
+   "font": "Manrope-Bold",
+   "width": 184.5
+  },
+  {
+   "page": 3,
+   "text": "Domestic Registration",
+   "x": 37.5,
+   "y": 681,
+   "baseline": 693.5,
+   "size": 12,
+   "font": "Manrope-SemiBold",
+   "width": 128.5
+  },
+  {
+   "page": 3,
+   "text": "hello@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 138.5
+  },
+  {
+   "page": 3,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 3,
+   "text": "Page 3 of 5",
+   "x": 520.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 4,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 4,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 4,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 4,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 4,
+   "text": "Email: hello@example.com | www.example.com",
+   "x": 386.5,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 171
+  },
+  {
+   "page": 4,
+   "text": "Base Price",
+   "x": 67.5,
+   "y": 116,
+   "baseline": 126,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 47
+  },
+  {
+   "page": 4,
+   "text": "Platform",
+   "x": 150.5,
+   "y": 116,
+   "baseline": 126,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 39
+  },
+  {
+   "page": 4,
+   "text": "Fee (2%)",
+   "x": 149,
+   "y": 129,
+   "baseline": 139,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 40.5
+  },
+  {
+   "page": 4,
+   "text": "GST on",
+   "x": 232.5,
+   "y": 116,
+   "baseline": 126,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 32
+  },
+  {
+   "page": 4,
+   "text": "Platform Fee",
+   "x": 207.5,
+   "y": 129,
+   "baseline": 139,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 57
+  },
+  {
+   "page": 4,
+   "text": "PG Fee",
+   "x": 298.5,
+   "y": 116,
+   "baseline": 126,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 31
+  },
+  {
+   "page": 4,
+   "text": "(2% of Bas",
+   "x": 281.5,
+   "y": 129,
+   "baseline": 139,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 48
+  },
+  {
+   "page": 4,
+   "text": "e+PF+PF",
+   "x": 291,
+   "y": 142,
+   "baseline": 152,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 38.5
+  },
+  {
+   "page": 4,
+   "text": "GST)",
+   "x": 306.5,
+   "y": 155,
+   "baseline": 165,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 23
+  },
+  {
+   "page": 4,
+   "text": "GST on",
+   "x": 362.5,
+   "y": 116,
+   "baseline": 126,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 32
+  },
+  {
+   "page": 4,
+   "text": "Gateway",
+   "x": 355.5,
+   "y": 129,
+   "baseline": 139,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 39
+  },
+  {
+   "page": 4,
+   "text": "Fee",
+   "x": 378.5,
+   "y": 142,
+   "baseline": 152,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 16
+  },
+  {
+   "page": 4,
+   "text": "Total",
+   "x": 452,
+   "y": 116,
+   "baseline": 126,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 22.5
+  },
+  {
+   "page": 4,
+   "text": "Charges",
+   "x": 436.5,
+   "y": 129,
+   "baseline": 139,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 38
+  },
+  {
+   "page": 4,
+   "text": "Total Paid",
+   "x": 505.5,
+   "y": 116,
+   "baseline": 126,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 44
+  },
+  {
+   "page": 4,
+   "text": "by Delegate",
+   "x": 496,
+   "y": 129,
+   "baseline": 139,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 53.5
+  },
+  {
+   "page": 4,
+   "text": "₹4,720.00",
+   "x": 71,
+   "y": 182,
+   "baseline": 192,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 43.5
+  },
+  {
+   "page": 4,
+   "text": "₹94.40",
+   "x": 158.5,
+   "y": 182,
+   "baseline": 192,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 31
+  },
+  {
+   "page": 4,
+   "text": "₹16.99",
+   "x": 235,
+   "y": 182,
+   "baseline": 192,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 29.5
+  },
+  {
+   "page": 4,
+   "text": "₹96.63",
+   "x": 298.5,
+   "y": 182,
+   "baseline": 192,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 31
+  },
+  {
+   "page": 4,
+   "text": "₹17.39",
+   "x": 367.5,
+   "y": 182,
+   "baseline": 192,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 27
+  },
+  {
+   "page": 4,
+   "text": "₹225.41",
+   "x": 441,
+   "y": 182,
+   "baseline": 192,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 33.5
+  },
+  {
+   "page": 4,
+   "text": "₹4,945.41",
+   "x": 507,
+   "y": 182,
+   "baseline": 192,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 4,
+   "text": "₹5,900.00",
+   "x": 69.5,
+   "y": 209,
+   "baseline": 219,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 45
+  },
+  {
+   "page": 4,
+   "text": "₹118.00",
+   "x": 157,
+   "y": 209,
+   "baseline": 219,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 32.5
+  },
+  {
+   "page": 4,
+   "text": "₹21.24",
+   "x": 237,
+   "y": 209,
+   "baseline": 219,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 27.5
+  },
+  {
+   "page": 4,
+   "text": "₹120.78",
+   "x": 296,
+   "y": 209,
+   "baseline": 219,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 33.5
+  },
+  {
+   "page": 4,
+   "text": "₹21.74",
+   "x": 367.5,
+   "y": 209,
+   "baseline": 219,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 27
+  },
+  {
+   "page": 4,
+   "text": "₹281.76",
+   "x": 441.5,
+   "y": 209,
+   "baseline": 219,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 33
+  },
+  {
+   "page": 4,
+   "text": "₹6,181.76",
+   "x": 511,
+   "y": 209,
+   "baseline": 219,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 38.5
+  },
+  {
+   "page": 4,
+   "text": "₹7,080.00",
+   "x": 71,
+   "y": 236,
+   "baseline": 246,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 43.5
+  },
+  {
+   "page": 4,
+   "text": "₹141.60",
+   "x": 157,
+   "y": 236,
+   "baseline": 246,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 32.5
+  },
+  {
+   "page": 4,
+   "text": "₹25.49",
+   "x": 234,
+   "y": 236,
+   "baseline": 246,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 30.5
+  },
+  {
+   "page": 4,
+   "text": "₹144.94",
+   "x": 295,
+   "y": 236,
+   "baseline": 246,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 34.5
+  },
+  {
+   "page": 4,
+   "text": "₹26.09",
+   "x": 363.5,
+   "y": 236,
+   "baseline": 246,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 31
+  },
+  {
+   "page": 4,
+   "text": "₹338.12",
+   "x": 442.5,
+   "y": 236,
+   "baseline": 246,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 32
+  },
+  {
+   "page": 4,
+   "text": "₹7,418.12",
+   "x": 512,
+   "y": 236,
+   "baseline": 246,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 4,
+   "text": "₹8,260.00",
+   "x": 69.5,
+   "y": 263,
+   "baseline": 273,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 45
+  },
+  {
+   "page": 4,
+   "text": "₹165.20",
+   "x": 155,
+   "y": 263,
+   "baseline": 273,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 34.5
+  },
+  {
+   "page": 4,
+   "text": "₹29.74",
+   "x": 235.5,
+   "y": 263,
+   "baseline": 273,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 29
+  },
+  {
+   "page": 4,
+   "text": "₹169.10",
+   "x": 298,
+   "y": 263,
+   "baseline": 273,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 31.5
+  },
+  {
+   "page": 4,
+   "text": "₹30.44",
+   "x": 364,
+   "y": 263,
+   "baseline": 273,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 30.5
+  },
+  {
+   "page": 4,
+   "text": "₹394.48",
+   "x": 438.5,
+   "y": 263,
+   "baseline": 273,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 36
+  },
+  {
+   "page": 4,
+   "text": "₹8,654.48",
+   "x": 505.5,
+   "y": 263,
+   "baseline": 273,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 44
+  },
+  {
+   "page": 4,
+   "text": "International Registration",
+   "x": 37.5,
+   "y": 295.5,
+   "baseline": 308.5,
+   "size": 12,
+   "font": "Manrope-SemiBold",
+   "width": 148
+  },
+  {
+   "page": 4,
+   "text": "Base Price",
+   "x": 67.5,
+   "y": 326,
+   "baseline": 336,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 47
+  },
+  {
+   "page": 4,
+   "text": "Platform",
+   "x": 150.5,
+   "y": 326,
+   "baseline": 336,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 39
+  },
+  {
+   "page": 4,
+   "text": "Fee (2%)",
+   "x": 149,
+   "y": 339,
+   "baseline": 349,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 40.5
+  },
+  {
+   "page": 4,
+   "text": "GST on",
+   "x": 232.5,
+   "y": 326,
+   "baseline": 336,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 32
+  },
+  {
+   "page": 4,
+   "text": "Platform Fee",
+   "x": 207.5,
+   "y": 339,
+   "baseline": 349,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 57
+  },
+  {
+   "page": 4,
+   "text": "PG Fee",
+   "x": 298.5,
+   "y": 326,
+   "baseline": 336,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 31
+  },
+  {
+   "page": 4,
+   "text": "(3% of Bas",
+   "x": 281.5,
+   "y": 339,
+   "baseline": 349,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 48
+  },
+  {
+   "page": 4,
+   "text": "e+PF+PF",
+   "x": 291,
+   "y": 352,
+   "baseline": 362,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 38.5
+  },
+  {
+   "page": 4,
+   "text": "GST)",
+   "x": 306.5,
+   "y": 365,
+   "baseline": 375,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 23
+  },
+  {
+   "page": 4,
+   "text": "GST on",
+   "x": 362.5,
+   "y": 326,
+   "baseline": 336,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 32
+  },
+  {
+   "page": 4,
+   "text": "Gateway",
+   "x": 355.5,
+   "y": 339,
+   "baseline": 349,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 39
+  },
+  {
+   "page": 4,
+   "text": "Fee",
+   "x": 378.5,
+   "y": 352,
+   "baseline": 362,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 16
+  },
+  {
+   "page": 4,
+   "text": "Total",
+   "x": 452,
+   "y": 326,
+   "baseline": 336,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 22.5
+  },
+  {
+   "page": 4,
+   "text": "Charges",
+   "x": 436.5,
+   "y": 339,
+   "baseline": 349,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 38
+  },
+  {
+   "page": 4,
+   "text": "Total Paid",
+   "x": 505.5,
+   "y": 326,
+   "baseline": 336,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 44
+  },
+  {
+   "page": 4,
+   "text": "by Delegate",
+   "x": 496,
+   "y": 339,
+   "baseline": 349,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 53.5
+  },
+  {
+   "page": 4,
+   "text": "USD 250.00",
+   "x": 63.5,
+   "y": 392,
+   "baseline": 402,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 51
+  },
+  {
+   "page": 4,
+   "text": "USD 5.00",
+   "x": 149.5,
+   "y": 392,
+   "baseline": 402,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 40
+  },
+  {
+   "page": 4,
+   "text": "USD 0.90",
+   "x": 224,
+   "y": 392,
+   "baseline": 402,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 40.5
+  },
+  {
+   "page": 4,
+   "text": "USD 7.68",
+   "x": 291,
+   "y": 392,
+   "baseline": 402,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 38.5
+  },
+  {
+   "page": 4,
+   "text": "USD 1.38",
+   "x": 357.5,
+   "y": 392,
+   "baseline": 402,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 37
+  },
+  {
+   "page": 4,
+   "text": "USD 14.96",
+   "x": 430.5,
+   "y": 392,
+   "baseline": 402,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 44
+  },
+  {
+   "page": 4,
+   "text": "USD 264.96",
+   "x": 498,
+   "y": 392,
+   "baseline": 402,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 51.5
+  },
+  {
+   "page": 4,
+   "text": "USD 300.00",
+   "x": 63,
+   "y": 419,
+   "baseline": 429,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 51.5
+  },
+  {
+   "page": 4,
+   "text": "USD 6.00",
+   "x": 149,
+   "y": 419,
+   "baseline": 429,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 40.5
+  },
+  {
+   "page": 4,
+   "text": "USD 1.08",
+   "x": 227,
+   "y": 419,
+   "baseline": 429,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 4,
+   "text": "USD 9.21",
+   "x": 291.5,
+   "y": 419,
+   "baseline": 429,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 38
+  },
+  {
+   "page": 4,
+   "text": "USD 1.66",
+   "x": 356.5,
+   "y": 419,
+   "baseline": 429,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 38
+  },
+  {
+   "page": 4,
+   "text": "USD 17.95",
+   "x": 432.5,
+   "y": 419,
+   "baseline": 429,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 42
+  },
+  {
+   "page": 4,
+   "text": "USD 317.95",
+   "x": 502,
+   "y": 419,
+   "baseline": 429,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 47.5
+  },
+  {
+   "page": 4,
+   "text": "2.2 Registration Categories",
+   "x": 37.5,
+   "y": 467,
+   "baseline": 481,
+   "size": 13,
+   "font": "Manrope-Bold",
+   "width": 176
+  },
+  {
+   "page": 4,
+   "text": "Category",
+   "x": 45.5,
+   "y": 501,
+   "baseline": 512,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 44.5
+  },
+  {
+   "page": 4,
+   "text": "Member",
+   "x": 390.5,
+   "y": 501,
+   "baseline": 512,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 39
+  },
+  {
+   "page": 4,
+   "text": "Non-Member",
+   "x": 487,
+   "y": 501,
+   "baseline": 512,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 62.5
+  },
+  {
+   "page": 4,
+   "text": "Student",
+   "x": 45.5,
+   "y": 529,
+   "baseline": 539.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 4,
+   "text": "₹6,000",
+   "x": 396.5,
+   "y": 529,
+   "baseline": 539.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 33
+  },
+  {
+   "page": 4,
+   "text": "₹7,000",
+   "x": 518,
+   "y": 529,
+   "baseline": 539.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 31.5
+  },
+  {
+   "page": 4,
+   "text": "Professional",
+   "x": 45.5,
+   "y": 556.5,
+   "baseline": 567,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 57
+  },
+  {
+   "page": 4,
+   "text": "₹7,000",
+   "x": 398,
+   "y": 556.5,
+   "baseline": 567,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 31.5
+  },
+  {
+   "page": 4,
+   "text": "₹8,000",
+   "x": 516.5,
+   "y": 556.5,
+   "baseline": 567,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 33
+  },
+  {
+   "page": 4,
+   "text": "Attendee Only",
+   "x": 45.5,
+   "y": 584,
+   "baseline": 595,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 66
+  },
+  {
+   "page": 4,
+   "text": "₹2,000",
+   "x": 397,
+   "y": 584,
+   "baseline": 595,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 32.5
+  },
+  {
+   "page": 4,
+   "text": "₹2,500",
+   "x": 517,
+   "y": 584,
+   "baseline": 595,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 32.5
+  },
+  {
+   "page": 4,
+   "text": "Subtotal",
+   "x": 45.5,
+   "y": 612,
+   "baseline": 622.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 42
+  },
+  {
+   "page": 4,
+   "text": "₹15,000",
+   "x": 390.5,
+   "y": 612,
+   "baseline": 622.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 39
+  },
+  {
+   "page": 4,
+   "text": "₹17,500",
+   "x": 511.5,
+   "y": 612,
+   "baseline": 622.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 38
+  },
+  {
+   "page": 4,
+   "text": "Total",
+   "x": 45.5,
+   "y": 639.5,
+   "baseline": 650,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 24.5
+  },
+  {
+   "page": 4,
+   "text": "₹32,500",
+   "x": 389.5,
+   "y": 639.5,
+   "baseline": 650,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 40
+  },
+  {
+   "page": 4,
+   "text": "hello@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 138.5
+  },
+  {
+   "page": 4,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 4,
+   "text": "Page 4 of 5",
+   "x": 520,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 5,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 5,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 5,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 5,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 5,
+   "text": "Email: hello@example.com | www.example.com",
+   "x": 386.5,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 171
+  },
+  {
+   "page": 5,
+   "text": "3. Commercials",
+   "x": 37.5,
+   "y": 113.5,
+   "baseline": 132.5,
+   "size": 18,
+   "font": "Manrope-ExtraBold",
+   "width": 137
+  },
+  {
+   "page": 5,
+   "text": "Quotation",
+   "x": 37.5,
+   "y": 157,
+   "baseline": 171,
+   "size": 13,
+   "font": "Manrope-Bold",
+   "width": 64.5
+  },
+  {
+   "page": 5,
+   "text": "TOTAL AMOUNT",
+   "x": 55.5,
+   "y": 205,
+   "baseline": 214.5,
+   "size": 8.5,
+   "font": "Manrope-SemiBold",
+   "width": 64
+  },
+  {
+   "page": 5,
+   "text": "₹7,500",
+   "x": 55.5,
+   "y": 219,
+   "baseline": 253.5,
+   "size": 32,
+   "font": "Manrope-ExtraBold",
+   "width": 109.5
+  },
+  {
+   "page": 5,
+   "text": "Including GST",
+   "x": 55.5,
+   "y": 261,
+   "baseline": 269.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 50.5
+  },
+  {
+   "page": 5,
+   "text": "Fixed Quotation",
+   "x": 232.5,
+   "y": 205,
+   "baseline": 217.5,
+   "size": 11.5,
+   "font": "Manrope-Bold",
+   "width": 88.5
+  },
+  {
+   "page": 5,
+   "text": "A one-time fee covering the platform and the services described in",
+   "x": 232.5,
+   "y": 223,
+   "baseline": 233.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 289.5
+  },
+  {
+   "page": 5,
+   "text": "this proposal.",
+   "x": 232.5,
+   "y": 237.5,
+   "baseline": 248,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 59
+  },
+  {
+   "page": 5,
+   "text": "In words: Seven Thousand Five Hundred Only (Including GST)",
+   "x": 232.5,
+   "y": 273,
+   "baseline": 283.5,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 274
+  },
+  {
+   "page": 5,
+   "text": "Note",
+   "x": 37.5,
+   "y": 314,
+   "baseline": 326.5,
+   "size": 12,
+   "font": "Manrope-SemiBold",
+   "width": 27.5
+  },
+  {
+   "page": 5,
+   "text": "Payment gateway charges are not part of the quoted amount:",
+   "x": 37.5,
+   "y": 338.5,
+   "baseline": 350.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 347.5
+  },
+  {
+   "page": 5,
+   "text": "2% per domestic transaction",
+   "x": 389.5,
+   "y": 338.5,
+   "baseline": 350.5,
+   "size": 11.5,
+   "font": "Manrope-Bold",
+   "width": 168
+  },
+  {
+   "page": 5,
+   "text": "(excluding GST).",
+   "x": 37.5,
+   "y": 356.5,
+   "baseline": 368.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 88
+  },
+  {
+   "page": 5,
+   "text": "4. Terms & Conditions",
+   "x": 37.5,
+   "y": 408.5,
+   "baseline": 427.5,
+   "size": 18,
+   "font": "Manrope-ExtraBold",
+   "width": 192
+  },
+  {
+   "page": 5,
+   "text": "• The quoted amount of ₹7,500 is a fixed fee and includes GST.",
+   "x": 37.5,
+   "y": 447.5,
+   "baseline": 459.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 333
+  },
+  {
+   "page": 5,
+   "text": "• Acme Events Private Limited may update platform features with prior notice.",
+   "x": 37.5,
+   "y": 469.5,
+   "baseline": 482,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 413
+  },
+  {
+   "page": 5,
+   "text": "5. Contact Information",
+   "x": 37.5,
+   "y": 522.5,
+   "baseline": 541.5,
+   "size": 18,
+   "font": "Manrope-ExtraBold",
+   "width": 202
+  },
+  {
+   "page": 5,
+   "text": "Acme Tickets",
+   "x": 37.5,
+   "y": 561.5,
+   "baseline": 576,
+   "size": 14,
+   "font": "Manrope-Bold",
+   "width": 91
+  },
+  {
+   "page": 5,
+   "text": "A product of Acme Events Private Limited",
+   "x": 37.5,
+   "y": 587,
+   "baseline": 599.5,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 216
+  },
+  {
+   "page": 5,
+   "text": "• Website: www.example.com",
+   "x": 37.5,
+   "y": 615.5,
+   "baseline": 628,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 161.5
+  },
+  {
+   "page": 5,
+   "text": "• Email: hello@example.com",
+   "x": 37.5,
+   "y": 638,
+   "baseline": 650,
+   "size": 11.5,
+   "font": "Manrope-Regular",
+   "width": 154
+  },
+  {
+   "page": 5,
+   "text": "PROJECT CONTACT",
+   "x": 37.5,
+   "y": 667,
+   "baseline": 677,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 88.5
+  },
+  {
+   "page": 5,
+   "text": "AUTHORIZED SIGNATORY",
+   "x": 307.5,
+   "y": 667,
+   "baseline": 677,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 113.5
+  },
+  {
+   "page": 5,
+   "text": "Name:",
+   "x": 37.5,
+   "y": 689,
+   "baseline": 701,
+   "size": 11,
+   "font": "Manrope-SemiBold",
+   "width": 34
+  },
+  {
+   "page": 5,
+   "text": "Alex Example",
+   "x": 145.5,
+   "y": 689,
+   "baseline": 701,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 66.5
+  },
+  {
+   "page": 5,
+   "text": "Name:",
+   "x": 307.5,
+   "y": 689,
+   "baseline": 701,
+   "size": 11,
+   "font": "Manrope-SemiBold",
+   "width": 34
+  },
+  {
+   "page": 5,
+   "text": "Sam Sample",
+   "x": 415.5,
+   "y": 689,
+   "baseline": 701,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 62
+  },
+  {
+   "page": 5,
+   "text": "Designation:",
+   "x": 37.5,
+   "y": 709,
+   "baseline": 721,
+   "size": 11,
+   "font": "Manrope-SemiBold",
+   "width": 67.5
+  },
+  {
+   "page": 5,
+   "text": "Chief Operating Officer",
+   "x": 145.5,
+   "y": 709,
+   "baseline": 721,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 117
+  },
+  {
+   "page": 5,
+   "text": "Designation:",
+   "x": 307.5,
+   "y": 709,
+   "baseline": 721,
+   "size": 11,
+   "font": "Manrope-SemiBold",
+   "width": 67.5
+  },
+  {
+   "page": 5,
+   "text": "Managing Director",
+   "x": 415.5,
+   "y": 709,
+   "baseline": 721,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 93.5
+  },
+  {
+   "page": 5,
+   "text": "Email:",
+   "x": 37.5,
+   "y": 729,
+   "baseline": 741,
+   "size": 11,
+   "font": "Manrope-SemiBold",
+   "width": 32
+  },
+  {
+   "page": 5,
+   "text": "alex@example.com",
+   "x": 145.5,
+   "y": 729,
+   "baseline": 741,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 97.5
+  },
+  {
+   "page": 5,
+   "text": "Email:",
+   "x": 307.5,
+   "y": 729,
+   "baseline": 741,
+   "size": 11,
+   "font": "Manrope-SemiBold",
+   "width": 32
+  },
+  {
+   "page": 5,
+   "text": "sam@example.com",
+   "x": 415.5,
+   "y": 729,
+   "baseline": 741,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 98
+  },
+  {
+   "page": 5,
+   "text": "Phone:",
+   "x": 37.5,
+   "y": 749,
+   "baseline": 761,
+   "size": 11,
+   "font": "Manrope-SemiBold",
+   "width": 37
+  },
+  {
+   "page": 5,
+   "text": "+00 00000 00000",
+   "x": 145.5,
+   "y": 749,
+   "baseline": 761,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 91.5
+  },
+  {
+   "page": 5,
+   "text": "Phone:",
+   "x": 307.5,
+   "y": 749,
+   "baseline": 761,
+   "size": 11,
+   "font": "Manrope-SemiBold",
+   "width": 37
+  },
+  {
+   "page": 5,
+   "text": "+00 00000 00000",
+   "x": 415.5,
+   "y": 749,
+   "baseline": 761,
+   "size": 11,
+   "font": "Manrope-Regular",
+   "width": 91.5
+  },
+  {
+   "page": 5,
+   "text": "hello@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 138.5
+  },
+  {
+   "page": 5,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 5,
+   "text": "Page 5 of 5",
+   "x": 520,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  }
+ ],
+ "images": [
+  {
+   "page": 1,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 2,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 3,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 4,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 5,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  }
+ ]
+}
