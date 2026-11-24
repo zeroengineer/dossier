@@ -40,7 +40,7 @@
       "advance": "Advance Payment Received",
       "balance": "Balance Service Charges Payable",
       "expensesTotal": "Total Reimbursable Expenses",
-      "summaryBalance": "Balance Professional Service Charges",
+      "summaryBalance": "Service Fee Balance",
       "totalPayable": "Total Amount Payable"
     },
     "detailRows": [

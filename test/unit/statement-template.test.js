@@ -51,6 +51,8 @@ test('employee settlement: per-day and half-day rates, attendance, other deducti
   assert.equal(t.net, 2000000 + 100000 - 96774 - 50000);
 
   assert.throws(() => employeeSettlement({ monthlySalary: 100, workingDays: 0 }), /workingDays/);
+  assert.throws(() => employeeSettlement({ monthlySalary: 100000, workingDays: 25, deductions: [{ label: 'Advance', amount: 100001 }] }), /negative/);
+  assert.equal(employeeSettlement({ monthlySalary: 100000, workingDays: 25, deductions: [{ label: 'Advance', amount: 100000 }] }).net, 0);
   assert.throws(() => employeeSettlement({ monthlySalary: 100, workingDays: 2.5 }), /workingDays/);
   assert.throws(() => employeeSettlement({ monthlySalary: 100, workingDays: 2, attendance: [{ label: 'x', days: 1, rule: 'quarter' }] }), /rule/);
   assert.throws(() => employeeSettlement({ monthlySalary: 100, workingDays: 2, attendance: [{ days: 1 }] }), /attendance\.0\.label/);
@@ -67,6 +69,8 @@ test('ticketing settlement: revenue = sold × price, fee and GST in paise, charg
   const zero = ticketingSettlement({ tickets });
   assert.deepEqual([zero.fee, zero.gst, zero.net], [0, 0, 5487100]);
   assert.throws(() => ticketingSettlement({ tickets: [] }), /at least one/);
+  assert.throws(() => ticketingSettlement({ tickets: [{ type: 'A', sold: 1, price: 10000 }], feePercent: 90 }), /negative/);
+  assert.equal(ticketingSettlement({ tickets: [{ type: 'A', sold: 1, price: 10000 }], feePercent: 90, deductCharges: false }).net, 10000);
   assert.throws(() => ticketingSettlement({ tickets: [{ type: 'A', sold: 1.5, price: 100 }] }), /sold/);
   assert.throws(() => ticketingSettlement({ tickets: [{ sold: 1, price: 100 }] }), /type or an event/);
 });

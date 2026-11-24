@@ -39,7 +39,7 @@ test('remittance statement: legacy positions and CONFIDENTIAL footer (DISCOVERY 
   const amount = find(items, '₹5,00,000/-');
   assert.equal(amount.font, 'Manrope-Bold');
   assert.ok(items.some((i) => /\(Rupees Five Lakh Only\)/.test(i.text)));
-  const intro = find(items, 'The details of the transaction are as follows:');
+  const intro = find(items, 'Transfer details:');
   const row1 = find(items, 'Date of Transaction');
   assert.deepEqual([row1.x, row1.y], [ML + 18, intro.y + 22]);
   assert.equal(find(items, ': 10 April 2026').x, ML + 18 + 130);

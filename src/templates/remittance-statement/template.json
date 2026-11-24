@@ -22,7 +22,7 @@
       "This is to confirm that an amount of **{amount}** ({amountWords}) {purpose} was transferred by **{company}** to the account of **{recipient}** given below.",
       { "text": "The payment was processed through **{processedThrough}**.", "when": "processedThrough" }
     ],
-    "detailsIntro": "The details of the transaction are as follows:",
+    "detailsIntro": "Transfer details:",
     "detailRows": [
       { "label": "Date of Transaction", "value": "{transferDate}" },
       { "label": "Particulars", "value": "{particulars}" },

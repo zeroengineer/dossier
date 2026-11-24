@@ -109,7 +109,9 @@ export function employeeSettlement(values) {
   const additions = money('additions');
   const totalDeductions = [...attendance, ...deductions].reduce((s, x) => s + x.amount, 0);
   const totalAdditions = additions.reduce((s, x) => s + x.amount, 0);
-  return { monthly, workingDays, perDay, halfDay, attendance, deductions, additions, totalDeductions, totalAdditions, net: monthly + totalAdditions - totalDeductions };
+  const net = monthly + totalAdditions - totalDeductions;
+  if (net < 0) throw new Error('the deductions are larger than the salary and additions; the net would be negative');
+  return { monthly, workingDays, perDay, halfDay, attendance, deductions, additions, totalDeductions, totalAdditions, net };
 }
 
 /**
@@ -137,6 +139,7 @@ export function ticketingSettlement(values) {
   const gst = percentOf(fee, gstPercent);
   const charges = fee + gst;
   const deductCharges = values.deductCharges !== false;
+  if (deductCharges && charges > gross) throw new Error('the platform charges are larger than the ticket revenue; the net would be negative');
   return { rows, sold: rows.reduce((s, r) => s + r.sold, 0), gross, feePercent, gstPercent, fee, gst, charges, deductCharges, net: deductCharges ? gross - charges : gross };
 }
 

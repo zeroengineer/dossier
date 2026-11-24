@@ -192,13 +192,13 @@
   },
   {
    "page": 1,
-   "text": "The details of the transaction are as follows:",
+   "text": "Transfer details:",
    "x": 37.5,
    "y": 296,
    "baseline": 306.5,
    "size": 10,
    "font": "Manrope-Regular",
-   "width": 203
+   "width": 74.5
   },
   {
    "page": 1,
