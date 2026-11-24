@@ -6,6 +6,7 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ### Added
 
+- Logo concepts (three directions) with brief and sources in `web/brand-src/`; the owner chose concept A, "Bound D".
 - Vendored shadcn agent skill (`.claude/skills/shadcn`) for work on the web UI.
 - `npm run test:api` as an explicit name for the API and service test suite.
 - The server serves the built web app from `web/dist` (`buildServer(ctx, { spaDir })`): hashed `/app/*` files are
