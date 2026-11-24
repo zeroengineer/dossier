@@ -1,4 +1,5 @@
 // Signature block (legacy offer letter / certificates / remittance / invoice signatory; docs/DISCOVERY.md A8 §1, §2, §4).
+import { placeImage } from './images.js';
 
 /** Offer-letter defaults: image h55 at +24, name +22 below the image, title +14, seal w76 rotated -6° at 0.85. */
 export const SIGNATURE_DEFAULTS = Object.freeze({
@@ -57,7 +58,7 @@ export async function drawSignatureBlock(ctx, opts) {
   const imageY = y + offsets.image;
   const imageW = sig.width * (imageHeight / sig.height);
   const imageX = align === 'right' ? x + width - imageW : x;
-  doc.image(sig.buffer, imageX, imageY, { height: imageHeight });
+  placeImage(ctx, sig, imageX, imageY, { height: imageHeight });
 
   if (seal) {
     const sealH = seal.width * (sealImg.height / sealImg.width);
@@ -66,7 +67,7 @@ export async function drawSignatureBlock(ctx, opts) {
     doc.save();
     doc.opacity(seal.opacity);
     doc.rotate(seal.rotate, { origin: [sealX + seal.width / 2, sealY + sealH / 2] });
-    doc.image(sealImg.buffer, sealX, sealY, { width: seal.width });
+    placeImage(ctx, sealImg, sealX, sealY, { width: seal.width });
     doc.restore();
   }
 

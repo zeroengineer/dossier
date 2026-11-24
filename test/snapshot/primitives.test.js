@@ -62,6 +62,8 @@ test('same input renders byte-identical PDFs', async () => {
   R.clearImageCache();
   const { buffer: b } = await renderSample();
   assert.ok(a.equals(b), 'two renders differ');
+  const parallel = await Promise.all([renderSample(), renderSample(), renderSample()]);
+  assert.ok(parallel.every((r) => r.buffer.equals(a)), 'concurrent renders differ');
   assert.match(a.subarray(0, 8).toString('latin1'), /^%PDF-1\./);
   const text = a.toString('latin1');
   const info = (key) => {

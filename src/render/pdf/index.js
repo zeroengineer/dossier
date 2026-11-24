@@ -1,7 +1,7 @@
 // PDF render primitives: one import for templates.
 export { PROFILES, getProfile } from './profiles.js';
 export { createPdf, finalizePdf, onPageAdded, detachPageHooks, brandScope, PRODUCER } from './document.js';
-export { loadImage, clearImageCache, brandImages } from './images.js';
+export { loadImage, placeImage, clearImageCache, brandImages } from './images.js';
 export { createFormatter, indianWords } from './format.js';
 export { drawLetterhead, attachLetterhead, LETTERHEAD_DEFAULTS } from './letterhead.js';
 export { drawFooters, FOOTER_DEFAULTS } from './footer.js';

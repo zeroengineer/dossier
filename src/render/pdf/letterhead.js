@@ -1,6 +1,7 @@
 // Letter-family page header (docs/DISCOVERY.md A8 "Shared letterhead"; legacy generate-proposal.js drawHeader).
 import { brandScope, onPageAdded } from './document.js';
 import { interpolate } from '../../workspace/index.js';
+import { placeImage } from './images.js';
 
 /** Default letterhead styles (legacy values). */
 export const LETTERHEAD_DEFAULTS = Object.freeze({
@@ -22,7 +23,7 @@ function blockHeight(lhName, lhLine, n, firstGap, lineGap) {
  * Draw the letterhead on the current page: logo at the left, vertically centred against a right-aligned block of the
  * legal name and the brand's `letterhead.lines` (with `{contact.*}` from the chosen contact), then a hairline rule.
  * @param {import('./document.js').PdfContext} ctx
- * @param {{ contact?: string, logo: { buffer: Buffer } } & Partial<typeof LETTERHEAD_DEFAULTS>} opts
+ * @param {{ contact?: string, logo: Awaited<ReturnType<typeof import('./images.js').loadImage>> } & Partial<typeof LETTERHEAD_DEFAULTS>} opts
  * @returns {{ textY: number, textBlockH: number, ruleY: number }}
  */
 export function drawLetterhead(ctx, opts) {
@@ -43,7 +44,7 @@ export function drawLetterhead(ctx, opts) {
   const textY = (MT - textBlockH) / 2;
   const logoY = textY + (textBlockH - LOGO_H) / 2;
 
-  doc.image(o.logo.buffer, ML, logoY, { height: LOGO_H });
+  placeImage(ctx, o.logo, ML, logoY, { height: LOGO_H });
 
   doc.font(o.nameFont).fontSize(o.nameSize).fillColor(palette.ink)
     .text(brand.legalName, ML, textY, { align: 'right', width: CW });
