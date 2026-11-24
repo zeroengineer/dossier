@@ -1,14 +1,16 @@
-import { FilePlus2Icon } from "lucide-react"
 import { useParams } from "react-router"
-import { PlaceholderPage } from "@/components/placeholder-page"
+import { PageHeader } from "@/components/page-header"
+import { GenerateTemplate } from "@/features/generate/generate-view"
+import { TemplatePicker } from "@/features/generate/picker"
 
+/** `/generate` (template picker) and `/generate/:templateId` (the template's form and preview). */
 export default function GeneratePage() {
   const { templateId } = useParams()
+  if (templateId) return <GenerateTemplate templateId={templateId} />
   return (
-    <PlaceholderPage
-      title={templateId ? `Generate: ${templateId}` : "Generate"}
-      description="Pick a template, fill in its fields and preview the document before it is numbered."
-      icon={FilePlus2Icon}
-    />
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Generate" description="Pick a template to fill in and preview before it is numbered." />
+      <TemplatePicker />
+    </div>
   )
 }

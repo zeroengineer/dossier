@@ -424,3 +424,90 @@ export interface UploadResult {
   /** Warning codes, e.g. NUMBER_CONFLICT when the number is already used in its series. */
   warnings: string[]
 }
+
+// generate
+
+/** A field's input type in template.json (`meta.fieldTypes`); `null` when the template leaves it untyped. */
+export type TemplateFieldType =
+  | "string"
+  | "text"
+  | "date"
+  | "money"
+  | "number"
+  | "enum"
+  | "entity"
+  | "array"
+  | "object"
+  | "boolean"
+
+/** One field of a template.json `fields` list, as stored (only what the form reads is typed). */
+export interface TemplateMetaField {
+  name: string
+  label?: string
+  type?: TemplateFieldType
+  source?: string
+  required?: boolean
+  default?: unknown
+  help?: string
+  enum?: unknown
+  item?: Record<string, string>
+}
+
+/** A template.json body (`GET /api/templates/:id` `meta`); keys the UI does not read are left untyped. */
+export interface TemplateMeta {
+  id: string
+  version: number
+  type: string
+  title: string
+  description?: string
+  category: string
+  sensitivity: SensitivityLevel
+  renditions: string[]
+  numbering?: TemplateNumbering
+  fields: TemplateMetaField[]
+  [key: string]: unknown
+}
+
+/** One input field of the generate form (src/services/fields.js formFields): the labelled fields of the template. */
+export interface TemplateField {
+  /** Dotted input path (`billTo.name`). */
+  name: string
+  label: string
+  type: TemplateFieldType | null
+  required: boolean
+  help: string | null
+  /** Where the value comes from when not given: `ask`, `today`, `entity:client`, `client.name`, `signatory`, … */
+  source?: string
+  /** Entity kind of an `entity:<kind>` source. */
+  entityKind: string | null
+  /** Allowed values (enum fields; brand lists resolved for the brand asked for). */
+  choices: string[] | null
+  /** Row columns of a list field: column name -> item type (`text`, `string`, `money`, `number`, `date`, `boolean`). */
+  item: Record<string, string> | null
+}
+
+/** `GET /api/templates/:id?brandId=`. */
+export interface TemplateDetail {
+  id: string
+  version: number
+  source: TemplateSource
+  hash: string
+  meta: TemplateMeta
+  fields: TemplateField[]
+}
+
+/** One row of `GET /api/entities` (src/services/entities.js findEntities), as the generate form lists it. */
+export interface EntityMatch {
+  id: number
+  kind: string
+  name: string
+  brand: string | null
+  aliases: string[]
+  /** The alias the query matched, when it was not the name. */
+  matched: string | null
+}
+
+/** `GET /api/entities?kind=&q=&limit=`. */
+export interface EntityMatchList {
+  entities: EntityMatch[]
+}
