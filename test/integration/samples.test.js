@@ -1,7 +1,7 @@
 // scripts/samples.js (npm run samples) and the pure parts of scripts/visual.js (npm run visual).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, lstatSync, readdirSync, readFileSync, renameSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { PNG } from 'pngjs';
 import { initWorkspace } from '../../src/workspace/index.js';
@@ -58,6 +58,24 @@ test('samples: a given workspace is only read (copied to a temp folder first)', 
     assert.equal(existsSync(join(home, 'data')), false);
     assert.equal(readFileSync(join(home, 'workspace.json'), 'utf8'), wsJson);
     assert.equal(JSON.parse(readFileSync(join(dir, 'out', MANIFEST), 'utf8')).exampleWorkspace, false);
+  } finally {
+    cleanup();
+  }
+});
+
+test('samples: a workspace.json that is a symbolic link is never written through', async () => {
+  const { dir, cleanup } = tmpDir();
+  try {
+    const home = initWorkspace(join(dir, 'ws'));
+    const real = join(dir, 'elsewhere-workspace.json');
+    renameSync(join(home, 'workspace.json'), real);
+    symlinkSync(real, join(home, 'workspace.json'));
+    const before = readFileSync(real, 'utf8');
+    const [r] = await generateSamples({ home, out: join(dir, 'out'), templates: ['invoice'] });
+    assert.equal(r.ok, true, r.error);
+    assert.equal(readFileSync(real, 'utf8'), before);
+    assert.ok(lstatSync(join(home, 'workspace.json')).isSymbolicLink());
+    assert.equal(existsSync(join(home, 'data')), false);
   } finally {
     cleanup();
   }

@@ -69,6 +69,9 @@ export async function generateSamples({ home = EXAMPLE_WORKSPACE, out = join(ROO
     const wsFile = join(ws, 'workspace.json');
     const wsJson = JSON.parse(readFileSync(wsFile, 'utf8'));
     wsJson.users = { ...(wsJson.users ?? {}), [SAMPLE_USER]: { clearance: 'Restricted' } };
+    // Replace the copy rather than writing into it: when the source workspace.json is a symbolic link, the copy is a
+    // link to the user's file too, and writing through it would change their workspace.
+    rmSync(wsFile, { force: true });
     writeFileSync(wsFile, JSON.stringify(wsJson, null, 2));
     mkdirSync(out, { recursive: true });
 
