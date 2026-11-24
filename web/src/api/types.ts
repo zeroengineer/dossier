@@ -145,3 +145,75 @@ export interface DashboardSummary {
   counters: SeriesCounter[]
   warnings: DashboardWarning[]
 }
+
+// document
+
+/** Rendition kinds (src/domain/enums.js RENDITION_KINDS). `original` is an uploaded file as it came in. */
+export type RenditionKind = "pdf" | "html" | "md" | "original"
+
+/** One stored file of a version (src/services/documentQueries.js renditionsOf). */
+export interface DocumentRendition {
+  id: number
+  kind: RenditionKind
+  sha256: string
+  bytes: number
+  mime: string
+  filename: string
+  /** Human file name (date, party, type, number, version). */
+  displayName: string
+  pageCount: number | null
+  createdAt: string
+}
+
+/** One version of a document with its renditions (src/services/documentQueries.js versionView). */
+export interface DocumentVersion {
+  id: number
+  versionNo: number
+  isCurrent: boolean
+  note: string | null
+  /** The generator input of a generated version; null for uploads. */
+  input: unknown
+  createdBy: string | null
+  createdAt: string
+  renditions: DocumentRendition[]
+}
+
+/** An entity a document field points at (business line, engagement, issuing entity). */
+export interface DocumentEntityRef {
+  id: number
+  kind: string
+  name: string
+}
+
+/** A document–entity link with its role (src/services/documentQueries.js documentEntities). */
+export interface DocumentEntityLink extends DocumentEntityRef {
+  role: string
+}
+
+/** A relation in either direction (src/services/documentQueries.js relationsOf). `out`: this document → the other end. */
+export interface DocumentRelation {
+  id: number
+  type: string
+  direction: "out" | "in"
+  /** The other document, or null when the other end is a template (`template:<id>@<version>`). */
+  document: { id: string; type: string; title: string; docNumber: string | null; status: Status } | null
+  template: { id: string; version: number } | null
+  attrs: Record<string, unknown>
+}
+
+/** `GET /api/documents/:id` (src/services/documentQueries.js getDocument). */
+export interface DocumentDetail extends DocumentSummary {
+  businessLine: DocumentEntityRef | null
+  engagement: DocumentEntityRef | null
+  issuingEntity: DocumentEntityRef | null
+  issuingBrandId: string | null
+  template: { id: string; version: number | null } | null
+  /** Renditions of the current version (empty when there is none). */
+  renditions: DocumentRendition[]
+  /** Every version, oldest first. */
+  versions: DocumentVersion[]
+  entities: DocumentEntityLink[]
+  relations: DocumentRelation[]
+  createdBy: string | null
+  createdAt: string
+}
