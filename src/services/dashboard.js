@@ -23,16 +23,18 @@ const DAY = "COALESCE(d.doc_date, date(d.created_at, 'localtime'))";
 const VISIBLE = 'd.sensitivity IN (SELECT value FROM json_each(:levels))';
 
 const ASSET_LABEL = { 'assets.logo': 'logo', 'assets.seal': 'seal', 'assets.watermark': 'watermark' };
+/** Short name of a brandAsset key for a warning: logo, seal, watermark, the signatory id, `<id> (large)`, `<weight> font`. */
 const assetLabel = (key) => {
   if (ASSET_LABEL[key]) return ASSET_LABEL[key];
   const [kind, arg] = key.split(':');
-  if (kind === 'signature') return `signature of ${arg}`;
-  if (kind === 'signature-large') return `large signature of ${arg}`;
+  if (kind === 'signature') return arg;
+  if (kind === 'signature-large') return `${arg} (large)`;
   return `${arg} font`;
 };
 
 function checkDays(days) {
-  const n = typeof days === 'string' && /^\d+$/.test(days) ? Number(days) : days;
+  // Only the canonical spelling: `007`, `7.0` or ` 7` are rejected.
+  const n = typeof days === 'string' && /^[1-9]\d*$/.test(days) ? Number(days) : days;
   if (!DASHBOARD_DAYS.includes(n)) {
     throw new DossierError('INVALID_INPUT', `days must be one of ${DASHBOARD_DAYS.join(', ')}`, { days: days ?? null, allowed: [...DASHBOARD_DAYS] });
   }
@@ -70,13 +72,13 @@ function warningsOf(ctx, levels) {
     });
   }
   for (const brandId of [...ctx.ws.brands.keys()].sort()) {
-    for (const m of missingBrandAssets(ctx.ws, brandId)) {
-      out.push({
-        code: 'BRAND_ASSET_MISSING',
-        message: `Brand "${brandId}": the ${assetLabel(m.key)} file ${m.path} is missing`,
-        href: `/settings/brands/${encodeURIComponent(brandId)}`,
-      });
-    }
+    const missing = [...new Set(missingBrandAssets(ctx.ws, brandId).map((m) => assetLabel(m.key)))];
+    if (missing.length === 0) continue;
+    out.push({
+      code: 'BRAND_ASSET_MISSING',
+      message: `Brand "${brandId}": ${missing.length} asset ${missing.length === 1 ? 'file' : 'files'} missing (${missing.join(', ')}); placeholders are used`,
+      href: `/settings/brands/${encodeURIComponent(brandId)}`,
+    });
   }
   return out;
 }
@@ -94,7 +96,7 @@ function warningsOf(ctx, levels) {
  * - `recent`: the RECENT_LIMIT documents updated last (DocumentSummary).
  * - `counters`: listCounters (series counters are workspace configuration, not document data).
  * - `warnings`: templates that fail to load, the user's documents with a number conflict (at most
- *   CONFLICT_WARNINGS_MAX), and brand asset files that are missing; each `{ code, message, href }`.
+ *   CONFLICT_WARNINGS_MAX), and one warning per brand naming its missing asset files; each `{ code, message, href }`.
  * @param {object} ctx
  * @param {{ days?: number|string, now?: Date }} [opts] days: 7, 30 or 90 (default 30), else INVALID_INPUT
  * @returns {object}

@@ -23,13 +23,22 @@ before(() => {
   writeWorkspace(home, {
     workspace: { name: 'Test Workspace', defaultBrand: 'acme', users: { admin: { clearance: 'Confidential' }, intern: { clearance: 'Internal' } } },
     brands: {
-      acme: minimalBrand('acme', { assets: { logo: 'assets/logo.png', watermark: 'assets/missing-watermark.png' } }),
+      acme: minimalBrand('acme', {
+        assets: { logo: 'assets/logo.png', seal: 'assets/missing-seal.png', watermark: 'assets/missing-watermark.png' },
+        signatories: [
+          { id: 'sign-ops', name: 'Alex Example', title: 'Operations', signature: 'assets/missing-ops.png' },
+          { id: 'sign-md', name: 'Sam Example', title: 'Director', signature: 'assets/missing-md.png', signatureLarge: 'assets/missing-md-large.png' },
+        ],
+      }),
+      other: minimalBrand('other'),
     },
     series: exampleSeries(),
   });
-  // The logo exists, the watermark does not.
-  mkdirSync(join(home, 'brands', 'acme', 'assets'), { recursive: true });
-  writeFileSync(join(home, 'brands', 'acme', 'assets', 'logo.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  // Both logos exist; acme's seal, watermark and signature files do not.
+  for (const b of ['acme', 'other']) {
+    mkdirSync(join(home, 'brands', b, 'assets'), { recursive: true });
+    writeFileSync(join(home, 'brands', b, 'assets', 'logo.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  }
   admin = openContext({ home, user: 'admin', env: {} });
   intern = openContext({ home, user: 'intern', env: {} });
 
@@ -94,7 +103,7 @@ describe('GET /api/dashboard', () => {
     const d = (await get(internApp)).json();
     assert.equal(d.range.days, 30);
     assert.equal(d.range.from, daysAgo(29));
-    for (const bad of ['1', '14', 'abc', '30.0', '-7', '']) {
+    for (const bad of ['1', '14', 'abc', '30.0', '-7', '', '007', '030', '0', '%207']) {
       const r = await get(internApp, `?days=${bad}`);
       assert.equal(r.statusCode, 400, `days=${bad}`);
       assert.equal(r.json().code, 'INVALID_INPUT');
@@ -194,9 +203,11 @@ describe('GET /api/dashboard', () => {
     const a = (await get(adminApp, '?days=7')).json();
     assert.deepEqual(a.warnings.filter((w) => w.code === 'NUMBER_CONFLICT').map((w) => w.href), [`/documents/${ids.n2}`, `/documents/${ids.c2}`]);
     const assets = i.warnings.filter((w) => w.code === 'BRAND_ASSET_MISSING');
-    assert.equal(assets.length, 1);
-    assert.equal(assets[0].href, '/settings/brands/acme');
-    assert.match(assets[0].message, /missing-watermark\.png/);
+    assert.deepEqual(assets, [{
+      code: 'BRAND_ASSET_MISSING',
+      message: 'Brand "acme": 5 asset files missing (seal, watermark, sign-ops, sign-md, sign-md (large)); placeholders are used',
+      href: '/settings/brands/acme',
+    }], 'one warning per brand; a brand whose files all exist has none');
   });
 
   test('warnings include templates that fail to load', () => {
