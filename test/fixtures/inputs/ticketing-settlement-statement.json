@@ -1,0 +1,11 @@
+{
+  "client": "Sample Society of Placeholders",
+  "engagement": "Sample Annual Meet 2026",
+  "date": "2026-11-05",
+  "tickets": [
+    { "type": "Members", "sold": 49, "price": 399 },
+    { "type": "Non-members", "sold": 57, "price": 499 },
+    { "type": "Student members", "sold": 23, "price": 299 }
+  ],
+  "feePercent": 1.5
+}

@@ -1,0 +1,73 @@
+{
+  "id": "expense-statement",
+  "version": 1,
+  "type": "Expense Statement",
+  "title": "Expense statement",
+  "description": "Letter to a client listing reimbursable expenses and agreed charges, with the amount in words and the bank account to pay into.",
+  "category": "statement",
+  "layoutProfile": "letter",
+  "partyType": "Client",
+  "partyKind": "client",
+  "sensitivity": "Internal",
+  "renditions": ["pdf", "html", "md"],
+  "numbering": { "series": "brand", "required": false },
+  "contact": "billing",
+  "params": {
+    "title": "EXPENSE REIMBURSEMENT STATEMENT",
+    "refLabel": "Ref: {number}",
+    "dateLabel": "Date:",
+    "toLabel": "To",
+    "subject": "Subject: Reimbursement of expenses for {event}",
+    "salutation": "Dear Sir/Madam,",
+    "opening": [
+      "We submit below the expenses and charges incurred by **{company}** in connection with **{event}**.",
+      "The details are as follows:"
+    ],
+    "table": {
+      "columns": [
+        { "label": "Particulars", "width": 170 },
+        { "label": "Calculation", "width": 230 },
+        { "label": "Amount ({currency})", "align": "right" }
+      ],
+      "totalLabel": "Total Amount Payable"
+    },
+    "wordsLabel": "Amount in Words",
+    "words": "{totalWords}.",
+    "closing": [
+      { "text": "The charges above are claimed under the terms of the agreement dated {agreementDate}.", "when": "agreementDate" },
+      "We request you to transfer **{total}/-** to the bank account below at your earliest convenience."
+    ],
+    "bankTitle": "Bank Details",
+    "bankColumns": [{ "label": "Particulars", "width": 170 }, { "label": "Details" }],
+    "bankFields": ["accountName", "bankName", "accountNumber", "ifsc", "branch"],
+    "bankLabels": { "accountName": "Account Name", "bankName": "Bank Name", "accountNumber": "Account Number", "ifsc": "IFSC", "branch": "Branch", "swift": "SWIFT" },
+    "showBank": true,
+    "signOff": {
+      "closing": "Thank you for your support and cooperation.",
+      "yours": "Yours faithfully,",
+      "forLine": "For {legalName}",
+      "lines": ["{legalName}"]
+    }
+  },
+  "fields": [
+    { "name": "brand", "source": "brand", "required": true },
+    { "name": "client", "label": "Client", "source": "entity:client", "required": true },
+    { "name": "engagement", "label": "Engagement", "source": "entity:engagement", "help": "Optional; stored on the document" },
+    { "name": "event", "label": "Event or engagement name", "source": "engagement.name", "type": "string", "required": true },
+    { "name": "recipient", "label": "Addressed to", "source": "client.name", "type": "text", "required": true, "help": "Name (and lines) under \"To\"" },
+    { "name": "date", "label": "Date", "source": "today", "type": "date", "required": true },
+    { "name": "subject", "label": "Subject line", "source": "ask", "type": "string" },
+    { "name": "agreementDate", "label": "Agreement date", "source": "ask", "type": "date" },
+    { "name": "items", "label": "Expenses", "source": "ask", "type": "array", "required": true,
+      "item": { "particulars": "string", "calculation": "text", "amount": "money" },
+      "help": "[{ particulars, calculation?, amount }]" },
+    { "name": "opening", "label": "Opening paragraphs", "source": "ask", "type": "array", "help": "Replace the default opening paragraphs" },
+    { "name": "closing", "label": "Closing paragraphs", "source": "ask", "type": "array", "help": "Replace the default closing paragraphs" },
+    { "name": "bankAccount", "label": "Bank account", "source": "ask", "type": "string", "help": "Brand account number or index (default: the first)" },
+    { "name": "bankDetails", "label": "Bank details", "source": "ask", "type": "array", "help": "[{ label, value }] rows replacing the brand account" },
+    { "name": "totals", "source": "computed:totals" },
+    { "name": "total", "source": "computed:total", "type": "money" },
+    { "name": "bank", "source": "computed:bank" },
+    { "name": "signatory", "source": "signatory", "required": true }
+  ]
+}

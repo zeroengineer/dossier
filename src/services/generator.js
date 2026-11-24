@@ -264,11 +264,25 @@ function seriesFor(ctx, meta, bid) {
   return sid;
 }
 
-/** Pattern variables: `{CLIENT}` = the party's `attrs.code`, `{CODE}` = `values.numberCode` (else `values.code`). */
+/** The first field value that is an engagement entity (stored as the document's engagement), else null. */
+function engagementOf(meta, values) {
+  for (const f of meta.fields) {
+    const src = parseSource(f.source);
+    if (src.kind !== 'entity' && f.type !== 'entity') continue;
+    const v = getPath(values, f.name);
+    if (isPlainObject(v) && v.kind === 'engagement' && Number.isSafeInteger(v.id)) return v;
+  }
+  return null;
+}
+
+/**
+ * Pattern variables: `{CLIENT}` = `values.clientCode`, else the party's `attrs.code`; `{CODE}` = `values.numberCode`
+ * (else `values.code`).
+ */
 function numberVars(meta, values, bid) {
   const party = partyOf(meta, values);
   const vars = { date: values.date ?? todayIso(), brandId: bid };
-  const client = party?.attrs?.code;
+  const client = typeof values.clientCode === 'string' && values.clientCode.trim() ? values.clientCode.trim() : party?.attrs?.code;
   if (client !== undefined && client !== null && client !== '') vars.client = String(client);
   const codeValue = values.numberCode ?? values.code;
   if (typeof codeValue === 'string' || typeof codeValue === 'number') vars.code = String(codeValue);
@@ -408,6 +422,7 @@ export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
   checkRelationTargets(ctx, rel.targets, existing?.id);
 
   const party = partyOf(meta, values);
+  const engagement = engagementOf(meta, values);
   const signer = signatoryEntity(ctx, meta, values);
   const issuer = issuerOf(ctx, bid);
   const docDate = typeof values.date === 'string' ? values.date : null;
@@ -419,6 +434,7 @@ export async function generateDocument(ctx, templateId, input = {}, opts = {}) {
     title: documentTitle(meta, values),
     partyId: party?.id ?? null,
     partyType: party ? meta.partyType : null,
+    engagementId: engagement?.id ?? null,
     issuingBrandId: bid,
     issuingEntityId: issuer,
     docDate,

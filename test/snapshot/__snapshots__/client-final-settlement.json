@@ -1,0 +1,870 @@
+{
+ "items": [
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 1,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 1,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 1,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 1,
+   "text": "Email: billing@example.com | www.example.com",
+   "x": 383,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175
+  },
+  {
+   "page": 1,
+   "text": "FINAL SETTLEMENT STATEMENT",
+   "x": 174,
+   "y": 101,
+   "baseline": 118,
+   "size": 16,
+   "font": "Manrope-ExtraBold",
+   "width": 247
+  },
+  {
+   "page": 1,
+   "text": "Event:",
+   "x": 37.5,
+   "y": 148,
+   "baseline": 157,
+   "size": 8.5,
+   "font": "Manrope-Regular",
+   "width": 25
+  },
+  {
+   "page": 1,
+   "text": "Example Fest 2026 - Sample College",
+   "x": 102.5,
+   "y": 148,
+   "baseline": 157,
+   "size": 8.5,
+   "font": "Manrope-Medium",
+   "width": 143.5
+  },
+  {
+   "page": 1,
+   "text": "Issued To:",
+   "x": 37.5,
+   "y": 169,
+   "baseline": 178,
+   "size": 8.5,
+   "font": "Manrope-Regular",
+   "width": 39.5
+  },
+  {
+   "page": 1,
+   "text": "Example Institute of Sample Studies",
+   "x": 102.5,
+   "y": 169,
+   "baseline": 178,
+   "size": 8.5,
+   "font": "Manrope-Medium",
+   "width": 143.5
+  },
+  {
+   "page": 1,
+   "text": "1 College Road, Example City 000000",
+   "x": 102.5,
+   "y": 184,
+   "baseline": 193.5,
+   "size": 8.5,
+   "font": "Manrope-Medium",
+   "width": 147
+  },
+  {
+   "page": 1,
+   "text": "Attn: Event Coordinator",
+   "x": 102.5,
+   "y": 199.5,
+   "baseline": 208.5,
+   "size": 8.5,
+   "font": "Manrope-Medium",
+   "width": 94
+  },
+  {
+   "page": 1,
+   "text": "Issued By:",
+   "x": 37.5,
+   "y": 220.5,
+   "baseline": 229.5,
+   "size": 8.5,
+   "font": "Manrope-Regular",
+   "width": 40
+  },
+  {
+   "page": 1,
+   "text": "ACME EVENTS PRIVATE LIMITED",
+   "x": 102.5,
+   "y": 220.5,
+   "baseline": 229.5,
+   "size": 8.5,
+   "font": "Manrope-Medium",
+   "width": 124
+  },
+  {
+   "page": 1,
+   "text": "Doc No.:",
+   "x": 307.5,
+   "y": 148,
+   "baseline": 157,
+   "size": 8.5,
+   "font": "Manrope-Regular",
+   "width": 32.5
+  },
+  {
+   "page": 1,
+   "text": "FSS/EISS/2026/001",
+   "x": 377.5,
+   "y": 148,
+   "baseline": 157,
+   "size": 8.5,
+   "font": "Manrope-Medium",
+   "width": 78
+  },
+  {
+   "page": 1,
+   "text": "Date:",
+   "x": 307.5,
+   "y": 166,
+   "baseline": 175,
+   "size": 8.5,
+   "font": "Manrope-Regular",
+   "width": 21
+  },
+  {
+   "page": 1,
+   "text": "13 July 2026",
+   "x": 377.5,
+   "y": 166,
+   "baseline": 175,
+   "size": 8.5,
+   "font": "Manrope-Medium",
+   "width": 48
+  },
+  {
+   "page": 1,
+   "text": "1. EVENT DETAILS",
+   "x": 45.5,
+   "y": 261,
+   "baseline": 271,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 78
+  },
+  {
+   "page": 1,
+   "text": "PARTICULAR",
+   "x": 45.5,
+   "y": 287.5,
+   "baseline": 297,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 55
+  },
+  {
+   "page": 1,
+   "text": "DETAILS",
+   "x": 185.5,
+   "y": 287.5,
+   "baseline": 297,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 36
+  },
+  {
+   "page": 1,
+   "text": "Event",
+   "x": 45.5,
+   "y": 311,
+   "baseline": 320.5,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 25
+  },
+  {
+   "page": 1,
+   "text": "Example Fest 2026 - Sample College",
+   "x": 185.5,
+   "y": 311,
+   "baseline": 320.5,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 150
+  },
+  {
+   "page": 1,
+   "text": "Services Provided",
+   "x": 45.5,
+   "y": 335,
+   "baseline": 344.5,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 78
+  },
+  {
+   "page": 1,
+   "text": "Event registration, digital ticketing, QR check-in and attendance tracking",
+   "x": 185.5,
+   "y": 335,
+   "baseline": 344.5,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 299
+  },
+  {
+   "page": 1,
+   "text": "Event Dates",
+   "x": 45.5,
+   "y": 358.5,
+   "baseline": 368.5,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 52
+  },
+  {
+   "page": 1,
+   "text": "9 July 2026 – 11 July 2026",
+   "x": 185.5,
+   "y": 358.5,
+   "baseline": 368.5,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 103.5
+  },
+  {
+   "page": 1,
+   "text": "2. PROFESSIONAL SERVICE FEE",
+   "x": 45.5,
+   "y": 421,
+   "baseline": 431,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 140
+  },
+  {
+   "page": 1,
+   "text": "PARTICULARS",
+   "x": 45.5,
+   "y": 447.5,
+   "baseline": 457,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 61
+  },
+  {
+   "page": 1,
+   "text": "AMOUNT (₹)",
+   "x": 495.5,
+   "y": 447.5,
+   "baseline": 457,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 54
+  },
+  {
+   "page": 1,
+   "text": "Professional Service Fee",
+   "x": 45.5,
+   "y": 471,
+   "baseline": 480.5,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 101
+  },
+  {
+   "page": 1,
+   "text": "15,000.00",
+   "x": 509,
+   "y": 471,
+   "baseline": 480.5,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 41
+  },
+  {
+   "page": 1,
+   "text": "GST @ 18%",
+   "x": 45.5,
+   "y": 495,
+   "baseline": 504.5,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 45.5
+  },
+  {
+   "page": 1,
+   "text": "2,700.00",
+   "x": 513.5,
+   "y": 495,
+   "baseline": 504.5,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 36.5
+  },
+  {
+   "page": 1,
+   "text": "Total Service Charges",
+   "x": 45.5,
+   "y": 518.5,
+   "baseline": 528.5,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 95
+  },
+  {
+   "page": 1,
+   "text": "17,700.00",
+   "x": 507,
+   "y": 518.5,
+   "baseline": 528.5,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 42.5
+  },
+  {
+   "page": 1,
+   "text": "Advance Payment Received",
+   "x": 45.5,
+   "y": 542.5,
+   "baseline": 552,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 119.5
+  },
+  {
+   "page": 1,
+   "text": "(10,500.00)",
+   "x": 497.5,
+   "y": 542.5,
+   "baseline": 552,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 52.5
+  },
+  {
+   "page": 1,
+   "text": "Balance Service Charges Payable",
+   "x": 45.5,
+   "y": 566.5,
+   "baseline": 576,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 143.5
+  },
+  {
+   "page": 1,
+   "text": "7,200.00",
+   "x": 510.5,
+   "y": 566.5,
+   "baseline": 576,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 39
+  },
+  {
+   "page": 1,
+   "text": "billing@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 142
+  },
+  {
+   "page": 1,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 1,
+   "text": "Page 1 of 2",
+   "x": 521.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 36
+  },
+  {
+   "page": 2,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 2,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 2,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 2,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 2,
+   "text": "Email: billing@example.com | www.example.com",
+   "x": 383,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175
+  },
+  {
+   "page": 2,
+   "text": "3. REIMBURSABLE EXPENSES",
+   "x": 45.5,
+   "y": 117,
+   "baseline": 127.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 131.5
+  },
+  {
+   "page": 2,
+   "text": "PARTICULARS",
+   "x": 45.5,
+   "y": 143.5,
+   "baseline": 153,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 61
+  },
+  {
+   "page": 2,
+   "text": "AMOUNT (₹)",
+   "x": 495.5,
+   "y": 143.5,
+   "baseline": 153,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 54
+  },
+  {
+   "page": 2,
+   "text": "Travel – Example City to Sample Town",
+   "x": 45.5,
+   "y": 167.5,
+   "baseline": 177,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 153.5
+  },
+  {
+   "page": 2,
+   "text": "3,066.50",
+   "x": 513,
+   "y": 167.5,
+   "baseline": 177,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 37
+  },
+  {
+   "page": 2,
+   "text": "Meals – 8 July 2026",
+   "x": 45.5,
+   "y": 191,
+   "baseline": 201,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 79.5
+  },
+  {
+   "page": 2,
+   "text": "200.00",
+   "x": 520.5,
+   "y": 191,
+   "baseline": 201,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 29.5
+  },
+  {
+   "page": 2,
+   "text": "Meals – 9 July 2026",
+   "x": 45.5,
+   "y": 215,
+   "baseline": 224.5,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 80
+  },
+  {
+   "page": 2,
+   "text": "160.00",
+   "x": 522,
+   "y": 215,
+   "baseline": 224.5,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 28
+  },
+  {
+   "page": 2,
+   "text": "Travel – Sample Town to Example City",
+   "x": 45.5,
+   "y": 239,
+   "baseline": 248.5,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 153.5
+  },
+  {
+   "page": 2,
+   "text": "3,119.00",
+   "x": 518,
+   "y": 239,
+   "baseline": 248.5,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 32
+  },
+  {
+   "page": 2,
+   "text": "Messaging charges (304 messages)",
+   "x": 45.5,
+   "y": 262.5,
+   "baseline": 272,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 150.5
+  },
+  {
+   "page": 2,
+   "text": "304.00",
+   "x": 521,
+   "y": 262.5,
+   "baseline": 272,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 29
+  },
+  {
+   "page": 2,
+   "text": "Total Reimbursable Expenses",
+   "x": 45.5,
+   "y": 286.5,
+   "baseline": 296,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 127.5
+  },
+  {
+   "page": 2,
+   "text": "6,849.50",
+   "x": 511,
+   "y": 286.5,
+   "baseline": 296,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 38.5
+  },
+  {
+   "page": 2,
+   "text": "4. FINAL SETTLEMENT SUMMARY",
+   "x": 45.5,
+   "y": 331.5,
+   "baseline": 341.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 147.5
+  },
+  {
+   "page": 2,
+   "text": "PARTICULARS",
+   "x": 45.5,
+   "y": 358,
+   "baseline": 367.5,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 61
+  },
+  {
+   "page": 2,
+   "text": "AMOUNT (₹)",
+   "x": 495.5,
+   "y": 358,
+   "baseline": 367.5,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 54
+  },
+  {
+   "page": 2,
+   "text": "Balance Professional Service Charges",
+   "x": 45.5,
+   "y": 382,
+   "baseline": 391.5,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 2,
+   "text": "7,200.00",
+   "x": 514,
+   "y": 382,
+   "baseline": 391.5,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 35.5
+  },
+  {
+   "page": 2,
+   "text": "Total Reimbursable Expenses",
+   "x": 45.5,
+   "y": 405.5,
+   "baseline": 415,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 121.5
+  },
+  {
+   "page": 2,
+   "text": "6,849.50",
+   "x": 513,
+   "y": 405.5,
+   "baseline": 415,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 37
+  },
+  {
+   "page": 2,
+   "text": "Total Amount Payable",
+   "x": 45.5,
+   "y": 429.5,
+   "baseline": 439,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 94.5
+  },
+  {
+   "page": 2,
+   "text": "14,049.50",
+   "x": 507,
+   "y": 429.5,
+   "baseline": 439,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 42.5
+  },
+  {
+   "page": 2,
+   "text": "Total Amount Payable to Acme Events Private Limited:",
+   "x": 161.5,
+   "y": 477,
+   "baseline": 488.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 272.5
+  },
+  {
+   "page": 2,
+   "text": "₹14,049.50",
+   "x": 246,
+   "y": 495,
+   "baseline": 515.5,
+   "size": 19,
+   "font": "Manrope-ExtraBold",
+   "width": 103.5
+  },
+  {
+   "page": 2,
+   "text": "(Rupees Fourteen Thousand Forty Nine and Fifty Paise Only)",
+   "x": 172,
+   "y": 519,
+   "baseline": 529,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 251.5
+  },
+  {
+   "page": 2,
+   "text": "This statement is issued under the agreement between Acme Events Private Limited and Example Institute of Sample Studies",
+   "x": 47.5,
+   "y": 555,
+   "baseline": 564.5,
+   "size": 8.5,
+   "font": "Manrope-Regular",
+   "width": 500.5
+  },
+  {
+   "page": 2,
+   "text": "dated 28 June 2026.",
+   "x": 47.5,
+   "y": 571.5,
+   "baseline": 580.5,
+   "size": 8.5,
+   "font": "Manrope-Regular",
+   "width": 79
+  },
+  {
+   "page": 2,
+   "text": "The amount above is the balance of the professional service fee together with the reimbursable expenses incurred for Example",
+   "x": 47.5,
+   "y": 603.5,
+   "baseline": 612.5,
+   "size": 8.5,
+   "font": "Manrope-Regular",
+   "width": 500.5
+  },
+  {
+   "page": 2,
+   "text": "Fest 2026 - Sample College. A payment of ₹14,049.50 (Rupees Fourteen Thousand Forty Nine and Fifty Paise Only) completes",
+   "x": 47.5,
+   "y": 619.5,
+   "baseline": 628.5,
+   "size": 8.5,
+   "font": "Manrope-Regular",
+   "width": 501
+  },
+  {
+   "page": 2,
+   "text": "the final settlement of this engagement.",
+   "x": 47.5,
+   "y": 636,
+   "baseline": 645,
+   "size": 8.5,
+   "font": "Manrope-Regular",
+   "width": 157
+  },
+  {
+   "page": 2,
+   "text": "billing@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 142
+  },
+  {
+   "page": 2,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 2,
+   "text": "Page 2 of 2",
+   "x": 520.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 2,
+   "text": "This document is the final settlement statement for Example Fest 2026 - Sample College. It should be read together with the",
+   "x": 37.5,
+   "y": 763,
+   "baseline": 772,
+   "size": 8.5,
+   "font": "Manrope-Regular",
+   "width": 520.5
+  },
+  {
+   "page": 2,
+   "text": "agreement dated 28 June 2026.",
+   "x": 37.5,
+   "y": 778,
+   "baseline": 787,
+   "size": 8.5,
+   "font": "Manrope-Regular",
+   "width": 124
+  }
+ ],
+ "images": [
+  {
+   "page": 1,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 2,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  }
+ ]
+}

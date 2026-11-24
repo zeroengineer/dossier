@@ -1,0 +1,86 @@
+{
+  "id": "client-final-settlement",
+  "version": 1,
+  "type": "Settlement Statement",
+  "title": "Client final settlement",
+  "description": "Final settlement of an engagement with a client: service fee with GST, advance received, reimbursable expenses and the total payable, settling earlier invoices.",
+  "category": "statement",
+  "layoutProfile": "letter",
+  "partyType": "Client",
+  "partyKind": "client",
+  "sensitivity": "Internal",
+  "renditions": ["pdf", "html", "md"],
+  "numbering": { "series": "brand", "required": true },
+  "contact": "billing",
+  "params": {
+    "title": "FINAL SETTLEMENT STATEMENT",
+    "metaLeft": [
+      { "label": "Event:", "value": "{event}" },
+      { "label": "Issued To:", "value": "{issuedTo}" },
+      { "label": "Issued By:", "value": "{companyUpper}" }
+    ],
+    "metaRight": [
+      { "label": "Doc No.:", "value": "{number}" },
+      { "label": "Date:", "value": "{date}" }
+    ],
+    "sections": {
+      "details": "1. Event Details",
+      "fees": "2. Professional Service Fee",
+      "expenses": "3. Reimbursable Expenses",
+      "summary": "4. Final Settlement Summary"
+    },
+    "labels": {
+      "particular": "PARTICULAR",
+      "details": "DETAILS",
+      "particulars": "PARTICULARS",
+      "amount": "AMOUNT ({currency})",
+      "fee": "Professional Service Fee",
+      "gst": "GST @ {gstPercent}%",
+      "serviceTotal": "Total Service Charges",
+      "advance": "Advance Payment Received",
+      "balance": "Balance Service Charges Payable",
+      "expensesTotal": "Total Reimbursable Expenses",
+      "summaryBalance": "Balance Professional Service Charges",
+      "totalPayable": "Total Amount Payable"
+    },
+    "detailRows": [
+      { "label": "Event", "value": "{event}" },
+      { "label": "Services Provided", "value": "{services}" },
+      { "label": "Event Dates", "value": "{eventDates}" }
+    ],
+    "breakBeforeExpenses": true,
+    "totalLabel": "Total Amount Payable to {company}:",
+    "totalWords": "({totalWords})",
+    "note": [
+      { "text": "This statement is issued under the agreement between {company} and {client} dated {agreementDate}.", "when": "agreementDate" },
+      "The amount above is the balance of the professional service fee together with the reimbursable expenses incurred for {event}. A payment of {total} ({totalWords}) completes the final settlement of this engagement."
+    ],
+    "footnote": [
+      "This document is the final settlement statement for {event}.",
+      { "text": "It should be read together with the agreement dated {agreementDate}.", "when": "agreementDate" }
+    ]
+  },
+  "fields": [
+    { "name": "brand", "source": "brand", "required": true },
+    { "name": "client", "label": "Client", "source": "entity:client", "required": true },
+    { "name": "clientCode", "label": "Client code (in the number)", "source": "client.attrs.code", "type": "string", "required": true,
+      "help": "Used for {CLIENT} in FSS/{CLIENT}/{YYYY}/{###}" },
+    { "name": "engagement", "label": "Engagement", "source": "entity:engagement", "help": "The event or engagement being settled (stored on the document)" },
+    { "name": "event", "label": "Event name", "source": "engagement.name", "type": "string", "required": true },
+    { "name": "issuedTo", "label": "Issued to", "source": "client.name", "type": "text", "required": true, "help": "Name and further lines (address, attention) of the client" },
+    { "name": "date", "label": "Date", "source": "today", "type": "date", "required": true },
+    { "name": "services", "label": "Services provided", "source": "ask", "type": "text" },
+    { "name": "eventDates", "label": "Event dates", "source": "ask", "type": "string", "help": "e.g. \"9 July 2026 – 11 July 2026\"" },
+    { "name": "details", "label": "Event detail rows", "source": "ask", "type": "array", "help": "[{ label, value }]; replaces the default rows" },
+    { "name": "agreementDate", "label": "Agreement date", "source": "ask", "type": "date" },
+    { "name": "serviceFee", "label": "Professional service fee", "source": "ask", "type": "money", "required": true },
+    { "name": "gstPercent", "label": "GST on the fee (%)", "source": "ask", "type": "number", "default": 18 },
+    { "name": "advance", "label": "Advance received", "source": "ask", "type": "money" },
+    { "name": "expenses", "label": "Reimbursable expenses", "source": "ask", "type": "array", "item": { "description": "text", "amount": "money" }, "help": "[{ description, amount }]" },
+    { "name": "invoices", "label": "Invoices settled", "source": "ask", "type": "array", "help": "Document ids of the invoices (and debit notes) this statement settles" },
+    { "name": "note", "label": "Settlement note", "source": "ask", "type": "array", "help": "Paragraphs replacing the default note" },
+    { "name": "settlement", "source": "computed:settlement" },
+    { "name": "total", "source": "computed:total", "type": "money" }
+  ],
+  "relations": [{ "type": "settles", "field": "invoices", "optional": true }]
+}

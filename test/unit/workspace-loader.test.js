@@ -214,9 +214,13 @@ test('the shipped example workspace validates and is fully wired', () => {
   assert.deepEqual(b.tax.modes[2].rates, [{ label: 'IGST @ 18%', rate: 0.18 }]);
   assert.equal(b.tax.defaultHsn, '998596');
   const templateIds = ['invoice', 'debit-note', 'receipt', 'internship-certificate',
-    'experience-certificate', 'relieving-letter', 'employee-final-settlement', 'ticketing-settlement-statement',
-    'client-final-settlement', 'remittance-statement', 'expense-statement', 'mou', 'board-resolution', 'proposal', 'pricing-report'];
+    'experience-certificate', 'relieving-letter', 'client-final-settlement', 'mou', 'board-resolution', 'proposal', 'pricing-report'];
   for (const t of templateIds) assert.ok(ws.series.has(b.series[t]), `series for ${t}`);
+  // Statements other than the client final settlement are unnumbered unless a brand maps a series.
+  for (const t of ['employee-final-settlement', 'ticketing-settlement-statement', 'remittance-statement', 'expense-statement']) {
+    assert.equal(b.series[t], undefined, t);
+  }
+  assert.equal(b.series['client-final-settlement'], 'settlement');
   // Offer letters are unnumbered unless a brand maps a series; certificates and the relieving letter share hr-cert.
   assert.equal(b.series['offer-letter'], undefined);
   assert.equal(b.series['internship-offer'], undefined);

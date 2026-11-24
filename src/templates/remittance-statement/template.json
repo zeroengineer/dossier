@@ -1,0 +1,60 @@
+{
+  "id": "remittance-statement",
+  "version": 1,
+  "type": "Remittance Statement",
+  "title": "Remittance statement",
+  "description": "Letter confirming that an amount collected for a client was transferred to the client's account, with the transaction and account details.",
+  "category": "statement",
+  "layoutProfile": "letter",
+  "partyType": "Client",
+  "partyKind": "client",
+  "sensitivity": "Internal",
+  "renditions": ["pdf", "html", "md"],
+  "numbering": { "series": "brand", "required": false },
+  "contact": "billing",
+  "params": {
+    "refLabel": "Ref: {number}",
+    "dateLabel": "Date: {date}",
+    "salutation": "To Whom It May Concern",
+    "subject": "Subject: Payment Remittance Statement – {particulars}",
+    "amountSuffix": "/-",
+    "paragraphs": [
+      "This is to confirm that an amount of **{amount}** ({amountWords}) {purpose} was transferred by **{company}** to the account of **{recipient}** given below.",
+      { "text": "The payment was processed through **{processedThrough}**.", "when": "processedThrough" }
+    ],
+    "detailsIntro": "The details of the transaction are as follows:",
+    "detailRows": [
+      { "label": "Date of Transaction", "value": "{transferDate}" },
+      { "label": "Particulars", "value": "{particulars}" },
+      { "label": "Amount Transferred", "value": "{amount}" },
+      { "label": "Transaction Reference", "value": "{transactionRef}" }
+    ],
+    "accountTitle": "Receiving Account Details:",
+    "closing": ["The above amount is the {closingPhrase} remitted by **{company}** to **{recipient}**."],
+    "signature": { "forLine": "For {legalName}" },
+    "footer": { "centerStyle": "caps" }
+  },
+  "fields": [
+    { "name": "brand", "source": "brand", "required": true },
+    { "name": "client", "label": "Client", "source": "entity:client", "required": true },
+    { "name": "engagement", "label": "Engagement", "source": "entity:engagement", "help": "Optional; stored on the document" },
+    { "name": "recipient", "label": "Account holder", "source": "client.name", "type": "string", "required": true, "help": "Whose account received the money" },
+    { "name": "date", "label": "Date", "source": "today", "type": "date", "required": true },
+    { "name": "transferDate", "label": "Date of transaction", "source": "ask", "type": "date", "help": "Default: the statement date" },
+    { "name": "particulars", "label": "Particulars", "source": "ask", "type": "string", "required": true, "help": "e.g. \"Event registrations – first transfer\"" },
+    { "name": "amount", "label": "Amount transferred", "source": "ask", "type": "money", "required": true },
+    { "name": "purpose", "label": "Purpose phrase", "source": "ask", "type": "string", "default": "collected on behalf of the account holder",
+      "help": "Completes \"an amount of … (…) <purpose> was transferred …\"" },
+    { "name": "processedThrough", "label": "Processed through", "source": "ask", "type": "string", "help": "Optional platform or payment gateway" },
+    { "name": "transactionRef", "label": "Transaction reference", "source": "ask", "type": "string" },
+    { "name": "closingPhrase", "label": "Closing phrase", "source": "ask", "type": "string", "default": "collected amount" },
+    { "name": "account", "label": "Receiving account", "source": "ask", "type": "array", "help": "[{ label, value }] rows of the receiving bank account (name, number, bank, branch …)" },
+    { "name": "accountRows", "source": "computed:accountRows" },
+    { "name": "subject", "label": "Subject line", "source": "ask", "type": "string" },
+    { "name": "references", "label": "Documents paid", "source": "ask", "type": "array", "help": "Optional document ids this remittance pays" },
+    { "name": "total", "source": "computed:total", "type": "money" },
+    { "name": "signatory", "source": "signatory", "required": true },
+    { "name": "seal", "label": "Company seal", "source": "ask", "type": "boolean", "default": true }
+  ],
+  "relations": [{ "type": "pays", "field": "references", "optional": true }]
+}

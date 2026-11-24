@@ -1,0 +1,11 @@
+{
+  "client": "Example Institute of Sample Studies",
+  "engagement": "Example Conference 2026 - Sample College",
+  "date": "2026-09-15",
+  "agreementDate": "2026-08-01",
+  "items": [
+    { "particulars": "Travel Expenses", "calculation": "₹2,000 × 3 persons", "amount": 6000 },
+    { "particulars": "Food Expenses", "calculation": "Meals on the evening before and the morning of the event", "amount": 1500 },
+    { "particulars": "Messaging Charges", "calculation": "456 messages × ₹1 per message", "amount": 456 }
+  ]
+}

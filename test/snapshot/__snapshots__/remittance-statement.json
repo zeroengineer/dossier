@@ -1,0 +1,517 @@
+{
+ "items": [
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 1,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 1,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 1,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 1,
+   "text": "Email: billing@example.com | www.example.com",
+   "x": 383,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175
+  },
+  {
+   "page": 1,
+   "text": "Date: 10 April 2026",
+   "x": 472,
+   "y": 124,
+   "baseline": 134,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 86
+  },
+  {
+   "page": 1,
+   "text": "To Whom It May Concern",
+   "x": 37.5,
+   "y": 154,
+   "baseline": 164.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 119
+  },
+  {
+   "page": 1,
+   "text": "Subject: Payment Remittance Statement – Sample Annual Meet 2026 – First Transfer",
+   "x": 37.5,
+   "y": 185.5,
+   "baseline": 197,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 427
+  },
+  {
+   "page": 1,
+   "text": "This is to confirm that an amount of",
+   "x": 37.5,
+   "y": 218,
+   "baseline": 228.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 164
+  },
+  {
+   "page": 1,
+   "text": "₹5,00,000/-",
+   "x": 203.5,
+   "y": 218,
+   "baseline": 228.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 59.5
+  },
+  {
+   "page": 1,
+   "text": "(Rupees Five Lakh Only) collected towards Sample Annual Meet",
+   "x": 265.5,
+   "y": 218,
+   "baseline": 228.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 292.5
+  },
+  {
+   "page": 1,
+   "text": "2026 registrations was transferred by",
+   "x": 37.5,
+   "y": 238.5,
+   "baseline": 249.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 182.5
+  },
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 224.5,
+   "y": 238.5,
+   "baseline": 249.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 144.5
+  },
+  {
+   "page": 1,
+   "text": "to the account of",
+   "x": 374,
+   "y": 238.5,
+   "baseline": 249.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 87
+  },
+  {
+   "page": 1,
+   "text": "Sample Society of",
+   "x": 465.5,
+   "y": 238.5,
+   "baseline": 249.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 92.5
+  },
+  {
+   "page": 1,
+   "text": "Placeholders",
+   "x": 37.5,
+   "y": 259.5,
+   "baseline": 270,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 63
+  },
+  {
+   "page": 1,
+   "text": "given below. The payment was processed through",
+   "x": 102.5,
+   "y": 259.5,
+   "baseline": 270,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 228.5
+  },
+  {
+   "page": 1,
+   "text": "Example Payments",
+   "x": 333,
+   "y": 259.5,
+   "baseline": 270,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 91
+  },
+  {
+   "page": 1,
+   "text": ".",
+   "x": 424,
+   "y": 259.5,
+   "baseline": 270,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 1,
+   "text": "The details of the transaction are as follows:",
+   "x": 37.5,
+   "y": 296,
+   "baseline": 306.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 203
+  },
+  {
+   "page": 1,
+   "text": "Date of Transaction",
+   "x": 55.5,
+   "y": 318,
+   "baseline": 328.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 90.5
+  },
+  {
+   "page": 1,
+   "text": ": 10 April 2026",
+   "x": 185.5,
+   "y": 318,
+   "baseline": 328.5,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 68
+  },
+  {
+   "page": 1,
+   "text": "Particulars",
+   "x": 55.5,
+   "y": 337,
+   "baseline": 347.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 49.5
+  },
+  {
+   "page": 1,
+   "text": ": Sample Annual Meet 2026 – First Transfer",
+   "x": 185.5,
+   "y": 337,
+   "baseline": 347.5,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 203.5
+  },
+  {
+   "page": 1,
+   "text": "Amount Transferred",
+   "x": 55.5,
+   "y": 356,
+   "baseline": 366.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 92.5
+  },
+  {
+   "page": 1,
+   "text": ": ₹5,00,000/-",
+   "x": 185.5,
+   "y": 356,
+   "baseline": 366.5,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 65.5
+  },
+  {
+   "page": 1,
+   "text": "Receiving Account Details:",
+   "x": 37.5,
+   "y": 393,
+   "baseline": 403.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 130.5
+  },
+  {
+   "page": 1,
+   "text": "Account Name",
+   "x": 55.5,
+   "y": 415,
+   "baseline": 425.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 67.5
+  },
+  {
+   "page": 1,
+   "text": ": Sample Society of Placeholders",
+   "x": 185.5,
+   "y": 415,
+   "baseline": 425.5,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 157
+  },
+  {
+   "page": 1,
+   "text": "Account Number",
+   "x": 55.5,
+   "y": 434,
+   "baseline": 444.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 77.5
+  },
+  {
+   "page": 1,
+   "text": ": 000000000000",
+   "x": 185.5,
+   "y": 434,
+   "baseline": 444.5,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 84.5
+  },
+  {
+   "page": 1,
+   "text": "Bank",
+   "x": 55.5,
+   "y": 453,
+   "baseline": 463.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 22.5
+  },
+  {
+   "page": 1,
+   "text": ": Example Bank",
+   "x": 185.5,
+   "y": 453,
+   "baseline": 463.5,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 73
+  },
+  {
+   "page": 1,
+   "text": "Branch",
+   "x": 55.5,
+   "y": 472,
+   "baseline": 482.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 32.5
+  },
+  {
+   "page": 1,
+   "text": ": Example Campus Branch",
+   "x": 185.5,
+   "y": 472,
+   "baseline": 482.5,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 124.5
+  },
+  {
+   "page": 1,
+   "text": "Location",
+   "x": 55.5,
+   "y": 491,
+   "baseline": 501.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 40.5
+  },
+  {
+   "page": 1,
+   "text": ": Example City",
+   "x": 185.5,
+   "y": 491,
+   "baseline": 501.5,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 69
+  },
+  {
+   "page": 1,
+   "text": "The above amount is the collected amount remitted by",
+   "x": 37.5,
+   "y": 528,
+   "baseline": 538.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 265
+  },
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 306.5,
+   "y": 528,
+   "baseline": 538.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 142.5
+  },
+  {
+   "page": 1,
+   "text": "to",
+   "x": 453,
+   "y": 528,
+   "baseline": 538.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 9.5
+  },
+  {
+   "page": 1,
+   "text": "Sample Society of",
+   "x": 466.5,
+   "y": 528,
+   "baseline": 538.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 91
+  },
+  {
+   "page": 1,
+   "text": "Placeholders",
+   "x": 37.5,
+   "y": 548.5,
+   "baseline": 559.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 63
+  },
+  {
+   "page": 1,
+   "text": ".",
+   "x": 100.5,
+   "y": 548.5,
+   "baseline": 559.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 1,
+   "text": "For Acme Events Private Limited",
+   "x": 37.5,
+   "y": 599.5,
+   "baseline": 610,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 154
+  },
+  {
+   "page": 1,
+   "text": "Alex Example",
+   "x": 37.5,
+   "y": 677.5,
+   "baseline": 688,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 64
+  },
+  {
+   "page": 1,
+   "text": "Chief Operating Officer",
+   "x": 37.5,
+   "y": 692.5,
+   "baseline": 702,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 97.5
+  },
+  {
+   "page": 1,
+   "text": "billing@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 142
+  },
+  {
+   "page": 1,
+   "text": "C O N F I D E N T I A L",
+   "x": 264,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-SemiBold",
+   "width": 65.5
+  },
+  {
+   "page": 1,
+   "text": "Page 1 of 1",
+   "x": 523,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 35
+  }
+ ],
+ "images": [
+  {
+   "page": 1,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 1,
+   "x": 37.5,
+   "y": 621.5,
+   "width": 188.5,
+   "height": 46
+  },
+  {
+   "page": 1,
+   "x": 470,
+   "y": 613.5,
+   "width": 83.5,
+   "height": 83.5
+  }
+ ]
+}

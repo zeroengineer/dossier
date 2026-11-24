@@ -1,0 +1,74 @@
+{
+  "id": "employee-final-settlement",
+  "version": 1,
+  "type": "Final Settlement",
+  "title": "Employee final settlement",
+  "description": "Final salary settlement for an employee: salary details, attendance and other deductions, net payable and a signature row.",
+  "category": "statement",
+  "layoutProfile": "letter",
+  "partyType": "Person",
+  "partyKind": "person",
+  "sensitivity": "Confidential",
+  "renditions": ["pdf", "html", "md"],
+  "numbering": { "series": "brand", "required": false },
+  "contact": "hr",
+  "params": {
+    "title": "FINAL SETTLEMENT STATEMENT",
+    "meta": [
+      [{ "label": "Employee Name:", "value": "{employeeName}" }, { "label": "Department:", "value": "{department}" }],
+      [{ "label": "Designation:", "value": "{designation}" }, { "label": "Working Days:", "value": "{workingDaysText}" }],
+      [{ "label": "Settlement Period:", "value": "{period}" }, { "label": "Reference:", "value": "{number}" }]
+    ],
+    "periodText": "{periodStart} to {periodEnd}",
+    "dayUnits": { "one": "day", "other": "days" },
+    "columnLabels": ["Particulars", "Amount"],
+    "salaryTable": {
+      "title": "Salary Details",
+      "monthly": "Monthly Salary",
+      "workingDays": "Working Days in the Period",
+      "perDay": "Per Day Salary  ({monthly} ÷ {workingDays})",
+      "halfDay": "Half-Day Salary  ({perDay} ÷ 2)"
+    },
+    "showHalfDay": true,
+    "deductionTable": {
+      "title": "Deductions",
+      "attendance": "{label}  ({daysText} × {rule} salary {rate})",
+      "other": "{label}",
+      "total": "Total Deductions"
+    },
+    "ruleNames": { "half": "half-day", "full": "full-day" },
+    "calculationTable": {
+      "title": "Final Salary Calculation",
+      "gross": "Gross Monthly Salary",
+      "addition": "Add: {label}",
+      "deductions": "Less: Total Deductions",
+      "deductionsValue": "– {deductionsFixed}"
+    },
+    "net": { "label": "Net Salary Payable", "note": "({monthly} – {deductions} deductions)" },
+    "declaration": null,
+    "forLine": "For {legalName}",
+    "signatureRow": ["Authorized Signatory", "Date", "Employee Signature"]
+  },
+  "fields": [
+    { "name": "brand", "source": "brand", "required": true },
+    { "name": "employee", "label": "Employee", "source": "entity:person", "required": true },
+    { "name": "employeeName", "label": "Name on the statement", "source": "employee.name", "type": "string", "required": true },
+    { "name": "designation", "label": "Designation", "source": "employee.attrs.designation", "type": "string", "required": true },
+    { "name": "department", "label": "Department", "source": "employee.attrs.department", "type": "string" },
+    { "name": "date", "label": "Date", "source": "today", "type": "date", "required": true },
+    { "name": "periodStart", "label": "Settlement period from", "source": "ask", "type": "date", "required": true },
+    { "name": "periodEnd", "label": "Settlement period to", "source": "ask", "type": "date", "required": true },
+    { "name": "period", "label": "Period text", "source": "ask", "type": "string", "help": "Replaces the printed period, e.g. \"1 to 31 October 2026\"" },
+    { "name": "monthlySalary", "label": "Monthly salary", "source": "ask", "type": "money", "required": true },
+    { "name": "workingDays", "label": "Working days in the period", "source": "ask", "type": "number", "required": true },
+    { "name": "attendance", "label": "Attendance deductions", "source": "ask", "type": "array",
+      "item": { "label": "string", "days": "number", "rule": "string" },
+      "help": "[{ label, days, rule: \"half\" | \"full\" }]: days × the half-day or per-day salary" },
+    { "name": "deductions", "label": "Other deductions", "source": "ask", "type": "array", "item": { "label": "string", "amount": "money" }, "help": "[{ label, amount }]" },
+    { "name": "additions", "label": "Additions", "source": "ask", "type": "array", "item": { "label": "string", "amount": "money" }, "help": "[{ label, amount }] added to the gross salary" },
+    { "name": "declaration", "label": "Declaration", "source": "ask", "type": "text", "help": "Optional declaration printed below the net amount" },
+    { "name": "settlement", "source": "computed:settlement" },
+    { "name": "total", "source": "computed:total", "type": "money" },
+    { "name": "signatory", "source": "signatory", "required": true }
+  ]
+}

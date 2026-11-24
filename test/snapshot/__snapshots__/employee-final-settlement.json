@@ -1,0 +1,510 @@
+{
+ "items": [
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 1,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 1,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 1,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 1,
+   "text": "Email: hr@example.com | www.example.com",
+   "x": 397,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 161
+  },
+  {
+   "page": 1,
+   "text": "FINAL SETTLEMENT STATEMENT",
+   "x": 186,
+   "y": 101,
+   "baseline": 116.5,
+   "size": 14.5,
+   "font": "Manrope-ExtraBold",
+   "width": 224
+  },
+  {
+   "page": 1,
+   "text": "Employee Name:",
+   "x": 37.5,
+   "y": 139,
+   "baseline": 149,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 76.5
+  },
+  {
+   "page": 1,
+   "text": "Jordan Placeholder",
+   "x": 152.5,
+   "y": 139,
+   "baseline": 149,
+   "size": 9.5,
+   "font": "Manrope-Medium",
+   "width": 85.5
+  },
+  {
+   "page": 1,
+   "text": "Department:",
+   "x": 342.5,
+   "y": 139,
+   "baseline": 149,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 59
+  },
+  {
+   "page": 1,
+   "text": "Operations",
+   "x": 427.5,
+   "y": 139,
+   "baseline": 149,
+   "size": 9.5,
+   "font": "Manrope-Medium",
+   "width": 50
+  },
+  {
+   "page": 1,
+   "text": "Designation:",
+   "x": 37.5,
+   "y": 163,
+   "baseline": 173,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 59.5
+  },
+  {
+   "page": 1,
+   "text": "Event Coordinator",
+   "x": 152.5,
+   "y": 163,
+   "baseline": 173,
+   "size": 9.5,
+   "font": "Manrope-Medium",
+   "width": 81
+  },
+  {
+   "page": 1,
+   "text": "Working Days:",
+   "x": 342.5,
+   "y": 163,
+   "baseline": 173,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 65.5
+  },
+  {
+   "page": 1,
+   "text": "25 days",
+   "x": 427.5,
+   "y": 163,
+   "baseline": 173,
+   "size": 9.5,
+   "font": "Manrope-Medium",
+   "width": 34
+  },
+  {
+   "page": 1,
+   "text": "Settlement Period:",
+   "x": 37.5,
+   "y": 187,
+   "baseline": 197,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 87
+  },
+  {
+   "page": 1,
+   "text": "1 October 2026 to 31 October 2026",
+   "x": 152.5,
+   "y": 187,
+   "baseline": 197,
+   "size": 9.5,
+   "font": "Manrope-Medium",
+   "width": 152.5
+  },
+  {
+   "page": 1,
+   "text": "Salary Details",
+   "x": 47.5,
+   "y": 233.5,
+   "baseline": 244,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 66.5
+  },
+  {
+   "page": 1,
+   "text": "• Monthly Salary",
+   "x": 47.5,
+   "y": 260.5,
+   "baseline": 270.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 75
+  },
+  {
+   "page": 1,
+   "text": "₹20,000",
+   "x": 508.5,
+   "y": 260.5,
+   "baseline": 270.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 39.5
+  },
+  {
+   "page": 1,
+   "text": "• Working Days in the Period",
+   "x": 47.5,
+   "y": 286.5,
+   "baseline": 296.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 125.5
+  },
+  {
+   "page": 1,
+   "text": "25 days",
+   "x": 513.5,
+   "y": 286.5,
+   "baseline": 296.5,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 34
+  },
+  {
+   "page": 1,
+   "text": "• Per Day Salary (₹20,000 ÷ 25)",
+   "x": 47.5,
+   "y": 312.5,
+   "baseline": 322.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 140.5
+  },
+  {
+   "page": 1,
+   "text": "₹800",
+   "x": 524,
+   "y": 312.5,
+   "baseline": 322.5,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 23.5
+  },
+  {
+   "page": 1,
+   "text": "• Half-Day Salary (₹800 ÷ 2)",
+   "x": 47.5,
+   "y": 338.5,
+   "baseline": 348.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 125.5
+  },
+  {
+   "page": 1,
+   "text": "₹400",
+   "x": 524,
+   "y": 338.5,
+   "baseline": 348.5,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 23.5
+  },
+  {
+   "page": 1,
+   "text": "Deductions",
+   "x": 47.5,
+   "y": 385.5,
+   "baseline": 396,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 56
+  },
+  {
+   "page": 1,
+   "text": "• Late arrival (16 days × half-day salary ₹400)",
+   "x": 47.5,
+   "y": 412.5,
+   "baseline": 422.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 199
+  },
+  {
+   "page": 1,
+   "text": "₹6,400.00",
+   "x": 500.5,
+   "y": 412.5,
+   "baseline": 422.5,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 47.5
+  },
+  {
+   "page": 1,
+   "text": "• Loss of pay (2 days × full-day salary ₹800)",
+   "x": 47.5,
+   "y": 438.5,
+   "baseline": 448.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 193
+  },
+  {
+   "page": 1,
+   "text": "₹1,600.00",
+   "x": 502.5,
+   "y": 438.5,
+   "baseline": 448.5,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 45
+  },
+  {
+   "page": 1,
+   "text": "• Short working hours (3 days × half-day salary ₹400)",
+   "x": 47.5,
+   "y": 464.5,
+   "baseline": 474.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 234.5
+  },
+  {
+   "page": 1,
+   "text": "₹1,200.00",
+   "x": 503,
+   "y": 464.5,
+   "baseline": 474.5,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 45
+  },
+  {
+   "page": 1,
+   "text": "Total Deductions",
+   "x": 47.5,
+   "y": 490.5,
+   "baseline": 500.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 78.5
+  },
+  {
+   "page": 1,
+   "text": "₹9,200.00",
+   "x": 499.5,
+   "y": 490.5,
+   "baseline": 500.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 48
+  },
+  {
+   "page": 1,
+   "text": "Final Salary Calculation",
+   "x": 47.5,
+   "y": 537.5,
+   "baseline": 548,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 113.5
+  },
+  {
+   "page": 1,
+   "text": "• Gross Monthly Salary",
+   "x": 47.5,
+   "y": 564.5,
+   "baseline": 574.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 102.5
+  },
+  {
+   "page": 1,
+   "text": "₹20,000.00",
+   "x": 494.5,
+   "y": 564.5,
+   "baseline": 574.5,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 53.5
+  },
+  {
+   "page": 1,
+   "text": "• Less: Total Deductions",
+   "x": 47.5,
+   "y": 590.5,
+   "baseline": 600.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 109.5
+  },
+  {
+   "page": 1,
+   "text": "– ₹9,200.00",
+   "x": 493.5,
+   "y": 590.5,
+   "baseline": 600.5,
+   "size": 9.5,
+   "font": "Manrope-SemiBold",
+   "width": 54
+  },
+  {
+   "page": 1,
+   "text": "Net Salary Payable",
+   "x": 47.5,
+   "y": 639,
+   "baseline": 650,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 94
+  },
+  {
+   "page": 1,
+   "text": "(₹20,000 – ₹9,200 deductions)",
+   "x": 47.5,
+   "y": 657,
+   "baseline": 666.5,
+   "size": 9,
+   "font": "Manrope-Medium",
+   "width": 131.5
+  },
+  {
+   "page": 1,
+   "text": "₹10,800.00",
+   "x": 481,
+   "y": 647,
+   "baseline": 659.5,
+   "size": 12,
+   "font": "Manrope-Bold",
+   "width": 67
+  },
+  {
+   "page": 1,
+   "text": "Authorized Signatory",
+   "x": 63.5,
+   "y": 764,
+   "baseline": 774,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 97.5
+  },
+  {
+   "page": 1,
+   "text": "Date",
+   "x": 287,
+   "y": 764,
+   "baseline": 774,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 21.5
+  },
+  {
+   "page": 1,
+   "text": "Employee Signature",
+   "x": 436.5,
+   "y": 764,
+   "baseline": 774,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 92.5
+  },
+  {
+   "page": 1,
+   "text": "9 November 2026",
+   "x": 255.5,
+   "y": 739,
+   "baseline": 749.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 84.5
+  },
+  {
+   "page": 1,
+   "text": "hr@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 129
+  },
+  {
+   "page": 1,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 1,
+   "text": "Page 1 of 1",
+   "x": 523,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 35
+  }
+ ],
+ "images": [
+  {
+   "page": 1,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 1,
+   "x": 18,
+   "y": 706,
+   "width": 189,
+   "height": 46
+  }
+ ]
+}

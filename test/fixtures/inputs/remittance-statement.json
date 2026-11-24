@@ -1,0 +1,16 @@
+{
+  "client": "Sample Society of Placeholders",
+  "engagement": "Sample Annual Meet 2026",
+  "date": "2026-04-10",
+  "particulars": "Sample Annual Meet 2026 – First Transfer",
+  "amount": "5,00,000",
+  "purpose": "collected towards Sample Annual Meet 2026 registrations",
+  "processedThrough": "Example Payments",
+  "account": [
+    { "label": "Account Name", "value": "Sample Society of Placeholders" },
+    { "label": "Account Number", "value": "000000000000" },
+    { "label": "Bank", "value": "Example Bank" },
+    { "label": "Branch", "value": "Example Campus Branch" },
+    { "label": "Location", "value": "Example City" }
+  ]
+}

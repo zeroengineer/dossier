@@ -233,8 +233,9 @@ What the generator fills in:
 
 | Document field | From |
 |---|---|
-| number | series `numbering.series`, or `brand.series[<templateId>]` when it is `"brand"`; date = `values.date`; `{CLIENT}` = the party's `attrs.code`; `{CODE}` = `values.numberCode` (else `values.code`) |
+| number | series `numbering.series`, or `brand.series[<templateId>]` when it is `"brand"`; date = `values.date`; `{CLIENT}` = `values.clientCode`, else the party's `attrs.code`; `{CODE}` = `values.numberCode` (else `values.code`) |
 | party | the first field whose value is an entity of kind `partyKind` (party type `partyType`) |
+| engagement | the first field whose value is an entity of kind `engagement` (none: no engagement) |
 | amount | `values.total` (minor units) in the locale's `currencyCode` |
 | date | `values.date` |
 | title | `<template title> - <party name>` |
@@ -348,4 +349,26 @@ print without paise when every figure is whole), `deductions` (`[{ label, value 
 `endDate`, `stipend` (empty: unpaid, the stipend paragraph and clause are left out), `reportingTo`, `placeOfWork`.
 Certificates: `startDate`, `endDate` (relieving letter: `relievingDate`), `summary`, `department` (experience),
 `reason` (relieving). `opening`, `clauses` and `paragraphs` fields replace the params for one document.
+
+### Statements: `employee-final-settlement`, `ticketing-settlement-statement`, `client-final-settlement`, `remittance-statement`, `expense-statement`
+
+Absolutely positioned legacy pages (docs/DISCOVERY.md A8 §6b, §7, §7b, §8, §10) drawn by
+`src/render/pdf/statementFrames.js` from a model built in `src/render/statementTemplate.js` (shared module exports:
+`computed`, `blocks` for HTML and Markdown, `renderPdf`). Checked against the six legacy scripts of those sections (both ticketing variants) fed the
+same values and wording: identical text items, image boxes and pixels. Every offset, size
+and colour is in the template's frame (`EMPLOYEE_SETTLEMENT_FRAME`, `TICKETING_FRAME`, `CLIENT_SETTLEMENT_FRAME`,
+`REMITTANCE_FRAME`, `EXPENSE_FRAME`), which `params.frame` deep-merges over; `params.footer` passes options to the footer.
+All amounts are paise; text params are interpolated like the letter family (`{company}`, `{companyUpper}`, `{currency}`,
+fields formatted for print, `{number}`), plus the computed values named below.
+
+| Template | Profile, contact, party | Numbering | Layout and computation |
+|---|---|---|---|
+| `employee-final-settlement` | `letter`, `hr`, a `person` | none unless mapped (`Reference:` cell) | title at letterhead rule + 16, meta grid (rows 24 apart, columns ML / +115 / +305 / +390), boxed tables Salary Details, Deductions, Final Salary Calculation (header h28, rows h26, value column 150), net box h50, optional declaration, signature row at y 755 (signatory image h46 over "Authorized Signatory", the date over "Date", "Employee Signature"). Per-day = `monthlySalary / workingDays`, half-day = per-day / 2 (half up); `attendance[]` `{ label, days, rule: half\|full }` × rate; `deductions[]`, `additions[]` `{ label, amount }`; `total` = net. A table that would reach the signature row moves to a new page. |
+| `ticketing-settlement-statement` | `settlement`, `billing`, a `client` | none unless mapped (`Doc No.:`) | title and meta (Event, Issued To, Issued By / Doc No., Date, Page No.) drawn on every page in a post-pass; content from `MT+CP+125`; slate section bars; ticket table (`columns`, or `eventColumns` when any ticket has an `event`; rows without an event continue the event's shading); platform charges card (`feePercent`, `gstPercent` default 18); final box; acknowledgement text and sign-off fields (`acknowledgement.fieldSpacing` 42 / `breakMin` 190; the older variant used 24 / 110). Revenue = sold × price; fee = `feePercent` of gross and GST = `gstPercent` of the fee, each rounded half up to a paisa (`percentOf`); net = gross - fee - GST, or gross when `deductCharges: false`. |
+| `client-final-settlement` | `letter`, `billing`, a `client` | `brand.series` (`settlement`: `FSS/{CLIENT}/{YYYY}/{###}`, `{CLIENT}` from the `clientCode` field, default the client's `attrs.code`) | title and meta on page 1; Event Details (`detailRows` params with `{event}`, `{services}`, `{eventDates}`, or the `details` field), Professional Service Fee (fee, GST, total, advance in brackets, balance), a forced page break (`breakBeforeExpenses`), Reimbursable Expenses, Final Settlement Summary, total box with `{totalWords}`, settlement note (`note`, items with `when`), footnote at `PH-MB-40` on the last page. `invoices` (document ids) -> `settles`. |
+| `remittance-statement` | `letter`, `billing`, a `client` | none unless mapped (`Ref:` left of the date) | date at `MT+CP+14`, salutation, subject, `paragraphs` (10 / lineGap 7, `**bold**`), transaction rows (`detailRows`; empty values left out), receiving account (`account` field rows), closing, signature (image trimmed, h46; seal by the `seal` field); footer centre in caps. `{amount}` prints `₹5,00,000` + `amountSuffix` (`/-`). `references` -> `pays`. |
+| `expense-statement` | `letter` (letterhead 8 / 7.5, footer 7), `billing`, a `client` | none unless mapped (`Ref:` on the date line) | title, date right, To + recipient, subject, salutation, `opening` paragraphs (left-aligned runs, lineGap 6), bordered expense table (`items[]` `{ particulars, calculation, amount }`, total row), amount in words, `closing` paragraphs, Bank Details (the brand account chosen by `bankAccount`, or the `bankDetails` field), sign-off (image h44, name, title, `signOff.lines`). |
+
+The `engagement` field (optional, `entity:engagement`) of the client-facing statements fills the event name and is
+stored as the document's engagement.
 

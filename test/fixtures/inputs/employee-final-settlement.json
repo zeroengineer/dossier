@@ -1,0 +1,14 @@
+{
+  "employee": "Jordan Placeholder",
+  "department": "Operations",
+  "date": "2026-11-09",
+  "periodStart": "2026-10-01",
+  "periodEnd": "2026-10-31",
+  "monthlySalary": "20,000",
+  "workingDays": 25,
+  "attendance": [
+    { "label": "Late arrival", "days": 16, "rule": "half" },
+    { "label": "Loss of pay", "days": 2, "rule": "full" },
+    { "label": "Short working hours", "days": 3, "rule": "half" }
+  ]
+}

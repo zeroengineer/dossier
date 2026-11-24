@@ -1,0 +1,717 @@
+{
+ "items": [
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 448.5,
+   "y": 23,
+   "baseline": 31.5,
+   "size": 8,
+   "font": "Manrope-Bold",
+   "width": 109.5
+  },
+  {
+   "page": 1,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 444.5,
+   "y": 34.5,
+   "baseline": 42.5,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 113
+  },
+  {
+   "page": 1,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 393,
+   "y": 45.5,
+   "baseline": 53.5,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 164.5
+  },
+  {
+   "page": 1,
+   "text": "Example City, Example State 000000, India",
+   "x": 411.5,
+   "y": 56,
+   "baseline": 64,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 146
+  },
+  {
+   "page": 1,
+   "text": "Email: billing@example.com | www.example.com",
+   "x": 393.5,
+   "y": 67,
+   "baseline": 75,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 164
+  },
+  {
+   "page": 1,
+   "text": "EXPENSE REIMBURSEMENT STATEMENT",
+   "x": 144,
+   "y": 114,
+   "baseline": 131,
+   "size": 16,
+   "font": "Manrope-ExtraBold",
+   "width": 307.5
+  },
+  {
+   "page": 1,
+   "text": "Date:",
+   "x": 437.5,
+   "y": 153.5,
+   "baseline": 164,
+   "size": 10,
+   "font": "Manrope-SemiBold",
+   "width": 26
+  },
+  {
+   "page": 1,
+   "text": "15 September 2026",
+   "x": 465,
+   "y": 153.5,
+   "baseline": 164,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 92.5
+  },
+  {
+   "page": 1,
+   "text": "To",
+   "x": 37.5,
+   "y": 183.5,
+   "baseline": 194.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 12
+  },
+  {
+   "page": 1,
+   "text": "Example Institute of Sample Studies",
+   "x": 37.5,
+   "y": 202,
+   "baseline": 213,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 174
+  },
+  {
+   "page": 1,
+   "text": "Subject: Reimbursement of expenses for Example Conference 2026 - Sample College",
+   "x": 37.5,
+   "y": 239,
+   "baseline": 250.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 430
+  },
+  {
+   "page": 1,
+   "text": "Dear Sir/Madam,",
+   "x": 37.5,
+   "y": 273.5,
+   "baseline": 284.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 80
+  },
+  {
+   "page": 1,
+   "text": "We submit below the expenses and charges incurred by",
+   "x": 37.5,
+   "y": 303.5,
+   "baseline": 315,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 267.5
+  },
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 307.5,
+   "y": 303.5,
+   "baseline": 315,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 143.5
+  },
+  {
+   "page": 1,
+   "text": "in connection with",
+   "x": 453,
+   "y": 303.5,
+   "baseline": 315,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 89
+  },
+  {
+   "page": 1,
+   "text": "Example Conference 2026 - Sample College",
+   "x": 37.5,
+   "y": 324,
+   "baseline": 335,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 221
+  },
+  {
+   "page": 1,
+   "text": ".",
+   "x": 258.5,
+   "y": 324,
+   "baseline": 335,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 2.5
+  },
+  {
+   "page": 1,
+   "text": "The details are as follows:",
+   "x": 37.5,
+   "y": 360,
+   "baseline": 371.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 124
+  },
+  {
+   "page": 1,
+   "text": "Particulars",
+   "x": 47.5,
+   "y": 404,
+   "baseline": 414.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 53
+  },
+  {
+   "page": 1,
+   "text": "Calculation",
+   "x": 217.5,
+   "y": 404,
+   "baseline": 414.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 56
+  },
+  {
+   "page": 1,
+   "text": "Amount (₹)",
+   "x": 492,
+   "y": 404,
+   "baseline": 414.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 56
+  },
+  {
+   "page": 1,
+   "text": "Travel Expenses",
+   "x": 47.5,
+   "y": 432.5,
+   "baseline": 443,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 74
+  },
+  {
+   "page": 1,
+   "text": "₹2,000 × 3 persons",
+   "x": 217.5,
+   "y": 432.5,
+   "baseline": 443,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 82.5
+  },
+  {
+   "page": 1,
+   "text": "6,000",
+   "x": 522,
+   "y": 432.5,
+   "baseline": 443,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 26
+  },
+  {
+   "page": 1,
+   "text": "Food Expenses",
+   "x": 47.5,
+   "y": 468,
+   "baseline": 478.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 68.5
+  },
+  {
+   "page": 1,
+   "text": "Meals on the evening before and the morning of",
+   "x": 217.5,
+   "y": 461.5,
+   "baseline": 472,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 207.5
+  },
+  {
+   "page": 1,
+   "text": "the event",
+   "x": 217.5,
+   "y": 474.5,
+   "baseline": 485,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 42
+  },
+  {
+   "page": 1,
+   "text": "1,500",
+   "x": 525,
+   "y": 468,
+   "baseline": 478.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 23
+  },
+  {
+   "page": 1,
+   "text": "Messaging Charges",
+   "x": 47.5,
+   "y": 503.5,
+   "baseline": 514,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 90.5
+  },
+  {
+   "page": 1,
+   "text": "456 messages × ₹1 per message",
+   "x": 217.5,
+   "y": 503.5,
+   "baseline": 514,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 140
+  },
+  {
+   "page": 1,
+   "text": "456",
+   "x": 531,
+   "y": 503.5,
+   "baseline": 514,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 17
+  },
+  {
+   "page": 1,
+   "text": "Total Amount Payable",
+   "x": 217.5,
+   "y": 532.5,
+   "baseline": 543,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 105
+  },
+  {
+   "page": 1,
+   "text": "₹7,956",
+   "x": 515,
+   "y": 532.5,
+   "baseline": 543,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 32.5
+  },
+  {
+   "page": 1,
+   "text": "Amount in Words:",
+   "x": 37.5,
+   "y": 571,
+   "baseline": 582.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 90
+  },
+  {
+   "page": 1,
+   "text": "Rupees Seven Thousand Nine Hundred Fifty Six Only.",
+   "x": 130,
+   "y": 571,
+   "baseline": 582.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 253
+  },
+  {
+   "page": 1,
+   "text": "The charges above are claimed under the terms of the agreement dated 1 August 2026.",
+   "x": 37.5,
+   "y": 611,
+   "baseline": 622,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 418
+  },
+  {
+   "page": 1,
+   "text": "We request you to transfer",
+   "x": 37.5,
+   "y": 647,
+   "baseline": 658,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 128.5
+  },
+  {
+   "page": 1,
+   "text": "₹7,956/-",
+   "x": 168,
+   "y": 647,
+   "baseline": 658,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 43.5
+  },
+  {
+   "page": 1,
+   "text": "to the bank account below at your earliest convenience.",
+   "x": 213.5,
+   "y": 647,
+   "baseline": 658,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 268.5
+  },
+  {
+   "page": 1,
+   "text": "billing@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 818.5,
+   "size": 7,
+   "font": "Manrope-Regular",
+   "width": 132.5
+  },
+  {
+   "page": 1,
+   "text": "Confidential",
+   "x": 277.5,
+   "y": 811,
+   "baseline": 818.5,
+   "size": 7,
+   "font": "Manrope-Regular",
+   "width": 40
+  },
+  {
+   "page": 1,
+   "text": "Page 1 of 2",
+   "x": 524,
+   "y": 811,
+   "baseline": 818.5,
+   "size": 7,
+   "font": "Manrope-Regular",
+   "width": 33.5
+  },
+  {
+   "page": 2,
+   "text": "Acme Events Private Limited",
+   "x": 448.5,
+   "y": 23,
+   "baseline": 31.5,
+   "size": 8,
+   "font": "Manrope-Bold",
+   "width": 109.5
+  },
+  {
+   "page": 2,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 444.5,
+   "y": 34.5,
+   "baseline": 42.5,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 113
+  },
+  {
+   "page": 2,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 393,
+   "y": 45.5,
+   "baseline": 53.5,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 164.5
+  },
+  {
+   "page": 2,
+   "text": "Example City, Example State 000000, India",
+   "x": 411.5,
+   "y": 56,
+   "baseline": 64,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 146
+  },
+  {
+   "page": 2,
+   "text": "Email: billing@example.com | www.example.com",
+   "x": 393.5,
+   "y": 67,
+   "baseline": 75,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 164
+  },
+  {
+   "page": 2,
+   "text": "Bank Details",
+   "x": 37.5,
+   "y": 112,
+   "baseline": 126,
+   "size": 13,
+   "font": "Manrope-Bold",
+   "width": 78
+  },
+  {
+   "page": 2,
+   "text": "Particulars",
+   "x": 47.5,
+   "y": 148,
+   "baseline": 158.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 53
+  },
+  {
+   "page": 2,
+   "text": "Details",
+   "x": 217.5,
+   "y": 148,
+   "baseline": 158.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 34
+  },
+  {
+   "page": 2,
+   "text": "Account Name",
+   "x": 47.5,
+   "y": 176.5,
+   "baseline": 187,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 67.5
+  },
+  {
+   "page": 2,
+   "text": "Acme Events Private Limited",
+   "x": 217.5,
+   "y": 176.5,
+   "baseline": 187,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 123
+  },
+  {
+   "page": 2,
+   "text": "Bank Name",
+   "x": 47.5,
+   "y": 205.5,
+   "baseline": 216,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 51
+  },
+  {
+   "page": 2,
+   "text": "Example Bank",
+   "x": 217.5,
+   "y": 205.5,
+   "baseline": 216,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 60.5
+  },
+  {
+   "page": 2,
+   "text": "Account Number",
+   "x": 47.5,
+   "y": 234.5,
+   "baseline": 245,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 77.5
+  },
+  {
+   "page": 2,
+   "text": "000000000000",
+   "x": 217.5,
+   "y": 234.5,
+   "baseline": 245,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 69.5
+  },
+  {
+   "page": 2,
+   "text": "IFSC",
+   "x": 47.5,
+   "y": 263.5,
+   "baseline": 273.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 21
+  },
+  {
+   "page": 2,
+   "text": "EXMP0000000",
+   "x": 217.5,
+   "y": 263.5,
+   "baseline": 273.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 65.5
+  },
+  {
+   "page": 2,
+   "text": "Branch",
+   "x": 47.5,
+   "y": 292.5,
+   "baseline": 302.5,
+   "size": 9.5,
+   "font": "Manrope-Bold",
+   "width": 32.5
+  },
+  {
+   "page": 2,
+   "text": "Example City Main Branch",
+   "x": 217.5,
+   "y": 292.5,
+   "baseline": 302.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 112.5
+  },
+  {
+   "page": 2,
+   "text": "Thank you for your support and cooperation.",
+   "x": 37.5,
+   "y": 336.5,
+   "baseline": 347.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 213.5
+  },
+  {
+   "page": 2,
+   "text": "Yours faithfully,",
+   "x": 37.5,
+   "y": 372.5,
+   "baseline": 383.5,
+   "size": 10.5,
+   "font": "Manrope-Regular",
+   "width": 73.5
+  },
+  {
+   "page": 2,
+   "text": "For Acme Events Private Limited",
+   "x": 37.5,
+   "y": 402.5,
+   "baseline": 413.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 162
+  },
+  {
+   "page": 2,
+   "text": "Alex Example",
+   "x": 37.5,
+   "y": 477,
+   "baseline": 488.5,
+   "size": 11,
+   "font": "Manrope-Bold",
+   "width": 70
+  },
+  {
+   "page": 2,
+   "text": "Chief Operating Officer",
+   "x": 37.5,
+   "y": 496,
+   "baseline": 506.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 106
+  },
+  {
+   "page": 2,
+   "text": "Acme Events Private Limited",
+   "x": 37.5,
+   "y": 512.5,
+   "baseline": 523,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 129.5
+  },
+  {
+   "page": 2,
+   "text": "billing@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 818.5,
+   "size": 7,
+   "font": "Manrope-Regular",
+   "width": 132.5
+  },
+  {
+   "page": 2,
+   "text": "Confidential",
+   "x": 277.5,
+   "y": 811,
+   "baseline": 818.5,
+   "size": 7,
+   "font": "Manrope-Regular",
+   "width": 40
+  },
+  {
+   "page": 2,
+   "text": "Page 2 of 2",
+   "x": 523,
+   "y": 811,
+   "baseline": 818.5,
+   "size": 7,
+   "font": "Manrope-Regular",
+   "width": 35
+  }
+ ],
+ "images": [
+  {
+   "page": 1,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 2,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 2,
+   "x": 37.5,
+   "y": 425,
+   "width": 180.5,
+   "height": 44
+  }
+ ]
+}

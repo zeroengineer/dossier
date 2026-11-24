@@ -1,0 +1,780 @@
+{
+ "items": [
+  {
+   "page": 1,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 1,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 1,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 1,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 1,
+   "text": "Email: billing@example.com | www.example.com",
+   "x": 383,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175
+  },
+  {
+   "page": 1,
+   "text": "1. TICKET SALES SUMMARY",
+   "x": 45.5,
+   "y": 246,
+   "baseline": 257,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 128.5
+  },
+  {
+   "page": 1,
+   "text": "TICKET TYPE",
+   "x": 45.5,
+   "y": 285,
+   "baseline": 293.5,
+   "size": 8,
+   "font": "Manrope-Bold",
+   "width": 49
+  },
+  {
+   "page": 1,
+   "text": "TICKETS SOLD",
+   "x": 284,
+   "y": 285,
+   "baseline": 293.5,
+   "size": 8,
+   "font": "Manrope-Bold",
+   "width": 55.5
+  },
+  {
+   "page": 1,
+   "text": "PRICE",
+   "x": 416.5,
+   "y": 285,
+   "baseline": 293.5,
+   "size": 8,
+   "font": "Manrope-Bold",
+   "width": 23
+  },
+  {
+   "page": 1,
+   "text": "REVENUE",
+   "x": 514,
+   "y": 285,
+   "baseline": 293.5,
+   "size": 8,
+   "font": "Manrope-Bold",
+   "width": 36
+  },
+  {
+   "page": 1,
+   "text": "Members",
+   "x": 45.5,
+   "y": 313,
+   "baseline": 323,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 38.5
+  },
+  {
+   "page": 1,
+   "text": "49",
+   "x": 328.5,
+   "y": 313,
+   "baseline": 323,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 11
+  },
+  {
+   "page": 1,
+   "text": "₹399.00",
+   "x": 405,
+   "y": 313,
+   "baseline": 323,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 34.5
+  },
+  {
+   "page": 1,
+   "text": "₹19,551.00",
+   "x": 506.5,
+   "y": 313,
+   "baseline": 323,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 43.5
+  },
+  {
+   "page": 1,
+   "text": "Non-members",
+   "x": 45.5,
+   "y": 338,
+   "baseline": 348,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 59.5
+  },
+  {
+   "page": 1,
+   "text": "57",
+   "x": 330,
+   "y": 338,
+   "baseline": 348,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 9.5
+  },
+  {
+   "page": 1,
+   "text": "₹499.00",
+   "x": 404.5,
+   "y": 338,
+   "baseline": 348,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 35
+  },
+  {
+   "page": 1,
+   "text": "₹28,443.00",
+   "x": 502.5,
+   "y": 338,
+   "baseline": 348,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 47
+  },
+  {
+   "page": 1,
+   "text": "Student members",
+   "x": 45.5,
+   "y": 363,
+   "baseline": 373,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 74.5
+  },
+  {
+   "page": 1,
+   "text": "23",
+   "x": 329.5,
+   "y": 363,
+   "baseline": 373,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 10
+  },
+  {
+   "page": 1,
+   "text": "₹299.00",
+   "x": 404.5,
+   "y": 363,
+   "baseline": 373,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 35
+  },
+  {
+   "page": 1,
+   "text": "₹6,877.00",
+   "x": 509,
+   "y": 363,
+   "baseline": 373,
+   "size": 9,
+   "font": "Manrope-Regular",
+   "width": 40.5
+  },
+  {
+   "page": 1,
+   "text": "Total",
+   "x": 45.5,
+   "y": 392,
+   "baseline": 402,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 22
+  },
+  {
+   "page": 1,
+   "text": "129",
+   "x": 324.5,
+   "y": 392,
+   "baseline": 402,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 15
+  },
+  {
+   "page": 1,
+   "text": "₹54,871.00",
+   "x": 502.5,
+   "y": 392,
+   "baseline": 402,
+   "size": 9,
+   "font": "Manrope-Bold",
+   "width": 47.5
+  },
+  {
+   "page": 1,
+   "text": "2. PLATFORM CHARGES",
+   "x": 45.5,
+   "y": 433.5,
+   "baseline": 444.5,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 112.5
+  },
+  {
+   "page": 1,
+   "text": "Platform Fee (1.5%)",
+   "x": 54.5,
+   "y": 476.5,
+   "baseline": 488.5,
+   "size": 11,
+   "font": "Manrope-Bold",
+   "width": 103.5
+  },
+  {
+   "page": 1,
+   "text": "Base Fee:",
+   "x": 54.5,
+   "y": 500.5,
+   "baseline": 511,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 42
+  },
+  {
+   "page": 1,
+   "text": "₹823.07",
+   "x": 509,
+   "y": 500.5,
+   "baseline": 511,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 35
+  },
+  {
+   "page": 1,
+   "text": "GST @18%:",
+   "x": 54.5,
+   "y": 520.5,
+   "baseline": 531,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 49
+  },
+  {
+   "page": 1,
+   "text": "₹148.15",
+   "x": 513,
+   "y": 520.5,
+   "baseline": 531,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 31
+  },
+  {
+   "page": 1,
+   "text": "Total:",
+   "x": 54.5,
+   "y": 552.5,
+   "baseline": 564,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 29
+  },
+  {
+   "page": 1,
+   "text": "₹971.22",
+   "x": 505.5,
+   "y": 552.5,
+   "baseline": 564,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 38.5
+  },
+  {
+   "page": 1,
+   "text": "3. FINAL SETTLEMENT",
+   "x": 45.5,
+   "y": 610.5,
+   "baseline": 621,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 103.5
+  },
+  {
+   "page": 1,
+   "text": "Net Settlement Amount for the Organisers of Sample Annual Meet 2026:",
+   "x": 115,
+   "y": 653.5,
+   "baseline": 664.5,
+   "size": 10.5,
+   "font": "Manrope-Bold",
+   "width": 365
+  },
+  {
+   "page": 1,
+   "text": "₹53,899.78",
+   "x": 243,
+   "y": 673.5,
+   "baseline": 695,
+   "size": 20,
+   "font": "Manrope-ExtraBold",
+   "width": 109.5
+  },
+  {
+   "page": 1,
+   "text": "billing@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 142
+  },
+  {
+   "page": 1,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 1,
+   "text": "Page 1 of 2",
+   "x": 521.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 36
+  },
+  {
+   "page": 1,
+   "text": "TICKETING & SETTLEMENT STATEMENT",
+   "x": 142,
+   "y": 101,
+   "baseline": 118.5,
+   "size": 16.5,
+   "font": "Manrope-ExtraBold",
+   "width": 311
+  },
+  {
+   "page": 1,
+   "text": "Event:",
+   "x": 37.5,
+   "y": 144,
+   "baseline": 154.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 29
+  },
+  {
+   "page": 1,
+   "text": "Sample Annual Meet 2026",
+   "x": 102.5,
+   "y": 144,
+   "baseline": 154.5,
+   "size": 10,
+   "font": "Manrope-Medium",
+   "width": 122
+  },
+  {
+   "page": 1,
+   "text": "Issued To:",
+   "x": 37.5,
+   "y": 164,
+   "baseline": 174.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 46.5
+  },
+  {
+   "page": 1,
+   "text": "Sample Society of Placeholders",
+   "x": 102.5,
+   "y": 164,
+   "baseline": 174.5,
+   "size": 10,
+   "font": "Manrope-Medium",
+   "width": 147
+  },
+  {
+   "page": 1,
+   "text": "Issued By:",
+   "x": 37.5,
+   "y": 184,
+   "baseline": 194.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 47
+  },
+  {
+   "page": 1,
+   "text": "ACME EVENTS PRIVATE LIMITED",
+   "x": 102.5,
+   "y": 184,
+   "baseline": 194.5,
+   "size": 10,
+   "font": "Manrope-Medium",
+   "width": 146
+  },
+  {
+   "page": 1,
+   "text": "Date:",
+   "x": 307.5,
+   "y": 144,
+   "baseline": 154.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 25
+  },
+  {
+   "page": 1,
+   "text": "5 November 2026",
+   "x": 372.5,
+   "y": 144,
+   "baseline": 154.5,
+   "size": 10,
+   "font": "Manrope-Medium",
+   "width": 81.5
+  },
+  {
+   "page": 1,
+   "text": "Page No.:",
+   "x": 307.5,
+   "y": 163,
+   "baseline": 173.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 43
+  },
+  {
+   "page": 1,
+   "text": "Page 1 of 2",
+   "x": 372.5,
+   "y": 163,
+   "baseline": 173.5,
+   "size": 10,
+   "font": "Manrope-Medium",
+   "width": 49
+  },
+  {
+   "page": 2,
+   "text": "Acme Events Private Limited",
+   "x": 441.5,
+   "y": 21,
+   "baseline": 30,
+   "size": 8.5,
+   "font": "Manrope-Bold",
+   "width": 116.5
+  },
+  {
+   "page": 2,
+   "text": "CIN: U00000XX2000PTC000000",
+   "x": 437,
+   "y": 33.5,
+   "baseline": 42,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 120.5
+  },
+  {
+   "page": 2,
+   "text": "Unit 000, Example Business Park, 1 Sample Road",
+   "x": 382,
+   "y": 45,
+   "baseline": 53.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175.5
+  },
+  {
+   "page": 2,
+   "text": "Example City, Example State 000000, India",
+   "x": 402,
+   "y": 56.5,
+   "baseline": 65,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 156
+  },
+  {
+   "page": 2,
+   "text": "Email: billing@example.com | www.example.com",
+   "x": 383,
+   "y": 68,
+   "baseline": 76.5,
+   "size": 8,
+   "font": "Manrope-Regular",
+   "width": 175
+  },
+  {
+   "page": 2,
+   "text": "4. ACKNOWLEDGEMENT",
+   "x": 45.5,
+   "y": 246,
+   "baseline": 257,
+   "size": 10,
+   "font": "Manrope-Bold",
+   "width": 114.5
+  },
+  {
+   "page": 2,
+   "text": "We, the organisers of Sample Annual Meet 2026, confirm that the ticket sales and settlement figures in this statement",
+   "x": 37.5,
+   "y": 275,
+   "baseline": 285.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 521
+  },
+  {
+   "page": 2,
+   "text": "are correct, and we acknowledge the net settlement amount shown above.",
+   "x": 37.5,
+   "y": 291,
+   "baseline": 301.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 325
+  },
+  {
+   "page": 2,
+   "text": "Name:",
+   "x": 37.5,
+   "y": 352,
+   "baseline": 362.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 28
+  },
+  {
+   "page": 2,
+   "text": "Designation:",
+   "x": 37.5,
+   "y": 394,
+   "baseline": 404.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 56
+  },
+  {
+   "page": 2,
+   "text": "Signature & Seal:",
+   "x": 37.5,
+   "y": 436,
+   "baseline": 446.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 74.5
+  },
+  {
+   "page": 2,
+   "text": "Date:",
+   "x": 37.5,
+   "y": 478,
+   "baseline": 488.5,
+   "size": 9.5,
+   "font": "Manrope-Regular",
+   "width": 23.5
+  },
+  {
+   "page": 2,
+   "text": "billing@example.com | www.example.com",
+   "x": 37.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 142
+  },
+  {
+   "page": 2,
+   "text": "Confidential",
+   "x": 276.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 42.5
+  },
+  {
+   "page": 2,
+   "text": "Page 2 of 2",
+   "x": 520.5,
+   "y": 811,
+   "baseline": 819,
+   "size": 7.5,
+   "font": "Manrope-Regular",
+   "width": 37.5
+  },
+  {
+   "page": 2,
+   "text": "TICKETING & SETTLEMENT STATEMENT",
+   "x": 142,
+   "y": 101,
+   "baseline": 118.5,
+   "size": 16.5,
+   "font": "Manrope-ExtraBold",
+   "width": 311
+  },
+  {
+   "page": 2,
+   "text": "Event:",
+   "x": 37.5,
+   "y": 144,
+   "baseline": 154.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 29
+  },
+  {
+   "page": 2,
+   "text": "Sample Annual Meet 2026",
+   "x": 102.5,
+   "y": 144,
+   "baseline": 154.5,
+   "size": 10,
+   "font": "Manrope-Medium",
+   "width": 122
+  },
+  {
+   "page": 2,
+   "text": "Issued To:",
+   "x": 37.5,
+   "y": 164,
+   "baseline": 174.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 46.5
+  },
+  {
+   "page": 2,
+   "text": "Sample Society of Placeholders",
+   "x": 102.5,
+   "y": 164,
+   "baseline": 174.5,
+   "size": 10,
+   "font": "Manrope-Medium",
+   "width": 147
+  },
+  {
+   "page": 2,
+   "text": "Issued By:",
+   "x": 37.5,
+   "y": 184,
+   "baseline": 194.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 47
+  },
+  {
+   "page": 2,
+   "text": "ACME EVENTS PRIVATE LIMITED",
+   "x": 102.5,
+   "y": 184,
+   "baseline": 194.5,
+   "size": 10,
+   "font": "Manrope-Medium",
+   "width": 146
+  },
+  {
+   "page": 2,
+   "text": "Date:",
+   "x": 307.5,
+   "y": 144,
+   "baseline": 154.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 25
+  },
+  {
+   "page": 2,
+   "text": "5 November 2026",
+   "x": 372.5,
+   "y": 144,
+   "baseline": 154.5,
+   "size": 10,
+   "font": "Manrope-Medium",
+   "width": 81.5
+  },
+  {
+   "page": 2,
+   "text": "Page No.:",
+   "x": 307.5,
+   "y": 163,
+   "baseline": 173.5,
+   "size": 10,
+   "font": "Manrope-Regular",
+   "width": 43
+  },
+  {
+   "page": 2,
+   "text": "Page 2 of 2",
+   "x": 372.5,
+   "y": 163,
+   "baseline": 173.5,
+   "size": 10,
+   "font": "Manrope-Medium",
+   "width": 50.5
+  }
+ ],
+ "images": [
+  {
+   "page": 1,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  },
+  {
+   "page": 2,
+   "x": 37.5,
+   "y": 34,
+   "width": 140.5,
+   "height": 32
+  }
+ ]
+}

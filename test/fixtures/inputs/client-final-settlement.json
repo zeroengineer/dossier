@@ -1,0 +1,18 @@
+{
+  "client": "Example Institute of Sample Studies",
+  "engagement": "Example Fest 2026 - Sample College",
+  "issuedTo": "Example Institute of Sample Studies\n1 College Road, Example City 000000\nAttn: Event Coordinator",
+  "date": "2026-07-13",
+  "services": "Event registration, digital ticketing, QR check-in and attendance tracking",
+  "eventDates": "9 July 2026 – 11 July 2026",
+  "agreementDate": "2026-06-28",
+  "serviceFee": "15,000",
+  "advance": "10,500",
+  "expenses": [
+    { "description": "Travel – Example City to Sample Town", "amount": "3,066.50" },
+    { "description": "Meals – 8 July 2026", "amount": 200 },
+    { "description": "Meals – 9 July 2026", "amount": 160 },
+    { "description": "Travel – Sample Town to Example City", "amount": "3,119" },
+    { "description": "Messaging charges (304 messages)", "amount": 304 }
+  ]
+}

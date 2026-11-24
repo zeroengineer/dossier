@@ -1,0 +1,75 @@
+{
+  "id": "ticketing-settlement-statement",
+  "version": 1,
+  "type": "Ticketing Settlement Statement",
+  "title": "Ticketing and settlement statement",
+  "description": "Ticket sales of an event with platform charges (fee and GST), the net settlement and an acknowledgement for the organisers.",
+  "category": "statement",
+  "layoutProfile": "settlement",
+  "partyType": "Client",
+  "partyKind": "client",
+  "sensitivity": "Internal",
+  "renditions": ["pdf", "html", "md"],
+  "numbering": { "series": "brand", "required": false },
+  "contact": "billing",
+  "params": {
+    "title": "TICKETING & SETTLEMENT STATEMENT",
+    "metaLeft": [
+      { "label": "Event:", "value": "{event}" },
+      { "label": "Issued To:", "value": "{issuedTo}" },
+      { "label": "Issued By:", "value": "{companyUpper}" }
+    ],
+    "metaRight": [
+      { "label": "Doc No.:", "value": "{number}" },
+      { "label": "Date:", "value": "{date}" },
+      { "label": "Page No.:", "value": "Page {page} of {pages}" }
+    ],
+    "sections": {
+      "sales": "1. Ticket Sales Summary",
+      "charges": "2. Platform Charges",
+      "settlement": "3. Final Settlement",
+      "acknowledgement": "4. Acknowledgement"
+    },
+    "columns": [
+      { "key": "type", "label": "TICKET TYPE", "width": 210 },
+      { "key": "sold", "label": "TICKETS SOLD", "width": 100, "align": "right" },
+      { "key": "price", "label": "PRICE", "width": 100, "align": "right" },
+      { "key": "revenue", "label": "REVENUE", "align": "right" }
+    ],
+    "eventColumns": [
+      { "key": "event", "label": "EVENT", "width": 175 },
+      { "key": "type", "label": "TICKET TYPE", "width": 95 },
+      { "key": "sold", "label": "TICKETS SOLD", "width": 80, "align": "right" },
+      { "key": "price", "label": "PRICE", "width": 80, "align": "right" },
+      { "key": "revenue", "label": "REVENUE", "align": "right" }
+    ],
+    "totalLabel": "Total",
+    "showCharges": true,
+    "charges": { "title": "Platform Fee ({feePercent}%)", "base": "Base Fee:", "gst": "GST @{gstPercent}%:", "total": "Total:" },
+    "finalLabel": "Net Settlement Amount for the Organisers of {event}:",
+    "acknowledgement": {
+      "text": "We, the organisers of {event}, confirm that the ticket sales and settlement figures in this statement are correct, and we acknowledge the net settlement amount shown above.",
+      "fields": ["Name:", "Designation:", "Signature & Seal:", "Date:"],
+      "fieldSpacing": 42,
+      "breakMin": 190
+    }
+  },
+  "fields": [
+    { "name": "brand", "source": "brand", "required": true },
+    { "name": "client", "label": "Client (organiser)", "source": "entity:client", "required": true },
+    { "name": "engagement", "label": "Engagement", "source": "entity:engagement", "help": "The event this statement settles (stored on the document)" },
+    { "name": "event", "label": "Event name", "source": "engagement.name", "type": "string", "required": true },
+    { "name": "issuedTo", "label": "Issued to", "source": "client.name", "type": "text", "required": true, "help": "Name (and lines) of the organiser" },
+    { "name": "date", "label": "Date", "source": "today", "type": "date", "required": true },
+    { "name": "tickets", "label": "Ticket sales", "source": "ask", "type": "array", "required": true,
+      "item": { "event": "string", "type": "string", "sold": "number", "price": "money" },
+      "help": "[{ event?, type, sold, price }]; rows with an empty event continue the event above (shaded as one group)" },
+    { "name": "feePercent", "label": "Platform fee (%)", "source": "ask", "type": "number", "default": 0 },
+    { "name": "gstPercent", "label": "GST on the fee (%)", "source": "ask", "type": "number", "default": 18 },
+    { "name": "deductCharges", "label": "Deduct the charges from the settlement", "source": "ask", "type": "boolean", "default": true,
+      "help": "No: the charges are shown for reference and the organisers receive the gross amount" },
+    { "name": "acknowledgementText", "label": "Acknowledgement text", "source": "ask", "type": "text" },
+    { "name": "settlement", "source": "computed:settlement" },
+    { "name": "total", "source": "computed:total", "type": "money" }
+  ]
+}

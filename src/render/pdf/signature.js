@@ -22,12 +22,15 @@ export const SIGNATURE_DEFAULTS = Object.freeze({
  * rotated `seal.rotate` degrees about its centre, opacity `seal.opacity`.
  * @param {import('./document.js').PdfContext} ctx
  * @param {{ x?: number, y: number, align?: 'left'|'right', width?: number, forLine?: string, signatoryId: string,
- *   variant?: 'large'|'compact', imageHeight?: number, offsets?: { image?: number, name?: number, title?: number },
+ *   variant?: 'large'|'compact', imageOptions?: { trim?: boolean, resizeWidth?: number, resizeHeight?: number, flattenWhite?: boolean },
+ *   imageHeight?: number, offsets?: { image?: number, name?: number, title?: number },
  *   seal?: null|{ width?: number, rotate?: number, opacity?: number, dx?: number, dy?: number, x?: number },
  *   forStyle?: object, nameStyle?: object, titleStyle?: object,
  *   name?: string, title?: string,
  *   extraLines?: Array<{ text: string, dy: number, font?: string, size?: number, color?: string }> }} opts
  *   Styles are `{ font, size, color }`; colours default to ink (for, name) and muted (title, extra lines).
+ *   `imageOptions` change how the signature image is prepared (default: flattened on white; the remittance letter
+ *   trims it and resizes it to width 500 first).
  * @returns {Promise<{ imageY: number, nameY: number, bottom: number }>}
  */
 export async function drawSignatureBlock(ctx, opts) {
@@ -46,7 +49,7 @@ export async function drawSignatureBlock(ctx, opts) {
   const titleStyle = { color: palette.muted, ...d.titleStyle, ...opts.titleStyle };
   const textOpts = align === 'right' ? { align: 'right', width } : {};
 
-  const sig = await ctx.assets.signature(signatory.id, { variant: opts.variant ?? 'large' });
+  const sig = await ctx.assets.signature(signatory.id, { variant: opts.variant ?? 'large', ...opts.imageOptions });
   const seal = opts.seal === null ? null : opts.seal === undefined ? d.seal : { ...d.seal, ...opts.seal };
   const sealImg = seal ? await ctx.assets.seal() : null;
 
