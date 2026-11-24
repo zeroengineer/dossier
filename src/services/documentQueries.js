@@ -267,3 +267,32 @@ export function readRendition(ctx, documentId, { versionNo, kind } = {}) {
   if (!r) throw new DossierError('RENDITION_NOT_FOUND', `${row.id} version ${v.version_no} has no ${kind} rendition`, { id: row.id, versionNo: v.version_no, kind });
   return { buffer: readBlob(ctx, r.blob_sha256), filename: r.filename, mime: r.mime, sha256: r.blob_sha256, bytes: r.bytes };
 }
+
+/**
+ * Read a stored file by its sha256 for the acting user: the bytes are served through a rendition of a document the
+ * user may see (readRendition), never straight from the blob store. When several renditions share the blob, the one
+ * whose file name equals `filename` is preferred (its mime and name are returned), then the newest.
+ * @param {object} ctx
+ * @param {string} sha256 64 lowercase hex characters
+ * @param {{ filename?: string }} [opts]
+ * @returns {ReturnType<typeof readRendition> & { documentId: string, versionNo: number, kind: string }}
+ *   throws INVALID_INPUT for a malformed sha256, BLOB_NOT_FOUND when no rendition uses it, FORBIDDEN when every
+ *   document using it is above the user's clearance
+ */
+export function readBlobForUser(ctx, sha256, { filename } = {}) {
+  if (typeof sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(sha256)) throw invalid('A blob id is a lowercase sha256 hex string', { sha256 });
+  const rows = ctx.db.prepare(
+    'SELECT r.kind, r.filename, v.version_no, d.id AS document_id, d.sensitivity FROM renditions r '
+    + 'JOIN versions v ON v.id = r.version_id JOIN documents d ON d.id = v.document_id '
+    + 'WHERE r.blob_sha256 = ? ORDER BY r.id DESC',
+  ).all(sha256);
+  if (rows.length === 0) throw new DossierError('BLOB_NOT_FOUND', `No stored file ${sha256}`, { sha256 });
+  const visible = rows.filter((r) => canAccess(ctx.user.clearance, r.sensitivity));
+  if (visible.length === 0) {
+    throw new DossierError('FORBIDDEN', `User "${ctx.user.id}" (${ctx.user.clearance} clearance) may not read this file`,
+      { sha256, clearance: ctx.user.clearance });
+  }
+  const pick = visible.find((r) => r.filename === filename) ?? visible[0];
+  const out = readRendition(ctx, pick.document_id, { versionNo: pick.version_no, kind: pick.kind });
+  return { ...out, documentId: pick.document_id, versionNo: pick.version_no, kind: pick.kind };
+}

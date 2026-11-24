@@ -4,6 +4,7 @@ import { initWorkspace } from './workspace/index.js';
 import { openContext } from './context.js';
 import { getNode } from './services/hierarchy.js';
 import { reindexAll } from './services/searchIndex.js';
+import { seedEntities } from './services/entities.js';
 
 /**
  * Command table. Each entry: `usage` (shown in help), `summary`, and `run(args, io) -> exit code`.
@@ -17,7 +18,67 @@ export const commands = {
     run(args, io) {
       const target = args[0] ? args[0] : loadConfig(io.env, io.cwd).home;
       const home = initWorkspace(resolve(io.cwd, target));
-      io.stdout.write(`Created workspace at ${home}\nEdit brands/acme/brand.json (or add brands) and set DOSSIER_HOME=${home}\n`);
+      // First open of the new workspace: create the database and load seeds/entities.json.
+      const ctx = openContext({ home, env: io.env });
+      let seeded;
+      try {
+        seeded = seedEntities(ctx);
+      } finally {
+        ctx.close();
+      }
+      io.stdout.write(`Created workspace at ${home}\n${seedSummary(seeded)}\n`
+        + `Edit brands/acme/brand.json (or add brands) and set DOSSIER_HOME=${home}\n`);
+      return 0;
+    },
+  },
+  seed: {
+    usage: 'seed',
+    summary: 'load seeds/entities.json into the entity list (idempotent; never overwrites edits)',
+    run(args, io) {
+      if (args.length) throw new Error(`unexpected argument ${args[0]}`);
+      const ctx = openContext({ home: loadConfig(io.env, io.cwd).home, env: io.env });
+      try {
+        io.stdout.write(`${seedSummary(seedEntities(ctx))}\n`);
+      } finally {
+        ctx.close();
+      }
+      return 0;
+    },
+  },
+  serve: {
+    usage: 'serve [--port N] [--host H]',
+    summary: 'start the web UI and JSON API (default http://127.0.0.1:4400; HOST / PORT env)',
+    async run(args, io) {
+      const opts = {};
+      for (let i = 0; i < args.length; i++) {
+        const a = args[i];
+        if (a === '--port' || a === '--host') {
+          const v = args[++i];
+          if (v === undefined) throw new Error(`${a} needs a value`);
+          if (a === '--port') {
+            if (!/^\d+$/.test(v) || Number(v) > 65535) throw new Error(`bad port ${v}`);
+            opts.port = Number(v);
+          } else {
+            opts.host = v;
+          }
+        } else {
+          throw new Error(`unknown option ${a}`);
+        }
+      }
+      const { start } = await import('./server.js');
+      const { app, url } = await start({ env: io.env, cwd: io.cwd, ...opts });
+      io.stdout.write(`Dossier is running at ${url} (Ctrl+C to stop)\n`);
+      await new Promise((resolveStop) => {
+        const stop = () => resolveStop();
+        if (io.signal) {
+          if (io.signal.aborted) stop();
+          else io.signal.addEventListener('abort', stop, { once: true });
+        } else {
+          process.once('SIGINT', stop);
+          process.once('SIGTERM', stop);
+        }
+      });
+      await app.close();
       return 0;
     },
   },
@@ -63,6 +124,10 @@ export const commands = {
   },
 };
 
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+const seedSummary = (r) => `Seeded ${plural(r.entitiesCreated, 'entity', 'entities')} (${r.entitiesUpdated} updated), `
+  + `${plural(r.aliasesAdded, 'alias', 'aliases')}, ${plural(r.relationsCreated, 'relation', 'relations')}`;
+
 const countDocs = (node) => node.documents.length + node.children.reduce((sum, c) => sum + countDocs(c), 0);
 
 /**
@@ -95,7 +160,8 @@ function usage() {
 }
 
 /**
- * @typedef {{ stdout: { write(s: string): any }, stderr: { write(s: string): any }, env: Record<string, string|undefined>, cwd: string }} CliIo
+ * @typedef {{ stdout: { write(s: string): any }, stderr: { write(s: string): any }, env: Record<string, string|undefined>, cwd: string,
+ *   signal?: AbortSignal }} CliIo `signal` stops long-running commands (serve) instead of SIGINT/SIGTERM
  */
 
 /**

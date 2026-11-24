@@ -20,9 +20,23 @@ Dossier holds no organisation data in code. Names, registration ids, addresses, 
 ```sh
 npm install
 npm test
-node bin/dossier.js init  # create ./workspace from the fake example (or: init <dir>)
+node bin/dossier.js init  # create ./workspace from the fake example (or: init <dir>) and load its seed entities
 export DOSSIER_HOME=$PWD/workspace
+node bin/dossier.js seed  # (re)load seeds/entities.json; idempotent, never overwrites your edits
 ```
+
+## Running the web UI
+
+```sh
+DOSSIER_USER=demo node bin/dossier.js serve   # or: npm start
+# Dossier is running at http://127.0.0.1:4400
+```
+
+`serve [--port N] [--host H]` (or `PORT` / `HOST`) starts the server for the workspace in `DOSSIER_HOME`, acting as `DOSSIER_USER` with that user's clearance. Pages: the vault tree (`/`), a document page (metadata, versions, renditions with open/download links, related entities and documents, status, link, metadata and new-version forms), upload, search, generate (a form built from the template's fields, with array rows, a draft preview in the page and generate/regenerate), templates, entities (create, edit, aliases, relations) and a read-only settings page.
+
+The JSON API mirrors the services: `GET /api/tree`, `GET /api/documents[/:id]`, `POST /api/documents/:id/status|metadata|links`, `DELETE /api/documents/:id/links?toId=&type=`, `GET /api/documents/:id/renditions/:kind[?version=]`, `POST /api/upload` (multipart: `file` plus metadata fields or a `meta` JSON field), `GET /api/search?q=`, `GET /api/templates[/:id]`, `POST /api/templates/:id/resolve|preview|generate` (`{ input, brandId?, documentId?, force?, note? }`; preview and generate return `warnings`), `GET/POST /api/entities`, `GET /api/entities/:id`, `POST /api/entities/:id/relations`. Errors are `{ code, message, details }` with `*_NOT_FOUND` 404, `FORBIDDEN` 403, duplicates, locked or contended states 409 and validation errors 400.
+
+Security: the server listens on `127.0.0.1` and only answers requests whose `Host` is a loopback name (set `HOST` to listen elsewhere; then `DOSSIER_ALLOWED_HOSTS=a.example,b.example` limits the host names). Every POST/PUT/PATCH/DELETE must come from the same origin: its `Origin` (or `Referer`) host must equal the `Host`; a request without either is accepted only with a JSON body, a non-POST method or an `X-Dossier-Client` header (scripts uploading multipart), none of which a cross-site page can send without a CORS preflight. File bytes are only served through a document the user may read (`/documents/:id/renditions/:kind`, `/blobs/:sha256/:name`), non-PDF files with `Content-Security-Policy: sandbox`. There is no login: anyone who can reach the port acts as `DOSSIER_USER`.
 
 The example workspace uses the fake brand "Acme Events Private Limited" and neutral placeholder images. Customise it as described in `docs/WORKSPACE.md`.
 

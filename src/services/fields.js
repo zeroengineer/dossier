@@ -356,3 +356,42 @@ function resolveEntityValue(ctx, v, kind, fail) {
     throw err;
   }
 }
+
+/**
+ * The fields a person fills in on a form, in template order: every field with a `label` (fields without one are
+ * internal: brand, computed totals, layout…). `choices` lists an enum's options (a list in template.json, or a
+ * `brand.<path>` list of the chosen brand); `entityKind` is set for entity pickers; `item` maps the keys of an array's
+ * rows to their types. `input` is never consulted: this describes the form, resolveFields fills it.
+ * @param {object} ctx
+ * @param {{ meta: { fields: object[] } }} template a getTemplate result
+ * @param {{ brandId?: string }} [opts]
+ * @returns {Array<{ name: string, label: string, type: string|null, required: boolean, help: string|null,
+ *   source: string, entityKind: string|null, choices: string[]|null, item: Record<string, string>|null }>}
+ */
+export function formFields(ctx, template, { brandId } = {}) {
+  const bid = brandId ?? ctx.ws.config.defaultBrand;
+  const brand = ctx.ws.brands.get(bid);
+  if (!brand) throw new DossierError('BRAND_NOT_FOUND', `No brand "${bid}" in the workspace`, { brandId: bid });
+  const choicesOf = (f) => {
+    if (f.enum === undefined) return null;
+    if (Array.isArray(f.enum)) return f.enum.map(String);
+    const src = parseSource(f.enum);
+    const list = src.kind === 'brandPath' ? getPath(brand, src.arg) : undefined;
+    return Array.isArray(list) ? list.map((x) => (isPlainObject(x) ? String(x.id) : String(x))) : null;
+  };
+  return template.meta.fields.filter((f) => typeof f.label === 'string' && f.label !== '').map((f) => {
+    const src = parseSource(f.source);
+    const entityKind = src.kind === 'entity' ? src.arg : null;
+    return {
+      name: f.name,
+      label: f.label,
+      type: f.type ?? (entityKind ? 'entity' : null),
+      required: f.required === true,
+      help: f.help ?? null,
+      source: f.source,
+      entityKind,
+      choices: choicesOf(f),
+      item: isPlainObject(f.item) ? { ...f.item } : null,
+    };
+  });
+}
