@@ -287,3 +287,31 @@ export interface TreeNode {
   children: TreeNode[]
   documents: TreeDocument[]
 }
+
+// documents (list)
+
+/** `GET /api/documents` query (src/services/documentQueries.js listDocuments FILTERS). Dates are YYYY-MM-DD, inclusive. */
+export interface DocumentListParams {
+  type?: string
+  status?: Status
+  partyId?: number
+  from?: string
+  to?: string
+  /** 1..500, default 50. */
+  limit?: number
+  offset?: number
+}
+
+/** `GET /api/documents`: one page of documents, newest document date first, and the count of every match. */
+export interface DocumentList {
+  documents: DocumentSummary[]
+  /** Every document matching the filters that the user may see, ignoring limit/offset. */
+  total: number
+}
+
+/** An entity offered as a party in the documents filter (`GET /api/entities` hit / `GET /api/entities/:id` subset). */
+export interface DocumentPartyOption {
+  id: number
+  kind: string
+  name: string
+}

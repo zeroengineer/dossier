@@ -11,7 +11,7 @@ import {
   checkDocId, docRow, documentEntities, getDocument, invalid, requireDoc, rowSnapshot, versionView,
 } from './documentQueries.js';
 
-export { getDocument, listDocuments, readRendition, readBlobForUser, RENDITION_KINDS, DOCUMENT_RELATION_TYPES, DOCUMENT_ENTITY_ROLES, PARTY_TYPES } from './documentQueries.js';
+export { getDocument, listDocuments, countDocuments, readRendition, readBlobForUser, RENDITION_KINDS, DOCUMENT_RELATION_TYPES, DOCUMENT_ENTITY_ROLES, PARTY_TYPES } from './documentQueries.js';
 
 /** Event emitted (after commit) whenever documents, versions, renditions or relations change. Payload: `{ ids: string[] }`. */
 export const DOCUMENT_CHANGED = 'document:changed';

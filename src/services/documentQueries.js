@@ -226,20 +226,39 @@ export function listDocuments(ctx, filters = {}) {
   const { limit = 50, offset = 0, ...rest } = filters ?? {};
   if (!Number.isSafeInteger(limit) || limit < 1 || limit > MAX_LIMIT) throw invalid(`limit must be an integer from 1 to ${MAX_LIMIT}`, { limit });
   if (!Number.isSafeInteger(offset) || offset < 0) throw invalid('offset must be a non-negative integer', { offset });
+  const { where, params } = listWhere(ctx, rest);
+  const rows = ctx.db.prepare(
+    `SELECT d.* FROM documents d WHERE ${where} `
+    + 'ORDER BY d.doc_date IS NULL, d.doc_date DESC, d.id DESC LIMIT :limit OFFSET :offset',
+  ).all({ ...params, limit, offset });
+  return rows.map((r) => summaryOf(ctx, r));
+}
+
+/**
+ * Count the documents `listDocuments` would return for the same filters without paging (for "page N of M").
+ * `limit` and `offset` are ignored; every other filter is validated exactly as in `listDocuments`.
+ * @param {object} ctx
+ * @param {Parameters<typeof listDocuments>[1]} [filters]
+ * @returns {number}
+ */
+export function countDocuments(ctx, filters = {}) {
+  const { limit: _limit, offset: _offset, ...rest } = filters ?? {};
+  const { where, params } = listWhere(ctx, rest);
+  return ctx.db.prepare(`SELECT COUNT(*) AS n FROM documents d WHERE ${where}`).get(params).n;
+}
+
+/** WHERE clause (clearance + FILTERS) shared by listDocuments and countDocuments. */
+function listWhere(ctx, filters) {
   const where = ['d.sensitivity IN (SELECT value FROM json_each(:levels))'];
-  const params = { levels: JSON.stringify(accessibleLevels(ctx.user.clearance)), limit, offset };
-  for (const [key, value] of Object.entries(rest)) {
+  const params = { levels: JSON.stringify(accessibleLevels(ctx.user.clearance)) };
+  for (const [key, value] of Object.entries(filters)) {
     if (!Object.hasOwn(FILTERS, key)) throw invalid(`Unknown filter "${key}" (expected one of ${Object.keys(FILTERS).join(', ')})`, { filter: key });
     if (value === undefined || value === null) continue;
     const f = FILTERS[key](value);
     where.push(f.sql);
     params[key] = f.v;
   }
-  const rows = ctx.db.prepare(
-    `SELECT d.* FROM documents d WHERE ${where.join(' AND ')} `
-    + 'ORDER BY d.doc_date IS NULL, d.doc_date DESC, d.id DESC LIMIT :limit OFFSET :offset',
-  ).all(params);
-  return rows.map((r) => summaryOf(ctx, r));
+  return { where: where.join(' AND '), params };
 }
 
 /**

@@ -1,5 +1,5 @@
 import {
-  getDocument, linkDocuments, listDocuments, readRendition, unlinkDocuments, updateMetadata, updateStatus,
+  countDocuments, getDocument, linkDocuments, listDocuments, readRendition, unlinkDocuments, updateMetadata, updateStatus,
   DOCUMENT_RELATION_TYPES,
 } from '../../services/documents.js';
 import { STATUSES } from '../../domain/status.js';
@@ -91,7 +91,11 @@ export default async function documentRoutes(app, { ctx }) {
   app.get('/documents/:id/renditions/:kind', rendition);
 
   // ----- JSON API
-  app.get('/api/documents', (req) => ({ documents: listDocuments(ctx, listFilters(req.query)) }));
+  // `total` counts every match (ignoring limit/offset) so tables can page; `documents` is the requested page.
+  app.get('/api/documents', (req) => {
+    const filters = listFilters(req.query);
+    return { documents: listDocuments(ctx, filters), total: countDocuments(ctx, filters) };
+  });
   app.get('/api/documents/:id', (req) => getDocument(ctx, req.params.id));
   app.get('/api/documents/:id/renditions/:kind', rendition);
   app.post('/api/documents/:id/status', (req) => updateStatus(ctx, req.params.id, req.body?.status));
