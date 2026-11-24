@@ -13,9 +13,21 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
   (`SPA_CSP`); a missing build answers those paths with a one-line 503 page.
 - `GET /api/me` (acting user and clearance, workspace, brands, version) and `GET /api/meta` (statuses and allowed
   transitions, enumerations, document types, folder defaults, built-in fonts, size limits).
+- Web app scaffold in `web/` (npm workspace `@dossier/web`): Vite, React 19, TypeScript (strict), Tailwind v4 and
+  shadcn components; dark theme with red `#e5484d` as the only accent, layered shadows and self-hosted Manrope; app
+  shell with a collapsible sidebar (brand switcher, Workspace / Create / System navigation, What's new card, help link,
+  user and clearance), sticky header with breadcrumbs, a navigation command palette on ⌘K / Ctrl+K, and toasts. Every
+  planned route exists; pages not built yet show their header and a "being built" state.
+- Typed API client (`ApiError` from the `{ code, message, details }` body, JSON and multipart with
+  `X-Dossier-Client: web`), TanStack Query with mutation errors shown as toasts, money and date formatting in minor
+  units and the workspace locale.
+- Scripts: `npm run build` (builds `web/dist`), `npm run dev:web` (Vite with a proxy to the server),
+  `npm run test:web` (Vitest + Testing Library + MSW) and `npm run typecheck`.
 
 ### Changed
 
+- `npm test` runs both suites: `npm run test:api` then `npm run test:web`. The root `package.json` declares the `web`
+  workspace; one lockfile covers both.
 - Unknown page paths outside the server-rendered pages now load the web app instead of the HTML 404 page; misses under
   `/search`, `/upload`, `/generate`, `/templates`, `/entities` and `/settings`, file paths and JSON requests still 404.
 

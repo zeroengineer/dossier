@@ -7,6 +7,9 @@
   "engines": {
     "node": ">=22.13"
   },
+  "workspaces": [
+    "web"
+  ],
   "bin": {
     "dossier": "bin/dossier.js",
     "dossier-mcp": "bin/dossier-mcp.js"
@@ -14,8 +17,12 @@
   "scripts": {
     "start": "node --no-warnings=ExperimentalWarning src/server.js",
     "mcp": "node --no-warnings=ExperimentalWarning src/mcp.js",
-    "test": "node --no-warnings=ExperimentalWarning --test --test-concurrency=1 \"test/**/*.test.js\"",
+    "build": "npm run build -w web",
+    "dev:web": "npm run dev -w web",
+    "test": "npm run test:api && npm run test:web",
     "test:api": "node --no-warnings=ExperimentalWarning --test --test-concurrency=1 \"test/**/*.test.js\"",
+    "test:web": "npm run test -w web",
+    "typecheck": "npm run typecheck -w web",
     "test:unit": "node --no-warnings=ExperimentalWarning --test \"test/unit/**/*.test.js\"",
     "test:integration": "node --no-warnings=ExperimentalWarning --test --test-concurrency=1 \"test/integration/**/*.test.js\"",
     "test:snapshot": "node --no-warnings=ExperimentalWarning --test \"test/snapshot/**/*.test.js\"",

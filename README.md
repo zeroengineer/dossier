@@ -47,6 +47,25 @@ generate. The document is filed under `03 Clients/…` in the vault tree with it
 `npm run samples` generates one document per template from fake data into `samples-out/` without touching your
 workspace, which is a quick way to see every layout.
 
+### The new web app (in progress)
+
+A React app in `web/` (Vite, TypeScript, Tailwind v4, shadcn) is replacing the server-rendered pages one page at a time.
+The server serves its build from `web/dist` on the same port: build it once with `npm run build` (after `npm install`),
+then `npm start` serves it at paths the old pages do not own, such as http://127.0.0.1:4400/vault. Until the old UI is
+removed, `/` and the old pages' paths (`/search`, `/upload`, `/generate`, `/templates`, `/entities`, `/settings`,
+`/documents/:id`) still show the server-rendered pages. Without a build those web-app paths answer 503 with a hint.
+
+For development run two terminals:
+
+```sh
+npm start              # terminal 1: the API and file server on http://127.0.0.1:4400 (DOSSIER_HOME, DOSSIER_USER as above)
+npm run dev:web        # terminal 2: Vite on http://127.0.0.1:5173 with hot reload
+```
+
+Open http://127.0.0.1:5173. Vite forwards `/api/`, `/assets/`, `/previews/`, `/blobs/`, `/app/` and
+`/documents/:id/renditions/` to port 4400 (`DOSSIER_DEV_BACKEND` overrides the target) without rewriting the `Host`
+header, so the server's same-origin check passes. `npm run typecheck` checks the web app's TypeScript.
+
 ### Command line
 
 ```text
@@ -196,7 +215,10 @@ and warnings (`--json` for JSON).
 ## Testing
 
 ```sh
-npm test                    # everything: unit, integration, snapshot, organisation-data guard
+npm test                    # everything: npm run test:api, then npm run test:web
+npm run test:api            # API and services: unit, integration, snapshot, organisation-data guard (node --test)
+npm run test:web            # web app: Vitest + Testing Library + MSW (jsdom), web/src/**/*.test.{ts,tsx}
+npm run typecheck           # web app TypeScript (strict)
 npm run test:unit
 npm run test:integration
 npm run test:snapshot
@@ -208,6 +230,8 @@ npm run visual -- --update  # rewrite the baselines (always from the example wor
 
 - **Unit and integration tests** use `node:test`, temporary folders and in-memory or temporary databases; they never
   use the network or your workspace.
+- **Web app tests** run in Vitest with jsdom. API calls are answered by MSW handlers (`web/src/test/handlers.ts`) with
+  the example workspace's fake data; an unhandled request fails the test.
 - **Snapshot tests** render every template from the fake fixtures in `test/fixtures/inputs/` and compare the PDF
   geometry (text positions, fonts, image boxes) with `test/snapshot/__snapshots__/`.
 - **Samples** (`npm run samples`) generate one final document per built-in template from the same fixtures into
@@ -247,6 +271,7 @@ src/services/                        documents, upload, search, entities, hierar
 src/render/                          PDF primitives and frames (pdfkit), blocks, HTML and Markdown renderers
 src/templates/<id>/                  built-in templates (template.json + index.js / body.md)
 src/cache/                           in-memory memo and disk render cache
+web/                                 the new web app (React, Vite, TypeScript; npm workspace @dossier/web), built to web/dist
 workspace.example/                   the fake example workspace
 ```
 
