@@ -6,6 +6,7 @@ import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fastifyMultipart from '@fastify/multipart';
 import { loadConfig } from './config.js';
+import { DossierError } from './errors.js';
 import { openContext } from './context.js';
 import { FONTS_DIR, REPO_ROOT } from './paths.js';
 import {
@@ -99,16 +100,31 @@ const isLoopback = (host) => ['127.0.0.1', 'localhost', '::1', '[::1]'].includes
 
 /**
  * Open the workspace from the environment and listen. HOST (default 127.0.0.1) and PORT (default 4400) choose the
- * address; on a non-loopback HOST any Host header is accepted unless DOSSIER_ALLOWED_HOSTS (comma separated) lists them.
- * @param {{ env?: Record<string, string|undefined>, cwd?: string, host?: string, port?: number, logger?: boolean|object }} [opts]
+ * address. A non-loopback HOST needs DOSSIER_ALLOWED_HOSTS (comma separated host names the server answers); without it
+ * the server refuses to start (HOST_UNSAFE), unless DOSSIER_ALLOW_ANY_HOST=1, which accepts any Host header and prints
+ * a warning to stderr. The vault has no login, so anyone who can reach the port acts as DOSSIER_USER.
+ * @param {{ env?: Record<string, string|undefined>, cwd?: string, host?: string, port?: number, logger?: boolean|object,
+ *   warn?: (message: string) => void }} [opts] warn: where the any-host warning goes (default stderr)
  * @returns {Promise<{ app: import('fastify').FastifyInstance, url: string }>}
  */
-export async function start({ env = process.env, cwd = process.cwd(), host, port, logger = false } = {}) {
+export async function start({ env = process.env, cwd = process.cwd(), host, port, logger = false, warn = (m) => process.stderr.write(m) } = {}) {
   const config = loadConfig(env, cwd);
-  const ctx = openContext({ home: config.home, env });
   const h = host ?? env.HOST ?? '127.0.0.1';
   const listed = (env.DOSSIER_ALLOWED_HOSTS ?? '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+  if (!listed.length && !isLoopback(h)) {
+    if (env.DOSSIER_ALLOW_ANY_HOST !== '1') {
+      throw new DossierError('HOST_UNSAFE',
+        `Refusing to listen on non-loopback HOST "${h}" without DOSSIER_ALLOWED_HOSTS: Dossier has no login, so any Host `
+        + 'header would be answered (DNS rebinding) and anyone who can reach the port could read and change the vault. '
+        + 'Set DOSSIER_ALLOWED_HOSTS to the host names you serve (and put an authenticating reverse proxy in front), or '
+        + 'set DOSSIER_ALLOW_ANY_HOST=1 to accept any Host anyway.', { host: h });
+    }
+    warn(`WARNING: Dossier is listening on non-loopback HOST "${h}" and answers ANY Host header (DOSSIER_ALLOW_ANY_HOST=1). `
+      + 'There is no login: anyone who can reach this port acts as DOSSIER_USER with full access. '
+      + 'Set DOSSIER_ALLOWED_HOSTS and use an authenticating reverse proxy.\n');
+  }
   const allowedHosts = listed.length ? listed : isLoopback(h) ? LOOPBACK_HOSTS : null;
+  const ctx = openContext({ home: config.home, env });
   const app = buildServer(ctx, { allowedHosts, logger });
   app.addHook('onClose', async () => ctx.close());
   try {
@@ -131,7 +147,10 @@ const runDirectly = (() => {
 })();
 
 if (runDirectly) {
-  const { app, url } = await start({ logger: true });
+  const { app, url } = await start({ logger: true }).catch((err) => {
+    process.stderr.write(`${err.message}\n`);
+    process.exit(1);
+  });
   process.stdout.write(`Dossier is running at ${url}\n`);
   for (const sig of ['SIGINT', 'SIGTERM']) process.once(sig, () => { app.close().then(() => process.exit(0)); });
 }

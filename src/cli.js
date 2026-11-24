@@ -68,7 +68,7 @@ export const commands = {
         }
       }
       const { start } = await import('./server.js');
-      const { app, url } = await start({ env: io.env, cwd: io.cwd, ...opts });
+      const { app, url } = await start({ env: io.env, cwd: io.cwd, warn: (m) => io.stderr.write(m), ...opts });
       io.stdout.write(`Dossier is running at ${url} (Ctrl+C to stop)\n`);
       await new Promise((resolveStop) => {
         const stop = () => resolveStop();

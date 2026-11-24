@@ -23,6 +23,13 @@ images; a test fails if anything that looks like a real identifier gets into the
 Requirements: Node.js 22.13 or newer (Dossier uses the built-in `node:sqlite`). Optional: `pdftoppm` (poppler) for the
 visual checks.
 
+Limitations: the defaults target Indian businesses. Money prints as `₹` with `en-IN` digit grouping, amounts in words
+use Rupees/Paise and the Thousand/Lakh/Crore system, tax labels default to GSTIN and CGST/SGST/IGST, governing law
+defaults to India, and `{FY}` and the Finance folders use the April-March financial year. The currency symbol and
+code, number locale, date formats and currency words are set in `workspace.json` `locale` (see
+[docs/WORKSPACE.md](docs/WORKSPACE.md)), and labels and clause texts in brand and template params; the Lakh/Crore
+grouping of amounts in words and the web UI's `en-IN` money grouping are fixed in this version.
+
 ```sh
 npm install
 npm test
@@ -61,7 +68,8 @@ workspace in `DOSSIER_HOME` (default `./workspace`) as the user `DOSSIER_USER`.
 | `DOSSIER_HOME` | `./workspace` | workspace folder |
 | `DOSSIER_USER` | your OS user name (`mcp` for the MCP server) | acting user; clearance from `workspace.json` `users`, `Confidential` when not listed |
 | `HOST`, `PORT` | `127.0.0.1`, `4400` | web server address |
-| `DOSSIER_ALLOWED_HOSTS` | none | host names the web server answers when `HOST` is not loopback |
+| `DOSSIER_ALLOWED_HOSTS` | none | host names the web server answers; required when `HOST` is not loopback |
+| `DOSSIER_ALLOW_ANY_HOST` | unset | `1` lets a non-loopback `HOST` start without `DOSSIER_ALLOWED_HOSTS` (any Host accepted; a warning is printed) |
 | `DOSSIER_TEMPLATE_DIRS` | none | extra template folders (separated like `PATH`) |
 | `DOSSIER_RENDER_CACHE_MB` | `500` | size of the rendered-file cache |
 | `DOSSIER_DENYLIST` | none | file of regular expressions the organisation-data guard also checks (see Testing) |
@@ -251,6 +259,9 @@ design and data model; `docs/DECISIONS.md` records the decisions and their reaso
 - **Local only, no login.** The web server listens on `127.0.0.1` and answers only requests whose `Host` is a
   loopback name. Anyone who can reach the port acts as `DOSSIER_USER`. To listen elsewhere set `HOST` and limit names
   with `DOSSIER_ALLOWED_HOSTS`, and put an authenticating reverse proxy in front; multi-user access is out of scope.
+  A non-loopback `HOST` without `DOSSIER_ALLOWED_HOSTS` refuses to start (`HOST_UNSAFE`), because the server would
+  then answer any Host header (DNS rebinding) with no login; `DOSSIER_ALLOW_ANY_HOST=1` overrides this and prints a
+  warning to stderr on every start.
 - **Same-origin writes.** Every POST/PUT/PATCH/DELETE must carry an `Origin` (or `Referer`) whose host equals the
   `Host`; a request without either is accepted only with a JSON body, a non-POST method or an `X-Dossier-Client`
   header, none of which a cross-site page can send without a CORS preflight.
