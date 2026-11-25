@@ -2,6 +2,7 @@
 // and the brand editor's series map read the same `["series", "list"]` query.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { request } from "@/lib/api"
+import { keys } from "@/lib/keys"
 import type { SeriesEntry, SeriesList, SeriesUsage, WorkspaceFile, WorkspaceFileResponse } from "./types"
 
 /** Query keys under the `series` prefix (invalidate `seriesKeys.all` after a series write). */
@@ -58,7 +59,7 @@ export function useSaveSeries() {
       queryClient.setQueryData(seriesKeys.list, series)
       void queryClient.invalidateQueries({ queryKey: seriesKeys.all })
       void queryClient.invalidateQueries({ queryKey: ["dashboard"] })
-      void queryClient.invalidateQueries({ queryKey: ["templates"] })
+      void queryClient.invalidateQueries({ queryKey: keys.templates.all })
     },
   })
 }

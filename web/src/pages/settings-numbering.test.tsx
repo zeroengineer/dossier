@@ -84,6 +84,17 @@ describe("Numbering settings", () => {
     const alert = document.querySelector<HTMLElement>("form [data-slot=alert]")!
     expect(within(alert).getByText('(root): template "memo" would no longer load')).toBeInTheDocument()
     expect(within(alert).getByText('brands/acme/brand.json series.receipt: unknown series "receipt"')).toBeInTheDocument()
+
+    // Discard undoes the edits and clears the "Not saved" alert.
+    await user.click(screen.getByRole("button", { name: "Discard" }))
+    await waitFor(() => expect(document.querySelector("form [data-slot=alert]")).toBeNull())
+    expect(screen.queryByRole("group", { name: "series 5" })).not.toBeInTheDocument()
+  })
+
+  it("says the usage is unavailable when it cannot be loaded", async () => {
+    server.use(http.get("*/api/series/usage", () => HttpResponse.json({ code: "INTERNAL", message: "boom", details: {} }, { status: 500 })))
+    await openPage()
+    expect(await within(row(1)).findByText("Usage unavailable")).toBeInTheDocument()
   })
 
   it("refuses a start that is not a whole number before sending", async () => {

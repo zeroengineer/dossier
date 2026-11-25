@@ -96,6 +96,23 @@ export function toWorkspaceFormValues(file: WorkspaceFile): WorkspaceFormValues 
 const USER_ID = /^[A-Za-z0-9._@-]+$/
 
 /**
+ * A routing value that starts with a stored custom top-level name (`"06 Money/Bank Statements"`) follows that folder's
+ * rename; otherwise the server would no longer recognise the prefix and file the type inside the party's folder.
+ * Default names always stay recognised, so values using them are left alone.
+ */
+function renamedRoute(value: string, storedTop: string[] | null, newTop: string[], defaults: string[]): string {
+  if (!storedTop) return value
+  for (let i = 0; i < storedTop.length; i++) {
+    const old = storedTop[i]
+    const next = newTop[i]
+    if (!old || !next || old === next || old === defaults[i]) continue
+    if (value === old) return next
+    if (value.startsWith(`${old}/`)) return `${next}${value.slice(old.length)}`
+  }
+  return value
+}
+
+/**
  * The workspace.json to save. `defaultTopLevel` (from `/api/meta`) fills top-level names left blank when at least one
  * is set, so the list always has its ten names.
  */
@@ -113,19 +130,34 @@ export function toWorkspaceFile(values: WorkspaceFormValues, base: WorkspaceFile
   // Hierarchy: the ten names (or none), routing rows keyed by document type.
   const hierarchy: Obj = isObj(body["hierarchy"]) ? body["hierarchy"] : {}
   const names = values.hierarchy.topLevel.map((t) => t.value.trim())
+  const storedTop = Array.isArray(base.hierarchy?.topLevel) && base.hierarchy.topLevel.length === TOP_LEVEL_COUNT ? base.hierarchy.topLevel : null
+  let newTop: string[] = defaultTopLevel
   if (names.every((n) => n === "")) delete hierarchy["topLevel"]
-  else hierarchy["topLevel"] = names.map((n, i) => n || (defaultTopLevel[i] ?? ""))
+  else {
+    newTop = names.map((n, i) => n || (defaultTopLevel[i] ?? ""))
+    hierarchy["topLevel"] = newTop
+    names.forEach((n, i) => {
+      if (!n) return
+      const field = `hierarchy.topLevel.${i}.value`
+      if (n.includes("/")) problems.push({ field, message: 'must not contain "/"' })
+      else if (newTop.some((other, j) => j !== i && other === n)) problems.push({ field, message: `duplicate folder name "${n}"` })
+    })
+  }
   const routing: Record<string, string> = {}
   const routeRow = new Map<string, number>()
+  const routeKeys = new Set<string>()
   values.hierarchy.routing.forEach((r, i) => {
     const type = r.type.trim()
     const value = r.value.trim()
     if (!type && !value) return
+    // The server matches types case-insensitively with spaces collapsed.
+    const key = type.replace(/\s+/g, " ").toLowerCase()
     if (!type) problems.push({ field: `hierarchy.routing.${i}.type`, message: "enter the document type" })
-    else if (routeRow.has(type)) problems.push({ field: `hierarchy.routing.${i}.type`, message: `duplicate document type "${type}"` })
+    else if (routeKeys.has(key)) problems.push({ field: `hierarchy.routing.${i}.type`, message: `duplicate document type "${type}"` })
     else {
-      routing[type] = value
+      routing[type] = renamedRoute(value, storedTop, newTop, defaultTopLevel)
       routeRow.set(type, i)
+      routeKeys.add(key)
     }
   })
   if (Object.keys(routing).length) hierarchy["routing"] = routing
@@ -171,4 +203,18 @@ export function toWorkspaceFile(values: WorkspaceFormValues, base: WorkspaceFile
     return null
   }
   return { body: body as WorkspaceFile, problems, fieldFor }
+}
+
+/**
+ * The clearance levels the acting user would lose by saving `body` (empty when theirs stays or rises). Their clearance
+ * in `body` is the listed one; an unlisted user or a blank clearance is Confidential. `clearances` is `meta.clearances`,
+ * lowest first. Used only to warn: once lowered, the server's clearance rule stops them raising it back themselves.
+ */
+export function lostClearances(body: WorkspaceFile, userId: string, current: string, clearances: string[]): string[] {
+  const entry = isObj(body.users) ? body.users[userId] : undefined
+  const after = (isObj(entry) && typeof entry["clearance"] === "string" && entry["clearance"]) || "Confidential"
+  const from = clearances.indexOf(after)
+  const to = clearances.indexOf(current)
+  if (from < 0 || to < 0 || from >= to) return []
+  return clearances.slice(from + 1, to + 1)
 }

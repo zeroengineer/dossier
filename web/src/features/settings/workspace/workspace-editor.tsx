@@ -5,6 +5,7 @@ import { useLocation } from "react-router"
 import { toast } from "sonner"
 import { useSaveWorkspaceFile } from "@/api/settings"
 import type { Locale, WorkspaceFile } from "@/api/types"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { errorMessage } from "@/lib/api"
 import { ListError, SelectField, TextField } from "../form-fields"
@@ -14,10 +15,14 @@ import { Section } from "../section"
 import { applyServerErrors, type UnplacedError } from "../server-errors"
 import { UnsavedChangesGuard } from "../unsaved-guard"
 import {
-  BLANK_ROUTE, BLANK_USER, LOCALE_PATHS, TOP_LEVEL_COUNT, toWorkspaceFile, toWorkspaceFormValues, type WorkspaceFormValues,
+  BLANK_ROUTE, BLANK_USER, LOCALE_PATHS, TOP_LEVEL_COUNT, lostClearances, toWorkspaceFile, toWorkspaceFormValues,
+  type WorkspaceBuild, type WorkspaceFormValues,
 } from "./workspace-form"
 
 const FORM_ID = "workspace-form"
+
+/** "A", "A and B", "A, B and C". */
+const listOf = (items: string[]) => (items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`)
 
 const LOCALE_LABELS: Record<(typeof LOCALE_PATHS)[number], string> = {
   currencySymbol: "Currency symbol",
@@ -36,7 +41,8 @@ interface WorkspaceEditorProps {
   brandIds: string[]
   /** The effective locale (`/api/me`): shown as the placeholder of a blank locale field. */
   locale: Locale | null
-  /** The acting user's clearance (the clearance rule's ceiling). */
+  /** The acting user's id and clearance (the clearance rule's ceiling). */
+  myId: string | null
   myClearance: string | null
   clearances: string[]
   /** Default top-level folder names and their slot keys (`/api/meta`). */
@@ -45,7 +51,7 @@ interface WorkspaceEditorProps {
 }
 
 /** workspace.json as one form: general, locale, folder hierarchy and users, saved whole with `PUT /api/workspace`. */
-export function WorkspaceEditor({ file, brandIds, locale, myClearance, clearances, defaultTopLevel, topKeys }: WorkspaceEditorProps) {
+export function WorkspaceEditor({ file, brandIds, locale, myId, myClearance, clearances, defaultTopLevel, topKeys }: WorkspaceEditorProps) {
   const [base, setBase] = React.useState(file)
   const form = useForm<WorkspaceFormValues>({ defaultValues: toWorkspaceFormValues(file) })
   const { isDirty } = useFormState({ control: form.control })
@@ -59,16 +65,28 @@ export function WorkspaceEditor({ file, brandIds, locale, myClearance, clearance
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView?.({ block: "start" })
   }, [hash])
 
+  // A save that lowers the acting user's own clearance waits for confirmation (it cannot be undone by them).
+  const [pending, setPending] = React.useState<{ build: WorkspaceBuild; lost: string[] } | null>(null)
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     form.clearErrors()
     setFailure(null)
-    const { body, problems, fieldFor } = toWorkspaceFile(form.getValues(), base, defaultTopLevel)
-    if (problems.length) {
-      for (const p of problems) form.setError(p.field as FieldPath<WorkspaceFormValues>, { type: "client", message: p.message })
+    const build = toWorkspaceFile(form.getValues(), base, defaultTopLevel)
+    if (build.problems.length) {
+      for (const p of build.problems) form.setError(p.field as FieldPath<WorkspaceFormValues>, { type: "client", message: p.message })
       toast.error("Not saved", { description: "Fix the marked fields." })
       return
     }
+    const lost = myId && myClearance ? lostClearances(build.body, myId, myClearance, clearances) : []
+    if (lost.length) {
+      setPending({ build, lost })
+      return
+    }
+    await send(build)
+  }
+
+  const send = async ({ body, fieldFor }: WorkspaceBuild) => {
     try {
       const saved = await save.mutateAsync(body)
       setBase(saved)
@@ -121,7 +139,7 @@ export function WorkspaceEditor({ file, brandIds, locale, myClearance, clearance
 
         <Section
           title="Folder hierarchy"
-          description="The vault's ten top-level folder names (all blank uses the defaults shown; a blank one keeps its default name) and routing overrides per document type."
+          description="The vault's ten top-level folder names (all blank uses the defaults shown; a blank one keeps its default name) and routing overrides per document type. Changes re-file existing documents in the vault view; no files are moved."
         >
           <div className="flex flex-col gap-4">
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -180,7 +198,32 @@ export function WorkspaceEditor({ file, brandIds, locale, myClearance, clearance
           </Section>
         </div>
       </form>
-      <SaveBar form={FORM_ID} dirty={isDirty} saving={save.isPending} onDiscard={() => form.reset()} saveLabel="Save workspace" />
+      <SaveBar
+        form={FORM_ID}
+        dirty={isDirty}
+        saving={save.isPending}
+        onDiscard={() => {
+          form.reset()
+          setFailure(null)
+        }}
+        saveLabel="Save workspace"
+      />
+      <ConfirmDialog
+        open={pending !== null}
+        onOpenChange={(open) => {
+          if (!open) setPending(null)
+        }}
+        title="Lower your own clearance?"
+        description={pending
+          ? `You will lose access to ${listOf(pending.lost)} and cannot raise it back yourself.`
+          : undefined}
+        confirmLabel="Lower my clearance"
+        onConfirm={async () => {
+          const build = pending?.build
+          setPending(null)
+          if (build) await send(build)
+        }}
+      />
       <UnsavedChangesGuard dirty={isDirty} what="the workspace" />
     </>
   )

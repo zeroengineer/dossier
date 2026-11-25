@@ -15,10 +15,12 @@ import { BLANK_SERIES, toSeriesFormValues, toSeriesList, type SeriesFormValues }
 
 const FORM_ID = "numbering-form"
 
+/** Series id -> where it is used; null while loading, "unavailable" when the usage query failed. */
+export type Usage = Record<string, string[]> | "unavailable" | null
+
 interface NumberingEditorProps {
   series: SeriesEntry[]
-  /** Series id -> where it is used (null while loading or when it failed). */
-  usage: Record<string, string[]> | null
+  usage: Usage
   /** `meta.seriesScopes`. */
   scopes: string[]
 }
@@ -80,7 +82,7 @@ export function NumberingEditor({ series, usage, scopes }: NumberingEditorProps)
               Tokens: <code>{"{YYYY}"}</code> <code>{"{YY}"}</code> <code>{"{MM}"}</code> <code>{"{FY}"}</code>{" "}
               <code>{"{BRAND}"}</code> <code>{"{CLIENT}"}</code> <code>{"{CODE}"}</code> and one counter such as{" "}
               <code>{"{####}"}</code>. A series that shares a counter must name a series that owns its own counter and use the
-              same scope.
+              same scope. Renaming a series keeps only the fields shown here.
             </>
           )}
         >
@@ -103,16 +105,26 @@ export function NumberingEditor({ series, usage, scopes }: NumberingEditorProps)
           />
         </Section>
       </form>
-      <SaveBar form={FORM_ID} dirty={isDirty} saving={save.isPending} onDiscard={() => form.reset()} saveLabel="Save series" />
+      <SaveBar
+        form={FORM_ID}
+        dirty={isDirty}
+        saving={save.isPending}
+        onDiscard={() => {
+          form.reset()
+          setFailure(null)
+        }}
+        saveLabel="Save series"
+      />
       <UnsavedChangesGuard dirty={isDirty} what="the series" />
     </>
   )
 }
 
 /** Where row `index`'s series is used (by its current id), from `GET /api/series/usage`. */
-function UsageLine({ control, index, usage }: { control: Control<SeriesFormValues>; index: number; usage: Record<string, string[]> | null }) {
+function UsageLine({ control, index, usage }: { control: Control<SeriesFormValues>; index: number; usage: Usage }) {
   const id = useWatch({ control, name: `series.${index}.id` }).trim()
   if (!usage || !id) return null
+  if (usage === "unavailable") return <p className="text-sm text-muted-foreground">Usage unavailable</p>
   const uses = usage[id] ?? []
   return (
     <p className="text-sm text-muted-foreground">

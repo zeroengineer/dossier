@@ -119,6 +119,39 @@ describe("Workspace settings", () => {
     expect(within(routeRow(1)).getByText("cannot route to the Restricted folder")).toBeInTheDocument()
   })
 
+  it("asks before lowering your own clearance, and sends nothing on cancel", async () => {
+    const bodies = capturePuts()
+    const { user } = await openPage()
+    await user.selectOptions(within(userRow(1)).getByLabelText(/^Clearance/), "Public")
+    await user.click(saveButton())
+    const dialog = await screen.findByRole("alertdialog")
+    expect(within(dialog).getByText("You will lose access to Internal and Confidential and cannot raise it back yourself.")).toBeInTheDocument()
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }))
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument())
+    expect(bodies).toHaveLength(0)
+    expect(screen.getByText("You have unsaved changes.")).toBeInTheDocument()
+  })
+
+  it("lowers your own clearance after confirming", async () => {
+    const bodies = capturePuts()
+    const { user } = await openPage()
+    await user.selectOptions(within(userRow(1)).getByLabelText(/^Clearance/), "Public")
+    await user.click(saveButton())
+    const dialog = await screen.findByRole("alertdialog")
+    await user.click(within(dialog).getByRole("button", { name: "Lower my clearance" }))
+    await waitFor(() => expect(bodies).toHaveLength(1))
+    expect(bodies[0]?.users?.["demo"]).toEqual({ clearance: "Public" })
+  })
+
+  it("does not ask when your clearance stays the same", async () => {
+    const bodies = capturePuts()
+    const { user } = await openPage()
+    await user.selectOptions(within(userRow(2)).getByLabelText(/^Clearance/), "Public")
+    await user.click(saveButton())
+    await waitFor(() => expect(bodies).toHaveLength(1))
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument()
+  })
+
   it("refuses duplicate users before sending", async () => {
     const bodies = capturePuts()
     const { user } = await openPage()

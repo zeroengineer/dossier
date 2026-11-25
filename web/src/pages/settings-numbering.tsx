@@ -16,7 +16,7 @@ export default function NumberingSettingsPage() {
       {failed ? (
         <ErrorState error={failed.error} title="Could not load the numbering series" onRetry={() => void failed.refetch()} />
       ) : series.data && meta.data ? (
-        <NumberingEditor series={series.data} usage={usage.data ?? null} scopes={meta.data.seriesScopes} />
+        <NumberingEditor series={series.data} usage={usage.isError ? "unavailable" : (usage.data ?? null)} scopes={meta.data.seriesScopes} />
       ) : (
         <PageSkeleton />
       )}
