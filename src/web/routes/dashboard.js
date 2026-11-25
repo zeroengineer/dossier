@@ -3,8 +3,8 @@ import { dashboardSummary } from '../../services/dashboard.js';
 
 /**
  * @param {import('fastify').FastifyInstance} app
- * @param {{ ctx: object }} opts
+ * @param {{ ctx: object, now?: () => Date }} opts now: the clock "today" comes from (buildServer's `now`)
  */
-export default async function dashboardRoutes(app, { ctx }) {
-  app.get('/api/dashboard', (req) => dashboardSummary(ctx, { days: req.query.days ?? 30 }));
+export default async function dashboardRoutes(app, { ctx, now = () => new Date() }) {
+  app.get('/api/dashboard', (req) => dashboardSummary(ctx, { days: req.query.days ?? 30, now: now() }));
 }

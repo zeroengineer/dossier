@@ -12,8 +12,11 @@ import { allocateNumber, listCounters } from '../../src/services/numbering.js';
 import { dashboardSummary } from '../../src/services/dashboard.js';
 import { todayIso } from '../../src/services/fields.js';
 
-// Local calendar dates relative to today, the convention the dashboard uses.
-const daysAgo = (n) => { const d = new Date(); return todayIso(new Date(d.getFullYear(), d.getMonth(), d.getDate() - n)); };
+// One clock for the whole file: the fixtures' dates, the server's "today" (buildServer `now`) and the undated
+// document's created_at all derive from NOW, so a run that crosses local midnight cannot see two different days.
+const NOW = new Date();
+// Local calendar dates relative to NOW, the convention the dashboard uses.
+const daysAgo = (n) => todayIso(new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() - n));
 
 let tmp; let admin; let intern; let adminApp; let internApp;
 const ids = {};
@@ -74,10 +77,12 @@ before(() => {
 
   // The oldest document was edited last.
   admin.db.prepare('UPDATE documents SET updated_at = ? WHERE id = ?').run('2999-01-01T00:00:00.000Z', ids.old);
+  // The undated document counts on its created (local) date: pin it to NOW, not the moment the row was written.
+  admin.db.prepare('UPDATE documents SET created_at = ? WHERE id = ?').run(NOW.toISOString(), ids.undated);
 
   const spaDir = fakeSpaDir(tmp.dir, 'web-dist');
-  adminApp = buildServer(admin, { spaDir });
-  internApp = buildServer(intern, { spaDir });
+  adminApp = buildServer(admin, { spaDir, now: () => NOW });
+  internApp = buildServer(intern, { spaDir, now: () => NOW });
 });
 
 after(async () => {
@@ -99,6 +104,15 @@ describe('GET /api/dashboard', () => {
     assert.deepEqual(Object.keys(b).sort(), ['counters', 'kpis', 'previous', 'range', 'recent', 'timeline', 'warnings']);
     assert.deepEqual(b.range, { days: 7, from: daysAgo(6), to: daysAgo(0) });
     assert.deepEqual(Object.keys(b.kpis).sort(), ['documents', 'drafts', 'invoiced', 'numberConflicts']);
+  });
+
+  test("the server's today comes from buildServer's clock", async () => {
+    const pinned = buildServer(intern, { spaDir: fakeSpaDir(tmp.dir, 'web-dist-pinned'), now: () => new Date(2026, 0, 15, 23, 59, 59) });
+    try {
+      assert.deepEqual((await get(pinned, '?days=7')).json().range, { days: 7, from: '2026-01-09', to: '2026-01-15' });
+    } finally {
+      await pinned.close();
+    }
   });
 
   test('days defaults to 30; anything but 7, 30 or 90 is INVALID_INPUT', async () => {

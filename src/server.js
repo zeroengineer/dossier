@@ -34,13 +34,17 @@ export const SPA_DIR = join(REPO_ROOT, 'web', 'dist');
 /**
  * Build the Fastify app for one context (one workspace, one acting user).
  * @param {object} ctx from openContext
- * @param {{ allowedHosts?: string[]|null, logger?: boolean|object, fileSizeLimit?: number, spaDir?: string }} [opts]
+ * @param {{ allowedHosts?: string[]|null, logger?: boolean|object, fileSizeLimit?: number, spaDir?: string,
+ *   now?: () => Date }} [opts]
  *   allowedHosts: Host header names accepted (default loopback names; null accepts any host);
  *   fileSizeLimit: largest upload in bytes (default 50 MB);
- *   spaDir: the built web app (default `web/dist`; a missing folder answers its routes with 503)
+ *   spaDir: the built web app (default `web/dist`; a missing folder answers its routes with 503);
+ *   now: the clock the dashboard's "today" comes from (default the system clock; tests pin it)
  * @returns {import('fastify').FastifyInstance}
  */
-export function buildServer(ctx, { allowedHosts = LOOPBACK_HOSTS, logger = false, fileSizeLimit = 50 * 1024 * 1024, spaDir = SPA_DIR } = {}) {
+export function buildServer(ctx, {
+  allowedHosts = LOOPBACK_HOSTS, logger = false, fileSizeLimit = 50 * 1024 * 1024, spaDir = SPA_DIR, now = () => new Date(),
+} = {}) {
   const app = Fastify({ logger });
 
   app.register(fastifyMultipart, { limits: { fileSize: fileSizeLimit, files: 1, fields: 100 }, throwFileSizeLimit: true });
@@ -85,7 +89,7 @@ export function buildServer(ctx, { allowedHosts = LOOPBACK_HOSTS, logger = false
     .send({ code: 'NOT_FOUND', message: `No route ${req.method} ${req.url.split('?')[0]}`, details: {} });
 
   for (const routes of [assetRoutes, vaultRoutes, documentRoutes, uploadRoutes, searchRoutes, templateRoutes, entityRoutes, settingsRoutes, metaRoutes, dashboardRoutes]) {
-    app.register(routes, { ctx, fileSizeLimit });
+    app.register(routes, { ctx, fileSizeLimit, now });
   }
   // Last: the web app's static files and its index.html for unmatched GET/HEAD client routes, `/` included (other
   // misses: notFound).
