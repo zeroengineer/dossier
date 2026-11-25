@@ -70,6 +70,16 @@ describe('SPA serving', () => {
     assert.equal(head.body, '');
   });
 
+  test('a wrong-case spelling of a build file is a 404 whether or not the file exists', async () => {
+    // On a case-insensitive disk the static plugin sees /APP/x.js as an alias of app/x.js and refuses it (403); on a
+    // case-sensitive one it is simply missing. Both must answer the same JSON 404.
+    for (const url of ['/APP/x.js', '/app/X.JS', '/APP/missing.js', '/BRAND/icon-192.png', '/Site.webmanifest', '/INDEX.HTML']) {
+      const r = await app.inject({ url });
+      assert.equal(r.statusCode, 404, `${url}: ${r.statusCode}`);
+      assert.equal(r.json().code, 'NOT_FOUND', url);
+    }
+  });
+
   test('a directory of the build is a 404, never a 403 or the web app', async () => {
     for (const url of ['/app/', '/brand/', '/app', '/brand', '/assets/fonts/', '/assets/fonts/Manrope/']) {
       const r = await app.inject({ url });
@@ -82,7 +92,7 @@ describe('SPA serving', () => {
     const js = await app.inject({ url: '/%61pp/x.js' });
     assert.equal(js.statusCode, 200);
     assert.match(js.headers['content-type'], /javascript/);
-    for (const url of ['/%61pp/missing.js', '/%62rand/missing.png', '/%61pi/nope', '/%41PI/nope', '/documents/DOC-1/%72enditions']) {
+    for (const url of ['/%61pp/missing.js', '/%62rand/missing.png', '/%61pi/nope', '/%41PI/nope', '/documents/DOC-1/%72enditions', '//api/x', '/api;x', '/API/x', '//app/x.js', '/app;x.js']) {
       const r = await app.inject({ url });
       assert.ok(r.statusCode >= 400 && r.statusCode < 500, `${url}: ${r.statusCode}`);
       assert.notEqual(r.body, INDEX, url);
@@ -126,6 +136,7 @@ describe('SPA serving', () => {
     const idx = await app.inject({ url: '/index.html' });
     assert.equal(idx.statusCode, 200);
     assert.equal(idx.headers['content-security-policy'], SPA_CSP);
+    assert.equal(idx.headers['cache-control'], 'no-store', 'index.html is never stored, like the fallback');
   });
 
   test('brand icons and the web manifest are served from the build, revalidated, never the web app', async () => {

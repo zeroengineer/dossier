@@ -23,6 +23,9 @@ test('error codes map to HTTP statuses', () => {
   assert.deepEqual(errorReply(new Error('secret internals')).body, { code: 'INTERNAL', message: 'Internal server error', details: {} });
   assert.equal(errorReply(Object.assign(new Error('too big'), { statusCode: 413 })).body.code, 'PAYLOAD_TOO_LARGE');
   assert.deepEqual(errorReply(Object.assign(new Error('Forbidden'), { statusCode: 403 })), { status: 403, body: { code: 'FORBIDDEN', message: 'Forbidden', details: {} } });
+  // The static plugin's refusal of a path it will not serve as spelled (it exists only under another spelling) is a 404.
+  assert.deepEqual(errorReply(Object.assign(new Error('Forbidden'), { statusCode: 403, code: 'FST_STATIC_FORBIDDEN_PATH' })),
+    { status: 404, body: { code: 'NOT_FOUND', message: 'Not found', details: {} } });
 });
 
 test('crossSiteReason: same origin only for form posts; JSON, other methods and X-Dossier-Client pass without Origin', () => {
@@ -73,7 +76,7 @@ test('searchOptions parses query strings', () => {
 
 test('wantsJson: any-case /api paths (with or without a slash) and Accept: application/json', () => {
   const req = (url, accept) => ({ url, headers: accept ? { accept } : {} });
-  for (const url of ['/api', '/api/', '/api/me', '/API/me', '/Api?x=1']) assert.equal(wantsJson(req(url)), true, url);
+  for (const url of ['/api', '/api/', '/api/me', '/API/me', '/API/x', '/Api?x=1', '//api/x', '//api', '/api;x', '///API;x']) assert.equal(wantsJson(req(url)), true, url);
   for (const url of ['/', '/apis', '/apidocs/x', '/dashboard?api=1']) assert.equal(wantsJson(req(url)), false, url);
   assert.equal(wantsJson(req('/dashboard', 'application/json')), true);
 });
@@ -87,7 +90,7 @@ test('isSpaRequest: GET/HEAD client routes only; never /api, file namespaces or 
   assert.equal(isSpaRequest(req('/dashboard', 'POST')), false);
   assert.equal(isSpaRequest(req('/dashboard', 'GET', 'application/json')), false);
   for (const url of [
-    '/api', '/API', '/api/nope', '/Api/x', '/%61pi/x', '/%41PI',
+    '/api', '/API', '/api/nope', '/Api/x', '/API/x', '/%61pi/x', '/%41PI', '//api/x', '/api;x', '//%61pi;x', '//app/x.js', '/app;x',
     '/app', '/app/x.js', '/APP/x.js', '/%61pp/x.js', '/assets/x', '/blobs/x/y', '/previews/t/f', '/brand/x.png', '/static/app.css',
     '/documents/DOC-1/renditions/pdf', '/documents/DOC-1/%72enditions/pdf', '/favicon.ico', '/robots.txt', '/workspace%2Ejson',
     '/%E0%A4%A',

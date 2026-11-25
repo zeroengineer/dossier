@@ -12,14 +12,16 @@ browser ──> Fastify (src/server.js, port 4400)
               ├─ /assets/fonts/*, /assets/brands/*, /previews/*, /blobs/*,
               │  /documents/:id/renditions/*  files (fonts, brand assets, draft previews, stored bytes, renditions)
               ├─ /app/*                       the web app's hashed bundle (web/dist/app, cached immutable)
-              └─ any other GET page route     web/dist/index.html (client-side routing; 503 if not built)
+              └─ /, any other GET page route  web/dist/index.html (client-side routing; 503 if not built)
 ```
 
 - **One server, one origin.** `src/web/spa.js` serves `web/dist`: hashed files under `/app/*` with an immutable cache,
   other files (favicon, manifest, brand images in `web/public`) revalidated, and `index.html` for every unmatched
-  GET/HEAD request that is not under `/api/`, not a file namespace, not a file name and does not ask for JSON. API
-  misses stay JSON 404s. When `web/dist` is missing the page routes answer 503 with a one-line hint and the server
-  still starts. Until F21 removes the server-rendered pages, `/` and the old pages' paths keep showing them.
+  GET/HEAD request (`/` included) that is not under `/api` (any letter case, any number of leading slashes), not a
+  file namespace, not a file name and does not ask for JSON; the raw and the percent-decoded path are both checked.
+  `index.html` is never stored (`no-store`). API misses, file misses and every error are JSON
+  (`{ code, message, details }`). When `web/dist` is missing the page routes answer 503 with a one-line hint and the
+  server still starts. There are no server-rendered pages and no form posts.
 - **No business logic in the UI.** Lifecycle, numbering, clearance and routing rules live in the backend services. The
   app reads them from `/api/meta`, `/api/me` and API errors (`{ code, message, details }`) and never re-implements
   them.

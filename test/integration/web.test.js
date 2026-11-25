@@ -89,7 +89,7 @@ describe('web app', () => {
   });
 
   test('unknown /api paths, in any letter case and without a slash, answer JSON 404', async () => {
-    for (const url of ['/api/nope', '/api', '/api/', '/API/me', '/Api/tree', '/%61pi/nope']) {
+    for (const url of ['/api/nope', '/api', '/api/', '/API/me', '/API/x', '/Api/tree', '/%61pi/nope', '//api/x', '//api', '/api;x', '///API;x/y']) {
       const r = await app.inject({ url });
       assert.equal(r.statusCode, 404, url);
       assert.match(r.headers['content-type'], /^application\/json/, url);
@@ -158,6 +158,9 @@ describe('JSON API', () => {
     const back = await api('POST', `/api/documents/${a.id}/status`, { status: 'Draft' });
     assert.equal(back.statusCode, 409);
     assert.equal(back.json().code, 'INVALID_STATUS_TRANSITION');
+    const unknown = await api('POST', `/api/documents/${b.id}/status`, { status: 'Nonsense' });
+    assert.equal(unknown.statusCode, 400, unknown.body);
+    assert.equal((await api('GET', `/api/documents/${b.id}`)).json().status, 'Draft');
     const md = await api('POST', `/api/documents/${a.id}/metadata`, { title: 'Quote A (rev)' });
     assert.equal(md.json().title, 'Quote A (rev)');
     const link = await api('POST', `/api/documents/${b.id}/links`, { toId: a.id, type: 'based_on' });
@@ -193,6 +196,29 @@ describe('JSON API', () => {
     assert.equal(rel.statusCode, 201);
     const missing = await api('GET', '/api/entities/999999');
     assert.equal(missing.statusCode, 404);
+  });
+
+  test('POST /api/entities with an id edits; brand null clears the brand; bad attrs are a 400', async () => {
+    const c = await api('POST', '/api/entities', { kind: 'client', name: 'Edit Client Ltd', brand: 'acme', attrs: { code: 'ECL' } });
+    assert.equal(c.statusCode, 201, c.body);
+    assert.equal(c.json().brand, 'acme');
+    const { id } = c.json();
+    const e = await api('POST', '/api/entities', { id, name: 'Edit Client Limited', aliases: ['ECL'] });
+    assert.equal(e.statusCode, 200, e.body);
+    assert.equal(e.json().id, id);
+    assert.equal(e.json().name, 'Edit Client Limited');
+    assert.ok(e.json().aliases.includes('ECL'), 'aliases are added');
+    assert.equal(e.json().brand, 'acme', 'a brand left out is kept');
+    const cleared = await api('POST', '/api/entities', { id, name: 'Edit Client Limited', brand: null });
+    assert.equal(cleared.statusCode, 200, cleared.body);
+    assert.equal(cleared.json().brand, null);
+    assert.equal((await api('GET', `/api/entities/${id}`)).json().brand, null);
+    for (const attrs of ['{nope', [], 7]) {
+      const bad = await api('POST', '/api/entities', { id, name: 'Edit Client Limited', attrs });
+      assert.equal(bad.statusCode, 400, `${JSON.stringify(attrs)}: ${bad.body}`);
+      assert.equal(bad.json().code, 'INVALID_INPUT');
+    }
+    assert.deepEqual((await api('GET', `/api/entities/${id}`)).json().attrs, { code: 'ECL' });
   });
 
   test('GET /api/templates and /api/templates/:id; POST resolve', async () => {
@@ -276,6 +302,15 @@ describe('upload', () => {
     assert.equal(r2.json().version.versionNo, 2);
     const s = await api('GET', '/api/search?q=warehouse');
     assert.ok(s.json().hits.some((h) => h.document.id === doc.id));
+  });
+
+  test('POST /api/upload refuses a secret with SECRET_REJECTED (400) and stores nothing', async () => {
+    const before = (await api('GET', '/api/documents?limit=1')).json().total;
+    const bad = multipart({ type: 'Letter' }, { filename: 'server.pem', mime: 'text/plain', buffer: Buffer.from('-----BEGIN PRIVATE KEY-----\nabc\n') });
+    const r = await app.inject({ method: 'POST', url: '/api/upload', ...bad, headers: { ...bad.headers, origin: ORIGIN } });
+    assert.equal(r.statusCode, 400, r.body);
+    assert.equal(r.json().code, 'SECRET_REJECTED');
+    assert.equal((await api('GET', '/api/documents?limit=1')).json().total, before);
   });
 });
 

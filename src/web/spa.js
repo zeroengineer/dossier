@@ -15,7 +15,7 @@ export const SPA_CSP = "default-src 'self'; img-src 'self' data: blob:; style-sr
  * Paths that name files (bundle, backend files, renditions); a miss there is a real 404, never the web app. `/static/`
  * stays listed so links to the removed server-rendered UI's CSS/JS get a 404 rather than the app.
  */
-const FILE_NAMESPACE = /^\/(?:(?:app|assets|blobs|previews|brand|static)(?:\/|$)|documents\/[^/]+\/renditions(?:\/|$)|favicon\.ico$)/i;
+const FILE_NAMESPACE = /^\/+(?:(?:app|assets|blobs|previews|brand|static)(?:[/;]|$)|documents\/[^/]+\/renditions(?:[/;]|$)|favicon\.ico$)/i;
 
 /** A last path segment that names a file (`/workspace.json`, `/robots.txt`): a miss is a 404, not a client route. */
 const FILE_EXTENSION = /\.(?:json|m?js|css|map|txt|xml|ico|png|jpe?g|gif|svg|webp|avif|pdf|html?|md|ttf|otf|woff2?|webmanifest|db|sqlite)$/i;
@@ -77,8 +77,10 @@ export function spaRoutes(app, { dir, notFound }) {
       allowedPath: (pathName) => !pathName.endsWith('/'),
       cacheControl: false,
       setHeaders: (reply, path) => {
-        reply.header('Cache-Control', path.startsWith(appDir) ? CACHE_PUBLIC_IMMUTABLE : 'public, max-age=0');
-        if (/\.html?$/i.test(path)) reply.header('Content-Security-Policy', SPA_CSP).header('X-Frame-Options', 'SAMEORIGIN');
+        // index.html is never stored (like the fallback that serves it), so a new build shows at once.
+        const html = /\.html?$/i.test(path);
+        reply.header('Cache-Control', html ? 'no-store' : path.startsWith(appDir) ? CACHE_PUBLIC_IMMUTABLE : 'public, max-age=0');
+        if (html) reply.header('Content-Security-Policy', SPA_CSP).header('X-Frame-Options', 'SAMEORIGIN');
       },
     });
   }

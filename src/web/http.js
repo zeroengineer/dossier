@@ -35,6 +35,9 @@ export function statusFor(code) {
  */
 export function errorReply(err) {
   if (isDossierError(err)) return { status: statusFor(err.code), body: err.toJSON() };
+  // @fastify/static refuses a path it will not serve as spelled (a wrong-case alias of an existing file, `//`, `..`)
+  // with a 403 only when the file exists; a 404 keeps the answer independent of what is on disk.
+  if (err?.code === 'FST_STATIC_FORBIDDEN_PATH') return { status: 404, body: { code: 'NOT_FOUND', message: 'Not found', details: {} } };
   const sc = Number(err?.statusCode);
   if (sc >= 400 && sc < 500) {
     const code = sc === 413 ? 'PAYLOAD_TOO_LARGE' : sc === 404 ? 'NOT_FOUND' : sc === 403 ? 'FORBIDDEN' : sc === 415 ? 'UNSUPPORTED_MEDIA_TYPE' : 'INVALID_INPUT';
@@ -150,8 +153,11 @@ export function sendFile(reply, { buffer, filename, mime }, { download = false, 
   return reply.send(buffer);
 }
 
-/** `/api` and everything under it, in any letter case (`/API/x`, a bare `/api`). */
-export const API_PATH = /^\/api(?:\/|$)/i;
+/**
+ * `/api` and everything under it, in any letter case and after any number of leading slashes (`/API/x`, `//api/x`,
+ * a bare `/api`, `/api;x`).
+ */
+export const API_PATH = /^\/+api(?:[/;]|$)/i;
 
 /** True when the client asked for JSON (an `/api` path, or `Accept: application/json`). */
 export const wantsJson = (req) => API_PATH.test(req.url.split('?')[0]) || /application\/json/.test(String(req.headers.accept ?? ''));
