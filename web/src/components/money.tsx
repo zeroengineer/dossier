@@ -1,5 +1,5 @@
 import { useMe } from "@/api/me"
-import { formatMoney } from "@/lib/format"
+import { DEFAULT_LOCALE, formatMoney } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 interface MoneyProps {
@@ -10,10 +10,10 @@ interface MoneyProps {
   className?: string
 }
 
-/** An amount in minor units, grouped for the workspace locale (`en-IN` by default). Never float-divides. */
+/** An amount in minor units, grouped for the workspace locale (`DEFAULT_LOCALE` until it loads). Never float-divides. */
 export function Money({ amountMinor, currency, className }: MoneyProps) {
   const { data: me } = useMe()
   const locale = me?.workspace.locale
-  const code = currency ?? locale?.currencyCode ?? "INR"
+  const code = currency ?? locale?.currencyCode ?? DEFAULT_LOCALE.currencyCode
   return <span className={cn("tabular-nums", className)}>{formatMoney(amountMinor, code, locale)}</span>
 }

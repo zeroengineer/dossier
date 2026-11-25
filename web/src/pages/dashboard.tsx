@@ -16,7 +16,7 @@ import { KpiCards, KpiCardsSkeleton } from "@/features/dashboard/kpi-cards"
 import { RecentDocuments } from "@/features/dashboard/recent-documents"
 import { SeriesCounters } from "@/features/dashboard/series-counters"
 import { WarningsCard } from "@/features/dashboard/warnings-card"
-import { formatDate } from "@/lib/format"
+import { DEFAULT_LOCALE, formatDate } from "@/lib/format"
 
 // Recharts is only needed here: its own chunk, fetched when the page mounts (in parallel with the dashboard data)
 // rather than once the data has arrived and the chart first renders.
@@ -47,7 +47,7 @@ function RangeToggle({ days, onChange }: { days: DashboardDays; onChange: (days:
 function ChartSummary({ points, weekly }: { points: ChartPoint[]; weekly: boolean }) {
   const { data: me } = useMe()
   const locale = me?.workspace.locale
-  const num = (n: number) => n.toLocaleString(locale?.numberLocale || "en-IN")
+  const num = (n: number) => n.toLocaleString(locale?.numberLocale || DEFAULT_LOCALE.numberLocale)
   const { total, peak } = summarizePoints(points)
   const bucket = (p: ChartPoint) => (weekly ? `Week of ${formatDate(p.date, "medium", locale)}` : formatDate(p.date, "medium", locale))
   return (
@@ -177,7 +177,7 @@ export default function DashboardPage() {
             </>
           )}
           <div className="grid gap-4 lg:grid-cols-2">
-            <SeriesCounters counters={data.counters} numberLocale={me?.workspace.locale.numberLocale || "en-IN"} />
+            <SeriesCounters counters={data.counters} numberLocale={me?.workspace.locale.numberLocale || DEFAULT_LOCALE.numberLocale} />
             <WarningsCard warnings={data.warnings} />
           </div>
         </div>

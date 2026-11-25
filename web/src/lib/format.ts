@@ -1,6 +1,12 @@
 import type { Locale } from "@/api/types"
 
-const DEFAULT_NUMBER_LOCALE = "en-IN"
+/**
+ * The fallbacks used before `/api/me` has loaded (or when it has no locale). They mirror the server's defaults for
+ * `workspace.json` `locale` in src/workspace/schemas.js (`currencyCode` INR, `numberLocale` en-IN): change both together.
+ */
+export const DEFAULT_LOCALE = { numberLocale: "en-IN", currencyCode: "INR" } as const
+
+const DEFAULT_NUMBER_LOCALE = DEFAULT_LOCALE.numberLocale
 
 /**
  * Format an amount held in minor units (paise, cents) without float division: the integer is split into major and

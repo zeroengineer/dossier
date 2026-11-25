@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { formatDate, formatMoney, parseDate } from "./format"
+import { DEFAULT_LOCALE, formatDate, formatMoney, parseDate } from "./format"
 
 const inr = { numberLocale: "en-IN" }
 
@@ -33,5 +33,24 @@ describe("dates", () => {
     expect(formatDate("2026-04-01", "short", inr)).toBe("01/04/2026")
     expect(formatDate("2026-04-01", "long", inr)).toBe("1 April 2026")
     expect(formatDate("garbage", "medium", inr)).toBe("garbage")
+  })
+})
+
+describe("DEFAULT_LOCALE", () => {
+  it("is the fallback when no workspace locale is given", () => {
+    expect(DEFAULT_LOCALE).toEqual({ numberLocale: "en-IN", currencyCode: "INR" })
+    expect(formatMoney(12345678, DEFAULT_LOCALE.currencyCode)).toBe("₹1,23,456.78")
+    expect(formatDate("2026-04-01", "short")).toBe("01/04/2026")
+  })
+
+  it("is the only place the app spells the fallback locale or currency", () => {
+    const sources = import.meta.glob<string>(["/src/**/*.{ts,tsx}", "!/src/**/*.test.{ts,tsx}", "!/src/test/**"], {
+      query: "?raw", import: "default", eager: true,
+    })
+    const offenders = Object.entries(sources)
+      .filter(([path, text]) => path !== "/src/lib/format.ts" && /["'`](en-IN|INR)["'`]/.test(text))
+      .map(([path]) => path)
+    expect(Object.keys(sources).length).toBeGreaterThan(50)
+    expect(offenders).toEqual([])
   })
 })

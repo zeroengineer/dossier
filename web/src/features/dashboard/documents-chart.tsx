@@ -6,7 +6,7 @@ import { useMe } from "@/api/me"
 import type { DashboardDays } from "@/api/types"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
-import { formatDate, parseDate } from "@/lib/format"
+import { DEFAULT_LOCALE, formatDate, parseDate } from "@/lib/format"
 import type { ChartPoint } from "./figures"
 
 const config = {
@@ -17,7 +17,7 @@ export default function DocumentsChart({ points, days }: { points: ChartPoint[];
   const { data: me } = useMe()
   const reducedMotion = useReducedMotion()
   const fillId = `fill-documents-${useId().replace(/:/g, "")}`
-  const numberLocale = me?.workspace.locale.numberLocale || "en-IN"
+  const numberLocale = me?.workspace.locale.numberLocale || DEFAULT_LOCALE.numberLocale
   const tick = (value: string) => {
     const d = parseDate(value)
     return d ? new Intl.DateTimeFormat(numberLocale, { day: "numeric", month: "short" }).format(d) : value

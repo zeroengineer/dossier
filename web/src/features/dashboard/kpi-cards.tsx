@@ -5,7 +5,7 @@ import type { DashboardSummary } from "@/api/types"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { formatMoney } from "@/lib/format"
+import { DEFAULT_LOCALE, formatMoney } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { deltaOf, headlineInvoiced, type Delta } from "./figures"
 
@@ -71,12 +71,12 @@ export function KpiCards({ data }: { data: DashboardSummary }) {
   const { kpis, previous, range } = data
   const days = range.days
   const prevPeriod = `the previous ${days} days`
-  const num = (n: number) => n.toLocaleString(locale?.numberLocale || "en-IN")
+  const num = (n: number) => n.toLocaleString(locale?.numberLocale || DEFAULT_LOCALE.numberLocale)
 
   const docDelta = deltaOf(kpis.documents, previous.documents)
 
   const headline = headlineInvoiced(kpis.invoiced, workspaceCurrency)
-  const currency = headline?.currency ?? workspaceCurrency ?? "INR"
+  const currency = headline?.currency ?? workspaceCurrency ?? DEFAULT_LOCALE.currencyCode
   const prevSame = previous.invoiced.find((i) => i.currency === currency)
   // Nothing invoiced this period but something last period is a real 100% drop: compare from zero.
   const invoicedDelta = prevSame ? deltaOf(headline?.amountMinor ?? 0, prevSame.amountMinor) : null
