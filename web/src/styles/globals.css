@@ -202,6 +202,11 @@
 #main-content > :not([aria-busy="true"]) {
   animation: dossier-fade-in 200ms ease-out;
 }
+/* During a route's view transition the page already fades in as a whole: no second fade inside it. (A separate rule,
+   so a browser without :active-view-transition drops only this one.) */
+:root:active-view-transition #main-content > * {
+  animation: none;
+}
 /* Table rows fade in when they replace skeleton rows or a new page of rows arrives. */
 [data-slot="table-body"] > [data-slot="table-row"] {
   animation: dossier-fade-in 150ms ease-out;

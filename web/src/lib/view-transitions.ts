@@ -5,7 +5,11 @@ type To = Parameters<Router["navigate"]>[0]
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)"
 
-/** The pathname a navigation leads to, or null when it cannot be told (history steps, odd values). */
+/**
+ * The pathname a navigation leads to, or null when it cannot be told (history steps, odd values). Relative paths
+ * resolve against `href` (the caller passes `window.location.href`), not against the route that navigates: close
+ * enough to tell "same page" from "another page", which is all this is used for.
+ */
 export function targetPathname(to: To, href: string): string | null {
   if (typeof to === "number" || to === null) return null
   try {

@@ -10,6 +10,7 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollableTabsList } from "@/components/scrollable-tabs-list"
 import { Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs"
+import { useLatchedWhileActive } from "@/hooks/use-latched-while-active"
 import { KIND_LABEL, formatBytes, originalPreview, viewerRenditions } from "./renditions"
 
 const FRAME = "h-[75vh] min-h-96 w-full rounded-md border bg-background"
@@ -84,7 +85,7 @@ export function DocumentViewer({ docId, title, version }: DocumentViewerProps) {
                 forceMount={isOpened(r.kind) ? true : undefined}
                 className="flex flex-col gap-2 data-[state=inactive]:hidden"
               >
-                <RenditionView docId={docId} title={title} versionNo={versionNo} rendition={r} />
+                <RenditionView docId={docId} title={title} versionNo={versionNo} rendition={r} active={r.kind === active.kind} />
                 <p className="truncate text-xs text-muted-foreground">
                   {r.displayName} · {formatBytes(r.bytes)}
                   {r.pageCount !== null ? ` · ${r.pageCount} ${r.pageCount === 1 ? "page" : "pages"}` : ""}
@@ -104,7 +105,17 @@ export function DocumentViewer({ docId, title, version }: DocumentViewerProps) {
   )
 }
 
-function RenditionView({ docId, title, versionNo, rendition }: { docId: string; title: string; versionNo: number | null; rendition: DocumentRendition }) {
+interface RenditionViewProps {
+  docId: string
+  title: string
+  versionNo: number | null
+  rendition: DocumentRendition
+  /** Whether its tab is the one on show. A hidden panel keeps the version it last showed until it is shown again. */
+  active: boolean
+}
+
+function RenditionView({ docId, title, versionNo: current, rendition, active }: RenditionViewProps) {
+  const versionNo = useLatchedWhileActive(current, active)
   const src = renditionUrl(docId, rendition.kind, { versionNo })
   const label = `${KIND_LABEL[rendition.kind]} of ${title}`
   const kind = rendition.kind === "original" ? originalPreview(rendition.mime) : rendition.kind

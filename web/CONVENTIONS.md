@@ -75,8 +75,9 @@ One spacing scale for every page (Tailwind steps, no arbitrary values):
 - **Shell.** The sidebar floats (`variant="floating"`, `collapsible="icon"`): inset 0.5rem from the window, rounded,
   `shadow-lg`. The sticky header floats with it: `h-12`, `rounded-xl`, border, backdrop blur, `shadow-md` once the page
   scrolls under it. Header and page share the sidebar's inset, so their edges line up with the sidebar's top and
-  bottom: `px-3 pt-3` on phones, `px-2 pt-2` from `md` (the left padding keeps the page clear of the sidebar's
-  resize rail, which straddles the sidebar's edge).
+  bottom: `px-3 pt-3` on phones, `pt-2 pr-2` from `md`. The left gutter from `md` is 0.75rem (header `pl-3`, page
+  `ml-3`, so the page's own box starts after it): the sidebar's resize rail reaches up to 10 px past the sidebar gap
+  in the icon rail (8 px expanded), and nothing of the page may sit under it.
 - **Page.** `#main-content` is a `flex flex-col gap-6` column with `pt-6`; a page's own root is `flex flex-col gap-6`
   too: header, toolbar, cards and tables are `gap-6` apart. Do not add page padding of your own.
 - **Inside a block.** Toolbar to table and card to card in one group: `gap-4`. Cards keep the card's own spacing

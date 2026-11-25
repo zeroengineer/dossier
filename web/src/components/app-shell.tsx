@@ -69,7 +69,7 @@ export function AppShell() {
           <header
             data-slot="app-header"
             data-scrolled={scrolled || undefined}
-            className="group/header sticky top-0 z-20 shrink-0 px-3 pt-3 md:px-2 md:pt-2"
+            className="group/header sticky top-0 z-20 shrink-0 px-3 pt-3 md:pt-2 md:pr-2 md:pl-3"
           >
             <div className="flex h-12 items-center gap-2 rounded-xl border bg-background/70 px-2 backdrop-blur-md transition-shadow duration-200 ease-out group-data-scrolled/header:bg-background/80 group-data-scrolled/header:shadow-md">
               <SidebarTrigger />
@@ -83,7 +83,7 @@ export function AppShell() {
           <div
             id={MAIN_ID}
             tabIndex={-1}
-            className="flex min-w-0 flex-1 flex-col gap-6 px-3 pt-6 pb-6 outline-none md:px-2 md:pb-2"
+            className="flex min-w-0 flex-1 flex-col gap-6 px-3 pt-6 pb-6 outline-none md:ml-3 md:pr-2 md:pb-2 md:pl-0"
           >
             <Suspense fallback={<PageSkeleton />}>
               <Outlet />

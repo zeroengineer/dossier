@@ -12,6 +12,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { ScrollableTabsList } from "@/components/scrollable-tabs-list"
 import { Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs"
 import { useDebounced } from "@/hooks/use-debounced"
+import { useLatchedWhileActive } from "@/hooks/use-latched-while-active"
 import { cn } from "@/lib/utils"
 import { labelOfPath, SERVER_ERROR, setFieldProblems, toFieldProblems, type FieldProblem } from "./problems"
 import { getPath, toInput, type FormValues, type RowIndex } from "./to-input"
@@ -277,7 +278,10 @@ const rank = (kind: string) => {
   return i === -1 ? KIND_ORDER.length : i
 }
 
-function PreviewFile({ kind, src, label, active }: { kind: string; src: string; label: string; active: boolean }) {
+function PreviewFile({ kind, src: latest, label, active }: { kind: string; src: string; label: string; active: boolean }) {
+  // A hidden panel keeps the draft it last showed: new previews reload only the frame on show, and a panel catches up
+  // when its tab is picked again.
+  const src = useLatchedWhileActive(latest, active)
   if (kind === "pdf") return <iframe src={src} title={label} className={FRAME} />
   if (kind === "md") return <MarkdownPreview src={src} label={label} enabled={active} />
   // HTML (and anything else) is served with `CSP: sandbox`; the empty sandbox attribute keeps scripts off here too.

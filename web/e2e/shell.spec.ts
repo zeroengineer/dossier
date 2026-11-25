@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test, type Page } from "@playwright/test"
 import { PAGES, box, isMobile, openNav, pageHeading, settled } from "./helpers"
 
 test.describe("app shell", () => {
@@ -77,13 +77,30 @@ test.describe("floating sidebar (desktop)", () => {
     // The page follows the rail.
     const main = await box(page.locator("#main-content"))
     expect(main.x).toBeLessThan(100)
+    // The sidebar's resize rail straddles its edge; it must not reach into the page (clicks there would toggle it).
+    await expect.poll(() => leftEdgeHits(page)).toEqual({ main: true, header: true })
 
     await page.keyboard.press("ControlOrMeta+b")
     await expect(page.locator('[data-slot="sidebar"][data-state="expanded"]')).toBeVisible()
     await expect.poll(async () => (await box(inner)).width).toBe(wide)
     await expect.poll(() => label.evaluate((el) => getComputedStyle(el).opacity)).toBe("1")
+    await expect.poll(() => leftEdgeHits(page)).toEqual({ main: true, header: true })
   })
 })
+
+/** Whether the first pixel column of the page and of the header belongs to them (not to the sidebar's rail). */
+function leftEdgeHits(page: Page) {
+  return page.evaluate(() => {
+    const inside = (selector: string, dy: number) => {
+      const el = document.querySelector(selector)!
+      const r = el.getBoundingClientRect()
+      const hit = document.elementFromPoint(r.left + 1, r.top + dy)
+      return !!hit && el.contains(hit)
+    }
+    // 40 px into the page (its heading row) and the header's middle.
+    return { main: inside("#main-content", 40), header: inside('[data-slot="app-header"] > div', 24) }
+  })
+}
 
 test.describe("mobile sidebar", () => {
   test.skip(({ viewport }) => (viewport?.width ?? 0) >= 768, "phones only")

@@ -19,10 +19,15 @@ export function ScrollableTabsList({ className, children, ...props }: React.Comp
     setOverflow((prev) => (prev.start === start && prev.end === end ? prev : { start, end }))
   }, [])
 
+  // Scroll the active tab into view only when the active tab changes (or first appears), so a list the user scrolled
+  // by hand stays where it is across unrelated re-renders.
+  const scrolledFor = React.useRef<string | null>(null)
   React.useLayoutEffect(() => {
     const scroller = ref.current
     const active = scroller?.querySelector<HTMLElement>('[role="tab"][data-state="active"]')
-    if (scroller && active) {
+    const key = active ? (active.id || active.textContent) : null
+    if (scroller && active && key !== scrolledFor.current) {
+      scrolledFor.current = key
       const left = active.offsetLeft
       const right = left + active.offsetWidth
       if (left < scroller.scrollLeft) scroller.scrollLeft = left

@@ -118,6 +118,33 @@ describe("Generate preview", () => {
     expect(await screen.findByLabelText("Markdown preview of Invoice")).toHaveTextContent("DRAFT - NOT NUMBERED")
   })
 
+  it("does not reload a hidden format's frame when a new preview arrives, and catches up when it is shown", async () => {
+    // Each answer carries a new token, as a changed input does.
+    const bodies = capturePreviews(() => {
+      const token = `tok${bodies.length}`
+      return HttpResponse.json({
+        ok: true,
+        token,
+        renditions: ["md", "html", "pdf"].map((kind) => ({ kind, bytes: 10, url: `/previews/${token}/preview.${kind}` })),
+        warnings: [],
+      })
+    })
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
+    const pdf = await screen.findByTitle("PDF preview of Invoice")
+    expect(pdf).toHaveAttribute("src", "/previews/tok1/preview.pdf?v=tok1")
+    await user.click(screen.getByRole("tab", { name: "HTML" }))
+    expect(screen.getByTitle("HTML preview of Invoice")).toHaveAttribute("src", "/previews/tok1/preview.html?v=tok1")
+
+    await user.type(screen.getByLabelText(label("Bank account")), "Example Bank")
+    await waitFor(() => expect(screen.getByTitle("HTML preview of Invoice")).toHaveAttribute("src", "/previews/tok2/preview.html?v=tok2"), { timeout: 3000 })
+    // The PDF panel is hidden (opened earlier, still mounted): same element, same page, no background reload.
+    expect(screen.getByTitle("PDF preview of Invoice")).toBe(pdf)
+    expect(pdf).toHaveAttribute("src", "/previews/tok1/preview.pdf?v=tok1")
+
+    await user.click(screen.getByRole("tab", { name: "PDF" }))
+    expect(pdf).toHaveAttribute("src", "/previews/tok2/preview.pdf?v=tok2")
+  })
+
   it("asks again after typing stops, once, with the latest input", async () => {
     const bodies = capturePreviews()
     const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })

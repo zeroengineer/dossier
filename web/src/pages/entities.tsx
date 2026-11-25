@@ -20,9 +20,13 @@ export default function EntitiesPage() {
   const navigate = useNavigate()
   const { data: meta } = useMeta()
   const requested = params.get("kind") ?? ""
-  // An unknown ?kind= (an old link, a typo) falls back to All once the kinds are known.
-  const kind = requested && meta && !meta.entityKinds.includes(requested) ? "" : requested
-  const { data, isPending, isError, error, refetch, isPlaceholderData } = useEntities({ kind: kind || undefined, limit: ENTITY_LIST_LIMIT })
+  // Only a known kind filters: an unknown ?kind= (an old link, a typo) shows All, and until the kinds have loaded the
+  // list waits rather than sending a request the server may refuse.
+  const kind = meta?.entityKinds.includes(requested) ? requested : ""
+  const { data, isPending, isError, error, refetch, isPlaceholderData } = useEntities(
+    { kind: kind || undefined, limit: ENTITY_LIST_LIMIT },
+    { enabled: !requested || meta !== undefined },
+  )
   const [creating, setCreating] = React.useState(false)
 
   const kinds = meta?.entityKinds ?? []
