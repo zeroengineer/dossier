@@ -161,11 +161,11 @@ function warnConflict(ctx, id, series, number, conflictsWith) {
  * again (forward only). A number that does not follow the series pattern, or whose scope cannot be worked out, is
  * stored as given and seeds nothing. Runs inside the caller's transaction.
  */
-function seedFromNumber(ctx, cols) {
+function seedFromNumber(ctx, cols, { withDate = true } = {}) {
   if (!cols.number_series || !cols.doc_number) return;
   try {
     registerExisting(ctx, cols.number_series, cols.doc_number, {
-      ...(cols.issuing_brand_id ? { brandId: cols.issuing_brand_id } : {}), ...(cols.doc_date ? { date: cols.doc_date } : {}),
+      ...(cols.issuing_brand_id ? { brandId: cols.issuing_brand_id } : {}), ...(withDate && cols.doc_date ? { date: cols.doc_date } : {}),
     });
   } catch (err) {
     if (!(err instanceof DossierError)) throw err;
@@ -208,9 +208,11 @@ const CREATE_FIELDS = [...Object.keys(COLUMNS), 'status', 'entities'];
  *   docDate?: string, dueDate?: string, amountMinor?: number, currency?: string, status?: string, sensitivity?: string,
  *   templateId?: string, templateVersion?: number, entities?: { entityId: number, role: string }[] }} meta
  *   status defaults to Draft, sensitivity to Internal (must not exceed the user's clearance)
+ * @param {{ seedWithDate?: boolean }} [opts] `seedWithDate: false` seeds the number's counter without `docDate` (a
+ *   guessed date, such as an imported file's modification time, must not pick the counter's year)
  * @returns {object} the document as returned by getDocument
  */
-export function createDocument(ctx, meta) {
+export function createDocument(ctx, meta, opts = {}) {
   if (!isPlainObject(meta)) throw invalid('createDocument needs a metadata object');
   checkUnknownKeys(meta, CREATE_FIELDS, 'document');
   const cols = toColumns(ctx, meta);
@@ -228,7 +230,7 @@ export function createDocument(ctx, meta) {
     writeEntities(ctx, newId, links);
     ctx.repo.audit('document.create', 'document', newId, null, snapshot(ctx, newId));
     if (conflicts.length) warnConflict(ctx, newId, cols.number_series, cols.doc_number, conflicts);
-    seedFromNumber(ctx, cols);
+    seedFromNumber(ctx, cols, { withDate: opts?.seedWithDate !== false });
     changed(ctx, [newId], ['documents', 'document_entities']);
     return newId;
   });

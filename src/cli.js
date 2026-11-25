@@ -205,7 +205,8 @@ export function renderTree(node, { documents = true } = {}) {
 
 /**
  * Plain-text summary table of an import (see importer.importFolder), with a "Dates" line counting where document
- * dates came from. `list` adds one line per document: `type | date | date source | sensitivity | path`.
+ * dates came from. `list` adds one line per document: `type | date | date source | sensitivity | path`, the source
+ * being `text-labelled`, `text-first`, `filename` or `mtime` (a file-time guess).
  * @param {import('./services/importer.js').ImportSummary} s
  * @param {{ list?: boolean }} [opts]
  * @returns {string}
@@ -231,12 +232,12 @@ export function renderImportSummary(s, { list = false } = {}) {
   const byType = Object.entries(s.byType).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   if (s.dates) {
     const d = s.dates;
-    parts.push(`Dates: from text ${d.text}, from file name ${d.filename}, from file time ${d.mtime}, none ${d.none}`);
+    parts.push(`Dates: from labelled text ${d['text-labelled']}, from first date in text ${d['text-first']}, `
+      + `from file name ${d.filename}, from file time ${d.mtime}, none ${d.none}`);
   }
   if (byType.length) parts.push(`Documents by type\n${table(byType)}`);
   if (list && s.documents.length) {
-    const source = { text: 'text', filename: 'file name', mtime: 'file time' };
-    const lines = s.documents.map((d) => `  ${d.type} | ${d.date ?? '-'} | ${source[d.dateFrom] ?? '-'} | ${d.sensitivity} | ${d.path}`);
+    const lines = s.documents.map((d) => `  ${d.type} | ${d.date ?? '-'} | ${d.dateFrom ?? '-'} | ${d.sensitivity} | ${d.path}`);
     parts.push(`Documents (type | date | date source | sensitivity | path)\n${lines.join('\n')}`);
   }
   if (s.newEntities.length) parts.push(`New entities\n${s.newEntities.map((e) => `  ${e.kind}: ${e.name}`).join('\n')}`);

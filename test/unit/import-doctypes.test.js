@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  BUILTIN_TYPE_KEYWORDS, IDENTITY_TYPES, TEXT_WINDOW, findTextDate, hasKeyword, plausibleDate, textType, typeKeywordTable, wordsOf,
+  BUILTIN_TYPE_KEYWORDS, IDENTITY_TYPES, TEXT_WINDOW, findTextDate, hasKeyword, nameHasKeyword, plausibleDate, textType,
+  textTypes, typeKeywordTable, wordsOf,
 } from '../../src/domain/doctypes.js';
 import { DEFAULT_ROUTES, leafIn, routeFor, routingConfig } from '../../src/domain/routing.js';
 import { chooseDate } from '../../src/services/importer.js';
@@ -42,8 +43,12 @@ test('text phrases: whole words, case and line breaks ignored, the earliest phra
   const table = typeKeywordTable();
   assert.deepEqual(textType('INCOME TAX DEPARTMENT\nPermanent Account\nNumber Card', table), { type: 'PAN Card', phrase: 'Permanent Account Number' });
   assert.equal(textType('Government of India\nUnique Identification Authority of India', table).type, 'Aadhaar Card');
-  // Earliest: an MoU that mentions a certificate later is still an MoU.
-  assert.equal(textType('Memorandum of Understanding between ... see the Certificate of Incorporation', table).type, 'MoU');
+  // Earliest: a GST certificate that mentions incorporation later is a GST certificate.
+  assert.equal(textType('Form GST REG-06 ... see the Certificate of Incorporation', table).type, 'GST Certificate');
+  // Phrases other documents quote are not built in.
+  for (const quoted of ['our proposal for the event', 'see our brochure', 'Tax Invoice', 'Memorandum of Understanding']) {
+    assert.equal(textType(quoted, table), null, quoted);
+  }
   assert.equal(textType('Impermanent Account Numbers', table), null);
   // Only the first TEXT_WINDOW characters are read.
   assert.equal(textType(`${'x '.repeat(TEXT_WINDOW)}Permanent Account Number`, table), null);
@@ -125,11 +130,64 @@ test('a labelled date beats an earlier unlabelled one; birth and expiry dates ar
 
 test('chooseDate: text, then file name, then file time; identity documents ignore unlabelled text dates', () => {
   const mtime = new Date(2026, 0, 2, 10, 0, 0);
-  assert.deepEqual(chooseDate('Date: 05/03/2025', '2026-01-01_x.pdf', mtime, { now: NOW }), { date: '2025-03-05', from: 'text' });
-  assert.deepEqual(chooseDate('see 05/03/2025', '2026-01-01_x.pdf', mtime, { now: NOW }), { date: '2025-03-05', from: 'text' });
+  assert.deepEqual(chooseDate('Date: 05/03/2025', '2026-01-01_x.pdf', mtime, { now: NOW }), { date: '2025-03-05', from: 'text-labelled' });
+  assert.deepEqual(chooseDate('see 05/03/2025', '2026-01-01_x.pdf', mtime, { now: NOW }), { date: '2025-03-05', from: 'text-first' });
   assert.deepEqual(chooseDate('no date here', '2026-01-01_x.pdf', mtime, { now: NOW }), { date: '2026-01-01', from: 'filename' });
   assert.deepEqual(chooseDate('', 'x.pdf', mtime, { now: NOW }), { date: '2026-01-02', from: 'mtime' });
   assert.deepEqual(chooseDate('01/11/1999 holder name', 'id.pdf', mtime, { now: NOW, identity: true }), { date: '2026-01-02', from: 'mtime' });
   assert.equal(chooseDate('', 'x.pdf', new Date(1980, 0, 1), { now: NOW }), null);
   assert.equal(chooseDate('', 'x.pdf', null, { now: NOW }), null);
+});
+
+test('guarded keywords: "pan" before "india", a bare "gst" in a filing, no bare "epic" or "recognition"', () => {
+  const pan = (n) => nameHasKeyword(wordsOf(n), 'pan');
+  assert.equal(pan('Pan India rollout plan'), false);
+  assert.equal(pan('pan india'), false);
+  assert.equal(pan('Example PAN'), true);
+  assert.equal(pan('pan india and pan copy'), true);
+  const gst = (n) => nameHasKeyword(wordsOf(n), 'gst');
+  assert.equal(gst('acme_gst'), true);
+  assert.equal(gst('Example Org GST'), true);
+  assert.equal(gst('GST'), true);
+  assert.equal(gst('GST return Q1'), false);
+  assert.equal(gst('gst-2025-03'), false);
+  assert.equal(gst('gst invoice'), false);
+  assert.equal(gst('gst of the example org group'), false, 'more than three other words');
+  assert.equal(nameHasKeyword(wordsOf('GST certificate 2025'), 'gst certificate'), true);
+  const all = (n) => [...typeKeywordTable().values()].filter((k) => k.names.some((w) => nameHasKeyword(wordsOf(n), w))).map((k) => k.type);
+  assert.deepEqual(all('epic campaign'), []);
+  assert.deepEqual(all('epic card'), ['Voter ID']);
+  assert.deepEqual(all('recognition award'), []);
+  assert.deepEqual(all('recognition certificate'), ['Startup Recognition Certificate']);
+});
+
+test('textTypes lists every phrase type, earliest first', () => {
+  assert.deepEqual(textTypes('Form GST REG-06 ... Permanent Account Number', typeKeywordTable()).map((h) => h.type), ['GST Certificate', 'PAN Card']);
+});
+
+test('date labels: birth, expiry, validity, due and renewal dates are never taken; specific labels outrank "Date"', () => {
+  assert.equal(date('Birth date: 01/01/1995'), null);
+  assert.equal(date('Birth date: 01/01/1995', { labelledOnly: true }), null);
+  assert.equal(date('Expiry Date: 01/01/2026'), null);
+  assert.equal(date('Due Date: 10/03/2025'), null);
+  assert.equal(date('Renewal date 01/04/2026'), null);
+  assert.equal(date('Valid until date 01/04/2026'), null);
+  assert.equal(date('Due Date: 10/03/2025\nInvoice Date: 01/03/2025'), '2025-03-01');
+  assert.equal(date('Expiry Date: 01/01/2026\nDate: 02/02/2025'), '2025-02-02');
+  assert.equal(date('Date: 02/02/2025\nDate of Issue: 03/03/2025'), '2025-03-03');
+  assert.equal(date('Dated 01/01/2025\nIssued on 04/04/2025'), '2025-04-04');
+  assert.equal(date('Date: 02/02/2025\nDate: 03/03/2025'), '2025-02-02', 'within a rank the first wins');
+  // "Date of <words> Registration" ranks with the specific labels; the first specific one wins.
+  assert.equal(date('Date: 01/01/2025\nDate of Example Registration 14/02/2026\nDate of Incorporation 31/10/2025'), '2026-02-14');
+  // A birth word on the line before a label, within 30 characters, also disqualifies it.
+  assert.equal(date('Holder born (birth) Date 01/01/1995'), null);
+});
+
+test('workspace.json import is strict and type names must not be blank', () => {
+  const r1 = WorkspaceSchema.safeParse({ name: 'W', defaultBrand: 'a', import: { typeKeyword: {} } });
+  assert.equal(r1.success, false);
+  assert.match(formatIssues(r1.error), /import/);
+  const r2 = WorkspaceSchema.safeParse({ name: 'W', defaultBrand: 'a', import: { typeKeywords: { '  ': { names: ['x'] } } } });
+  assert.equal(r2.success, false);
+  assert.match(formatIssues(r2.error), /import\.typeKeywords/);
 });

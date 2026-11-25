@@ -14,7 +14,8 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 ### Changed
 
 - The importer's type detection: a type name, then a type keyword (whole words: "company" never means PAN), in the file name; then a type phrase in the text; then the number's series; then the leaf folder's type only when the leaf has exactly one; otherwise "Other" (it used to take the first of several leaf types). Identity types are imported Confidential.
-- Imported documents get a date from their text (a labelled date first, day-first numeric dates), else the file name, else the file's modification time; the version note and `input_json.import.date_source` say which.
+- Imported documents get a date from their text (a labelled date first, specific labels before a bare "Date", never birth, expiry, due or renewal dates; day-first numeric dates), else the file name, else the file's modification time; the source (`text-labelled`, `text-first`, `filename`, `mtime`) is in `--list`, the summary, the version note and `input_json.import.date_source`. A file-time date never seeds a numbering counter (`createDocument(ctx, meta, { seedWithDate: false })`).
+- Import type matches respect the folder: Template and Reference only from their folders, names and keywords routed to another top-level folder are ignored inside a leaf, and text phrases count only when they fit the leaf's types. The phrases "Proposal for", "Brochure", "Tax Invoice" and "Memorandum of Understanding" and the bare keywords "epic" and "recognition" are not used; "pan" before "india" and a bare "gst" in a filing name do not count.
 - People folders have an "Identity Documents" leaf.
 
 ### Removed

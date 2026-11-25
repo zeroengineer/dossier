@@ -16,14 +16,14 @@ export const BUILTIN_TYPE_KEYWORDS = Object.freeze({
   // Identity documents (a person's, or the company's PAN).
   'PAN Card': { names: ['pan', 'pancard', 'pan card'], text: ['Permanent Account Number'] },
   'Aadhaar Card': { names: ['aadhaar', 'aadhar'], text: ['Unique Identification Authority'] },
-  'Voter ID': { names: ['voter', 'voter id', 'voters card', 'epic'], text: ['Election Commission of India'] },
+  'Voter ID': { names: ['voter', 'voter id', 'voters card', 'epic card'], text: ['Election Commission of India'] },
   'Passport': { names: ['passport'], text: [] },
-  // Company identity and registration.
-  'GST Certificate': { names: ['gst', 'gstin'], text: ['Form GST REG-06'] },
+  // Company identity and registration. A bare "gst" is guarded (see KEYWORD_GUARDS).
+  'GST Certificate': { names: ['gst', 'gstin', 'gst certificate', 'gst registration', 'gst reg 06'], text: ['Form GST REG-06'] },
   'Memorandum of Association': { names: ['moa'], text: ['Memorandum of Association'] },
   'Articles of Association': { names: ['aoa'], text: ['Articles of Association'] },
   'Certificate of Incorporation': { names: ['incorporation'], text: ['Certificate of Incorporation'] },
-  'Startup Recognition Certificate': { names: ['dpiit', 'startup india', 'recognition'], text: [] },
+  'Startup Recognition Certificate': { names: ['dpiit', 'startup india', 'recognition certificate'], text: [] },
   'Udyam Certificate': { names: ['udyam', 'msme'], text: [] },
   // Banking.
   'Cancelled Cheque': { names: ['cancelled check', 'cancelled cheque', 'canceled check', 'canceled cheque'], text: [] },
@@ -36,16 +36,47 @@ export const BUILTIN_TYPE_KEYWORDS = Object.freeze({
   'User Flow': { names: ['userflow', 'user flow'], text: [] },
   'Specification': { names: ['feature spec'], text: [] },
   'Settlement Statement': { names: ['settlement'], text: [] },
-  // Existing generated kinds, recognised from the heading of their text when the file name says nothing.
-  'Proposal': { names: [], text: ['Service Proposal', 'Partnership Proposal', 'Proposal for'] },
-  'Brochure': { names: [], text: ['Brochure'] },
+  // Existing generated kinds, recognised from the heading of their text when the file name says nothing. Phrases
+  // that other documents quote ("proposal for", "brochure", "tax invoice", "memorandum of understanding") are left out.
+  'Proposal': { names: [], text: ['Service Proposal', 'Partnership Proposal'] },
   'Internship Offer': { names: [], text: ['Offer of Internship'] },
-  'MoU': { names: [], text: ['Memorandum of Understanding'] },
-  'Invoice': { names: [], text: ['Tax Invoice'] },
 });
 
 /** Types that are identity documents: imported Confidential at least, like files in an identity folder. */
 export const IDENTITY_TYPES = Object.freeze(['PAN Card', 'Aadhaar Card', 'Voter ID', 'Passport']);
+
+/** Words that, next to a bare "gst", say the file is a filing or a bill rather than the registration certificate. */
+const GST_FILING_WORDS = new Set(['return', 'returns', 'filing', 'filings', 'gstr', 'invoice', 'invoices', 'bill', 'bills',
+  'payment', 'payments', 'challan', 'challans', 'report', 'reports', 'summary', 'ledger', 'statement', 'statements',
+  'reconciliation', 'notice', 'reply', 'refund', 'computation', 'working', 'workings']);
+
+/**
+ * Extra conditions on a few short built-in keywords that are also ordinary words (normalised keyword -> test on the
+ * file name's words). A bare "gst" names the certificate only in a short name (at most three words besides it) with
+ * no digits and no filing words ("acme_gst.pdf", "Example Org GST.pdf", not "GST return Q1.pdf" or "gst-2025-03.pdf");
+ * longer evidence ("gstin", "gst certificate", "gst registration", "reg 06") always counts. "pan" never counts when
+ * followed by "india" ("Pan India rollout").
+ */
+const KEYWORD_GUARDS = Object.freeze({
+  gst: (words) => {
+    const list = words.trim().split(' ').filter(Boolean);
+    const others = list.filter((w) => w !== 'gst');
+    return others.length <= 3 && !list.some((w) => /\d/.test(w) || GST_FILING_WORDS.has(w));
+  },
+  pan: (words) => / pans? (?!india )/.test(words),
+});
+
+/**
+ * True when a type keyword names the file: {@link hasKeyword}, plus the guard of a few short words (see
+ * KEYWORD_GUARDS).
+ * @param {string} words from {@link wordsOf}
+ * @param {string} keyword
+ */
+export function nameHasKeyword(words, keyword) {
+  if (!hasKeyword(words, keyword)) return false;
+  const guard = KEYWORD_GUARDS[wordsOf(keyword).trim()];
+  return guard ? guard(words) : true;
+}
 
 /** How much of the extracted text the importer reads for type phrases and dates. */
 export const TEXT_WINDOW = 3000;
@@ -98,18 +129,30 @@ export function typeKeywordTable(extra = {}) {
  * @returns {{ type: string, phrase: string } | null}
  */
 export function textType(text, table) {
+  return textTypes(text, table)[0] ?? null;
+}
+
+/**
+ * Every type whose phrase appears in a text, in the order of their first phrase (earliest first; ties to the longer
+ * phrase). Same matching as {@link textType}; the importer takes the first one its folder accepts.
+ * @param {string} text
+ * @param {Map<string, { type: string, text: string[] }>} table
+ * @returns {{ type: string, phrase: string }[]}
+ */
+export function textTypes(text, table) {
   const words = wordsOf(String(text ?? '').slice(0, TEXT_WINDOW));
-  let best = null;
+  const hits = new Map(); // type -> best hit
   for (const { type, text: phrases } of table.values()) {
     for (const phrase of phrases) {
       const k = wordsOf(phrase).trim();
       if (!k) continue;
       const at = words.indexOf(` ${k} `);
       if (at < 0) continue;
-      if (!best || at < best.at || (at === best.at && k.length > best.len)) best = { type, phrase, at, len: k.length };
+      const cur = hits.get(type);
+      if (!cur || at < cur.at || (at === cur.at && k.length > cur.len)) hits.set(type, { type, phrase, at, len: k.length });
     }
   }
-  return best ? { type: best.type, phrase: best.phrase } : null;
+  return [...hits.values()].sort((a, b) => a.at - b.at || b.len - a.len).map(({ type, phrase }) => ({ type, phrase }));
 }
 
 // ---------- dates ----------
@@ -163,44 +206,59 @@ function dateAt(s, index, now) {
   return null;
 }
 
-/** Labels that introduce a document's own date (longest first, so "Date of Issue" wins over "Date"). */
-const LABEL_RE = /(?<![a-z])(date\s+of\s+issue|date\s+of\s+incorporation|invoice\s+date|issued\s+on|dated|date|w\.?\s?e\.?\s?f\.?)(?![a-z])[\s:.\-–—]*/giu;
+/**
+ * Labels that introduce a document's own date (longest first, so "Date of Issue" wins over "Date"). Group 1 is a
+ * specific label, which outranks group 2 (a bare "Date", "Dated" or "w.e.f.").
+ */
+const LABEL_RE = /(?<![a-z])(?:(date\s+of\s+issue|date\s+of\s+incorporation|date\s+of\s+registration|registration\s+date|invoice\s+date|issue\s+date|issued\s+on)|(dated|date|w\.?\s?e\.?\s?f\.?))(?![a-z])[\s:.\-–—]*/giu;
 
-/** Words just before a date that make it someone's birth date or an expiry, never the document's date. */
-const NOT_DOC_DATE_RE = /(birth|d\.?\s?o\.?\s?b\.?|valid\s+(till|until|upto|up\s+to)|expir\w*)[\s:.\-–—]*$/i;
-/** Words in the gap after a label that make the date not the document's. */
-const NOT_DOC_WORD_RE = /birth|\bd\.?\s?o\.?\s?b\b|valid|expir/i;
+/** Words that make a nearby date someone's birth date, an expiry, a validity end or a due date, never the document's. */
+const NOT_DOC_WORD_RE = /birth|\bd\.?\s?o\.?\s?b\b|expir|valid|\bdue\b|renew|until|\btill\b/i;
+
+/** The same line's text up to `index`, at most `max` characters. */
+const lineBefore = (s, index, max = 30) => {
+  const from = Math.max(0, index - max);
+  const chunk = s.slice(from, index);
+  const nl = chunk.lastIndexOf('\n');
+  return nl >= 0 ? chunk.slice(nl + 1) : chunk;
+};
 
 /**
- * The document date written in a text: the first labelled date ("Date: 05/03/2025", "Dated 5th March 2025",
- * "Date of Issue", "Issued on", "Invoice Date", "Date of Incorporation", "w.e.f."), else (unless `labelledOnly`) the
- * first plausible date. A label may be followed by a few words on the same line before its date ("Date of
- * Registration 14/02/2026"), but not by birth or expiry words. Only the first {@link TEXT_WINDOW} characters are
- * read. Numeric dates are day first.
+ * The document date written in a text and how it was found. Labelled dates come first: a specific label ("Invoice
+ * Date", "Date of Issue", "Issue Date", "Issued on", "Date of Incorporation", "Date of Registration") outranks a bare
+ * "Date", "Dated" or "w.e.f.", and within a rank the first one wins. A label may be followed by a few words on the
+ * same line before its date ("Date of Udyam Registration 14/02/2026"). A label is ignored when it, the words after it,
+ * or the 30 characters before it on its line speak of birth, expiry, validity, due or renewal dates ("Birth date",
+ * "Expiry Date", "Due Date", "Valid until"). Without a labelled date (and unless `labelledOnly`), the first plausible
+ * date that is not such a date. Only the first {@link TEXT_WINDOW} characters are read; numeric dates are day first.
  * @param {string} text
  * @param {{ now?: Date, labelledOnly?: boolean }} [opts]
  * @returns {{ date: string, labelled: boolean } | null}
  */
 export function findTextDate(text, { now = new Date(), labelledOnly = false } = {}) {
   const s = String(text ?? '').slice(0, TEXT_WINDOW);
+  let best = null; // { date, rank }
   for (const m of s.matchAll(LABEL_RE)) {
+    if (best?.rank === 2 || NOT_DOC_WORD_RE.test(`${lineBefore(s, m.index)} ${m[1] ?? m[2]}`)) continue;
     const start = m.index + m[0].length;
-    const direct = dateAt(s, start, now);
-    if (direct) return { date: direct, labelled: true };
-    // Try each position in a short same-line gap after the label.
-    const gapEnd = Math.min(s.length, start + 30);
-    for (let i = start + 1; i <= gapEnd; i++) {
-      if (/[\d\n]/.test(s[i - 1])) break;
-      if (NOT_DOC_WORD_RE.test(s.slice(start, i))) break;
-      const iso = dateAt(s, i, now);
-      if (iso) return { date: iso, labelled: true };
+    let iso = dateAt(s, start, now);
+    let gap = '';
+    // Else each position in a short same-line gap after the label.
+    for (let i = start + 1; !iso && i <= Math.min(s.length, start + 30); i++) {
+      if (/[\d\n]/.test(s[i - 1]) || NOT_DOC_WORD_RE.test(s.slice(start, i))) break;
+      iso = dateAt(s, i, now);
+      if (iso) gap = s.slice(start, i);
     }
+    // "Date of <something> Registration/Issue" is as specific as "Date of Registration".
+    const rank = m[1] || /\b(registration|issue|incorporation)\b/i.test(gap) ? 2 : 1;
+    if (iso && (!best || rank > best.rank)) best = { date: iso, rank };
   }
+  if (best) return { date: best.date, labelled: true };
   if (labelledOnly) return null;
   for (let i = 0; i < s.length; i++) {
     if (!/[0-9a-z]/i.test(s[i]) || (i > 0 && /[0-9a-z]/i.test(s[i - 1]))) continue;
     const iso = dateAt(s, i, now);
-    if (iso && !NOT_DOC_DATE_RE.test(s.slice(Math.max(0, i - 30), i))) return { date: iso, labelled: false };
+    if (iso && !NOT_DOC_WORD_RE.test(lineBefore(s, i))) return { date: iso, labelled: false };
   }
   return null;
 }

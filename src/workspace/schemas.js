@@ -63,9 +63,9 @@ export const WorkspaceSchema = z.object({
       }
     }
   }).prefault({}),
-  import: z.object({
+  import: z.strictObject({
     // Extra type keywords for `dossier import`, merged over the built-ins (src/domain/doctypes.js).
-    typeKeywords: z.record(nonEmpty, z.strictObject({
+    typeKeywords: z.record(z.string().refine((t) => /\S/.test(t), 'a type name must not be blank'), z.strictObject({
       names: z.array(keyword).default([]),
       text: z.array(keyword).default([]),
     })).default({}),

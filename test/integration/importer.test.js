@@ -104,9 +104,9 @@ test('folder import classifies, dedupes, parses numbers, flags conflicts, create
   assert.equal(type('2026-03-02_EISS_ACM-REC-2026-0135.md'), 'Receipt');
   assert.equal(type('2026-01-20_SSP_MoU copy.md'), 'MoU');
   assert.equal(type('2026-04-02_FW_ACM-Q-FW-2026-03.md'), 'Proposal');
-  // A type named in the file name ("Pricing") comes before the number's series (the "report" series is checked below).
-  assert.equal(type('pricing.pdf'), 'Pricing');
-  assert.equal(docByPath(s, 'pricing.pdf').typeFrom, 'name');
+  // The name says "pricing"; the number's series (report) has a type containing it, which wins.
+  assert.equal(type('pricing.pdf'), 'Pricing Report');
+  assert.equal(docByPath(s, 'pricing.pdf').typeFrom, 'series');
   assert.equal(type('Acme Tickets Brochure.md'), 'Brochure');
   assert.equal(type('letter-template.md'), 'Template');
   assert.equal(type('bill-0042.txt'), 'Vendor Invoice');
@@ -174,7 +174,7 @@ test('folder import classifies, dedupes, parses numbers, flags conflicts, create
   const named = ctx.db.prepare('SELECT input_json, note FROM versions WHERE document_id = ?').get(proposal.id);
   assert.equal(JSON.parse(named.input_json).import.date_source, 'filename');
   assert.match(named.note, /\(date from file name\)$/);
-  assert.deepEqual(s.dates, { text: 0, filename: 9, mtime: 7, none: 0 });
+  assert.deepEqual(s.dates, { 'text-labelled': 0, 'text-first': 0, filename: 9, mtime: 7, none: 0 });
   const engagementOf = ctx.db.prepare('SELECT e.display_name AS n FROM documents d JOIN entities e ON e.id = d.engagement_id WHERE d.id = ?').get(proposal.id);
   assert.equal(engagementOf.n, 'Spring Launch 2026');
 
@@ -429,6 +429,7 @@ async function setupAccuracy(fn) {
     const wsFile = join(home, 'workspace.json');
     const ws = JSON.parse(readFileSync(wsFile, 'utf8'));
     ws.import = { typeKeywords: { 'Startup Mission Certificate': { names: ['startup mission'], text: ['Example Startup Mission'] } } };
+    ws.hierarchy = { routing: { 'Startup Mission Certificate': '01 Company/Legal and Registration' } };
     writeFileSync(wsFile, JSON.stringify(ws, null, 2));
     const vault = join(dir, 'vault');
     const LR = '01 Company/Legal and Registration';
@@ -503,8 +504,8 @@ test('type detection: name, keyword, text, series, single leaf type, else Other;
   assert.equal(pan.sensitivity, 'Confidential');
   assert.equal(pan.docDate, '2025-03-05');
   const v = ctx.db.prepare('SELECT input_json, note FROM versions WHERE document_id = ?').get(pan.id);
-  assert.equal(JSON.parse(v.input_json).import.date_source, 'text');
-  assert.match(v.note, /\(date from text\)$/);
+  assert.equal(JSON.parse(v.input_json).import.date_source, 'text-labelled');
+  assert.match(v.note, /\(date from labelled text\)$/);
 }));
 
 test('dates: labelled text date, unlabelled text date, file time; never a birth date', () => setupAccuracy(async ({ ctx, vault }) => {
@@ -513,13 +514,13 @@ test('dates: labelled text date, unlabelled text date, file time; never a birth 
     const doc = docByPath(s, suffix);
     return `${doc.date} ${doc.dateFrom}`;
   };
-  assert.equal(d('scan-0001.pdf'), '2025-03-05 text');
-  assert.equal(d('company-profile.pdf'), '2024-03-12 text');
-  assert.equal(d('registration-letter.pdf'), '2026-01-23 text');
-  assert.equal(d('Onboarding/scan.pdf'), '2026-06-01 text');
+  assert.equal(d('scan-0001.pdf'), '2025-03-05 text-labelled');
+  assert.equal(d('company-profile.pdf'), '2024-03-12 text-first');
+  assert.equal(d('registration-letter.pdf'), '2026-01-23 text-labelled');
+  assert.equal(d('Onboarding/scan.pdf'), '2026-06-01 text-labelled');
   assert.equal(d('alex_aadhar.pdf'), '2026-01-10 mtime');
   assert.equal(docByPath(s, 'moana-notes.pdf').dateFrom, 'mtime');
-  assert.deepEqual(s.dates, { text: 4, filename: 0, mtime: 12, none: 0 });
+  assert.deepEqual(s.dates, { 'text-labelled': 3, 'text-first': 1, filename: 0, mtime: 12, none: 0 });
 }));
 
 test('--only pdf skips other extensions under their own reason; without it every file is considered', () => setupAccuracy(async ({ ctx, vault }) => {
@@ -546,10 +547,10 @@ test('dossier import --only pdf --dry-run --list prints each document and the da
   const env = { DOSSIER_HOME: home, DOSSIER_USER: 'tester' };
   assert.equal(await main(['import', vault, '--only', 'pdf', '--dry-run', '--list'], { stdout: out, stderr: err, env, cwd: home }), 0, err.text);
   assert.match(out.text, /Would import\s+16/);
-  assert.match(out.text, /Dates: from text 4, from file name 0, from file time 12, none 0/);
+  assert.match(out.text, /Dates: from labelled text 3, from first date in text 1, from file name 0, from file time 12, none 0/);
   assert.match(out.text, /Documents \(type \| date \| date source \| sensitivity \| path\)/);
-  assert.ok(out.text.includes('  PAN Card | 2025-03-05 | text | Confidential | 01 Company/Legal and Registration/scan-0001.pdf\n'));
-  assert.ok(out.text.includes('  Aadhaar Card | 2026-01-10 | file time | Confidential | 02 People/Team Identity Documents/Alex Example/alex_aadhar.pdf\n'));
+  assert.ok(out.text.includes('  PAN Card | 2025-03-05 | text-labelled | Confidential | 01 Company/Legal and Registration/scan-0001.pdf\n'));
+  assert.ok(out.text.includes('  Aadhaar Card | 2026-01-10 | mtime | Confidential | 02 People/Team Identity Documents/Alex Example/alex_aadhar.pdf\n'));
   assert.match(out.text, /readme\.txt: not in --only/);
 
   // Without --list there is no per-document listing; the help names the new options.
@@ -569,3 +570,117 @@ test('dossier import --only pdf --dry-run --list prints each document and the da
   try { assert.equal(count(check, 'documents'), 0); } finally { check.close(); }
 }));
 
+
+// ---------- import accuracy, fix round 1: folders limit name, keyword and text matches; file times never seed ----------
+
+/** A fresh workspace (with a series whose pattern has no year) and a vault of the given fake PDFs. */
+async function setupFiles(files, fn, { mtimes = {} } = {}) {
+  const { dir, cleanup } = tmpDir('dossier-import-r1-');
+  let ctx;
+  try {
+    const home = initWorkspace(join(dir, 'ws'));
+    const seriesFile = join(home, 'series.json');
+    const series = JSON.parse(readFileSync(seriesFile, 'utf8'));
+    series.push({ id: 'noyear', pattern: 'ACM-X-{####}', scope: 'brand+year' });
+    writeFileSync(seriesFile, JSON.stringify(series, null, 2));
+    const vault = join(dir, 'vault');
+    for (const [rel, text] of Object.entries(files)) {
+      mkdirSync(join(vault, rel, '..'), { recursive: true });
+      writeFileSync(join(vault, rel), await makePdf([text]));
+    }
+    for (const [rel, when] of Object.entries(mtimes)) utimesSync(join(vault, rel), when, when);
+    ctx = openContext({ home, user: 'tester', env: {} });
+    seedEntities(ctx);
+    return await fn({ ctx, home, vault });
+  } finally {
+    ctx?.close();
+    cleanup();
+  }
+}
+
+const typeOf = (s, suffix) => {
+  const d = docByPath(s, suffix);
+  assert.ok(d, suffix);
+  return `${d.type} <- ${d.typeFrom}`;
+};
+
+test('a file-time date never seeds a counter, and the warning says so (C-1)', () => setupFiles({
+  '01 Company/Board and Governance/ACM-X-0042.pdf': 'Resolution without a written date',
+  '01 Company/Board and Governance/ACM-X-0050.pdf': 'Resolution\nDate: 05/03/2025',
+}, async ({ ctx, vault }) => {
+  const s = await importFolder(ctx, { folder: vault });
+  assert.equal(docByPath(s, 'ACM-X-0042.pdf').dateFrom, 'mtime');
+  assert.equal(docByPath(s, 'ACM-X-0042.pdf').date, '2023-06-15');
+  const keys = ctx.db.prepare('SELECT scope_key, next FROM sequences ORDER BY scope_key').all();
+  assert.ok(!keys.some((k) => k.scope_key.includes('2023')), `no 2023 counter: ${JSON.stringify(keys)}`);
+  // The labelled text date seeds its year's counter past its number.
+  assert.ok(keys.some((k) => k.scope_key.includes('2025') && k.next === 51), JSON.stringify(keys));
+  const w = s.warnings.find((x) => x.path.endsWith('ACM-X-0042.pdf'));
+  assert.ok(w, 'the unseeded counter is reported');
+  assert.match(w.message, /^counter not seeded for ACM-X-0042 \(its only date is the file time, which does not set a counter year\): /);
+  assert.ok(!s.warnings.some((x) => x.path.endsWith('ACM-X-0050.pdf')));
+  // The stored document keeps the file-time date, marked as such.
+  const doc = getDocument(ctx, docByPath(s, 'ACM-X-0042.pdf').id);
+  assert.equal(doc.docDate, '2023-06-15');
+  const v = ctx.db.prepare('SELECT input_json, note FROM versions WHERE document_id = ?').get(doc.id);
+  assert.equal(JSON.parse(v.input_json).import.date_source, 'mtime');
+  assert.match(v.note, /\(date from file time\)$/);
+}, { mtimes: { '01 Company/Board and Governance/ACM-X-0042.pdf': new Date(2023, 5, 15, 12) } }));
+
+test('text phrases do not override a folder whose types they do not fit (I-1)', () => setupFiles({
+  '03 Clients/Events/Example Client/Invoices and Receipts/bill-01.pdf': 'Example Org\nPermanent Account Number printed on the bill',
+  '01 Company/Banking and Payments/letter-02.pdf': 'Permanent Account Number of the holder',
+  '01 Company/Board and Governance/resolution-07.pdf': 'Resolved, under the Articles of Association, that ...',
+  '03 Clients/Events/Example Client/Proposals and Pricing/notes-03.pdf': 'Thank you for the call. Our proposal for the event follows.',
+  '03 Clients/Events/Example Client/Proposals and Pricing/offer-04.pdf': 'Service Proposal\nSee our brochure for the product.',
+  '03 Clients/Events/Example Client/Agreements/draft-05.pdf': 'This Memorandum of Understanding is an agreement between ...',
+  '04 Vendors/Example Vendor/Invoices Received/bill-06.pdf': 'TAX INVOICE\nExample Vendor',
+  '01 Company/Legal and Registration/scan-08.pdf': 'Permanent Account Number',
+  '01 Company/scan-09.pdf': 'Permanent Account Number (company copy)',
+  '03 Clients/Events/Example Client/scan-10.pdf': 'Permanent Account Number (client copy)',
+}, async ({ ctx, vault }) => {
+  const s = await importFolder(ctx, { folder: vault, dryRun: true });
+  assert.equal(typeOf(s, 'bill-01.pdf'), 'Other <- none', 'PAN phrase in an invoice folder');
+  assert.equal(docByPath(s, 'bill-01.pdf').sensitivity, 'Internal');
+  assert.equal(typeOf(s, 'letter-02.pdf'), 'Other <- none', 'PAN phrase in a bank folder');
+  assert.equal(typeOf(s, 'resolution-07.pdf'), 'Board Resolution <- leaf', 'AoA cited by a resolution');
+  assert.equal(typeOf(s, 'notes-03.pdf'), 'Other <- none', '"proposal for" is not a type phrase');
+  assert.equal(typeOf(s, 'offer-04.pdf'), 'Proposal <- text', '"brochure" is not a type phrase; the heading fits the leaf');
+  assert.equal(typeOf(s, 'draft-05.pdf'), 'Other <- none', '"Memorandum of Understanding" is not a type phrase');
+  assert.equal(typeOf(s, 'bill-06.pdf'), 'Vendor Invoice <- leaf', '"Tax Invoice" is not a type phrase');
+  // Identity phrases still count in a legal leaf and in a type-less company folder, not in a client folder.
+  assert.equal(typeOf(s, 'scan-08.pdf'), 'PAN Card <- text');
+  assert.equal(typeOf(s, 'scan-09.pdf'), 'PAN Card <- text');
+  assert.equal(typeOf(s, 'scan-10.pdf'), 'Other <- none');
+}));
+
+test('generic words in file names do not override folders (I-2)', () => setupFiles({
+  '05 Products/Widget App/Pan India rollout plan.pdf': 'Plan',
+  '01 Company/Compliance and Tax/GST return Q1.pdf': 'Return',
+  '01 Company/Compliance and Tax/gst-2025-03.pdf': 'Monthly return',
+  '01 Company/Legal and Registration/acme_gst.pdf': 'Certificate',
+  '01 Company/Legal and Registration/Example Org GST Registration.pdf': 'Registration certificate',
+  '01 Company/recognition award.pdf': 'Award',
+  '01 Company/Legal and Registration/recognition certificate.pdf': 'Recognition',
+  '05 Products/Widget App/epic campaign.pdf': 'Campaign',
+  '02 People/Casey Example/epic card.pdf': 'Card',
+  '02 People/Casey Example/Exit/Reference letter.pdf': 'To whom it may concern',
+  '02 People/Casey Example/Exit/settlement - Casey.pdf': 'Amounts',
+  '02 People/Casey Example/Exit/template-notes.pdf': 'Notes',
+  '02 People/Casey Example/Exit/gst certificate copy.pdf': 'Copy kept with the exit papers',
+}, async ({ ctx, vault }) => {
+  const s = await importFolder(ctx, { folder: vault, dryRun: true });
+  assert.equal(typeOf(s, 'Pan India rollout plan.pdf'), 'Other <- none');
+  assert.equal(typeOf(s, 'GST return Q1.pdf'), 'Other <- none');
+  assert.equal(typeOf(s, 'gst-2025-03.pdf'), 'Other <- none');
+  assert.equal(typeOf(s, 'acme_gst.pdf'), 'GST Certificate <- keyword');
+  assert.equal(typeOf(s, 'Example Org GST Registration.pdf'), 'GST Certificate <- keyword');
+  assert.equal(typeOf(s, 'recognition award.pdf'), 'Other <- none');
+  assert.equal(typeOf(s, 'recognition certificate.pdf'), 'Startup Recognition Certificate <- keyword');
+  assert.equal(typeOf(s, 'epic campaign.pdf'), 'Other <- none');
+  assert.equal(typeOf(s, 'epic card.pdf'), 'Voter ID <- keyword');
+  assert.equal(typeOf(s, 'Reference letter.pdf'), 'Other <- none', 'Reference only in the References folder');
+  assert.equal(typeOf(s, 'template-notes.pdf'), 'Other <- none', 'Template only in the Templates folder');
+  assert.equal(typeOf(s, 'settlement - Casey.pdf'), 'Final Settlement <- keyword', 'the Exit leaf type that contains the word');
+  assert.equal(typeOf(s, 'gst certificate copy.pdf'), 'Other <- none', 'a company type in a person\'s leaf folder');
+}));

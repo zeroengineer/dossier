@@ -32,16 +32,17 @@ const VERSION_KEYS = ['note', 'makeCurrent', 'inputJson'];
  * (by name, bytes or extracted text) are refused with SECRET_REJECTED before anything is stored. A document number
  * already used in its series is accepted and reported as `warnings: ['NUMBER_CONFLICT']`. `meta.inputJson` is stored on
  * the version (e.g. where an imported file came from). A caller that already extracted the text (the importer) passes
- * it as `extracted` so the file is not parsed twice.
+ * it as `extracted` so the file is not parsed twice. `create` is passed to createDocument as its options (the importer
+ * sets `seedWithDate: false` for a date that is only the file's modification time).
  * Document creation and the version are one transaction: a failure leaves no half-made document behind.
  * @param {object} ctx
  * @param {{ buffer: Buffer|Uint8Array, filename: string, mime?: string|null,
  *   meta?: { documentId?: string, note?: string, makeCurrent?: boolean, inputJson?: object } & Record<string, unknown>,
- *   extracted?: { text: string, pageCount?: number } }} file
+ *   extracted?: { text: string, pageCount?: number }, create?: { seedWithDate?: boolean } }} file
  * @returns {Promise<{ document: object, version: import('./documentQueries.js').VersionView, deduped: boolean,
  *   warnings: string[] }>} `deduped` is true when a blob with the same sha256 was already stored
  */
-export async function uploadFile(ctx, { buffer, filename, mime = null, meta = {}, extracted = null } = {}) {
+export async function uploadFile(ctx, { buffer, filename, mime = null, meta = {}, extracted = null, create = {} } = {}) {
   if (!(buffer instanceof Uint8Array)) throw invalid('An upload needs the file bytes as a Buffer');
   if (typeof filename !== 'string' || baseName(filename) === '') throw invalid('An upload needs a file name', { filename });
   if (mime !== null && mime !== undefined && (typeof mime !== 'string' || mime.trim() === '')) throw invalid('mime must be a string', { mime });
@@ -78,7 +79,7 @@ export async function uploadFile(ctx, { buffer, filename, mime = null, meta = {}
     const existed = Boolean(ctx.db.prepare('SELECT 1 FROM blobs WHERE sha256 = ?').get(sha256));
     const docId = documentId !== undefined
       ? documentId
-      : createDocument(ctx, { ...docMeta, title: docMeta.title ?? defaultTitle(name) }).id;
+      : createDocument(ctx, { ...docMeta, title: docMeta.title ?? defaultTitle(name) }, create).id;
     return { id: docId, version: addVersion(ctx, docId, spec), deduped: existed };
   });
   const document = getDocument(ctx, id);

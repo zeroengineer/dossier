@@ -4,8 +4,8 @@ import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path'
 import { DossierError } from '../errors.js';
 import { normaliseName } from '../domain/canonical.js';
 import { findNumbers } from '../domain/numbering.js';
-import { IDENTITY_TYPES, findTextDate, hasKeyword, plausibleDate, textType, typeKeywordTable, wordsOf } from '../domain/doctypes.js';
-import { DEFAULT_LEAF, DEFAULT_ROUTES, LEAF_MAP, TOP_KEYS, TOP_LEAVES, TOP_LEVEL, leafIn, routingConfig } from '../domain/routing.js';
+import { IDENTITY_TYPES, findTextDate, hasKeyword, nameHasKeyword, plausibleDate, textTypes, typeKeywordTable, wordsOf } from '../domain/doctypes.js';
+import { DEFAULT_LEAF, DEFAULT_ROUTES, LEAF_MAP, TOP_KEYS, TOP_LEAVES, TOP_LEVEL, leafIn, routeFor, routingConfig } from '../domain/routing.js';
 import { secretReason } from '../domain/secrets.js';
 import { LEVELS, canAccess } from '../domain/sensitivity.js';
 import { extractText } from '../extract/index.js';
@@ -91,7 +91,7 @@ const key = (s) => normaliseName(s);
  *   documents: { path: string, id: string|null, type: string, typeFrom: TypeSource, party: string|null,
  *     partyKind: string|null, sensitivity: string, number: string|null, series: string|null,
  *     date: string|null, dateFrom: DateSource|null }[],
- *   dates: { text: number, filename: number, mtime: number, none: number },
+ *   dates: { 'text-labelled': number, 'text-first': number, filename: number, mtime: number, none: number },
  * }} ImportSummary
  *   `files` counts every file looked at (skipped folders count as one skipped entry, not their files);
  *   `imported` documents created (or, in a dry run, that would be); `existing` files whose bytes are already in the
@@ -100,12 +100,18 @@ const key = (s) => normaliseName(s);
  *   `folder` the Templates/References folder, `name` a type name in the file name, `keyword` a type keyword in the file
  *   name, `text` a type phrase in the text, `series` the parsed number's series, `leaf` the leaf folder's only type,
  *   `none` nothing (type "Other")
- * @typedef {'text'|'filename'|'mtime'} DateSource where `doc_date` came from: the document's text, a date in its file
- *   name, or the source file's modification time
+ * @typedef {'text-labelled'|'text-first'|'filename'|'mtime'} DateSource where `doc_date` came from: a labelled date in
+ *   the document's text, the first date in its text, a date in its file name, or the source file's modification time
  */
 
-/** Words recorded in the version note for each date source. */
-export const DATE_SOURCE_NOTE = Object.freeze({ text: 'date from text', filename: 'date from file name', mtime: 'date from file time' });
+/** The date sources, in the order they are tried. */
+export const DATE_SOURCES = Object.freeze(['text-labelled', 'text-first', 'filename', 'mtime']);
+
+/** Words recorded in the version note (and printed by `--list`) for each date source. */
+export const DATE_SOURCE_NOTE = Object.freeze({
+  'text-labelled': 'date from labelled text', 'text-first': 'date from first date in text',
+  filename: 'date from file name', mtime: 'date from file time',
+});
 
 /**
  * Import a folder of existing documents (or the files an index CSV lists) into the vault.
@@ -158,7 +164,7 @@ export async function importFolder(ctx, opts = {}) {
   const dryRun = opts.dryRun === true;
   const summary = {
     dryRun, folder, index, brandId, files: 0, imported: 0, existing: 0, deduped: 0, ignoredDsStore: 0, newEntities: [], byType: {},
-    dates: { text: 0, filename: 0, mtime: 0, none: 0 },
+    dates: { 'text-labelled': 0, 'text-first': 0, filename: 0, mtime: 0, none: 0 },
     numbers: [], conflicts: [], duplicates: [], skipped: [], warnings: [], documents: [],
   };
   const keywords = typeKeywordTable(ctx.ws.config.import?.typeKeywords);
@@ -452,15 +458,16 @@ async function importOne(env, entry) {
         },
       },
     };
-    const res = await uploadFile(ctx, { buffer, filename, meta, extracted });
+    // A file-time date is a guess: it never picks a counter's year (neither when the document is created nor below).
+    const guessed = dated?.from === 'mtime';
+    const res = await uploadFile(ctx, { buffer, filename, meta, extracted, create: { seedWithDate: !guessed } });
     id = res.document.id;
     if (found) {
       try {
-        // A file-time date is a guess: it does not choose the counter's year.
-        const seedDate = dated && dated.from !== 'mtime' ? { date: docDate } : {};
-        registerExisting(ctx, found.series, found.number, { brandId: env.brandId, ...seedDate });
+        registerExisting(ctx, found.series, found.number, { brandId: env.brandId, ...(docDate && !guessed ? { date: docDate } : {}) });
       } catch (e) {
-        summary.warnings.push({ path: rel, message: `counter not seeded for ${found.number}: ${e.message}` });
+        const why = guessed ? ' (its only date is the file time, which does not set a counter year)' : '';
+        summary.warnings.push({ path: rel, message: `counter not seeded for ${found.number}${why}: ${e.message}` });
       }
     }
   }
@@ -628,6 +635,12 @@ function classify(env, rel) {
 
 const higher = (a, b) => (LEVELS.indexOf(a) >= LEVELS.indexOf(b) ? a : b);
 
+/** Types that only their own top-level folder gives (never a file-name or text match elsewhere). */
+const FOLDER_TYPES = new Set(['template', 'reference']);
+
+/** Top-level folders where a text phrase may never make a file an identity document (bills, statements, products). */
+const NO_IDENTITY_TEXT_SLOTS = new Set(['clients', 'vendors', 'finance', 'products']);
+
 /**
  * Document type of a classified file, and how it was found. In order:
  * 1. the Templates or References folder (the folder is the type, whatever the file is a template of);
@@ -637,62 +650,98 @@ const higher = (a, b) => (LEVELS.indexOf(a) >= LEVELS.indexOf(b) ? a : b);
  * 5. the series of the parsed document number;
  * 6. the leaf folder's type, when the leaf maps to exactly one;
  * 7. otherwise "Other", never the first of several leaf types.
- * Keywords match whole words only ("pan" is not in "company"). When a step finds several types, one that fits the
- * folder (the leaf's types, else the top-level folder's) wins, then the longest name.
+ * Keywords match whole words only ("pan" is not in "company"). The folder limits steps 2-4:
+ * - Template and Reference come only from their folders; inside a leaf folder, a name or keyword whose type is routed
+ *   to another top-level folder is ignored ("Reference letter" in a person's Exit folder).
+ * - When a step finds several types, one that fits the folder (the leaf's own types, all its types, else the
+ *   top-level folder's) wins, also when the folder's type contains the matched words ("settlement" in an Exit folder
+ *   is a Final Settlement); then the longest name. A number's series type that contains the matched name wins too
+ *   ("pricing.pdf" numbered in the report series is a Pricing Report).
+ * - A text phrase decides only when it fits the leaf's types, or when the leaf has none (no leaf, "Other", an unknown
+ *   folder). Identity phrases ("Permanent Account Number") count only in identity folders, leaves that hold the type,
+ *   or type-less places outside the clients, vendors, finance and products folders.
  * @returns {{ type: string, from: TypeSource }}
  */
 function chooseType(env, c, filename, found, text) {
   if (c.slot === 'templates') return { type: 'Template', from: 'folder' };
   if (c.slot === 'references') return { type: 'Reference', from: 'folder' };
+  const leafScopes = [c.leafOwn, c.leafTypes];
   // Folder fit, most specific first: the leaf's own types, all its types, else the top-level folder's types.
-  const scopes = c.leafTypes.length ? [c.leafOwn, c.leafTypes] : [c.slot ? slotTypes(env, c.slot) : []];
+  const scopes = c.leafTypes.length ? leafScopes : [c.slot ? slotTypes(env, c.slot) : []];
   // The name as written, without an index's "[from …]" note.
   const words = wordsOf(filename.replace(/\.[^.]+$/, '').replace(/\s*\[from [^\]]*\]\s*$/i, ''));
-
-  const named = pickType([...env.typeNames.values()].filter((t) => hasKeyword(words, t)), scopes);
-  if (named) return { type: named, from: 'name' };
-
-  const keyed = [...env.keywords.values()].filter((k) => k.names.some((n) => hasKeyword(words, n)));
-  const byKeyword = pickType(keyed.map((k) => displayType(env, routeKey(k.type))), scopes);
-  if (byKeyword) return { type: byKeyword, from: 'keyword' };
-
-  const phrase = textType(text, env.keywords);
-  if (phrase) return { type: displayType(env, routeKey(phrase.type)), from: 'text' };
-
   const seriesTypes = found ? env.typesBySeries.get(found.series) ?? [] : [];
+  const usable = (t) => !FOLDER_TYPES.has(routeKey(t)) && (!c.leaf || staysIn(env, t, c.slot));
+
+  const fromName = (candidates, hints, from) => {
+    if (!candidates.length) return null;
+    const series = seriesTypes.find((s) => !candidates.includes(s) && candidates.some((t) => hasKeyword(wordsOf(s), t)));
+    if (series) return { type: series, from: 'series' };
+    return { type: pickType(candidates, scopes, hints), from };
+  };
+
+  const names = [...env.typeNames.values()].filter((t) => usable(t) && hasKeyword(words, t));
+  const named = fromName(names, names, 'name');
+  if (named) return named;
+
+  const keyed = [...env.keywords.values()]
+    .map((k) => ({ type: displayType(env, routeKey(k.type)), hits: k.names.filter((n) => nameHasKeyword(words, n)) }))
+    .filter((k) => k.hits.length && usable(k.type));
+  const byKeyword = fromName(keyed.map((k) => k.type), keyed.flatMap((k) => k.hits), 'keyword');
+  if (byKeyword) return byKeyword;
+
+  for (const hit of textTypes(text, env.keywords)) {
+    const t = displayType(env, routeKey(hit.type));
+    if (!usable(t)) continue;
+    if (IDENTITY_TYPES.includes(t) && !(c.identity || c.leafTypes.includes(t) || (!c.leafTypes.length && !NO_IDENTITY_TEXT_SLOTS.has(c.slot)))) continue;
+    if (!c.leafTypes.length) return { type: t, from: 'text' };
+    const fit = pickType([t], leafScopes, [t], { strict: true });
+    if (fit) return { type: fit, from: 'text' };
+  }
+
   const bySeries = scopes.flat().find((t) => seriesTypes.includes(t)) ?? (seriesTypes.length === 1 ? seriesTypes[0] : null);
   if (bySeries) return { type: bySeries, from: 'series' };
 
-  const single = [c.leafOwn, c.leafTypes].find((list) => list.length === 1);
+  const single = leafScopes.find((list) => list.length === 1);
   if (single) return { type: single[0], from: 'leaf' };
   return { type: DEFAULT_LEAF, from: 'none' };
 }
 
-/**
- * The best of several candidate types. For each folder scope in turn (most specific first): a candidate in the
- * scope, else a scope type whose name contains a candidate's ("Invoice" in a vendor's "Invoices Received" folder is
- * a "Vendor Invoice"). Without a fit, the longest candidate. Ties go to the longer name. Null without candidates.
- * @param {string[]} candidates
- * @param {string[][]} scopes
- * @returns {string|null}
- */
-function pickType(candidates, scopes) {
-  if (!candidates.length) return null;
-  const longest = (list) => [...list].sort((a, b) => b.length - a.length || a.localeCompare(b))[0];
-  for (const scope of scopes) {
-    const fit = candidates.filter((t) => scope.includes(t));
-    if (fit.length) return longest(fit);
-    const wider = scope.filter((s) => candidates.some((t) => hasKeyword(wordsOf(s), t)));
-    if (wider.length) return longest(wider);
-  }
-  return longest(candidates);
+/** True when a type's route keeps it in top-level slot `slot` (party routes follow the party, so they stay). */
+function staysIn(env, type, slot) {
+  const route = routeFor(type, env.cfg);
+  return route.top === null || route.top === slot;
 }
 
 /**
- * Document date and where it came from, in order: a labelled date in the text ("Date:", "Dated", "Date of Issue",
- * "Issued on", "Invoice Date", "Date of Incorporation", "w.e.f."); the first plausible date in the text (not for
- * identity documents, whose other dates are birth or expiry dates); an ISO date in the file name; the source file's
- * modification time. Dates before 1990 or more than a year after `now` are ignored.
+ * The best of several candidate types. For each folder scope in turn (most specific first): a candidate in the
+ * scope, else a scope type whose name contains a candidate's name or one of the matched `hints` ("Invoice" in a
+ * vendor's "Invoices Received" folder is a "Vendor Invoice"; the keyword "settlement" in an Exit folder is a "Final
+ * Settlement"). Without a fit, the longest candidate (null with `strict`). Ties go to the longer name.
+ * @param {string[]} candidates
+ * @param {string[][]} scopes
+ * @param {string[]} [hints] the words that matched (type names or keywords)
+ * @param {{ strict?: boolean }} [opts]
+ * @returns {string|null}
+ */
+function pickType(candidates, scopes, hints = [], { strict = false } = {}) {
+  if (!candidates.length) return null;
+  const longest = (list) => [...list].sort((a, b) => b.length - a.length || a.localeCompare(b))[0];
+  const clues = [...new Set([...candidates, ...hints])];
+  for (const scope of scopes) {
+    const fit = candidates.filter((t) => scope.includes(t));
+    if (fit.length) return longest(fit);
+    const wider = scope.filter((s) => clues.some((t) => hasKeyword(wordsOf(s), t)));
+    if (wider.length) return longest(wider);
+  }
+  return strict ? null : longest(candidates);
+}
+
+/**
+ * Document date and where it came from, in order: a labelled date in the text (`text-labelled`, see findTextDate);
+ * the first plausible date in the text (`text-first`; not for identity documents, whose other dates are birth or
+ * expiry dates); an ISO date in the file name (`filename`); the source file's modification time (`mtime`, a guess
+ * that never seeds a counter). Dates before 1990 or more than a year after `now` are ignored.
  * @param {string} text extracted text (the first 3000 characters are read)
  * @param {string} filename
  * @param {Date|null} mtime
@@ -701,7 +750,7 @@ function pickType(candidates, scopes) {
  */
 export function chooseDate(text, filename, mtime, { now = new Date(), identity = false } = {}) {
   const inText = findTextDate(text, { now, labelledOnly: identity });
-  if (inText) return { date: inText.date, from: 'text' };
+  if (inText) return { date: inText.date, from: inText.labelled ? 'text-labelled' : 'text-first' };
   const inName = dateIn(filename);
   if (inName) return { date: inName, from: 'filename' };
   if (mtime instanceof Date && !Number.isNaN(mtime.getTime())) {
