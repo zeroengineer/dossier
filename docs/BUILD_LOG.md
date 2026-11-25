@@ -200,7 +200,7 @@ Commit IDs are on `main`. Most features have a `docs:` commit with their changel
 | — | `sharp` 0.35.5 security upgrade | 58abfbd, 0468021 | verified by the coordinator (see rulings) |
 | F24 | Release preparation: changelog, versions, docs | 63b11fc, c8d4a5c | final whole-branch review |
 | — | Final fix wave: optimistic concurrency for settings saves, clearance-filtered entity counts, eight minor fixes | branch `fix/final-wave` | fixes for the final review's findings |
-| F25 | Visual polish: floating navigation, layout rhythm, view transitions, tab state in the URL, alignment fixes, Playwright e2e | 6ce890d, 412bb20, cbae482, 82e5ee9 (branch `feat/f25-polish`, rebased on e454f87) | pending review |
+| F25 | Visual polish: floating navigation, layout rhythm, view transitions, tab state in the URL, alignment fixes, Playwright e2e | 6ce890d, 412bb20, cbae482, 82e5ee9, 8776194 (branch `feat/f25-polish`, rebased on e454f87) | 1 fix round: the sidebar rail still covered 2 px of the page when collapsed, hidden preview and viewer frames reloaded in the background |
 
 ### Rulings made during the build
 
@@ -252,6 +252,7 @@ These minor findings were parked during reviews. None blocks use.
 - **Upload:** a 413 reply is shown as a network error; unknown clearance levels are not handled specially.
 - **Entities:** no index on `issuing_entity_id`; entity search is not designed for more than 500 entities; punctuation is not folded in matching; the breadcrumb shows the id, not the name.
 - **Settings:** saving a brand trims, lowercases and rewrites blank lines in some fields; renaming a series can leave extra keys.
+- **F25 e2e:** `screens.spec.ts` waits a fixed 400 ms for entrance fades before each screenshot (parked; screenshots are for looking at, not assertions).
 - **Logo kit:** `export_kit.sh` gives an unclear message when the logo skill is missing; no check that the favicon master and its public copy match.
 - **Docker:** the Node base image is not pinned to a minor version; the healthcheck accepts any reply below 500.
 - **Development dependencies:** 4 moderate audit findings in development-only tools (`minimatch` through `@ts-morph` and others); none ships in the runtime image.
