@@ -28,7 +28,7 @@ export function DocumentVersions({ versions, selected, onSelect }: DocumentVersi
             <TableHeader>
               <TableRow>
                 <TableHead className="w-24">Version</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead className="hidden sm:table-cell">Created</TableHead>
                 <TableHead className="hidden md:table-cell">By</TableHead>
                 <TableHead className="hidden md:table-cell">Note</TableHead>
                 <TableHead>Files</TableHead>
@@ -62,13 +62,13 @@ export function DocumentVersions({ versions, selected, onSelect }: DocumentVersi
                         {v.isCurrent ? <Badge variant="secondary">Current</Badge> : null}
                       </div>
                     </TableCell>
-                    <TableCell><DateText value={v.createdAt} style="datetime" /></TableCell>
+                    <TableCell className="hidden sm:table-cell"><DateText value={v.createdAt} style="datetime" /></TableCell>
                     <TableCell className="hidden md:table-cell">{v.createdBy ?? <span className="text-muted-foreground">—</span>}</TableCell>
                     <TableCell className="hidden max-w-64 truncate md:table-cell">
                       {v.note ?? <span className="text-muted-foreground">—</span>}
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex gap-1">
                         {VIEWER_KINDS.filter((k) => v.renditions.some((r) => r.kind === k)).map((k) => (
                           <Badge key={k} variant="outline">{KIND_LABEL[k]}</Badge>
                         ))}

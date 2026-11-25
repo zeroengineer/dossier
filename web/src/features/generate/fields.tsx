@@ -239,7 +239,7 @@ function RowsField({ field, control }: Omit<FieldProps, "meta">) {
           <TableHeader>
             <TableRow>
               {columns.map(([key, type]) => (
-                <TableHead key={key}>
+                <TableHead key={key} className={type === "money" || type === "number" ? "text-right" : undefined}>
                   {key} <span className="font-normal text-muted-foreground">{type}</span>
                 </TableHead>
               ))}
@@ -321,7 +321,8 @@ function RowCell({ name, type, label, control }: RowCellProps) {
           )
         }
         if (type === "text") {
-          return <Textarea {...common} rows={2} value={value} onChange={rhf.onChange} className="min-h-9 min-w-48" />
+          // One line high like the inputs beside it; it grows with its text.
+          return <Textarea {...common} rows={1} value={value} onChange={rhf.onChange} className="min-h-8 min-w-48 py-1" />
         }
         if (type === "date") return <Input {...common} type="date" value={value} onChange={rhf.onChange} />
         const numeric = type === "money" || type === "number"

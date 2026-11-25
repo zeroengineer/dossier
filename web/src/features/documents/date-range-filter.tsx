@@ -28,7 +28,7 @@ export function DateRangeFilter({ from, to, onChange }: DateRangeFilterProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="border-dashed">
+        <Button variant="outline" className="border-dashed">
           <CalendarIcon data-icon="inline-start" />
           Date
           {label ? (

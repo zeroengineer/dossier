@@ -34,11 +34,12 @@ export default function VaultPage() {
         </ResizablePanel>
         <ResizableHandle withHandle className="max-md:hidden" />
         <ResizablePanel defaultSize="72" minSize="40">
-          <ScrollArea className="h-full">
-            <div className="p-4 md:p-6">
+          {/* A plain scroller (not ScrollArea, whose table wrapper has no height) so an empty state can fill and centre. */}
+          <div className="h-full overflow-y-auto">
+            <div className="flex min-h-full flex-col p-4 md:p-6">
               <FolderDocuments key={nodeId} nodeId={nodeId} />
             </div>
-          </ScrollArea>
+          </div>
         </ResizablePanel>
       </ResizablePanelGroup>
     </>

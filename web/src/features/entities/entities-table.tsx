@@ -21,7 +21,7 @@ const columns: ColumnDef<EntitySummary>[] = [
     filterFn: nameOrAlias,
     enableHiding: false,
     cell: ({ row }) => (
-      <Link to={entityPath(row.original.id)} className="block max-w-80 truncate font-medium hover:underline">
+      <Link to={entityPath(row.original.id)} title={row.original.name} className="block max-w-48 truncate font-medium hover:underline sm:max-w-80">
         {row.original.name}
       </Link>
     ),
@@ -56,7 +56,7 @@ const columns: ColumnDef<EntitySummary>[] = [
   },
   {
     accessorKey: "documentCount",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Documents" className="justify-end" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Documents" align="end" />,
     meta: { label: "Documents", className: "text-right" },
     cell: ({ row }) => <span className="tabular-nums">{row.original.documentCount}</span>,
   },

@@ -79,10 +79,11 @@ describe("Entities page", () => {
     await waitFor(() => expect(router.state.location.pathname).toBe("/entities/4"))
   })
 
-  it("shows the API error for an unknown kind", async () => {
+  it("falls back to the All tab for an unknown kind", async () => {
     renderRoute(<EntitiesPage />, "/entities?kind=planet", { route: "/entities" })
-    expect(await screen.findByText("Could not load entities")).toBeInTheDocument()
-    expect(screen.getByText(/INVALID_INPUT: Unknown entity kind "planet"/)).toBeInTheDocument()
+    expect(await screen.findByText("Example Supplies")).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole("tab", { name: "All" })).toHaveAttribute("aria-selected", "true"))
+    expect(screen.queryByRole("tab", { name: "planet" })).not.toBeInTheDocument()
   })
 })
 

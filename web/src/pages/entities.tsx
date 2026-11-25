@@ -7,7 +7,8 @@ import { EmptyState } from "@/components/empty-state"
 import { ErrorState } from "@/components/error-state"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollableTabsList } from "@/components/scrollable-tabs-list"
+import { Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs"
 import { EntitiesTable } from "@/features/entities/entities-table"
 import { EntityFormDialog } from "@/features/entities/entity-form-dialog"
 import { entityPath, kindLabel } from "@/features/entities/labels"
@@ -17,8 +18,10 @@ const ALL = "all"
 export default function EntitiesPage() {
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
-  const kind = params.get("kind") ?? ""
   const { data: meta } = useMeta()
+  const requested = params.get("kind") ?? ""
+  // An unknown ?kind= (an old link, a typo) falls back to All once the kinds are known.
+  const kind = requested && meta && !meta.entityKinds.includes(requested) ? "" : requested
   const { data, isPending, isError, error, refetch, isPlaceholderData } = useEntities({ kind: kind || undefined, limit: ENTITY_LIST_LIMIT })
   const [creating, setCreating] = React.useState(false)
 
@@ -56,17 +59,15 @@ export default function EntitiesPage() {
       />
 
       <Tabs value={tab} onValueChange={selectTab}>
-        <div className="-mx-1 overflow-x-auto px-1 pb-1">
-          <TabsList aria-label="Entity kind">
-            <TabsTrigger value={ALL}>All</TabsTrigger>
-            {kinds.map((k) => (
-              <TabsTrigger key={k} value={k}>
-                {kindLabel(k)}
-              </TabsTrigger>
-            ))}
-            {kind && meta && !kinds.includes(kind) ? <TabsTrigger value={kind}>{kind}</TabsTrigger> : null}
-          </TabsList>
-        </div>
+        <ScrollableTabsList aria-label="Entity kind">
+          <TabsTrigger value={ALL}>All</TabsTrigger>
+          {kinds.map((k) => (
+            <TabsTrigger key={k} value={k}>
+              {kindLabel(k)}
+            </TabsTrigger>
+          ))}
+          {kind && !kinds.includes(kind) ? <TabsTrigger value={kind}>{kind}</TabsTrigger> : null}
+        </ScrollableTabsList>
 
         <TabsContent value={tab} className="flex flex-col gap-3">
           {isError ? (

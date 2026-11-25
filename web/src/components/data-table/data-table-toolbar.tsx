@@ -56,7 +56,7 @@ export function DataTableToolbar<TData>({
   }
 
   return (
-    <div className={cn("flex flex-wrap items-center justify-between gap-2", className)}>
+    <div className={cn("flex flex-wrap items-start justify-between gap-2", className)}>
       <div className="flex flex-1 flex-wrap items-center gap-2">
         {showSearch ? (
           <InputGroup className="w-full sm:w-64">
@@ -74,7 +74,7 @@ export function DataTableToolbar<TData>({
         ) : null}
         {children}
         {isFiltered ? (
-          <Button variant="ghost" size="sm" onClick={reset}>
+          <Button variant="ghost" onClick={reset}>
             Reset
             <XIcon data-icon="inline-end" />
           </Button>

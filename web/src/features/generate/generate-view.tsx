@@ -200,26 +200,33 @@ function GenerateWorkspace({
         }
       />
       {isMobile ? (
-        <Tabs defaultValue="form">
-          <TabsList>
+        // Both panes stay mounted (the inactive one hidden): switching never drops typed input or reloads the preview.
+        <Tabs defaultValue="form" className="gap-4">
+          <TabsList className="w-full">
             <TabsTrigger value="form">Form</TabsTrigger>
             <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
-          <TabsContent value="form">{formPane}</TabsContent>
-          <TabsContent value="preview" className="min-h-96">
+          <TabsContent value="form" forceMount className="data-[state=inactive]:hidden">
+            {formPane}
+          </TabsContent>
+          <TabsContent value="preview" forceMount className="flex min-h-96 flex-col data-[state=inactive]:hidden">
             {preview}
           </TabsContent>
         </Tabs>
       ) : (
-        <ResizablePanelGroup className="h-[calc(100svh-12rem)] min-h-128 rounded-lg border bg-card shadow-md">
-          <ResizablePanel defaultSize="55" minSize="30">
-            <div className="h-full overflow-y-auto p-6">{formPane}</div>
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize="45" minSize="25">
-            <div className="h-full overflow-y-auto p-6">{preview}</div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+        // The panel group sets `height: 100%` inline, so the viewport-high box is a wrapper: with a definite height the
+        // two panes scroll on their own and the Generate row sticks to the bottom of the form pane.
+        <div className="h-[calc(100svh-12rem)] min-h-128">
+          <ResizablePanelGroup className="rounded-lg border bg-card shadow-md">
+            <ResizablePanel defaultSize="55" minSize="30">
+              <div className="h-full overflow-y-auto p-6">{formPane}</div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize="45" minSize="25">
+              <div className="h-full overflow-y-auto p-6">{preview}</div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
       )}
     </div>
   )

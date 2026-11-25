@@ -20,7 +20,7 @@ export function DataTableViewOptions<TData>({ table }: { table: Table<TData> }) 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline">
           <Settings2Icon data-icon="inline-start" />
           View
         </Button>

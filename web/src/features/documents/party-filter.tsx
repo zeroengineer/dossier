@@ -33,7 +33,7 @@ export function PartyFilter({ value, onChange }: PartyFilterProps) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="border-dashed">
+        <Button variant="outline" className="border-dashed">
           <PlusCircleIcon data-icon="inline-start" />
           Party
           {selectedName !== undefined ? (

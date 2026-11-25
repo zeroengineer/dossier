@@ -35,7 +35,7 @@ export function WarningsCard({ warnings }: { warnings: DashboardWarning[] }) {
                   <TriangleAlertIcon />
                   <AlertTitle>{titleOf(w.code)}</AlertTitle>
                   <AlertDescription>
-                    <span>{w.message}</span>
+                    <span>{w.message}</span>{" "}
                     <Link to={w.href} className="inline-flex items-center gap-1 font-medium text-foreground hover:underline">
                       Fix
                       <ArrowRightIcon className="size-3.5" />

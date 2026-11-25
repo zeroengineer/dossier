@@ -56,13 +56,34 @@ describe("Document page", () => {
     expect(v.getByText("Version 1")).toBeInTheDocument()
     expect(v.getByTitle("PDF of Event services invoice")).toHaveAttribute("src", "/documents/DOC-000001/renditions/pdf?version=1")
     await user.click(v.getByRole("tab", { name: "HTML" }))
+    await waitFor(() => expect(router.state.location.search).toBe("?version=1&view=html"))
     const html = v.getByTitle("HTML of Event services invoice")
     expect(html).toHaveAttribute("sandbox", "")
     expect(html).toHaveAttribute("src", "/documents/DOC-000001/renditions/html?version=1")
     expect(screen.getByRole("button", { name: "v1, show version 1" })).toHaveAttribute("aria-pressed", "true")
 
     await user.click(screen.getByRole("button", { name: "v2, show version 2" }))
-    await waitFor(() => expect(router.state.location.search).toBe(""))
+    await waitFor(() => expect(router.state.location.search).toBe("?view=html"))
+  })
+
+  it("opens the view named in ?view= and falls back to the first view for an unknown one", async () => {
+    const { unmount } = renderRoute(<DocumentPage />, "/documents/DOC-000001?version=1&view=html", { route: "/documents/:id" })
+    let v = await viewer()
+    expect(v.getByRole("tab", { name: "HTML" })).toHaveAttribute("aria-selected", "true")
+    unmount()
+    renderRoute(<DocumentPage />, "/documents/DOC-000001?version=1&view=nope", { route: "/documents/:id" })
+    v = await viewer()
+    expect(v.getByRole("tab", { name: "PDF" })).toHaveAttribute("aria-selected", "true")
+  })
+
+  it("keeps an opened view mounted when switching tabs, so its frame does not reload", async () => {
+    const { user, router } = renderRoute(<DocumentPage />, "/documents/DOC-000001?version=1", { route: "/documents/:id" })
+    const v = await viewer()
+    const pdf = v.getByTitle("PDF of Event services invoice")
+    await user.click(v.getByRole("tab", { name: "HTML" }))
+    await user.click(v.getByRole("tab", { name: "PDF" }))
+    await waitFor(() => expect(router.state.location.search).toBe("?version=1"))
+    expect(v.getByTitle("PDF of Event services invoice")).toBe(pdf)
   })
 
   it("opens the version named in ?version= and fetches its Markdown", async () => {

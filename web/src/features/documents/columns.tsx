@@ -46,7 +46,7 @@ export const documentColumns: ColumnDef<DocumentSummary>[] = [
     enableSorting: false,
     enableHiding: false,
     cell: ({ row }) => (
-      <Link to={`/documents/${encodeURIComponent(row.original.id)}`} className="block max-w-80 truncate font-medium hover:underline">
+      <Link to={`/documents/${encodeURIComponent(row.original.id)}`} title={row.original.title} className="block max-w-48 truncate font-medium hover:underline sm:max-w-80">
         {row.original.title}
       </Link>
     ),

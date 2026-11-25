@@ -7,11 +7,11 @@ import { cn } from "@/lib/utils"
 export function SettingsNav({ className }: { className?: string }) {
   const { pathname, hash } = useLocation()
   return (
-    <nav aria-label="Settings" className={cn("flex flex-wrap gap-1 border-b pb-2", className)}>
+    <nav aria-label="Settings" className={cn("scrollbar-none -mx-1 flex gap-1 overflow-x-auto border-b px-1 pb-2", className)}>
       {SETTINGS_ITEMS.map((item) => {
         const active = isActive(item, pathname, hash)
         return (
-          <Button key={item.to} asChild variant={active ? "secondary" : "ghost"} size="sm">
+          <Button key={item.to} asChild variant={active ? "secondary" : "ghost"} size="sm" className="shrink-0">
             <Link to={item.to} aria-current={active ? "page" : undefined}>
               <item.icon data-icon="inline-start" />
               {item.title}

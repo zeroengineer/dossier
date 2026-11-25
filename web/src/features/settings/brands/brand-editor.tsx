@@ -4,7 +4,8 @@ import { useSearchParams } from "react-router"
 import { toast } from "sonner"
 import { useReloadBrand, useSaveBrand } from "@/api/brands"
 import type { BrandAssetUpload, BrandDetail, BrandFile, ResolvedBrand } from "@/api/types"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollableTabsList } from "@/components/scrollable-tabs-list"
+import { Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs"
 import { errorMessage } from "@/lib/api"
 import { SaveBar } from "../save-bar"
 import { SaveFailureAlert, type SaveFailure } from "../save-failure"
@@ -150,7 +151,7 @@ export function BrandEditor({ brand, parent, fontWeights, builtinFonts, seriesId
         <form id={FORM_ID} onSubmit={(e) => void onSubmit(e)} noValidate aria-label={`Brand ${id}`} className="flex min-w-0 flex-col gap-4">
           <SaveFailureAlert failure={failure} onReload={reload} />
           <Tabs value={tab} onValueChange={setTab}>
-            <TabsList className="h-auto w-full flex-wrap justify-start">
+            <ScrollableTabsList aria-label="Brand sections">
               {BRAND_TABS.map((t) => (
                 <TabsTrigger key={t.id} value={t.id} className="flex-none" aria-invalid={tabsWithErrors.has(t.id) || undefined}>
                   {t.label}
@@ -162,7 +163,7 @@ export function BrandEditor({ brand, parent, fontWeights, builtinFonts, seriesId
                   ) : null}
                 </TabsTrigger>
               ))}
-            </TabsList>
+            </ScrollableTabsList>
             <TabsContent value="identity"><IdentitySection {...section} /></TabsContent>
             <TabsContent value="registrations"><RegistrationsSection {...section} /></TabsContent>
             <TabsContent value="addresses"><AddressesSection {...section} /></TabsContent>

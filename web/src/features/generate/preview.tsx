@@ -9,7 +9,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollableTabsList } from "@/components/scrollable-tabs-list"
+import { Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs"
 import { useDebounced } from "@/hooks/use-debounced"
 import { cn } from "@/lib/utils"
 import { labelOfPath, SERVER_ERROR, setFieldProblems, toFieldProblems, type FieldProblem } from "./problems"
@@ -224,24 +225,32 @@ function PreviewFiles({ preview, title, stale }: { preview: PreviewOk; title: st
   const renditions = [...preview.renditions].sort((a, b) => rank(a.kind) - rank(b.kind))
   const [picked, setPicked] = React.useState<string | null>(null)
   const active = renditions.find((r) => r.kind === picked) ?? renditions[0]
+  // Panels stay mounted once opened, so switching back to a tab does not reload its frame.
+  const [opened, setOpened] = React.useState<ReadonlySet<string>>(() => new Set())
+  const pick = (kind: string) => {
+    if (active) setOpened((prev) => new Set(prev).add(active.kind))
+    setPicked(kind)
+  }
   if (!active) {
     return <EmptyState icon={FileSearchIcon} title="No files" description="This template renders no previewable files." />
   }
   return (
     <Tabs
       value={active.kind}
-      onValueChange={setPicked}
+      onValueChange={pick}
       className={cn("min-h-0 flex-1 gap-3 transition-opacity", stale && "opacity-50")}
       aria-busy={stale || undefined}
     >
       <div className="flex items-center justify-between gap-2">
-        <TabsList>
-          {renditions.map((r) => (
-            <TabsTrigger key={r.kind} value={r.kind}>
-              {KIND_LABEL[r.kind] ?? r.kind}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="min-w-0">
+          <ScrollableTabsList aria-label="Preview format">
+            {renditions.map((r) => (
+              <TabsTrigger key={r.kind} value={r.kind}>
+                {KIND_LABEL[r.kind] ?? r.kind}
+              </TabsTrigger>
+            ))}
+          </ScrollableTabsList>
+        </div>
         <Button variant="outline" size="sm" asChild>
           <a href={versioned(active.url, preview.token)} target="_blank" rel="noopener noreferrer">
             <ExternalLinkIcon data-icon="inline-start" />
@@ -250,7 +259,12 @@ function PreviewFiles({ preview, title, stale }: { preview: PreviewOk; title: st
         </Button>
       </div>
       {renditions.map((r) => (
-        <TabsContent key={r.kind} value={r.kind} className="flex min-h-0 flex-1 flex-col">
+        <TabsContent
+          key={r.kind}
+          value={r.kind}
+          forceMount={r.kind === active.kind || opened.has(r.kind) ? true : undefined}
+          className="flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden"
+        >
           <PreviewFile kind={r.kind} src={versioned(r.url, preview.token)} label={`${KIND_LABEL[r.kind] ?? r.kind} preview of ${title}`} active={r.kind === active.kind} />
         </TabsContent>
       ))}
