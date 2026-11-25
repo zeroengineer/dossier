@@ -4,6 +4,7 @@ import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path'
 import { DossierError } from '../errors.js';
 import { normaliseName } from '../domain/canonical.js';
 import { findNumbers } from '../domain/numbering.js';
+import { IDENTITY_TYPES, findTextDate, hasKeyword, plausibleDate, textType, typeKeywordTable, wordsOf } from '../domain/doctypes.js';
 import { DEFAULT_LEAF, DEFAULT_ROUTES, LEAF_MAP, TOP_KEYS, TOP_LEAVES, TOP_LEVEL, leafIn, routingConfig } from '../domain/routing.js';
 import { secretReason } from '../domain/secrets.js';
 import { LEVELS, canAccess } from '../domain/sensitivity.js';
@@ -87,13 +88,24 @@ const key = (s) => normaliseName(s);
  *   duplicates: { path: string, of: string|null, reason: string }[],
  *   skipped: { path: string, reason: string }[],
  *   warnings: { path: string, message: string, code?: 'SOURCE_CHANGED' }[],
- *   documents: { path: string, id: string|null, type: string, party: string|null, partyKind: string|null,
- *     sensitivity: string, number: string|null, series: string|null }[],
+ *   documents: { path: string, id: string|null, type: string, typeFrom: TypeSource, party: string|null,
+ *     partyKind: string|null, sensitivity: string, number: string|null, series: string|null,
+ *     date: string|null, dateFrom: DateSource|null }[],
+ *   dates: { text: number, filename: number, mtime: number, none: number },
  * }} ImportSummary
  *   `files` counts every file looked at (skipped folders count as one skipped entry, not their files);
  *   `imported` documents created (or, in a dry run, that would be); `existing` files whose bytes are already in the
  *   vault; `deduped` identical copies within the import (and index rows recorded as identical copies).
+ * @typedef {'folder'|'name'|'keyword'|'text'|'series'|'leaf'|'none'} TypeSource how the type was found:
+ *   `folder` the Templates/References folder, `name` a type name in the file name, `keyword` a type keyword in the file
+ *   name, `text` a type phrase in the text, `series` the parsed number's series, `leaf` the leaf folder's only type,
+ *   `none` nothing (type "Other")
+ * @typedef {'text'|'filename'|'mtime'} DateSource where `doc_date` came from: the document's text, a date in its file
+ *   name, or the source file's modification time
  */
+
+/** Words recorded in the version note for each date source. */
+export const DATE_SOURCE_NOTE = Object.freeze({ text: 'date from text', filename: 'date from file name', mtime: 'date from file time' });
 
 /**
  * Import a folder of existing documents (or the files an index CSV lists) into the vault.
@@ -111,10 +123,16 @@ const key = (s) => normaliseName(s);
  *   within the run is a duplicate. Files the secret scanner flags are skipped. Every workspace series pattern is
  *   tried against the file name, then the extracted text; a hit sets the number and series and seeds the counter
  *   forward (`registerExisting`); a number already used in its series is filed with the conflict flag and reported.
+ * - `only` (extensions such as `['pdf']`) imports only files with those extensions; the others are skipped with the
+ *   reason "not in --only". Without it every file is considered.
+ * - Type: see {@link chooseType}. Identity types (PAN, Aadhaar, Voter ID, Passport) are imported at the identity
+ *   sensitivity at least, like files in an identity folder.
+ * - Date: see {@link chooseDate}. Its source is kept in the version note and in `input_json.import.date_source`.
  * - `dryRun` reads and classifies everything but writes nothing (no entities, counters, blobs or documents).
  * @param {object} ctx
- * @param {{ folder: string, index?: string|null, dryRun?: boolean, brandId?: string,
- *   sensitivity?: { default?: string, people?: string, identity?: string }, identityPattern?: RegExp }} opts
+ * @param {{ folder: string, index?: string|null, dryRun?: boolean, brandId?: string, only?: string[]|null,
+ *   sensitivity?: { default?: string, people?: string, identity?: string }, identityPattern?: RegExp, now?: Date }} opts
+ *   `now` is the reference for the "at most a year ahead" date check (tests)
  * @returns {Promise<ImportSummary>}
  */
 export async function importFolder(ctx, opts = {}) {
@@ -133,15 +151,21 @@ export async function importFolder(ctx, opts = {}) {
   const identityRe = opts.identityPattern ?? IDENTITY_FOLDER_RE;
   if (!(identityRe instanceof RegExp)) throw invalid('identityPattern must be a RegExp');
 
+  const only = onlyExtensions(opts.only);
+  const now = opts.now ?? new Date();
+  if (!(now instanceof Date) || Number.isNaN(now.getTime())) throw invalid('now must be a valid Date');
+
   const dryRun = opts.dryRun === true;
   const summary = {
     dryRun, folder, index, brandId, files: 0, imported: 0, existing: 0, deduped: 0, ignoredDsStore: 0, newEntities: [], byType: {},
+    dates: { text: 0, filename: 0, mtime: 0, none: 0 },
     numbers: [], conflicts: [], duplicates: [], skipped: [], warnings: [], documents: [],
   };
+  const keywords = typeKeywordTable(ctx.ws.config.import?.typeKeywords);
   const env = {
-    ctx, folder, dryRun, brandId, sensitivity, identityRe, summary,
+    ctx, folder, dryRun, brandId, sensitivity, identityRe, summary, only, now, keywords,
     cfg: routingConfig(ctx.ws.config.hierarchy),
-    typeNames: typeNames(ctx),
+    typeNames: typeNames(ctx, keywords),
     typesBySeries: typesBySeries(ctx, brandId),
     entityCache: new Map(),
     seen: new Map(), // sha256 -> path imported in this run
@@ -160,6 +184,24 @@ export async function importFolder(ctx, opts = {}) {
   }
   summary.newEntities.sort((a, b) => a.kind.localeCompare(b.kind) || a.name.localeCompare(b.name));
   return summary;
+}
+
+/**
+ * Normalise the `only` option: extensions without the dot, lower case, de-duplicated; null when not given.
+ * @param {unknown} only
+ * @returns {string[]|null}
+ */
+function onlyExtensions(only) {
+  if (only === undefined || only === null) return null;
+  if (!Array.isArray(only)) throw invalid('only must be a list of file extensions, e.g. ["pdf"]');
+  const out = [];
+  for (const raw of only) {
+    const e = typeof raw === 'string' ? raw.trim().replace(/^\.+/, '').toLowerCase() : '';
+    if (!/^[a-z0-9]+$/.test(e)) throw invalid(`only: "${raw}" is not a file extension`, { only });
+    if (!out.includes(e)) out.push(e);
+  }
+  if (!out.length) throw invalid('only needs at least one file extension', { only });
+  return out;
 }
 
 // ---------- file lists ----------
@@ -323,6 +365,10 @@ async function importOne(env, entry) {
   if (st.isSymbolicLink()) { summary.skipped.push({ path: rel, reason: 'symbolic link' }); return; }
   if (!st.isFile()) { summary.skipped.push({ path: rel, reason: 'not a file' }); return; }
   const filename = rel.split('/').pop();
+  if (env.only && !env.only.includes(extname(filename).slice(1).toLowerCase())) {
+    summary.skipped.push({ path: rel, reason: 'not in --only' });
+    return;
+  }
   const buffer = readFileSync(abs);
   if (entry.md5 && createHash('md5').update(buffer).digest('hex') !== entry.md5) {
     summary.warnings.push({ path: rel, message: 'md5 differs from the index (file changed since the index was written)' });
@@ -356,9 +402,11 @@ async function importOne(env, entry) {
 
   const c = classify(env, rel);
   const found = parseDocNumber(env, filename, extracted.text);
-  const type = chooseType(env, c, filename, found);
-  const docDate = dateIn(filename);
-  const level = c.sensitivity;
+  const { type, from: typeFrom } = chooseType(env, c, filename, found, extracted.text);
+  const identityType = IDENTITY_TYPES.includes(type);
+  const dated = chooseDate(extracted.text, filename, st.mtime, { now: env.now, identity: c.identity || identityType });
+  const docDate = dated?.date ?? null;
+  const level = identityType ? higher(c.sensitivity, env.sensitivity.identity) : c.sensitivity;
   if (!canAccess(ctx.user.clearance, level)) {
     summary.skipped.push({ path: rel, reason: `needs ${level} clearance (user "${ctx.user.id}" has ${ctx.user.clearance})` });
     return;
@@ -396,14 +444,21 @@ async function importOne(env, entry) {
       ...(engagement ? { engagementId: engagement.id } : {}),
       ...(docDate ? { docDate } : {}),
       ...(found ? { numberSeries: found.series, docNumber: found.number, issuingBrandId: env.brandId } : {}),
-      note: `Imported from ${rel}`,
-      inputJson: { import: { source_path: rel, source_folder: rel.includes('/') ? rel.slice(0, rel.lastIndexOf('/')) : '', ...(entry.note ? { index_note: entry.note } : {}) } },
+      note: `Imported from ${rel}${dated ? ` (${DATE_SOURCE_NOTE[dated.from]})` : ''}`,
+      inputJson: {
+        import: {
+          source_path: rel, source_folder: rel.includes('/') ? rel.slice(0, rel.lastIndexOf('/')) : '',
+          ...(entry.note ? { index_note: entry.note } : {}), ...(dated ? { date_source: dated.from } : {}),
+        },
+      },
     };
     const res = await uploadFile(ctx, { buffer, filename, meta, extracted });
     id = res.document.id;
     if (found) {
       try {
-        registerExisting(ctx, found.series, found.number, { brandId: env.brandId, ...(docDate ? { date: docDate } : {}) });
+        // A file-time date is a guess: it does not choose the counter's year.
+        const seedDate = dated && dated.from !== 'mtime' ? { date: docDate } : {};
+        registerExisting(ctx, found.series, found.number, { brandId: env.brandId, ...seedDate });
       } catch (e) {
         summary.warnings.push({ path: rel, message: `counter not seeded for ${found.number}: ${e.message}` });
       }
@@ -414,9 +469,10 @@ async function importOne(env, entry) {
   env.seen.set(sha, rel);
   summary.imported++;
   summary.byType[type] = (summary.byType[type] ?? 0) + 1;
+  summary.dates[dated?.from ?? 'none']++;
   summary.documents.push({
-    path: rel, id, type, party: party?.name ?? null, partyKind: c.party?.kind ?? null, sensitivity: level,
-    number: found?.number ?? null, series: found?.series ?? null,
+    path: rel, id, type, typeFrom, party: party?.name ?? null, partyKind: c.party?.kind ?? null, sensitivity: level,
+    number: found?.number ?? null, series: found?.series ?? null, date: docDate, dateFrom: dated?.from ?? null,
   });
 }
 
@@ -443,32 +499,40 @@ function matchTop(env, name) {
   return null;
 }
 
-/** Leaf name (lower-cased key) -> per slot, the types routed there, in routing-table order. */
+/**
+ * Leaf name (lower-cased key) -> per slot, the types routed there, in routing-table order. `own` marks the types
+ * routed to the leaf by name (not translated into it from another slot's leaf name), e.g. only "Vendor Invoice" is
+ * routed to a vendor's "Invoices Received"; "Invoice" lands there through LEAF_MAP.
+ * @returns {Map<string, string[]> & { own: Map<string, string[]> }}
+ */
 function leafIndex(env) {
   const { cfg } = env;
   const index = new Map(); // `${slot}\u0000${leafKey}` -> types
-  const add = (slot, leaf, type) => {
+  const own = new Map();
+  const add = (map, slot, leaf, type) => {
     if (!leaf) return;
     const k = `${slot}\u0000${key(leaf)}`;
-    const list = index.get(k) ?? [];
+    const list = map.get(k) ?? [];
     if (!list.includes(type)) list.push(type);
-    index.set(k, list);
+    map.set(k, list);
   };
   const types = [...cfg.routes.entries()];
   // Exact route leaves first, then the leaves they are translated to in each slot.
   for (const slot of TOP_KEYS) {
     for (const [t, r] of types) {
       const type = displayType(env, t);
-      if (r.top === slot) add(slot, r.leaf, type);
-      else if (r.top === null && (r.override || !TOP_LEAVES[slot] || TOP_LEAVES[slot].includes(r.leaf))) add(slot, r.leaf, type);
+      if (r.top === slot || (r.top === null && (r.override || !TOP_LEAVES[slot] || TOP_LEAVES[slot].includes(r.leaf)))) {
+        add(index, slot, r.leaf, type);
+        add(own, slot, r.leaf, type);
+      }
     }
     for (const [t, r] of types) {
       if (r.top !== null || r.override) continue;
       const mapped = leafIn(slot, r.leaf);
-      if (mapped && mapped !== DEFAULT_LEAF) add(slot, mapped, displayType(env, t));
+      if (mapped && mapped !== DEFAULT_LEAF) add(index, slot, mapped, displayType(env, t));
     }
   }
-  return index;
+  return Object.assign(index, { own });
 }
 
 /** Routing keys are lower case; give back the type as written in the default table or the workspace routing. */
@@ -476,25 +540,32 @@ const displayType = (env, typeKey) => env.typeNames.get(typeKey) ?? typeKey;
 
 const routeKey = (t) => String(t).trim().replace(/\s+/g, ' ').toLowerCase();
 
-/** Normalised routing key -> the type's spelling (workspace routing wins over the default table). */
-function typeNames(ctx) {
-  const names = [...Object.keys(DEFAULT_ROUTES), ...Object.keys(ctx.ws.config.hierarchy?.routing ?? {})];
+/**
+ * Normalised type key -> the type's spelling, for every known type: the default routes, the keyword types and the
+ * workspace routing (whose spelling wins).
+ */
+function typeNames(ctx, keywords) {
+  const names = [...Object.keys(DEFAULT_ROUTES), ...[...keywords.values()].map((k) => k.type), ...Object.keys(ctx.ws.config.hierarchy?.routing ?? {})];
   return new Map(names.map((t) => [routeKey(t), t.trim().replace(/\s+/g, ' ')]));
 }
 
-/** Types whose leaf in `slot` is the folder name `seg` (or whose name is the folder name, e.g. "MoU", "Invoices"). */
+/**
+ * Types whose leaf in `slot` is the folder name `seg` (or whose name is the folder name, e.g. "MoU", "Invoices").
+ * `own` are the types routed to that leaf by name (see {@link leafIndex}).
+ * @returns {{ leaf: boolean, types: string[], own: string[] }}
+ */
 function leafTypes(env, slot, seg) {
   const k = key(seg);
-  if (k === key(DEFAULT_LEAF)) return { leaf: true, types: [] };
+  if (k === key(DEFAULT_LEAF)) return { leaf: true, types: [], own: [] };
   const byLeaf = slot ? env.leafIndex.get(`${slot}\u0000${k}`) : null;
-  if (byLeaf?.length) return { leaf: true, types: byLeaf };
+  if (byLeaf?.length) return { leaf: true, types: byLeaf, own: env.leafIndex.own.get(`${slot}\u0000${k}`) ?? [] };
   const singular = k.endsWith('s') ? k.slice(0, -1) : k;
   const named = [...env.cfg.routes.keys()].filter((t) => key(t) === k || key(t) === singular).map((t) => displayType(env, t));
-  if (named.length) return { leaf: true, types: named };
+  if (named.length) return { leaf: true, types: named, own: named };
   if (slot && (TOP_LEAVES[slot]?.some((l) => key(l) === k) || Object.keys(LEAF_MAP[slot] ?? {}).some((l) => key(l) === k))) {
-    return { leaf: true, types: [] };
+    return { leaf: true, types: [], own: [] };
   }
-  return { leaf: false, types: [] };
+  return { leaf: false, types: [], own: [] };
 }
 
 /** Types whose route ends up in `slot` (used when a party folder has no leaf folder). */
@@ -507,15 +578,16 @@ function slotTypes(env, slot) {
 /**
  * Split a file's folder path into slot, party, business line, engagement, leaf and sensitivity.
  * @returns {{ slot: string|null, party: { kind: string, name: string }|null, businessLine: string|null,
- *   engagement: string|null, leaf: string|null, leafTypes: string[], sensitivity: string }}
+ *   engagement: string|null, leaf: string|null, leafTypes: string[], leafOwn: string[], sensitivity: string,
+ *   identity: boolean }} `leafOwn`: the leaf's own types (routed to it by name), a subset of `leafTypes`
  */
 function classify(env, rel) {
   const dirs = rel.split('/').slice(0, -1);
   const identity = dirs.some((d) => env.identityRe.test(d));
   const top = dirs.length ? matchTop(env, dirs[0]) : null;
   const slot = top?.slot ?? null;
-  const out = { slot, party: null, businessLine: null, engagement: null, leaf: top?.leaf ?? null, leafTypes: [], identity };
-  if (top?.leaf) out.leafTypes = leafTypes(env, slot, top.leaf).types;
+  const out = { slot, party: null, businessLine: null, engagement: null, leaf: top?.leaf ?? null, leafTypes: [], leafOwn: [], identity };
+  if (top?.leaf) ({ types: out.leafTypes, own: out.leafOwn } = leafTypes(env, slot, top.leaf));
   let level = slot === 'people' ? env.sensitivity.people : env.sensitivity.default;
   if (identity) level = higher(level, env.sensitivity.identity);
   out.sensitivity = level;
@@ -526,7 +598,7 @@ function classify(env, rel) {
   const leafAt = segs.findIndex((s) => leafTypes(env, slot, s).leaf);
   if (leafAt >= 0) {
     out.leaf = segs[leafAt];
-    out.leafTypes = leafTypes(env, slot, segs[leafAt]).types;
+    ({ types: out.leafTypes, own: out.leafOwn } = leafTypes(env, slot, segs[leafAt]));
   }
   const pre = leafAt >= 0 ? segs.slice(0, leafAt) : segs;
   const kind = PARTY_KIND[slot];
@@ -556,29 +628,86 @@ function classify(env, rel) {
 
 const higher = (a, b) => (LEVELS.indexOf(a) >= LEVELS.indexOf(b) ? a : b);
 
-/** Document type of a classified file: leaf candidates narrowed by the number's series, then by the file name. */
-function chooseType(env, c, filename, found) {
+/**
+ * Document type of a classified file, and how it was found. In order:
+ * 1. the Templates or References folder (the folder is the type, whatever the file is a template of);
+ * 2. a type name written in the file name ("…_Debit Note_…", "MoU");
+ * 3. a type keyword or alias in the file name ("pancard", "moa"; built-ins plus `import.typeKeywords`);
+ * 4. a type phrase in the first part of the extracted text ("Permanent Account Number");
+ * 5. the series of the parsed document number;
+ * 6. the leaf folder's type, when the leaf maps to exactly one;
+ * 7. otherwise "Other", never the first of several leaf types.
+ * Keywords match whole words only ("pan" is not in "company"). When a step finds several types, one that fits the
+ * folder (the leaf's types, else the top-level folder's) wins, then the longest name.
+ * @returns {{ type: string, from: TypeSource }}
+ */
+function chooseType(env, c, filename, found, text) {
+  if (c.slot === 'templates') return { type: 'Template', from: 'folder' };
+  if (c.slot === 'references') return { type: 'Reference', from: 'folder' };
+  // Folder fit, most specific first: the leaf's own types, all its types, else the top-level folder's types.
+  const scopes = c.leafTypes.length ? [c.leafOwn, c.leafTypes] : [c.slot ? slotTypes(env, c.slot) : []];
+  // The name as written, without an index's "[from …]" note.
+  const words = wordsOf(filename.replace(/\.[^.]+$/, '').replace(/\s*\[from [^\]]*\]\s*$/i, ''));
+
+  const named = pickType([...env.typeNames.values()].filter((t) => hasKeyword(words, t)), scopes);
+  if (named) return { type: named, from: 'name' };
+
+  const keyed = [...env.keywords.values()].filter((k) => k.names.some((n) => hasKeyword(words, n)));
+  const byKeyword = pickType(keyed.map((k) => displayType(env, routeKey(k.type))), scopes);
+  if (byKeyword) return { type: byKeyword, from: 'keyword' };
+
+  const phrase = textType(text, env.keywords);
+  if (phrase) return { type: displayType(env, routeKey(phrase.type)), from: 'text' };
+
   const seriesTypes = found ? env.typesBySeries.get(found.series) ?? [] : [];
-  if (c.leafTypes.length) {
-    return c.leafTypes.find((t) => seriesTypes.includes(t)) ?? keywordType(c.leafTypes, filename) ?? c.leafTypes[0];
-  }
-  if (c.leaf) return keywordType(slotTypes(env, c.slot), filename) ?? DEFAULT_LEAF;
-  if (c.slot === 'templates') return 'Template';
-  if (c.slot === 'references') return 'Reference';
-  if (!c.slot) return DEFAULT_LEAF;
-  const candidates = slotTypes(env, c.slot);
-  return keywordType(candidates, filename) ?? candidates.find((t) => seriesTypes.includes(t)) ?? DEFAULT_LEAF;
+  const bySeries = scopes.flat().find((t) => seriesTypes.includes(t)) ?? (seriesTypes.length === 1 ? seriesTypes[0] : null);
+  if (bySeries) return { type: bySeries, from: 'series' };
+
+  const single = [c.leafOwn, c.leafTypes].find((list) => list.length === 1);
+  if (single) return { type: single[0], from: 'leaf' };
+  return { type: DEFAULT_LEAF, from: 'none' };
 }
 
-/** The longest type name that appears as words in the file name ("…_debit_note_…" -> Debit Note), or null. */
-function keywordType(types, filename) {
-  const words = ` ${key(filename.replace(/\.[^.]+$/, '').replace(/[_.]+/g, ' ').replace(/-/g, ' '))} `;
-  const compact = words.replace(/\s+/g, '');
-  const sorted = [...types].sort((a, b) => b.length - a.length);
-  for (const t of sorted) {
-    const tk = key(t.replace(/-/g, ' '));
-    if (words.includes(` ${tk} `) || words.includes(` ${tk}s `)) return t;
-    if (tk.includes(' ') && compact.includes(tk.replace(/\s+/g, ''))) return t;
+/**
+ * The best of several candidate types. For each folder scope in turn (most specific first): a candidate in the
+ * scope, else a scope type whose name contains a candidate's ("Invoice" in a vendor's "Invoices Received" folder is
+ * a "Vendor Invoice"). Without a fit, the longest candidate. Ties go to the longer name. Null without candidates.
+ * @param {string[]} candidates
+ * @param {string[][]} scopes
+ * @returns {string|null}
+ */
+function pickType(candidates, scopes) {
+  if (!candidates.length) return null;
+  const longest = (list) => [...list].sort((a, b) => b.length - a.length || a.localeCompare(b))[0];
+  for (const scope of scopes) {
+    const fit = candidates.filter((t) => scope.includes(t));
+    if (fit.length) return longest(fit);
+    const wider = scope.filter((s) => candidates.some((t) => hasKeyword(wordsOf(s), t)));
+    if (wider.length) return longest(wider);
+  }
+  return longest(candidates);
+}
+
+/**
+ * Document date and where it came from, in order: a labelled date in the text ("Date:", "Dated", "Date of Issue",
+ * "Issued on", "Invoice Date", "Date of Incorporation", "w.e.f."); the first plausible date in the text (not for
+ * identity documents, whose other dates are birth or expiry dates); an ISO date in the file name; the source file's
+ * modification time. Dates before 1990 or more than a year after `now` are ignored.
+ * @param {string} text extracted text (the first 3000 characters are read)
+ * @param {string} filename
+ * @param {Date|null} mtime
+ * @param {{ now?: Date, identity?: boolean }} [opts]
+ * @returns {{ date: string, from: DateSource } | null}
+ */
+export function chooseDate(text, filename, mtime, { now = new Date(), identity = false } = {}) {
+  const inText = findTextDate(text, { now, labelledOnly: identity });
+  if (inText) return { date: inText.date, from: 'text' };
+  const inName = dateIn(filename);
+  if (inName) return { date: inName, from: 'filename' };
+  if (mtime instanceof Date && !Number.isNaN(mtime.getTime())) {
+    // The local calendar day, as the file's details show it.
+    const iso = plausibleDate(mtime.getDate(), mtime.getMonth() + 1, mtime.getFullYear(), now);
+    if (iso) return { date: iso, from: 'mtime' };
   }
   return null;
 }

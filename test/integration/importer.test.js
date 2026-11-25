@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { appendFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { appendFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, symlinkSync, utimesSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -104,7 +104,9 @@ test('folder import classifies, dedupes, parses numbers, flags conflicts, create
   assert.equal(type('2026-03-02_EISS_ACM-REC-2026-0135.md'), 'Receipt');
   assert.equal(type('2026-01-20_SSP_MoU copy.md'), 'MoU');
   assert.equal(type('2026-04-02_FW_ACM-Q-FW-2026-03.md'), 'Proposal');
-  assert.equal(type('pricing.pdf'), 'Pricing Report');
+  // A type named in the file name ("Pricing") comes before the number's series (the "report" series is checked below).
+  assert.equal(type('pricing.pdf'), 'Pricing');
+  assert.equal(docByPath(s, 'pricing.pdf').typeFrom, 'name');
   assert.equal(type('Acme Tickets Brochure.md'), 'Brochure');
   assert.equal(type('letter-template.md'), 'Template');
   assert.equal(type('bill-0042.txt'), 'Vendor Invoice');
@@ -163,8 +165,16 @@ test('folder import classifies, dedupes, parses numbers, flags conflicts, create
   assert.equal(proposal.issuingBrandId, 'acme');
   const other = getDocument(ctx, docByPath(s, 'annual-filing.txt').id);
   const version = ctx.db.prepare('SELECT input_json, note FROM versions WHERE document_id = ?').get(other.id);
-  assert.deepEqual(JSON.parse(version.input_json), { import: { source_path: '07 Placeholder Holdings LLP/annual-filing.txt', source_folder: '07 Placeholder Holdings LLP' } });
-  assert.equal(version.note, 'Imported from 07 Placeholder Holdings LLP/annual-filing.txt');
+  // No date in its text or name: the file's modification time, recorded as such.
+  assert.deepEqual(JSON.parse(version.input_json), { import: { source_path: '07 Placeholder Holdings LLP/annual-filing.txt', source_folder: '07 Placeholder Holdings LLP', date_source: 'mtime' } });
+  assert.equal(version.note, 'Imported from 07 Placeholder Holdings LLP/annual-filing.txt (date from file time)');
+  const mtime = statSync(join(vault, '07 Placeholder Holdings LLP/annual-filing.txt')).mtime;
+  const localDay = `${mtime.getFullYear()}-${String(mtime.getMonth() + 1).padStart(2, '0')}-${String(mtime.getDate()).padStart(2, '0')}`;
+  assert.equal(other.docDate, localDay);
+  const named = ctx.db.prepare('SELECT input_json, note FROM versions WHERE document_id = ?').get(proposal.id);
+  assert.equal(JSON.parse(named.input_json).import.date_source, 'filename');
+  assert.match(named.note, /\(date from file name\)$/);
+  assert.deepEqual(s.dates, { text: 0, filename: 9, mtime: 7, none: 0 });
   const engagementOf = ctx.db.prepare('SELECT e.display_name AS n FROM documents d JOIN entities e ON e.id = d.engagement_id WHERE d.id = ?').get(proposal.id);
   assert.equal(engagementOf.n, 'Spring Launch 2026');
 
@@ -403,5 +413,159 @@ test('an absolute CSV path under the resolved root is accepted when the root was
   assert.equal(s.imported, 2);
   assert.equal(docByPath(s, 'letter-template.md').path, '05 Templates/letter-template.md');
   assert.equal(docByPath(s, 'letter-template.md').type, 'Template');
+}));
+
+// ---------- import accuracy: --only, type keywords, dates from the document ----------
+
+/**
+ * A fresh workspace (with a local type keyword in workspace.json) and a vault of fake PDFs whose text carries type
+ * phrases and dates, plus one text file for --only.
+ */
+async function setupAccuracy(fn) {
+  const { dir, cleanup } = tmpDir('dossier-import-acc-');
+  let ctx;
+  try {
+    const home = initWorkspace(join(dir, 'ws'));
+    const wsFile = join(home, 'workspace.json');
+    const ws = JSON.parse(readFileSync(wsFile, 'utf8'));
+    ws.import = { typeKeywords: { 'Startup Mission Certificate': { names: ['startup mission'], text: ['Example Startup Mission'] } } };
+    writeFileSync(wsFile, JSON.stringify(ws, null, 2));
+    const vault = join(dir, 'vault');
+    const LR = '01 Company/Legal and Registration';
+    const files = {
+      [`${LR}/company_pan.pdf`]: 'Scanned copy',
+      [`${LR}/scan-0001.pdf`]: 'INCOME TAX DEPARTMENT\nPermanent Account Number\nDate: 05/03/2025',
+      [`${LR}/company-profile.pdf`]: 'About the company. Founded 12th March 2024.',
+      [`${LR}/Certificate of Incorporation.pdf`]: 'Permanent Account Number of the company is printed below.',
+      [`${LR}/AOA.pdf`]: 'Articles of the company',
+      [`${LR}/moana-notes.pdf`]: 'Notes',
+      [`${LR}/registration-letter.pdf`]: 'Registered with the Example Startup Mission.\nIssued on Jan 23, 2026',
+      '01 Company/Banking/cancelled check.pdf': 'Cheque',
+      '02 People/Team Identity Documents/Alex Example/alex_aadhar.pdf': 'Alex Example\nDate of Birth: 01/01/1995',
+      '02 People/Alex Example/Onboarding/scan.pdf': 'Offer of Internship\nDated 1st June 2026',
+      '03 Clients/Events/Example Client/Proposals and Pricing/notes.pdf': 'Meeting notes',
+      '03 Clients/Events/Example Client/Proposals and Pricing/summary.pdf': 'Summary ACM-REP-2026-127',
+      '04 Vendors/Example Vendor/Invoices Received/order-77.pdf': 'Order 77',
+      '04 Vendors/Example Vendor/Invoices Received/hosting invoice.pdf': 'Hosting',
+      '05 Products/Widget App/widget-playbook.pdf': 'Plan',
+      '05 Products/Widget App/Widget Deck.PDF': 'Deck',
+    };
+    for (const [rel, text] of Object.entries(files)) {
+      mkdirSync(join(vault, rel, '..'), { recursive: true });
+      writeFileSync(join(vault, rel), await makePdf([text]));
+    }
+    writeFileSync(join(vault, '05 Products/Widget App/readme.txt'), 'Plain text file (fixture)');
+    // A known file time for the identity document (its only text date is a birth date).
+    const known = new Date(2026, 0, 10, 12);
+    utimesSync(join(vault, '02 People/Team Identity Documents/Alex Example/alex_aadhar.pdf'), known, known);
+    ctx = openContext({ home, user: 'tester', env: {} });
+    seedEntities(ctx);
+    return await fn({ ctx, home, vault });
+  } finally {
+    ctx?.close();
+    cleanup();
+  }
+}
+
+test('type detection: name, keyword, text, series, single leaf type, else Other; identity types are Confidential', () => setupAccuracy(async ({ ctx, vault }) => {
+  const s = await importFolder(ctx, { folder: vault, only: ['pdf'] });
+  const got = (suffix) => {
+    const d = docByPath(s, suffix);
+    assert.ok(d, suffix);
+    return `${d.type} <- ${d.typeFrom}`;
+  };
+  assert.equal(got('company_pan.pdf'), 'PAN Card <- keyword');
+  assert.equal(got('scan-0001.pdf'), 'PAN Card <- text');
+  assert.equal(got('company-profile.pdf'), 'Other <- none', '"company" does not name a PAN, and a multi-type leaf gives Other');
+  assert.equal(got('Certificate of Incorporation.pdf'), 'Certificate of Incorporation <- name', 'the name beats the text');
+  assert.equal(got('AOA.pdf'), 'Articles of Association <- keyword');
+  assert.equal(got('moana-notes.pdf'), 'Other <- none');
+  assert.equal(got('registration-letter.pdf'), 'Startup Mission Certificate <- text', 'workspace text phrase');
+  assert.equal(got('cancelled check.pdf'), 'Cancelled Cheque <- keyword');
+  assert.equal(got('alex_aadhar.pdf'), 'Aadhaar Card <- keyword');
+  assert.equal(got('Onboarding/scan.pdf'), 'Internship Offer <- text');
+  assert.equal(got('Proposals and Pricing/notes.pdf'), 'Other <- none', 'never the first of several leaf types');
+  assert.equal(got('summary.pdf'), 'Pricing Report <- series');
+  assert.equal(got('order-77.pdf'), 'Vendor Invoice <- leaf');
+  assert.equal(got('hosting invoice.pdf'), 'Vendor Invoice <- name', '"Invoice" in a vendor invoice folder');
+  assert.equal(got('widget-playbook.pdf'), 'Product Plan <- keyword');
+  assert.equal(got('Widget Deck.PDF'), 'Other <- none');
+
+  // Identity types are Confidential wherever they are; other company documents keep the default.
+  assert.equal(docByPath(s, 'company_pan.pdf').sensitivity, 'Confidential');
+  assert.equal(docByPath(s, 'scan-0001.pdf').sensitivity, 'Confidential');
+  assert.equal(docByPath(s, 'AOA.pdf').sensitivity, 'Internal');
+  assert.equal(docByPath(s, 'alex_aadhar.pdf').party, 'Alex Example');
+
+  // Stored on the document: type, date and where the date came from.
+  const pan = getDocument(ctx, docByPath(s, 'scan-0001.pdf').id);
+  assert.equal(pan.type, 'PAN Card');
+  assert.equal(pan.sensitivity, 'Confidential');
+  assert.equal(pan.docDate, '2025-03-05');
+  const v = ctx.db.prepare('SELECT input_json, note FROM versions WHERE document_id = ?').get(pan.id);
+  assert.equal(JSON.parse(v.input_json).import.date_source, 'text');
+  assert.match(v.note, /\(date from text\)$/);
+}));
+
+test('dates: labelled text date, unlabelled text date, file time; never a birth date', () => setupAccuracy(async ({ ctx, vault }) => {
+  const s = await importFolder(ctx, { folder: vault, only: ['pdf'], dryRun: true });
+  const d = (suffix) => {
+    const doc = docByPath(s, suffix);
+    return `${doc.date} ${doc.dateFrom}`;
+  };
+  assert.equal(d('scan-0001.pdf'), '2025-03-05 text');
+  assert.equal(d('company-profile.pdf'), '2024-03-12 text');
+  assert.equal(d('registration-letter.pdf'), '2026-01-23 text');
+  assert.equal(d('Onboarding/scan.pdf'), '2026-06-01 text');
+  assert.equal(d('alex_aadhar.pdf'), '2026-01-10 mtime');
+  assert.equal(docByPath(s, 'moana-notes.pdf').dateFrom, 'mtime');
+  assert.deepEqual(s.dates, { text: 4, filename: 0, mtime: 12, none: 0 });
+}));
+
+test('--only pdf skips other extensions under their own reason; without it every file is considered', () => setupAccuracy(async ({ ctx, vault }) => {
+  const only = await importFolder(ctx, { folder: vault, only: ['.PDF'], dryRun: true });
+  assert.deepEqual(only.skipped, [{ path: '05 Products/Widget App/readme.txt', reason: 'not in --only' }]);
+  assert.equal(only.files, 17);
+  assert.equal(only.imported, 16);
+  assert.ok(docByPath(only, 'Widget Deck.PDF'), 'extensions compare case-insensitively');
+
+  const all = await importFolder(ctx, { folder: vault, dryRun: true });
+  assert.deepEqual(all.skipped, []);
+  assert.equal(all.imported, 17);
+  assert.ok(docByPath(all, 'readme.txt'));
+
+  for (const bad of [[], ['p d f'], 'pdf', [7]]) {
+    await assert.rejects(importFolder(ctx, { folder: vault, only: bad, dryRun: true }), (e) => e.code === 'INVALID_INPUT', JSON.stringify(bad));
+  }
+}));
+
+test('dossier import --only pdf --dry-run --list prints each document and the date sources', () => setupAccuracy(async ({ ctx, home, vault }) => {
+  ctx.close();
+  const out = { text: '', write(s) { this.text += s; return true; } };
+  const err = { text: '', write(s) { this.text += s; return true; } };
+  const env = { DOSSIER_HOME: home, DOSSIER_USER: 'tester' };
+  assert.equal(await main(['import', vault, '--only', 'pdf', '--dry-run', '--list'], { stdout: out, stderr: err, env, cwd: home }), 0, err.text);
+  assert.match(out.text, /Would import\s+16/);
+  assert.match(out.text, /Dates: from text 4, from file name 0, from file time 12, none 0/);
+  assert.match(out.text, /Documents \(type \| date \| date source \| sensitivity \| path\)/);
+  assert.ok(out.text.includes('  PAN Card | 2025-03-05 | text | Confidential | 01 Company/Legal and Registration/scan-0001.pdf\n'));
+  assert.ok(out.text.includes('  Aadhaar Card | 2026-01-10 | file time | Confidential | 02 People/Team Identity Documents/Alex Example/alex_aadhar.pdf\n'));
+  assert.match(out.text, /readme\.txt: not in --only/);
+
+  // Without --list there is no per-document listing; the help names the new options.
+  out.text = '';
+  assert.equal(await main(['import', vault, '--dry-run'], { stdout: out, stderr: err, env, cwd: home }), 0, err.text);
+  assert.doesNotMatch(out.text, /Documents \(type/);
+  assert.match(out.text, /Would import\s+17/);
+  out.text = '';
+  assert.equal(await main(['help'], { stdout: out, stderr: err, env, cwd: home }), 0);
+  assert.match(out.text, /--only <ext,\.\.\.>/);
+  assert.match(out.text, /--list/);
+  err.text = '';
+  assert.equal(await main(['import', vault, '--only', ',', '--dry-run'], { stdout: out, stderr: err, env, cwd: home }), 1);
+  assert.match(err.text, /--only needs at least one extension/);
+  assert.equal(await main(['import', vault, '--only'], { stdout: out, stderr: err, env, cwd: home }), 1);
+  const check = openContext({ home, user: 'tester', env: {} });
+  try { assert.equal(count(check, 'documents'), 0); } finally { check.close(); }
 }));
 

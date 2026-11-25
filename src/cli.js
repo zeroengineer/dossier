@@ -8,6 +8,8 @@ import { seedEntities } from './services/entities.js';
 import { importFolder } from './services/importer.js';
 import { clearRenderCache, renderCacheDir } from './cache/renderCache.js';
 
+const IMPORT_USAGE = 'import <folder> [--index <csv>] [--only <ext,...>] [--dry-run] [--list] [--brand <id>] [--json]';
+
 /**
  * Command table. Each entry: `usage` (shown in help), `summary`, and `run(args, io) -> exit code`.
  * Later features add entries here.
@@ -128,29 +130,34 @@ export const commands = {
     },
   },
   import: {
-    usage: 'import <folder> [--index <csv>] [--dry-run] [--brand <id>] [--json]',
-    summary: 'register an existing document folder (or the files an index CSV lists) into the vault; source files are only read',
+    usage: IMPORT_USAGE,
+    summary: 'register an existing document folder (or the files an index CSV lists) into the vault; source files are only read. '
+      + '--only pdf,… imports only those extensions; --list lists each document (type, date, date source, sensitivity, path)',
     async run(args, io) {
       const opts = {};
       const rest = [];
       let json = false;
+      let list = false;
       for (let i = 0; i < args.length; i++) {
         const a = args[i];
-        if (a === '--index' || a === '--brand') {
+        if (a === '--index' || a === '--brand' || a === '--only') {
           const v = args[++i];
           if (v === undefined) throw new Error(`${a} needs a value`);
           if (a === '--index') opts.index = resolve(io.cwd, v);
+          else if (a === '--only') opts.only = [...(opts.only ?? []), ...v.split(',').map((e) => e.trim()).filter(Boolean)];
           else opts.brandId = v;
         } else if (a === '--dry-run') opts.dryRun = true;
         else if (a === '--json') json = true;
+        else if (a === '--list') list = true;
         else if (a.startsWith('--')) throw new Error(`unknown option ${a}`);
         else rest.push(a);
       }
-      if (rest.length !== 1) throw new Error('expected: import <folder> [--index <csv>] [--dry-run] [--brand <id>] [--json]');
+      if (rest.length !== 1) throw new Error(`expected: ${IMPORT_USAGE}`);
+      if (opts.only && !opts.only.length) throw new Error('--only needs at least one extension, e.g. --only pdf');
       const ctx = openContext({ home: loadConfig(io.env, io.cwd).home, env: io.env });
       try {
         const summary = await importFolder(ctx, { ...opts, folder: resolve(io.cwd, rest[0]) });
-        io.stdout.write(json ? `${JSON.stringify(summary, null, 2)}\n` : renderImportSummary(summary));
+        io.stdout.write(json ? `${JSON.stringify(summary, null, 2)}\n` : renderImportSummary(summary, { list }));
       } finally {
         ctx.close();
       }
@@ -197,11 +204,13 @@ export function renderTree(node, { documents = true } = {}) {
 }
 
 /**
- * Plain-text summary table of an import (see importer.importFolder).
+ * Plain-text summary table of an import (see importer.importFolder), with a "Dates" line counting where document
+ * dates came from. `list` adds one line per document: `type | date | date source | sensitivity | path`.
  * @param {import('./services/importer.js').ImportSummary} s
+ * @param {{ list?: boolean }} [opts]
  * @returns {string}
  */
-export function renderImportSummary(s) {
+export function renderImportSummary(s, { list = false } = {}) {
   const rows = [
     ['Files', s.files],
     [s.dryRun ? 'Would import' : 'Imported', s.imported],
@@ -220,7 +229,16 @@ export function renderImportSummary(s) {
   };
   const parts = [`Import of ${s.folder}${s.index ? ` (index ${s.index})` : ''}${s.dryRun ? ' -- dry run: nothing was written' : ''}`, table(rows)];
   const byType = Object.entries(s.byType).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  if (s.dates) {
+    const d = s.dates;
+    parts.push(`Dates: from text ${d.text}, from file name ${d.filename}, from file time ${d.mtime}, none ${d.none}`);
+  }
   if (byType.length) parts.push(`Documents by type\n${table(byType)}`);
+  if (list && s.documents.length) {
+    const source = { text: 'text', filename: 'file name', mtime: 'file time' };
+    const lines = s.documents.map((d) => `  ${d.type} | ${d.date ?? '-'} | ${source[d.dateFrom] ?? '-'} | ${d.sensitivity} | ${d.path}`);
+    parts.push(`Documents (type | date | date source | sensitivity | path)\n${lines.join('\n')}`);
+  }
   if (s.newEntities.length) parts.push(`New entities\n${s.newEntities.map((e) => `  ${e.kind}: ${e.name}`).join('\n')}`);
   if (s.conflicts.length) parts.push(`Number conflicts\n${s.conflicts.map((c) => `  ${c.number} (${c.series}): ${c.path} -- also ${c.conflictsWith.join(', ')}`).join('\n')}`);
   if (s.skipped.length) parts.push(`Skipped\n${s.skipped.map((x) => `  ${x.path}: ${x.reason}`).join('\n')}`);

@@ -4,6 +4,19 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ## [Unreleased]
 
+### Added
+
+- `dossier import --only <ext,...>` (`importFolder({ only })`): import only files with those extensions; the others are skipped as "not in --only".
+- `dossier import --list`: one line per document (type, date, date source, sensitivity, path); the summary counts where dates came from (`Dates: from text N, from file name N, from file time N, none N`).
+- Generic document types for the importer, with routes: PAN Card, Aadhaar Card, Voter ID, Passport (a person's "Identity Documents" folder; the company's PAN goes to Legal and Registration), GST Certificate, Memorandum and Articles of Association, Startup Recognition Certificate, Udyam Certificate (Legal and Registration), Cancelled Cheque and Bank Letter (Banking and Payments), Letterhead, Product Plan and Pricing.
+- `import.typeKeywords` in workspace.json: extra file-name keywords and text phrases per type, merged over the built-ins.
+
+### Changed
+
+- The importer's type detection: a type name, then a type keyword (whole words: "company" never means PAN), in the file name; then a type phrase in the text; then the number's series; then the leaf folder's type only when the leaf has exactly one; otherwise "Other" (it used to take the first of several leaf types). Identity types are imported Confidential.
+- Imported documents get a date from their text (a labelled date first, day-first numeric dates), else the file name, else the file's modification time; the version note and `input_json.import.date_source` say which.
+- People folders have an "Identity Documents" leaf.
+
 ### Removed
 
 - The sidebar's "What's new" card and dialog.

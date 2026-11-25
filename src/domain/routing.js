@@ -28,7 +28,7 @@ export const DEFAULT_LEAF = 'Other';
  */
 export const TOP_LEAVES = Object.freeze({
   company: Object.freeze(['Legal and Registration', 'Board and Governance', 'Banking and Payments', 'Compliance and Tax', 'Company Profile', 'Brand Assets']),
-  people: Object.freeze(['Onboarding', 'Employment', 'Exit']),
+  people: Object.freeze(['Onboarding', 'Employment', 'Exit', 'Identity Documents']),
   clients: Object.freeze(['Proposals and Pricing', 'Agreements', 'Invoices and Receipts', 'Settlements and Statements', 'Deliverables and Correspondence']),
   vendors: Object.freeze(['Agreements', 'Invoices Received']),
   products: Object.freeze(['Marketing', 'Specifications', 'Pricing', 'Brand Assets', 'Design Source']),
@@ -37,6 +37,8 @@ export const TOP_LEAVES = Object.freeze({
 
 /** Per-slot translation of a routed leaf into that folder's own leaf name (applied before the closed-set check). */
 export const LEAF_MAP = Object.freeze({
+  // The company's own identity documents (its PAN) belong with its registrations.
+  company: Object.freeze({ 'Identity Documents': 'Legal and Registration' }),
   products: Object.freeze({ 'Proposals and Pricing': 'Pricing', 'Agreements': 'Specifications' }),
   vendors: Object.freeze({ 'Invoices and Receipts': 'Invoices Received' }),
 });
@@ -97,6 +99,21 @@ export const DEFAULT_ROUTES = Object.freeze({
   'Board Resolution': fixed('company', 'Board and Governance'),
   'Certificate of Incorporation': fixed('company', 'Legal and Registration'),
   'Registration Certificate': fixed('company', 'Legal and Registration'),
+  // Identity documents: the person's identity folder (the company's own go to Legal and Registration via LEAF_MAP).
+  'PAN Card': party('Identity Documents'),
+  'Aadhaar Card': party('Identity Documents'),
+  'Voter ID': party('Identity Documents'),
+  'Passport': party('Identity Documents'),
+  'GST Certificate': fixed('company', 'Legal and Registration'),
+  'Memorandum of Association': fixed('company', 'Legal and Registration'),
+  'Articles of Association': fixed('company', 'Legal and Registration'),
+  'Startup Recognition Certificate': fixed('company', 'Legal and Registration'),
+  'Udyam Certificate': fixed('company', 'Legal and Registration'),
+  'Cancelled Cheque': fixed('company', 'Banking and Payments'),
+  'Bank Letter': fixed('company', 'Banking and Payments'),
+  'Letterhead': party('Brand Assets'),
+  'Product Plan': party('Specifications'),
+  'Pricing': party('Proposals and Pricing'),
   'Template': fixed('templates'),
   'Reference': fixed('references'),
   'Bank Statement': fixed('finance', 'Bank Statements'),

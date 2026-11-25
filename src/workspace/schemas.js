@@ -28,6 +28,8 @@ export const FONT_DEFAULTS = Object.freeze({
 const id = z.string().regex(/^[a-z0-9][a-z0-9_-]*$/, 'must be lowercase letters, digits, "-" or "_"');
 const text = z.string();
 const nonEmpty = z.string().min(1, 'must not be empty');
+/** A type keyword or phrase: needs at least one letter or digit (punctuation alone would match nothing usefully). */
+const keyword = z.string().refine((s) => /[\p{L}\p{N}]/u.test(s), 'must contain a letter or digit');
 const colour = z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/, 'must be a hex colour like #1a1a1a');
 
 // ---------- workspace.json ----------
@@ -60,6 +62,13 @@ export const WorkspaceSchema = z.object({
         ctx.addIssue({ code: 'custom', path: ['routing', type], message: 'cannot route to the Restricted folder: only Restricted sensitivity places a document there' });
       }
     }
+  }).prefault({}),
+  import: z.object({
+    // Extra type keywords for `dossier import`, merged over the built-ins (src/domain/doctypes.js).
+    typeKeywords: z.record(nonEmpty, z.strictObject({
+      names: z.array(keyword).default([]),
+      text: z.array(keyword).default([]),
+    })).default({}),
   }).prefault({}),
 });
 
