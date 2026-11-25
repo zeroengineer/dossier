@@ -195,6 +195,7 @@ dry run, which reads and classifies everything and writes nothing:
 node bin/dossier.js import /path/to/folder --dry-run        # print what would happen
 node bin/dossier.js import /path/to/folder                  # register the files
 node bin/dossier.js import /path/to/folder --index /path/to/folder/_index.csv --brand acme --json
+node bin/dossier.js import /path/to/folder --only pdf --dry-run --list   # PDFs only, one line per document
 ```
 
 The import only reads the source files; it never changes, moves or deletes them. In short:
@@ -203,16 +204,30 @@ The import only reads the source files; it never changes, moves or deletes them.
   folders at any depth, index/spec files, and anything the secret scanner flags (`.pem`, `.key`, `.env`, PEM armour).
 - Deduplicated by sha256: running the import again imports nothing new; a changed file at a known path becomes a new
   document with a `SOURCE_CHANGED` warning.
-- Classified by its folders: the top-level folder gives the group (company, people, clients, vendors…), the leaf folder
-  the document type, the folders between them become entities (created when missing; `Name (CODE)` adds an alias).
+- `--only pdf` (or `--only pdf,docx`) imports only files with those extensions; the others are skipped and reported
+  as "not in --only". Without it every file is considered.
+- Grouped by its folders: the top-level folder gives the group (company, people, clients, vendors…), the folders
+  between it and the leaf become entities (created when missing; `Name (CODE)` adds an alias).
+- Typed, first match wins: the Templates or References folder; a type name in the file name ("Invoice", "MoU"); a
+  type keyword in the file name, matched as whole words ("pan", "aadhaar", "moa", "gst", "cancelled cheque",
+  "playbook"…, so "company" never means PAN); a type phrase in the first 3000 characters of the text ("Permanent
+  Account Number", "Form GST REG-06"…); the series of a parsed number; the leaf folder's type when the leaf holds
+  exactly one; otherwise "Other". Add your own keywords and types under `import.typeKeywords` in workspace.json
+  ([docs/WORKSPACE.md](docs/WORKSPACE.md#import-type-keywords)).
+- Dated, first match wins: a labelled date in the text ("Date:", "Dated", "Date of Issue", "Issued on", "Invoice
+  Date", "Date of Incorporation", "w.e.f."); the first plausible date in the text (not for identity documents, whose
+  other dates are birth or expiry dates); an ISO date in the file name; the file's modification time. Numeric dates
+  are read day first (05/03/2025 is 5 March); dates before 1990 or more than a year ahead are ignored. The version
+  note says where the date came from ("date from text", "date from file name", "date from file time").
 - Numbers are parsed from the file name or text with every series pattern; counters move past them; repeats are
   reported as conflicts.
-- Sensitivity: people and identity-document folders are Confidential, the rest Internal; files above the importing
-  user's clearance are skipped.
+- Sensitivity: people and identity-document folders, and identity types (PAN, Aadhaar, Voter ID, Passport), are
+  Confidential, the rest Internal; files above the importing user's clearance are skipped.
 
 With `--index`, a CSV (`original_path,vault_path,vault_folder,md5,size_bytes,note`) lists the files; paths outside the
-CSV's folder are refused. The summary lists counts, new entities, documents by type, numbers, conflicts, skipped files
-and warnings (`--json` for JSON).
+CSV's folder are refused. The summary lists counts, where the dates came from (`Dates: from text N, from file name N,
+from file time N, none N`), new entities, documents by type, numbers, conflicts, skipped files and warnings. `--list`
+adds one line per document (`type | date | date source | sensitivity | path`); `--json` gives all of it as JSON.
 
 ## Docker
 

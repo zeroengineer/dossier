@@ -70,6 +70,36 @@ The web app's Settings pages edit these files in place: `/settings/brands` lists
 | `users.<userId>.clearance` | `Confidential` | `Public`, `Internal`, `Confidential` or `Restricted`; users not listed get `Confidential` |
 | `hierarchy.topLevel` | built-in names | exactly 10 top-level folder names, in order |
 | `hierarchy.routing` | built-in table (`src/domain/routing.js`) | `{ "<docType>": "<route>" }` overrides, type matched case-insensitively. A plain leaf name (`"Agreements"`) files the type inside the party's folder; a value starting with a top-level name (`"06 Finance/Bank Statements"`, `"08 References"`) files it in that folder (finance folders add the financial year). Overrides are used as given (built-in routes are limited to each folder's leaf set, else `Other`). The Restricted folder is not a valid target: only Restricted sensitivity places a document there |
+| `import.typeKeywords` | `{}` (built-ins in `src/domain/doctypes.js`) | extra file-name keywords and text phrases per document type for `dossier import`, merged over the built-ins; see [below](#import-type-keywords) |
+
+### Import type keywords
+
+`dossier import` recognises a file's type from a type name in its file name, then from a type keyword in its file
+name, then from a type phrase in the first 3000 characters of its text (see the README, "Importing an existing
+folder"). Built-in keywords cover generic kinds (PAN Card, Aadhaar Card, Voter ID, Passport, GST Certificate,
+Memorandum and Articles of Association, Certificate of Incorporation, Startup Recognition Certificate, Udyam
+Certificate, Cancelled Cheque, Bank Letter, Letterhead, Product Plan, Pricing, PRD, User Flow, Specification and a few
+more). Add your own under `import.typeKeywords`:
+
+```json
+{
+  "import": {
+    "typeKeywords": {
+      "State Startup Certificate": { "names": ["state startup"], "text": ["Example State Startup Mission"] },
+      "PAN Card": { "names": ["tax id card"] }
+    }
+  },
+  "hierarchy": { "routing": { "State Startup Certificate": "01 Company/Legal and Registration" } }
+}
+```
+
+- `names`: words or phrases matched as whole words in the file name, case and punctuation ignored, with an optional
+  plural "s" (`"pan"` matches `pan_card.pdf` and `Pan-2026.pdf`, never `company.pdf`). A phrase also matches written
+  as one word (`"pan card"` matches `pancard.pdf`).
+- `text`: phrases matched as whole words in the text; when several types' phrases appear, the one found first wins.
+- Lists for a built-in type are added to its built-in keywords; a new type name adds a type. Give a new type a
+  `hierarchy.routing` entry to file it in a folder; without one it goes to the party's `Other` folder.
+- Every keyword needs a letter or digit; unknown fields are rejected.
 
 ## brands/&lt;id&gt;/brand.json
 
