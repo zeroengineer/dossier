@@ -6,6 +6,7 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ### Added
 
+- Dossier logo kit (Bound D): mark, 16 px cut, wordmark and lockups in `web/brand-src/kit`; favicon, app and PWA icons in `web/public/brand`, `favicon.ico` and `site.webmanifest`; the sidebar shows the new mark and wordmark.
 - Settings → Brands: brand list with a New brand dialog (create-only `POST /api/brands`, 409 `BRAND_DUPLICATE` for an existing id), and a brand editor that saves the whole brand.json as one form: tabs per section, server field errors on their fields, inherited values as placeholders, per-slot asset uploads with `?v=` previews, letterhead preview and brand.json download.
 - Entities pages: tabs per kind, searchable table with document counts, create/edit dialog (aliases tag input, brand, attributes JSON), entity detail with relations, add-relation dialog with entity search, and linked documents; `GET /api/entities` rows include `documentCount`; `GET /api/documents` accepts `entityId` (any reference to the entity).
 - Generate: a template picker grouped by category with search, and a dynamic form per template (all field types, list rows, entity combobox, brand select defaulting to the sidebar brand) in a two-pane layout ready for the live preview. Switching brand clears choices the new brand does not offer.
