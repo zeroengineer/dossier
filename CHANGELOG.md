@@ -74,6 +74,10 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 - **BREAKING:** the server-rendered UI: HTML pages, form posts, `src/web/views/*`, `src/web/html.js`, `src/web/settingsForms.js`, `src/web/public/*`, the urlencoded body parser and `PAGE_CSP` (one policy, `SPA_CSP`, covers every HTML reply). Removed routes: `GET /` (vault page), `GET /documents/:id`, `POST /documents/:id/status`, `POST /documents/:id/links`, `POST /documents/:id/links/delete`, `POST /documents/:id/metadata`, `GET /upload`, `POST /upload`, `GET /search`, `GET /templates`, `GET /generate`, `GET /generate/:id`, `POST /generate/:id`, `POST /generate/:id/preview`, `GET /entities`, `POST /entities`, `GET /entities/:id`, `POST /entities/:id`, `POST /entities/:id/relations`, `GET /settings`, `GET /settings/brands`, `POST /settings/brands`, `GET /settings/brands/:id`, `POST /settings/brands/:id`, `POST /settings/brands/:id/assets`, `GET /settings/brands/:id/brand.json` (use `GET /api/brands/:id/file`), `GET /settings/brands/:id/preview.pdf` (use `GET /api/brands/:id/preview.pdf`), `GET /settings/series`, `POST /settings/series`, `GET /settings/workspace`, `POST /settings/workspace`, `GET /static/*`.
 
+### Security
+
+- Upgraded `sharp` to 0.35.5 (libvips 8.18.7) for the high-severity libvips (CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591; GHSA-f88m-g3jw-g9cj), libheif (GHSA-rgj7-g3m4-5g8c) and librsvg (CVE-2026-96889; GHSA-wq5f-xc86-pv6w) advisories. Generated documents are byte-identical; cached renditions are rebuilt once because the render-cache key includes the sharp version.
+
 ## [0.1.0] - 2026-11-24
 
 First complete version: document vault, template-driven generator with 17 built-in templates, numbering series, search, server-rendered web UI, brand settings, MCP server for Claude Code, cache layers, legacy folder import, samples and visual checks, and an organisation-data guard. See `docs/BUILD_LOG.md` for how it was built.
