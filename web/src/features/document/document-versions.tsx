@@ -56,8 +56,8 @@ export function DocumentVersions({ versions, selected, onSelect }: DocumentVersi
                             onSelect(v.versionNo)
                           }}
                         >
-                          <span className="sr-only">Show version {v.versionNo}</span>
-                          <span aria-hidden="true">v{v.versionNo}</span>
+                          v{v.versionNo}
+                          <span className="sr-only">, show version {v.versionNo}</span>
                         </Button>
                         {v.isCurrent ? <Badge variant="secondary">Current</Badge> : null}
                       </div>

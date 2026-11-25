@@ -50,7 +50,7 @@ describe("Document page", () => {
   it("drives the viewer from the versions table and shows HTML in a sandboxed iframe", async () => {
     const { user, router } = renderRoute(<DocumentPage />, "/documents/DOC-000001", { route: "/documents/:id" })
     await viewer()
-    await user.click(screen.getByRole("button", { name: "Show version 1" }))
+    await user.click(screen.getByRole("button", { name: "v1, show version 1" }))
     await waitFor(() => expect(router.state.location.search).toBe("?version=1"))
     const v = await viewer()
     expect(v.getByText("Version 1")).toBeInTheDocument()
@@ -59,9 +59,9 @@ describe("Document page", () => {
     const html = v.getByTitle("HTML of Event services invoice")
     expect(html).toHaveAttribute("sandbox", "")
     expect(html).toHaveAttribute("src", "/documents/DOC-000001/renditions/html?version=1")
-    expect(screen.getByRole("button", { name: "Show version 1" })).toHaveAttribute("aria-pressed", "true")
+    expect(screen.getByRole("button", { name: "v1, show version 1" })).toHaveAttribute("aria-pressed", "true")
 
-    await user.click(screen.getByRole("button", { name: "Show version 2" }))
+    await user.click(screen.getByRole("button", { name: "v2, show version 2" }))
     await waitFor(() => expect(router.state.location.search).toBe(""))
   })
 

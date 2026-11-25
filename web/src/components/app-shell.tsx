@@ -1,4 +1,4 @@
-import { Suspense } from "react"
+import { Suspense, type MouseEvent } from "react"
 import { SearchIcon } from "lucide-react"
 import { Outlet } from "react-router"
 import { AppSidebar } from "@/components/app-sidebar"
@@ -22,12 +22,27 @@ function PaletteButton() {
   )
 }
 
+const MAIN_ID = "main-content"
+
+/**
+ * Moves focus to the page content without touching the URL: following `#main-content` would go through the router,
+ * replace the location hash (which some nav items match on) and add a history entry. The href stays as a fallback.
+ */
+function skipToMain(event: MouseEvent<HTMLAnchorElement>) {
+  const main = document.getElementById(MAIN_ID)
+  if (!main) return
+  event.preventDefault()
+  main.focus()
+  main.scrollIntoView({ block: "start" })
+}
+
 /** Sidebar + sticky header (trigger, breadcrumbs, ⌘K) around the routed page. */
 export function AppShell() {
   return (
     <CommandPaletteProvider>
       <a
-        href="#main-content"
+        href={`#${MAIN_ID}`}
+        onClick={skipToMain}
         className="sr-only rounded-md bg-background px-3 py-2 text-sm font-medium shadow-md focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         Skip to main content
@@ -43,7 +58,7 @@ export function AppShell() {
             </div>
             <PaletteButton />
           </header>
-          <div id="main-content" tabIndex={-1} className="flex min-w-0 flex-1 flex-col gap-6 p-4 outline-none md:p-6">
+          <div id={MAIN_ID} tabIndex={-1} className="flex min-w-0 flex-1 flex-col gap-6 p-4 outline-none md:p-6">
             <Suspense fallback={<PageSkeleton />}>
               <Outlet />
             </Suspense>

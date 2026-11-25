@@ -113,12 +113,15 @@ function SystemGroup({ pathname, hash }: { pathname: string; hash: string }) {
 }
 
 export function AppSidebar() {
-  const { pathname, hash } = useLocation()
+  const { pathname, hash, key } = useLocation()
   const { setOpenMobile } = useSidebar()
   const DocsIcon = DOCS_ICON
 
-  // On phones the sidebar is a Sheet over the page: close it once a link has taken the user somewhere.
-  useEffect(() => setOpenMobile(false), [pathname, hash, setOpenMobile])
+  // On phones the sidebar is a Sheet over the page: close it after every navigation, including a tap on the current
+  // page's own link (a new location key even when the path is the same).
+  useEffect(() => {
+    setOpenMobile(false)
+  }, [key, setOpenMobile])
 
   return (
     <Sidebar collapsible="icon" role="complementary" aria-label="Sidebar">

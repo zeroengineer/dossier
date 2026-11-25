@@ -3,7 +3,7 @@ import { delay, http, HttpResponse } from "msw"
 import { afterEach, describe, expect, it } from "vitest"
 import DashboardPage from "@/pages/dashboard"
 import { dashboardFixture } from "@/test/fixtures-dashboard"
-import { renderRoute } from "@/test/render"
+import { renderApp, renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 
 /** Record the `days` of every dashboard request. */
@@ -67,7 +67,7 @@ describe("Dashboard page", () => {
   })
 
   it("renders on the index route too", async () => {
-    renderRoute(<DashboardPage />, "/")
+    renderApp("/")
     expect(await screen.findByTestId("kpi-documents")).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Dashboard" })).toBeInTheDocument()
   })

@@ -10,7 +10,8 @@ import { cn } from "@/lib/utils"
 /**
  * Below `md` the two panes stack (tree above, documents below) by CSS alone, so the tree and the folder's documents
  * mount once whatever the width (no layout swap after the first paint). The panel library sets its flex layout as
- * inline styles, hence the `!` overrides.
+ * inline styles, hence the `!` overrides. This depends on react-resizable-panels 4.x putting those inline styles on
+ * the group and on each panel's outer `[data-panel]` div (the className goes to an inner div); recheck it on upgrade.
  */
 const STACK_BELOW_MD =
   "max-md:h-auto! max-md:flex-col! max-md:overflow-visible! max-md:[&>[data-panel]]:flex-none! max-md:[&>[data-panel]]:max-h-none!"

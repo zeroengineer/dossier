@@ -147,6 +147,20 @@ describe("AppShell", () => {
     expect(target).toHaveAttribute("tabindex", "-1")
   })
 
+  it("moves focus to the main content on activation without changing the URL or history", async () => {
+    const { user, router } = renderShell("/settings/workspace#users")
+    await sidebar()
+    const before = router.state.location
+    await user.tab()
+    await user.keyboard("{Enter}")
+    expect(document.getElementById("main-content")).toHaveFocus()
+    expect(router.state.location.hash).toBe("#users")
+    expect(router.state.location.key).toBe(before.key)
+    expect(router.state.historyAction).toBe("POP")
+    // The hash-matched Users item stays active.
+    expect((await sidebar()).getByRole("link", { name: "Users" })).toHaveAttribute("data-active", "true")
+  })
+
   it("has no axe violations", async () => {
     renderShell("/vault")
     await sidebar()
@@ -173,6 +187,24 @@ describe("AppShell", () => {
       await user.click(within(nav).getByRole("link", { name: "Documents" }))
       await waitFor(() => expect(router.state.location.pathname).toBe("/documents"))
       await waitFor(() => expect(screen.queryByRole("dialog", { name: "Sidebar" })).not.toBeInTheDocument())
+    })
+
+    it("closes the Sheet on a tap on the current page's own link", async () => {
+      window.innerWidth = 500
+      const { user } = renderShell("/vault")
+      await user.click(await screen.findByRole("button", { name: "Toggle Sidebar" }))
+      const sheet = await screen.findByRole("dialog", { name: "Sidebar" })
+      await user.click(within(sheet).getByRole("link", { name: "Vault" }))
+      await waitFor(() => expect(screen.queryByRole("dialog", { name: "Sidebar" })).not.toBeInTheDocument())
+    })
+
+    it("has no axe violations with the Sheet open", async () => {
+      window.innerWidth = 500
+      const { user } = renderShell("/vault")
+      await user.click(await screen.findByRole("button", { name: "Toggle Sidebar" }))
+      const sheet = await screen.findByRole("dialog", { name: "Sidebar" })
+      await within(sheet).findByTestId("nav-user")
+      await expectNoAxeViolations()
     })
   })
 })
