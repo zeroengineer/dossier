@@ -231,6 +231,7 @@ Phase 1's two rules (no browser tools; nothing written outside the repo) held ex
 - **An agent stopped mid-task.** The sharp upgrade agent died after installing but before committing. A new agent resumed it in the same worktree.
 - **A stale server served a deleted bundle.** A running server kept an `index.html` whose bundle had been rebuilt away, so the app loaded blank. It was restarted, and the fix wave made the server re-read `index.html` when it changes.
 - **The F03 agent tried one redirect outside the repo.** It was refused and nothing was written.
+- **The fix-wave agent wrote one log file to the system temp folder** (`$TMPDIR/npmci.log`, an `npm ci` log) instead of its own `mktemp -d` folder. It deleted the file straight after reading it; the controller confirmed it was gone.
 
 ### Open items
 
@@ -238,7 +239,7 @@ These minor findings were parked during reviews. None blocks use.
 
 - **Web client:** the API client types a non-JSON success reply as JSON; a few upstream command-palette quirks.
 - **Dashboard:** the recent-documents list runs about 20 small queries; the number-conflict message can hint that a hidden document exists; the chart chunk is not prefetched.
-- **Settings saves (fix wave):** `If-Match` is optional, so the MCP tools and scripts still save last-write-wins; a hand edit that keeps a file's bytes identical is (correctly) not a conflict. A conflict offers only Reload; there is no merge of the unsaved edits with the newer file.
+- **Settings saves (fix wave):** `If-Match` is optional, so scripts and other HTTP clients still save last-write-wins (no MCP tool writes these files); a hand edit that keeps a file's bytes identical is (correctly) not a conflict. A conflict offers only Reload; there is no merge of the unsaved edits with the newer file.
 - **Web build serving (fix wave):** a rebuild that writes an `index.html` of the same size within the same millisecond as the old one is not noticed until the next change; a server started before `web/dist` existed still needs a restart to serve the bundle.
 - **Vault:** expanding a folder downloads its whole subtree again (a backend `depth=1` option would fix it); a brief double mount on mobile; a fixed minimum height; no tests for tree or right-pane server errors.
 - **Documents and document page:** the party-kind filter list; a refetch while a date range is half filled; the count and list queries run outside one transaction; a mouse-wheel scroll check in a picker; aligning the add-link search with the main search; a sensitivity `FORBIDDEN` error is not shown on its field; the old status flashes while a dialog closes.

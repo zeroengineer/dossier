@@ -116,7 +116,7 @@ routes. See `docs/WEB.md` for the web app and `docs/BUILD_LOG.md` for how it was
 - Settings saves detect changes made elsewhere: `GET /api/brands/:id`, `GET /api/series` and `GET /api/workspace`
   return `fileHash` (sha256 of the stored file), and the matching PUTs accept it as an `If-Match` header, answering
   409 `CONFLICT` with `details.currentHash` when the file changed since. PUT answers and asset uploads return the new
-  `fileHash`. A PUT without `If-Match` is still accepted (MCP, scripts). The brand, numbering and workspace editors
+  `fileHash`. A PUT without `If-Match` is still accepted (scripts and other HTTP clients). The brand, numbering and workspace editors
   send the hash and, on a conflict, offer to reload instead of overwriting.
 - `ASSET_INVALID` for a corrupt image or font has a one-line message; the decoder's detail is in `details.reason`.
 - `buildServer` takes an optional `now` clock for the dashboard's "today" (tests pin it).
