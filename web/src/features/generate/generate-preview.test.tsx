@@ -189,6 +189,32 @@ describe("Generate preview", () => {
     expect(screen.getByRole("combobox", { name: label("Client") })).not.toHaveAttribute("aria-invalid", "true")
   })
 
+  it("keeps the missing alert and field errors while the next answer is pending", async () => {
+    const bodies = capturePreviews(async () => {
+      await new Promise((r) => setTimeout(r, 300))
+      return HttpResponse.json(
+        { ok: false, missing: [{ name: "client", label: "Client", type: "entity" }], errors: [{ name: "items.0.amount", message: "not a money amount" }] },
+        { status: 400 },
+      )
+    })
+    const { user } = renderApp("/generate/invoice")
+    const items = await screen.findByRole("table", { name: label("Items") })
+    await user.type(within(items).getByRole("textbox", { name: "Items row 1 amount" }), "lots")
+    const amount = within(items).getByRole("textbox", { name: "Items row 1 amount" })
+    await waitFor(() => expect(amount).toHaveAttribute("aria-invalid", "true"), { timeout: 3000 })
+    const settledCount = bodies.length
+
+    // Type in another field: through the debounce and the slow answer, the alert and the error never go away.
+    await user.type(screen.getByLabelText(label("Bank account")), "Example")
+    const deadline = Date.now() + 1500
+    while (Date.now() < deadline) {
+      expect(screen.getByText("Fill in to preview").closest("[role=alert]")).toHaveTextContent("Client")
+      expect(amount).toHaveAttribute("aria-invalid", "true")
+      await new Promise((r) => setTimeout(r, 50))
+    }
+    expect(bodies.length).toBeGreaterThan(settledCount)
+  })
+
   it("lists placeholders that print empty", async () => {
     capturePreviews(() =>
       HttpResponse.json({
@@ -331,7 +357,8 @@ describe("Regenerate", () => {
 
     const lockedTitle = await screen.findByText("ACM-2026-0010 is Sent")
     const alert = lockedTitle.closest("[role=alert]") as HTMLElement
-    expect(within(alert).getByText(/Generate a new document and supersede this one/)).toBeInTheDocument()
+    expect(within(alert).getByText(/A Sent document cannot simply be regenerated/)).toBeInTheDocument()
+    expect(alert).not.toHaveTextContent("force: true")
     expect(bodies[0]).toEqual({ input: expect.any(Object), documentId: "DOC-000010", note: "Corrected the bank account" })
     expect(screen.getByRole("button", { name: "Regenerate" })).toBeDisabled()
 

@@ -16,10 +16,9 @@ import { toastError } from "@/lib/query-client"
 import { setFieldProblems, toFieldProblems, type FieldProblem } from "./problems"
 import { toInput, type FormValues } from "./to-input"
 
-/** What STATUS_LOCKED said: the document is past Draft, so a plain regenerate is refused. */
+/** STATUS_LOCKED: a plain regenerate of the document was refused; `status` is its status from the error details. */
 interface Locked {
   status: string
-  message: string
 }
 
 interface UseGenerateActionOptions {
@@ -78,7 +77,7 @@ export function useGenerateAction({ template, form, brandId, regenerate }: UseGe
           show(toFieldProblems(template.fields, err.details as Parameters<typeof toFieldProblems>[1], rowIndex))
         } else if (err instanceof ApiError && err.code === "STATUS_LOCKED") {
           const status = typeof err.details["status"] === "string" ? err.details["status"] : (regenerate?.status ?? "")
-          setLocked({ status, message: err.message })
+          setLocked({ status })
         } else {
           toastError(err)
         }
@@ -147,17 +146,16 @@ export function GenerateActionBar({ action, onGenerateNew }: GenerateActionBarPr
             {docName} is {locked.status}
           </AlertTitle>
           <AlertDescription className="flex flex-col gap-3">
-            <p>{locked.message}</p>
             <p>
-              To keep {docName} as it was sent, generate a new document from this input and mark it as superseding{" "}
-              {docName} (add the relation on the new document's page). To change {docName} itself, regenerate anyway: it
-              keeps its number, gets a new version and its status goes back to Draft.
+              A {locked.status} document cannot simply be regenerated. You can keep {docName} as it is and generate a new
+              document from this input, then mark it as superseding {docName} on the new document's page. Or you can
+              regenerate {docName} anyway: it keeps its number and gets a new version, and its status may change.
             </p>
             <Field orientation="horizontal">
               <Checkbox id="generate-force" checked={force} onCheckedChange={(v) => setForce(v === true)} />
               <FieldContent>
                 <FieldLabel htmlFor="generate-force">Regenerate anyway</FieldLabel>
-                <FieldDescription>Resets {docName} from {locked.status} to Draft.</FieldDescription>
+                <FieldDescription>Adds a new version to {docName} although it is {locked.status}.</FieldDescription>
               </FieldContent>
             </Field>
             {onGenerateNew ? (

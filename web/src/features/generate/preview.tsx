@@ -1,7 +1,7 @@
 import * as React from "react"
 import { useWatch, type UseFormReturn } from "react-hook-form"
 import { CircleAlertIcon, ExternalLinkIcon, FileSearchIcon, TriangleAlertIcon } from "lucide-react"
-import { usePreview, usePreviewText, type PreviewOk } from "@/api/generate"
+import { usePreview, usePreviewText, type PreviewOk, type PreviewResult } from "@/api/generate"
 import type { TemplateDetail } from "@/api/types"
 import { EmptyState } from "@/components/empty-state"
 import { ErrorState } from "@/components/error-state"
@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDebounced } from "@/hooks/use-debounced"
 import { cn } from "@/lib/utils"
 import { labelOfPath, setFieldProblems, toFieldProblems, type FieldProblem } from "./problems"
-import { toInput, type FormValues } from "./to-input"
+import { toInput, type FormValues, type RowIndex } from "./to-input"
 
 /** How long the form must be still before a preview is asked for. */
 export const PREVIEW_DEBOUNCE_MS = 600
@@ -28,7 +28,13 @@ export interface GeneratePreviewProps {
   isPlaceholderData: boolean
 }
 
-const KIND_ORDER = ["pdf", "html", "md"]
+/** A preview answer for a sent input, with that input's list-row mapping (see `toInput`). */
+interface Settled {
+  answer: PreviewResult
+  rowIndex: RowIndex
+}
+
+const KIND_ORDER =["pdf", "html", "md"]
 const KIND_LABEL: Record<string, string> = { pdf: "PDF", html: "HTML", md: "Markdown" }
 const FRAME = "h-full min-h-96 w-full flex-1 rounded-md border bg-background"
 
@@ -52,11 +58,18 @@ export function GeneratePreview({ template, form, brandId, isPlaceholderData }: 
   // The answer for the input on screen (not the previous one kept while the next loads).
   const current = !query.isPlaceholderData && debounced === inputJson ? result : undefined
 
-  // The last draft that rendered stays visible (dimmed) while fields are missing or invalid.
+  // The last settled answer (with the row mapping of the input it answered) drives the alerts, the field errors and
+  // the warnings until the next answer settles, so nothing flickers away while typing. The last draft that rendered
+  // stays visible (dimmed) while fields are missing or invalid.
+  const [settled, setSettled] = React.useState<Settled | null>(null)
   const [lastOk, setLastOk] = React.useState<PreviewOk | null>(null)
+  const rowIndexRef = React.useRef(rowIndex)
+  rowIndexRef.current = rowIndex
   React.useEffect(() => {
-    if (result?.ok) setLastOk(result)
-  }, [result])
+    if (!current) return
+    setSettled({ answer: current, rowIndex: rowIndexRef.current })
+    if (current.ok) setLastOk(current)
+  }, [current])
 
   const { submitCount } = form.formState
   const problems = React.useMemo<FieldProblem[]>(() => {
@@ -66,20 +79,28 @@ export function GeneratePreview({ template, form, brandId, isPlaceholderData }: 
       message: e.message,
       missing: false,
     }))
-    if (current && !current.ok) list.push(...toFieldProblems(fields, current, rowIndex))
+    if (settled && !settled.answer.ok) {
+      // While the input on screen is the one answered, map rows with today's form (a blank row may have been removed).
+      list.push(...toFieldProblems(fields, settled.answer, current === settled.answer ? rowIndex : settled.rowIndex))
+    }
     return list
-  }, [current, fields, inputErrors, rowIndex])
+  }, [current, fields, inputErrors, rowIndex, settled])
 
-  // Put the problems on the fields; only when they change (a JSON key, since `problems` is rebuilt on every keystroke).
-  const problemsKey = JSON.stringify(problems)
+  // Put the problems on the fields after every render. Reading `errors` re-renders this pane when a field's own
+  // validation (on blur or change) replaces a server error, which is then put back until the next answer settles.
+  // `setFieldProblems` is idempotent, so this does not loop.
+  void form.formState.errors
   const marked = React.useRef<string[]>([])
   React.useEffect(() => {
     marked.current = setFieldProblems(form, problems, marked.current, { missingOnlyIfTouched: submitCount === 0 })
-  }, [form, problemsKey, submitCount]) // `problemsKey` stands for `problems`
+  })
 
   const missing = problems.filter((p) => p.missing)
   const invalid = problems.filter((p) => !p.missing)
-  const shown = result?.ok ? result : lastOk
+  const shown = lastOk
+  const warnings = settled?.answer.ok ? settled.answer.warnings : []
+  // Dimmed unless the draft on show answers the input on screen.
+  const stale = inputJson === null || !current?.ok || current !== shown
   const updating = query.isFetching || (inputJson !== null && debounced !== inputJson)
 
   return (
@@ -117,13 +138,13 @@ export function GeneratePreview({ template, form, brandId, isPlaceholderData }: 
           </AlertDescription>
         </Alert>
       ) : null}
-      {result?.ok && result.warnings.length ? (
+      {warnings.length ? (
         <Alert>
           <TriangleAlertIcon />
           <AlertTitle>Printed empty</AlertTitle>
           <AlertDescription>
             <ul className="flex flex-col gap-0.5">
-              {result.warnings.map((w) => (
+              {warnings.map((w) => (
                 <li key={`${w.name}:${w.message}`}>{w.message}</li>
               ))}
             </ul>
@@ -135,7 +156,7 @@ export function GeneratePreview({ template, form, brandId, isPlaceholderData }: 
         {query.isError ? (
           <ErrorState error={query.error} title="Could not render the preview" onRetry={() => void query.refetch()} />
         ) : shown ? (
-          <PreviewFiles preview={shown} title={template.meta.title} stale={!result?.ok} />
+          <PreviewFiles preview={shown} title={template.meta.title} stale={stale} />
         ) : query.isPending && query.fetchStatus === "fetching" ? (
           <Skeleton className="min-h-96 flex-1" aria-label="Loading the preview" />
         ) : (

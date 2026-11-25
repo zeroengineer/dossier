@@ -59,20 +59,27 @@ export function setFieldProblems(
   previous: readonly string[],
   { missingOnlyIfTouched = false }: { missingOnlyIfTouched?: boolean } = {},
 ): string[] {
-  for (const path of previous) {
-    if (form.getFieldState(path).error?.type === SERVER_ERROR) form.clearErrors(path)
-  }
-  const set: string[] = []
+  // Idempotent: a field already showing the same server error is left alone, so calling this again with the same
+  // problems changes nothing (no form state update, no re-render loop).
+  const wanted = new Map<string, string>()
   for (const p of problems) {
+    if (wanted.has(p.path)) continue
     if (p.missing && missingOnlyIfTouched) {
       const state = form.getFieldState(p.path)
       if (!state.isTouched && !state.isDirty) continue
     }
+    wanted.set(p.path, p.message)
+  }
+  for (const path of previous) {
+    if (!wanted.has(path) && form.getFieldState(path).error?.type === SERVER_ERROR) form.clearErrors(path)
+  }
+  const set: string[] = []
+  for (const [path, message] of wanted) {
+    const current = form.getFieldState(path).error
     // Keep a schema error already on the field (e.g. "Required"): it says the same and clears itself.
-    const current = form.getFieldState(p.path).error
     if (current && current.type !== SERVER_ERROR) continue
-    form.setError(p.path, { type: SERVER_ERROR, message: p.message })
-    set.push(p.path)
+    if (current?.message !== message) form.setError(path, { type: SERVER_ERROR, message })
+    set.push(path)
   }
   return set
 }

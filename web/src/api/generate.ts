@@ -136,12 +136,12 @@ export function useGenerateDocument(id: string) {
   return useMutation({
     mutationFn: (body: GenerateRequest) => generateFromTemplate(id, body),
     meta: { silentError: true },
-    onSuccess: () =>
-      Promise.all([
-        client.invalidateQueries({ queryKey: keys.documents.all }),
-        client.invalidateQueries({ queryKey: ["dashboard"] }),
-        client.invalidateQueries({ queryKey: treeKeys.all }),
-        client.invalidateQueries({ queryKey: ["search"] }),
-      ]),
+    // Not awaited: the caller navigates straight away while the refetches run.
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: keys.documents.all })
+      void client.invalidateQueries({ queryKey: ["dashboard"] })
+      void client.invalidateQueries({ queryKey: treeKeys.all })
+      void client.invalidateQueries({ queryKey: ["search"] })
+    },
   })
 }
