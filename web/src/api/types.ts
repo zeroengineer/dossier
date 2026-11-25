@@ -739,3 +739,56 @@ export interface GenerateResult {
   /** Placeholders that printed empty (`PLACEHOLDER_EMPTY` …). */
   warnings: { code?: string; name: string; message: string }[]
 }
+
+// settings: numbering and workspace
+
+/**
+ * One series of series.json as stored (`GET`/`PUT /api/series`). `scope` absent means the default (brand+year),
+ * `counter` absent means the series owns its counter. Keys the settings form does not edit are kept on save.
+ */
+export interface SeriesEntry {
+  id: string
+  pattern: string
+  scope?: string
+  start?: number
+  /** Another series whose counter this one shares. */
+  counter?: string
+  [key: string]: unknown
+}
+
+/** `GET /api/series` and the `PUT /api/series` answer (the stored list). */
+export interface SeriesList {
+  series: SeriesEntry[]
+}
+
+/** `GET /api/series/usage`: series id -> uses (`<brandId>: <documentType>`, `template <id>`), in workspace order. */
+export interface SeriesUsage {
+  usage: Record<string, string[]>
+}
+
+/** workspace.json as stored (`GET`/`PUT /api/workspace`). Blank locale keys are absent (the server's defaults apply). */
+export interface WorkspaceFile {
+  name: string
+  defaultBrand: string
+  locale?: {
+    currencySymbol?: string
+    currencyCode?: string
+    numberLocale?: string
+    dateFormats?: { short?: string; long?: string; us?: string }
+    currencyWords?: { major?: string; minor?: string; suffix?: string }
+  }
+  /** User id -> clearance; an unlisted user or a blank clearance is Confidential. */
+  users?: Record<string, { clearance?: SensitivityLevel; [key: string]: unknown }>
+  hierarchy?: {
+    /** Exactly 10 top-level folder names when present. */
+    topLevel?: string[]
+    /** Document type -> route (`"Agreements"` or `"<top-level name>[/<leaf>]"`). */
+    routing?: Record<string, string>
+  }
+  [key: string]: unknown
+}
+
+/** `GET /api/workspace` and the `PUT /api/workspace` answer (the stored file). */
+export interface WorkspaceFileResponse {
+  workspace: WorkspaceFile
+}

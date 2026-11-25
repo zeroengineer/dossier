@@ -1,21 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { request } from "@/lib/api"
 import { keys } from "@/lib/keys"
 import { treeKeys } from "./vault"
-import type { UploadResult, UploadSeries } from "./types"
+import { useSeries } from "./settings"
+import type { UploadResult } from "./types"
 
-/** Query keys for the workspace's numbering series (prefix `series`). */
-export const uploadSeriesKeys = {
-  list: ["series", "list"] as const,
-}
-
-export const fetchUploadSeries = async (signal?: AbortSignal) =>
-  (await request<{ series: UploadSeries[] }>("/api/series", { signal })).series
-
-/** The workspace's numbering series (series.json), for the upload form's series Select. */
-export function useUploadSeries() {
-  return useQuery({ queryKey: uploadSeriesKeys.list, queryFn: ({ signal }) => fetchUploadSeries(signal), staleTime: 60_000 })
-}
+/** The workspace's numbering series (series.json), for the upload form's series Select: the canonical series query. */
+export const useUploadSeries = () => useSeries()
 
 /** `POST /api/upload` with a ready multipart body (`file` plus metadata text fields). */
 export const uploadFile = (body: FormData) => request<UploadResult>("/api/upload", { formData: body })

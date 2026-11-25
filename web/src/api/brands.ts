@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { request } from "@/lib/api"
 import { keys } from "@/lib/keys"
-import type { BrandAssets, BrandAssetUpload, BrandDetail, BrandFile, BrandList, SeriesIdList } from "./types"
+import { useSeries } from "./settings"
+import type { BrandAssets, BrandAssetUpload, BrandDetail, BrandFile, BrandList, SeriesEntry } from "./types"
 
 /** Query keys under the `brands` prefix (invalidate `brandKeys.all` after any brand write). */
 export const brandKeys = {
@@ -9,8 +10,6 @@ export const brandKeys = {
   list: ["brands", "list"] as const,
   detail: (id: string) => ["brands", "detail", id] as const,
   assets: (id: string) => ["brands", "assets", id] as const,
-  /** Series ids offered in the brand editor's series map (`series` prefix, so a series edit refreshes it). */
-  seriesIds: ["series", "brand-editor-ids"] as const,
 }
 
 const enc = encodeURIComponent
@@ -42,13 +41,11 @@ export function useBrandAssets(id: string) {
   return useQuery({ queryKey: brandKeys.assets(id), queryFn: ({ signal }) => fetchBrandAssets(id, signal), enabled: id !== "" })
 }
 
-/** Series ids of `series.json`, for the series-map selects. */
+const seriesIdsOf = (list: SeriesEntry[]) => list.map((s) => s.id).filter((s): s is string => typeof s === "string")
+
+/** Series ids of `series.json`, for the series-map selects (the canonical series query, narrowed). */
 export function useSeriesIds() {
-  return useQuery({
-    queryKey: brandKeys.seriesIds,
-    queryFn: ({ signal }) => request<SeriesIdList>("/api/series", { signal }),
-    select: (d) => d.series.map((s) => s.id).filter((s): s is string => typeof s === "string"),
-  })
+  return useSeries(seriesIdsOf)
 }
 
 /** Replace a brand's whole `brand.json` (`PUT /api/brands/:id`; creates it when it does not exist). */

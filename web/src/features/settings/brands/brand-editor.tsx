@@ -1,16 +1,16 @@
 import * as React from "react"
 import { TriangleAlertIcon } from "lucide-react"
 import { useForm, useFormState, type FieldPath } from "react-hook-form"
-import { useBlocker, useSearchParams } from "react-router"
+import { useSearchParams } from "react-router"
 import { toast } from "sonner"
 import { useSaveBrand } from "@/api/brands"
 import type { BrandAssetUpload, BrandDetail, BrandFile, ResolvedBrand } from "@/api/types"
-import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { errorMessage } from "@/lib/api"
 import { SaveBar } from "../save-bar"
 import { applyServerErrors, type UnplacedError } from "../server-errors"
+import { UnsavedChangesGuard } from "../unsaved-guard"
 import { AssetsSection } from "./assets-section"
 import { TAB_OF_FIELD, toBrandFile, toFormValues, type BrandContext, type BrandFormValues } from "./brand-form"
 import { BrandPreview } from "./brand-preview"
@@ -134,15 +134,6 @@ export function BrandEditor({ brand, parent, fontWeights, builtinFonts, seriesId
     }
   }
 
-  // Leaving with unsaved changes asks first (in-app navigation and closing the tab).
-  const blocker = useBlocker(({ currentLocation, nextLocation }) => isDirty && currentLocation.pathname !== nextLocation.pathname)
-  React.useEffect(() => {
-    if (!isDirty) return
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault()
-    window.addEventListener("beforeunload", warn)
-    return () => window.removeEventListener("beforeunload", warn)
-  }, [isDirty])
-
   const section: SectionProps = { form, file: base.file, ctx: base.ctx, parentId }
 
   return (
@@ -199,16 +190,8 @@ export function BrandEditor({ brand, parent, fontWeights, builtinFonts, seriesId
         <BrandPreview brandId={id} configHash={brand.configHash} />
       </div>
       <SaveBar form={FORM_ID} dirty={isDirty} saving={save.isPending} onDiscard={() => form.reset()} saveLabel="Save brand" />
-      <ConfirmDialog
-        open={blocker.state === "blocked"}
-        onOpenChange={(open) => {
-          if (!open && blocker.state === "blocked") blocker.reset()
-        }}
-        title="Leave without saving?"
-        description="Your unsaved changes to this brand will be lost."
-        confirmLabel="Leave"
-        onConfirm={() => blocker.proceed?.()}
-      />
+      {/* Leaving with unsaved changes asks first (in-app navigation and closing the tab). */}
+      <UnsavedChangesGuard dirty={isDirty} what="this brand" />
     </>
   )
 }

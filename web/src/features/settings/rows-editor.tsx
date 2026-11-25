@@ -1,4 +1,5 @@
 // Repeatable rows for the settings forms (brands, numbering, ...), generic over the form's values.
+import type * as React from "react"
 import { PlusIcon, Trash2Icon } from "lucide-react"
 import {
   Controller, useFieldArray, type Control, type FieldArray, type FieldArrayPath, type FieldPath, type FieldValues,
@@ -43,6 +44,8 @@ interface RowsEditorProps<T extends FieldValues, N extends FieldArrayPath<T>> {
   empty?: string
   /** Grid columns per row (default: the number of columns, at most 4). */
   gridColumns?: number
+  /** Read-only content shown under row `i`'s fields (e.g. where a series is used). */
+  rowExtra?: (i: number) => React.ReactNode
 }
 
 /**
@@ -50,7 +53,7 @@ interface RowsEditorProps<T extends FieldValues, N extends FieldArrayPath<T>> {
  * `<name>.root` shows under the rows.
  */
 export function RowsEditor<T extends FieldValues, N extends FieldArrayPath<T>>({
-  control, name, columns, blank, rowLabel, addLabel, disabled, empty = "No rows yet.", gridColumns,
+  control, name, columns, blank, rowLabel, addLabel, disabled, empty = "No rows yet.", gridColumns, rowExtra,
 }: RowsEditorProps<T, N>) {
   const { fields, append, remove } = useFieldArray({ control, name })
   const grid = GRID[Math.min(gridColumns ?? columns.length, 4)] ?? GRID[4]
@@ -59,31 +62,34 @@ export function RowsEditor<T extends FieldValues, N extends FieldArrayPath<T>>({
       {fields.length === 0 ? <p className="text-sm text-muted-foreground">{empty}</p> : null}
       {fields.map((f, i) => (
         <div key={f.id} role="group" aria-label={rowLabel(i)} className="flex items-start gap-2 rounded-lg border bg-card p-3">
-          <div className={cn("grid flex-1 gap-3", grid)}>
-            {columns.map((c) => {
-              const fieldName = `${name}.${i}.${c.key}` as FieldPath<T>
-              const label = (
-                <>
-                  {c.label}
-                  <span className="sr-only"> ({rowLabel(i)})</span>
-                </>
-              )
-              const cls = c.wide ? "sm:col-span-2" : undefined
-              return c.options ? (
-                <SelectField key={c.key} control={control} name={fieldName} label={label} options={c.options} disabled={disabled} className={cls} />
-              ) : (
-                <TextField
-                  key={c.key}
-                  control={control}
-                  name={fieldName}
-                  label={label}
-                  placeholder={c.placeholder}
-                  multiline={c.multiline}
-                  disabled={disabled}
-                  className={cls}
-                />
-              )
-            })}
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
+            <div className={cn("grid gap-3", grid)}>
+              {columns.map((c) => {
+                const fieldName = `${name}.${i}.${c.key}` as FieldPath<T>
+                const label = (
+                  <>
+                    {c.label}
+                    <span className="sr-only"> ({rowLabel(i)})</span>
+                  </>
+                )
+                const cls = c.wide ? "sm:col-span-2" : undefined
+                return c.options ? (
+                  <SelectField key={c.key} control={control} name={fieldName} label={label} options={c.options} disabled={disabled} className={cls} />
+                ) : (
+                  <TextField
+                    key={c.key}
+                    control={control}
+                    name={fieldName}
+                    label={label}
+                    placeholder={c.placeholder}
+                    multiline={c.multiline}
+                    disabled={disabled}
+                    className={cls}
+                  />
+                )
+              })}
+            </div>
+            {rowExtra?.(i)}
           </div>
           {disabled ? null : (
             <Button type="button" variant="ghost" size="icon-sm" aria-label={`Remove ${rowLabel(i)}`} onClick={() => remove(i)}>

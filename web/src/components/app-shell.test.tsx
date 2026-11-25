@@ -112,12 +112,6 @@ describe("AppShell", () => {
     expect(await screen.findByRole("dialog")).toBeInTheDocument()
   })
 
-  it("renders placeholder pages with their title and an empty state", async () => {
-    renderApp("/settings/numbering")
-    expect(await screen.findByRole("heading", { level: 1, name: "Numbering" })).toBeInTheDocument()
-    expect(screen.getByText("This page is being built")).toBeInTheDocument()
-  })
-
   it("renders a not-found page for unknown paths inside the shell", async () => {
     renderApp("/nowhere")
     expect(await screen.findByText("Page not found")).toBeInTheDocument()

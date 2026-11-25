@@ -135,4 +135,3 @@ export const acmeAssets: BrandAssets = {
   ],
 }
 
-export const seriesIds = { series: [{ id: "invoice-main" }, { id: "receipt" }, { id: "generic" }] }

@@ -1,10 +1,10 @@
 import { http, HttpResponse } from "msw"
 import type { BrandDetail, BrandFile } from "@/api/types"
-import { acmeAssets, brandDetails, brandList, seriesIds } from "../fixtures-brands"
+import { acmeAssets, brandDetails, brandList } from "../fixtures-brands"
 
 const notFound = (id: string) => HttpResponse.json({ code: "BRAND_NOT_FOUND", message: `No brand "${id}" in the workspace`, details: { brandId: id } }, { status: 404 })
 
-/** Brand settings: list, detail, assets, series ids; PUT echoes the body back as the new file. */
+/** Brand settings: list, detail, assets (series ids come from handlers/settings.ts); PUT echoes the body back as the new file. */
 export const handlers = [
   http.get("*/api/brands", () => HttpResponse.json(brandList)),
   http.get("*/api/brands/:id", ({ params }) => {
@@ -36,5 +36,4 @@ export const handlers = [
     const detail: BrandDetail = { id: body.id, file: body, resolved: { ...brandDetails["acme"]!.resolved, id: body.id }, configHash: "eeeeeeeeeeee5555" }
     return HttpResponse.json(detail, { status: 201 })
   }),
-  http.get("*/api/series", () => HttpResponse.json(seriesIds)),
 ]
