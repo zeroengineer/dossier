@@ -113,8 +113,8 @@ export const studioResolved: ResolvedBrand = {
 }
 
 export const brandDetails: Record<string, BrandDetail> = {
-  acme: { id: "acme", file: acmeFile, resolved: acmeResolved, configHash: "aaaaaaaaaaaa5a1b2c3d4e5f1111" },
-  "acme-studio": { id: "acme-studio", file: studioFile, resolved: studioResolved, configHash: "bbbbbbbbbbbb6a7b8c9d0e1f2222" },
+  acme: { id: "acme", file: acmeFile, fileHash: "a1".repeat(32), resolved: acmeResolved, configHash: "aaaaaaaaaaaa5a1b2c3d4e5f1111" },
+  "acme-studio": { id: "acme-studio", file: studioFile, fileHash: "b2".repeat(32), resolved: studioResolved, configHash: "bbbbbbbbbbbb6a7b8c9d0e1f2222" },
 }
 
 export const brandList: BrandList = {

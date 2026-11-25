@@ -1,18 +1,17 @@
 import * as React from "react"
-import { TriangleAlertIcon } from "lucide-react"
 import { useForm, useFormState, type FieldPath } from "react-hook-form"
 import { useLocation } from "react-router"
 import { toast } from "sonner"
-import { useSaveWorkspaceFile } from "@/api/settings"
+import { useReloadWorkspaceFile, useSaveWorkspaceFile } from "@/api/settings"
 import type { Locale, WorkspaceFile } from "@/api/types"
 import { ConfirmDialog } from "@/components/confirm-dialog"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { errorMessage } from "@/lib/api"
 import { ListError, SelectField, TextField } from "../form-fields"
 import { RowsEditor } from "../rows-editor"
 import { SaveBar } from "../save-bar"
+import { SaveFailureAlert, type SaveFailure } from "../save-failure"
 import { Section } from "../section"
-import { applyServerErrors, type UnplacedError } from "../server-errors"
+import { applyServerErrors } from "../server-errors"
 import { UnsavedChangesGuard } from "../unsaved-guard"
 import {
   BLANK_ROUTE, BLANK_USER, LOCALE_PATHS, TOP_LEVEL_COUNT, lostClearances, toWorkspaceFile, toWorkspaceFormValues,
@@ -38,6 +37,8 @@ const LOCALE_LABELS: Record<(typeof LOCALE_PATHS)[number], string> = {
 
 interface WorkspaceEditorProps {
   file: WorkspaceFile
+  /** workspace.json's file hash as loaded: sent with the save, so a file changed elsewhere is never overwritten. */
+  fileHash: string | null
   brandIds: string[]
   /** The effective locale (`/api/me`): shown as the placeholder of a blank locale field. */
   locale: Locale | null
@@ -51,13 +52,26 @@ interface WorkspaceEditorProps {
 }
 
 /** workspace.json as one form: general, locale, folder hierarchy and users, saved whole with `PUT /api/workspace`. */
-export function WorkspaceEditor({ file, brandIds, locale, myId, myClearance, clearances, defaultTopLevel, topKeys }: WorkspaceEditorProps) {
-  const [base, setBase] = React.useState(file)
+export function WorkspaceEditor({
+  file, fileHash, brandIds, locale, myId, myClearance, clearances, defaultTopLevel, topKeys,
+}: WorkspaceEditorProps) {
+  // The stored file and its hash the form was last loaded from (a save sends the hash back as If-Match).
+  const [base, setBase] = React.useState({ file, fileHash })
   const form = useForm<WorkspaceFormValues>({ defaultValues: toWorkspaceFormValues(file) })
   const { isDirty } = useFormState({ control: form.control })
   const save = useSaveWorkspaceFile()
-  const [failure, setFailure] = React.useState<{ error: unknown; unplaced: UnplacedError[] } | null>(null)
+  const reloadFile = useReloadWorkspaceFile()
+  const [failure, setFailure] = React.useState<SaveFailure | null>(null)
   const control = form.control
+
+  const load = (next: { workspace: WorkspaceFile; fileHash: string | null }) => {
+    setBase({ file: next.workspace, fileHash: next.fileHash })
+    form.reset(toWorkspaceFormValues(next.workspace))
+  }
+  const reload = async () => {
+    load(await reloadFile())
+    setFailure(null)
+  }
 
   // `/settings/workspace#users` (the Users settings link) scrolls to the users section.
   const { hash } = useLocation()
@@ -72,7 +86,7 @@ export function WorkspaceEditor({ file, brandIds, locale, myId, myClearance, cle
     e.preventDefault()
     form.clearErrors()
     setFailure(null)
-    const build = toWorkspaceFile(form.getValues(), base, defaultTopLevel)
+    const build = toWorkspaceFile(form.getValues(), base.file, defaultTopLevel)
     if (build.problems.length) {
       for (const p of build.problems) form.setError(p.field as FieldPath<WorkspaceFormValues>, { type: "client", message: p.message })
       toast.error("Not saved", { description: "Fix the marked fields." })
@@ -88,9 +102,7 @@ export function WorkspaceEditor({ file, brandIds, locale, myId, myClearance, cle
 
   const send = async ({ body, fieldFor }: WorkspaceBuild) => {
     try {
-      const saved = await save.mutateAsync(body)
-      setBase(saved)
-      form.reset(toWorkspaceFormValues(saved))
+      load(await save.mutateAsync({ workspace: body, fileHash: base.fileHash }))
       toast.success("Workspace saved")
     } catch (err) {
       const { unplaced } = applyServerErrors(err, form.setError, fieldFor, "workspace.json")
@@ -107,20 +119,7 @@ export function WorkspaceEditor({ file, brandIds, locale, myId, myClearance, cle
   return (
     <>
       <form id={FORM_ID} onSubmit={(e) => void onSubmit(e)} noValidate aria-label="Workspace settings" className="flex flex-col gap-4">
-        {failure ? (
-          <Alert variant="destructive">
-            <TriangleAlertIcon />
-            <AlertTitle>Not saved</AlertTitle>
-            <AlertDescription>
-              <p>{errorMessage(failure.error)}</p>
-              {failure.unplaced.length ? (
-                <ul className="list-inside list-disc">
-                  {failure.unplaced.map((u) => <li key={u.text}>{u.text}</li>)}
-                </ul>
-              ) : null}
-            </AlertDescription>
-          </Alert>
-        ) : null}
+        <SaveFailureAlert failure={failure} onReload={reload} />
 
         <Section title="General">
           <div className="grid gap-4 sm:grid-cols-2">

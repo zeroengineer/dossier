@@ -2,6 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
 import type { BrandDetail, BrandFile } from "@/api/types"
+import { CONFLICT_TEXT } from "@/features/settings/save-failure"
 import { acmeFile, brandDetails } from "@/test/fixtures-brands"
 import BrandSettingsPage from "@/pages/settings-brand"
 import { renderRoute } from "@/test/render"
@@ -65,6 +66,38 @@ describe("Brand editor", () => {
     expect(bodies[0]).toEqual({ ...acmeFile, shortName: "Acme" })
     expect(await screen.findByText("All changes saved.")).toBeInTheDocument()
     expect(screen.getByTitle("Letterhead preview")).toHaveAttribute("src", "/api/brands/acme/preview.pdf?ts=dddddddddddd")
+  })
+
+  it("sends the loaded file hash and, on 409 CONFLICT, shows the conflict alert and reloads on request", async () => {
+    const matches: Array<string | null> = []
+    server.use(
+      http.put("*/api/brands/:id", ({ request }) => {
+        matches.push(request.headers.get("If-Match"))
+        return HttpResponse.json({ code: "CONFLICT", message: "brands/acme/brand.json changed elsewhere", details: { currentHash: "9f".repeat(32) } }, { status: 409 })
+      }),
+    )
+    const { user } = await openEditor()
+    const name = screen.getByLabelText("Short name *")
+    await user.clear(name)
+    await user.type(name, "Mine")
+    await user.click(saveButton())
+    const alert = await waitFor(() => {
+      const el = document.querySelector<HTMLElement>("form [data-slot=alert]")
+      expect(el).not.toBeNull()
+      return el!
+    })
+    expect(within(alert).getByText(CONFLICT_TEXT)).toBeInTheDocument()
+    expect(matches).toEqual([`"${brandDetails["acme"]!.fileHash}"`])
+    expect(name).toHaveValue("Mine")
+
+    server.use(
+      http.get("*/api/brands/:id", () =>
+        HttpResponse.json({ ...brandDetails["acme"], file: { ...acmeFile, shortName: "Theirs" }, fileHash: "9f".repeat(32) })),
+    )
+    await user.click(within(alert).getByRole("button", { name: "Reload" }))
+    await waitFor(() => expect(screen.getByLabelText("Short name *")).toHaveValue("Theirs"))
+    expect(document.querySelector("form [data-slot=alert]")).toBeNull()
+    expect(screen.getByText("All changes saved.")).toBeInTheDocument()
   })
 
   it("puts WORKSPACE_INVALID errors on their fields and opens the tab of the first one", async () => {
@@ -251,6 +284,34 @@ describe("Brand assets", () => {
     await user.click(saveButton())
     await waitFor(() => expect(bodies).toHaveLength(1))
     expect(bodies[0]!["signatories"]).toEqual(copied)
+  })
+
+  it("adopts brand.json's new file hash after an upload, so the next save is not refused", async () => {
+    const matches: Array<string | null> = []
+    const uploadedHash = "77".repeat(32)
+    server.use(
+      http.post("*/api/brands/:id/assets/:key", () => {
+        const file = { ...acmeFile, assets: { logo: "assets/logo-abcdef123456.png", seal: "assets/seal.png" } }
+        return HttpResponse.json({
+          key: "assets.logo", path: "assets/logo-abcdef123456.png", sha256: "abcdef", bytes: 4, fileHash: uploadedHash,
+          brand: { ...brandDetails["acme"], file, fileHash: uploadedHash },
+        })
+      }),
+      http.put("*/api/brands/:id", async ({ request }) => {
+        matches.push(request.headers.get("If-Match"))
+        return HttpResponse.json({ ...brandDetails["acme"], file: await request.json(), fileHash: "88".repeat(32) })
+      }),
+    )
+    const { user } = await openEditor("/settings/brands/acme?tab=assets")
+    await screen.findByRole("group", { name: "Logo" })
+    await user.upload(screen.getByLabelText("Upload Logo"), new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], "l.png", { type: "image/png" }))
+    await waitFor(() => expect(screen.getByLabelText("Logo path")).toHaveValue("assets/logo-abcdef123456.png"))
+    await user.click(screen.getByRole("tab", { name: "Identity" }))
+    const name = screen.getByLabelText("Short name *")
+    await user.clear(name)
+    await user.type(name, "Acme")
+    await user.click(saveButton())
+    await waitFor(() => expect(matches).toEqual([`"${uploadedHash}"`]))
   })
 
   it("reports a file that is too large without uploading, and a 413 from the server", async () => {

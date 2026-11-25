@@ -2,7 +2,8 @@ import { screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
 import type { SeriesEntry } from "@/api/types"
-import { seriesFile } from "@/test/fixtures-settings"
+import { CONFLICT_TEXT } from "@/features/settings/save-failure"
+import { SERIES_HASH, seriesFile } from "@/test/fixtures-settings"
 import NumberingSettingsPage from "@/pages/settings-numbering"
 import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
@@ -107,6 +108,42 @@ describe("Numbering settings", () => {
     await user.click(saveButton())
     expect(await within(row(1)).findByText("must be a whole number")).toBeInTheDocument()
     expect(bodies).toHaveLength(0)
+  })
+
+  it("sends the loaded file hash, adopts the new one after a save, and on 409 offers a Reload instead of overwriting", async () => {
+    const matches: Array<string | null> = []
+    let conflict = false
+    server.use(
+      http.put("*/api/series", async ({ request }) => {
+        matches.push(request.headers.get("If-Match"))
+        const body = (await request.json()) as { series: SeriesEntry[] }
+        if (conflict) {
+          return HttpResponse.json({ code: "CONFLICT", message: "series.json changed elsewhere", details: { currentHash: "9f".repeat(32) } }, { status: 409 })
+        }
+        return HttpResponse.json({ series: body.series, fileHash: "5e".repeat(32) })
+      }),
+    )
+    const { user } = await openPage()
+    const start = () => within(row(1)).getByLabelText(/^Start/)
+    await user.clear(start())
+    await user.type(start(), "5")
+    await user.click(saveButton())
+    await waitFor(() => expect(matches).toEqual([`"${SERIES_HASH}"`]))
+    expect(await screen.findByText("All changes saved.")).toBeInTheDocument()
+
+    conflict = true
+    await user.clear(start())
+    await user.type(start(), "7")
+    await user.click(saveButton())
+    await waitFor(() => expect(matches).toEqual([`"${SERIES_HASH}"`, `"${"5e".repeat(32)}"`]))
+    expect(await screen.findByText(CONFLICT_TEXT)).toBeInTheDocument()
+    expect(start()).toHaveValue("7")
+
+    // Reload takes the file as it is now, dropping the unsaved edit.
+    server.use(http.get("*/api/series", () => HttpResponse.json({ series: seriesFile.map((s, i) => (i === 0 ? { ...s, start: 42 } : s)), fileHash: "9f".repeat(32) })))
+    await user.click(screen.getByRole("button", { name: "Reload" }))
+    await waitFor(() => expect(start()).toHaveValue("42"))
+    expect(document.querySelector("form [data-slot=alert]")).toBeNull()
   })
 
   it("shows an error state when the series cannot be loaded", async () => {

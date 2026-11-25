@@ -1,5 +1,6 @@
 // Numbering series (series.json) and workspace.json: the canonical fetchers and hooks. The upload form's series picker
 // and the brand editor's series map read the same `["series", "list"]` query.
+import * as React from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { request } from "@/lib/api"
 import { keys } from "@/lib/keys"
@@ -8,7 +9,7 @@ import type { SeriesEntry, SeriesList, SeriesUsage, WorkspaceFile, WorkspaceFile
 /** Query keys under the `series` prefix (invalidate `seriesKeys.all` after a series write). */
 export const seriesKeys = {
   all: ["series"] as const,
-  /** series.json as stored. */
+  /** series.json as stored, with its file hash (`SeriesList`). */
   list: ["series", "list"] as const,
   usage: ["series", "usage"] as const,
 }
@@ -18,14 +19,33 @@ export const workspaceKeys = {
   file: ["workspace", "file"] as const,
 }
 
-export const fetchSeries = async (signal?: AbortSignal) => (await request<SeriesList>("/api/series", { signal })).series
+/** `If-Match` for a whole-file save: the file hash the editor loaded (none: the server does not check). */
+export const ifMatch = (fileHash: string | null | undefined): Record<string, string> | undefined =>
+  fileHash ? { "If-Match": `"${fileHash}"` } : undefined
+
+/** series.json as stored, with its file hash. */
+export const fetchSeriesFile = (signal?: AbortSignal) => request<SeriesList>("/api/series", { signal })
 export const fetchSeriesUsage = async (signal?: AbortSignal) => (await request<SeriesUsage>("/api/series/usage", { signal })).usage
-export const fetchWorkspaceFile = async (signal?: AbortSignal) =>
-  (await request<WorkspaceFileResponse>("/api/workspace", { signal })).workspace
+/** workspace.json as stored, with its file hash. */
+export const fetchWorkspaceFile = (signal?: AbortSignal) => request<WorkspaceFileResponse>("/api/workspace", { signal })
+
+const seriesQuery = { queryKey: seriesKeys.list, queryFn: ({ signal }: { signal?: AbortSignal }) => fetchSeriesFile(signal), staleTime: 60_000 }
+
+/** series.json as stored with its file hash (the numbering editor). */
+export function useSeriesFile() {
+  return useQuery(seriesQuery)
+}
 
 /** The workspace's numbering series (series.json as stored), optionally narrowed with `select`. */
 export function useSeries<T = SeriesEntry[]>(select?: (list: SeriesEntry[]) => T) {
-  return useQuery({ queryKey: seriesKeys.list, queryFn: ({ signal }) => fetchSeries(signal), staleTime: 60_000, select })
+  const pick = React.useCallback((d: SeriesList) => (select ? select(d.series) : (d.series as T)), [select])
+  return useQuery({ ...seriesQuery, select: pick })
+}
+
+/** Fetch series.json again (a save was refused because it changed elsewhere) and update the cache. */
+export function useReloadSeriesFile() {
+  const queryClient = useQueryClient()
+  return () => queryClient.fetchQuery({ ...seriesQuery, staleTime: 0 })
 }
 
 /** Where each series is used (brand series maps, templates numbering with a series directly). */
@@ -33,18 +53,29 @@ export function useSeriesUsage() {
   return useQuery({ queryKey: seriesKeys.usage, queryFn: ({ signal }) => fetchSeriesUsage(signal) })
 }
 
-/** workspace.json as stored. */
+const workspaceQuery = { queryKey: workspaceKeys.file, queryFn: ({ signal }: { signal?: AbortSignal }) => fetchWorkspaceFile(signal) }
+
+/** workspace.json as stored, with its file hash. */
 export function useWorkspaceFile() {
-  return useQuery({ queryKey: workspaceKeys.file, queryFn: ({ signal }) => fetchWorkspaceFile(signal) })
+  return useQuery(workspaceQuery)
 }
 
-/** Replace series.json (`PUT /api/series`); answers the stored list. */
-export const putSeries = async (series: SeriesEntry[]) =>
-  (await request<SeriesList>("/api/series", { method: "PUT", json: { series } })).series
+/** Fetch workspace.json again (a save was refused because it changed elsewhere) and update the cache. */
+export function useReloadWorkspaceFile() {
+  const queryClient = useQueryClient()
+  return () => queryClient.fetchQuery({ ...workspaceQuery, staleTime: 0 })
+}
 
-/** Replace workspace.json (`PUT /api/workspace`); answers the stored file. */
-export const putWorkspaceFile = async (workspace: WorkspaceFile) =>
-  (await request<WorkspaceFileResponse>("/api/workspace", { method: "PUT", json: workspace })).workspace
+/**
+ * Replace series.json (`PUT /api/series`); answers the stored list and its new hash. With `fileHash` (the hash the
+ * editor loaded) a file changed elsewhere is refused with 409 CONFLICT.
+ */
+export const putSeries = ({ series, fileHash }: { series: SeriesEntry[]; fileHash?: string | null }) =>
+  request<SeriesList>("/api/series", { method: "PUT", json: { series }, headers: ifMatch(fileHash) })
+
+/** Replace workspace.json (`PUT /api/workspace`); answers the stored file and its new hash (409 CONFLICT as putSeries). */
+export const putWorkspaceFile = ({ workspace, fileHash }: { workspace: WorkspaceFile; fileHash?: string | null }) =>
+  request<WorkspaceFileResponse>("/api/workspace", { method: "PUT", json: workspace, headers: ifMatch(fileHash) })
 
 /**
  * Save series.json. Errors are shown on the form (`silentError`). Afterwards the series queries (list, usage, the

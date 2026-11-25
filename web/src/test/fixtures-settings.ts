@@ -9,6 +9,11 @@ export const seriesFile: SeriesEntry[] = [
   { id: "generic", pattern: "ACM-G-{###}", scope: "global" },
 ]
 
+/** series.json's file hash as `GET /api/series` returns it (sha256 hex). */
+export const SERIES_HASH = "5a".repeat(32)
+/** workspace.json's file hash as `GET /api/workspace` returns it. */
+export const WORKSPACE_HASH = "3b".repeat(32)
+
 /** `GET /api/series/usage`. */
 export const seriesUsage: Record<string, string[]> = {
   "invoice-main": ["acme: invoice", "acme-studio: invoice"],

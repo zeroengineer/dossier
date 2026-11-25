@@ -669,6 +669,8 @@ export interface BrandDetail {
   resolved: ResolvedBrand
   /** Hash of the resolved brand; changes whenever the brand (or a brand it inherits from) changes. */
   configHash: string
+  /** sha256 (hex) of the stored brand.json bytes: sent back as `If-Match` so a save never overwrites a change made elsewhere. */
+  fileHash: string
 }
 
 /** Where an asset slot's file comes from (`null`: nothing is drawn, e.g. an unset watermark). */
@@ -698,6 +700,8 @@ export interface BrandAssetUpload {
   path: string
   sha256: string
   bytes: number
+  /** brand.json's new file hash (the upload rewrote it); the same as `brand.fileHash`. */
+  fileHash: string
   brand: BrandDetail
 }
 
@@ -754,6 +758,8 @@ export interface SeriesEntry {
 /** `GET /api/series` and the `PUT /api/series` answer (the stored list). */
 export interface SeriesList {
   series: SeriesEntry[]
+  /** sha256 (hex) of series.json's bytes (null when the file does not exist); sent back as `If-Match` on save. */
+  fileHash: string | null
 }
 
 /** `GET /api/series/usage`: series id -> uses (`<brandId>: <documentType>`, `template <id>`), in workspace order. */
@@ -786,4 +792,6 @@ export interface WorkspaceFile {
 /** `GET /api/workspace` and the `PUT /api/workspace` answer (the stored file). */
 export interface WorkspaceFileResponse {
   workspace: WorkspaceFile
+  /** sha256 (hex) of workspace.json's bytes; sent back as `If-Match` on save. */
+  fileHash: string | null
 }

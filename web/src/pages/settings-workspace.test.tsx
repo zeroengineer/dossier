@@ -3,7 +3,8 @@ import { http, HttpResponse } from "msw"
 import { beforeEach, describe, expect, it } from "vitest"
 import type { WorkspaceFile } from "@/api/types"
 import { meta } from "@/test/fixtures"
-import { defaultTopLevel, topKeys, workspaceFile } from "@/test/fixtures-settings"
+import { CONFLICT_TEXT } from "@/features/settings/save-failure"
+import { WORKSPACE_HASH, defaultTopLevel, topKeys, workspaceFile } from "@/test/fixtures-settings"
 import WorkspaceSettingsPage from "@/pages/settings-workspace"
 import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
@@ -169,5 +170,28 @@ describe("Workspace settings", () => {
     const nav = screen.getByRole("navigation", { name: "Settings" })
     expect(within(nav).getByRole("link", { name: "Users" })).toHaveAttribute("aria-current", "page")
     expect(document.getElementById("users")).toContainElement(screen.getByText("Users", { selector: "[data-slot=card-title]" }))
+  })
+
+  it("sends the loaded file hash and, on 409 CONFLICT, shows the conflict alert with a Reload button", async () => {
+    const matches: Array<string | null> = []
+    server.use(
+      http.put("*/api/workspace", ({ request }) => {
+        matches.push(request.headers.get("If-Match"))
+        return HttpResponse.json({ code: "CONFLICT", message: "workspace.json changed elsewhere", details: { currentHash: "9f".repeat(32) } }, { status: 409 })
+      }),
+    )
+    const { user } = await openPage()
+    const name = screen.getByLabelText("Workspace name")
+    await user.clear(name)
+    await user.type(name, "Edited Here")
+    await user.click(saveButton())
+    expect(await within(formAlert()).findByText(CONFLICT_TEXT)).toBeInTheDocument()
+    expect(matches).toEqual([`"${WORKSPACE_HASH}"`])
+    expect(name).toHaveValue("Edited Here")
+
+    server.use(http.get("*/api/workspace", () => HttpResponse.json({ workspace: { ...workspaceFile, name: "Changed Elsewhere" }, fileHash: "9f".repeat(32) })))
+    await user.click(within(formAlert()).getByRole("button", { name: "Reload" }))
+    await waitFor(() => expect(screen.getByLabelText("Workspace name")).toHaveValue("Changed Elsewhere"))
+    expect(document.querySelector("form [data-slot=alert]")).toBeNull()
   })
 })

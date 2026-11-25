@@ -23,6 +23,7 @@ export const handlers = [
     const detail: BrandDetail = {
       id,
       file: body,
+      fileHash: "c3".repeat(32),
       resolved: before ? before.resolved : { ...brandDetails["acme"]!.resolved, id },
       configHash: "cccccccccccc3333333333333333",
     }
@@ -33,7 +34,9 @@ export const handlers = [
     if (brandDetails[body.id]) {
       return HttpResponse.json({ code: "BRAND_DUPLICATE", message: `Brand "${body.id}" already exists`, details: { brandId: body.id } }, { status: 409 })
     }
-    const detail: BrandDetail = { id: body.id, file: body, resolved: { ...brandDetails["acme"]!.resolved, id: body.id }, configHash: "eeeeeeeeeeee5555" }
+    const detail: BrandDetail = {
+      id: body.id, file: body, fileHash: "e5".repeat(32), resolved: { ...brandDetails["acme"]!.resolved, id: body.id }, configHash: "eeeeeeeeeeee5555",
+    }
     return HttpResponse.json(detail, { status: 201 })
   }),
 ]

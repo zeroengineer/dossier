@@ -18,7 +18,8 @@ export default function WorkspaceSettingsPage() {
         <ErrorState error={failed.error} title="Could not load workspace.json" onRetry={() => void failed.refetch()} />
       ) : file.data && meta.data && me.data ? (
         <WorkspaceEditor
-          file={file.data}
+          file={file.data.workspace}
+          fileHash={file.data.fileHash}
           brandIds={me.data.brands.map((b) => b.id)}
           locale={me.data.workspace.locale}
           myId={me.data.user.id}

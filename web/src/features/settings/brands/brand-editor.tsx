@@ -1,15 +1,14 @@
 import * as React from "react"
-import { TriangleAlertIcon } from "lucide-react"
 import { useForm, useFormState, type FieldPath } from "react-hook-form"
 import { useSearchParams } from "react-router"
 import { toast } from "sonner"
-import { useSaveBrand } from "@/api/brands"
+import { useReloadBrand, useSaveBrand } from "@/api/brands"
 import type { BrandAssetUpload, BrandDetail, BrandFile, ResolvedBrand } from "@/api/types"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { errorMessage } from "@/lib/api"
 import { SaveBar } from "../save-bar"
-import { applyServerErrors, type UnplacedError } from "../server-errors"
+import { SaveFailureAlert, type SaveFailure } from "../save-failure"
+import { applyServerErrors } from "../server-errors"
 import { UnsavedChangesGuard } from "../unsaved-guard"
 import { AssetsSection } from "./assets-section"
 import { TAB_OF_FIELD, toBrandFile, toFormValues, type BrandContext, type BrandFormValues } from "./brand-form"
@@ -60,12 +59,16 @@ export function BrandEditor({ brand, parent, fontWeights, builtinFonts, seriesId
     [parent, fontWeights],
   )
 
-  // The stored file the form was last loaded from: the base every save starts from (keys the form does not edit).
-  const [base, setBase] = React.useState<{ file: BrandFile; ctx: BrandContext }>(() => ({ file: brand.file, ctx: contextOf(brand.resolved) }))
+  // The stored file the form was last loaded from: the base every save starts from (keys the form does not edit), and
+  // its file hash, sent back as If-Match so a brand.json changed elsewhere is never overwritten.
+  const [base, setBase] = React.useState<{ file: BrandFile; fileHash: string; ctx: BrandContext }>(
+    () => ({ file: brand.file, fileHash: brand.fileHash, ctx: contextOf(brand.resolved) }),
+  )
   const form = useForm<BrandFormValues>({ defaultValues: toFormValues(brand.file, contextOf(brand.resolved)) })
   const { isDirty, errors } = useFormState({ control: form.control })
   const save = useSaveBrand(id)
-  const [failure, setFailure] = React.useState<{ error: unknown; unplaced: UnplacedError[] } | null>(null)
+  const reloadBrand = useReloadBrand(id)
+  const [failure, setFailure] = React.useState<SaveFailure | null>(null)
 
   const [params, setParams] = useSearchParams()
   const requested = params.get("tab")
@@ -85,8 +88,13 @@ export function BrandEditor({ brand, parent, fontWeights, builtinFonts, seriesId
 
   const load = (detail: BrandDetail, opts?: { keepDirtyValues?: boolean }) => {
     const ctx = contextOf(detail.resolved)
-    setBase({ file: detail.file, ctx })
+    setBase({ file: detail.file, fileHash: detail.fileHash, ctx })
     form.reset(toFormValues(detail.file, ctx), opts)
+  }
+  /** After a conflict: take brand.json as it is now, dropping unsaved edits. */
+  const reload = async () => {
+    load(await reloadBrand())
+    setFailure(null)
   }
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -101,7 +109,7 @@ export function BrandEditor({ brand, parent, fontWeights, builtinFonts, seriesId
       return
     }
     try {
-      const detail = await save.mutateAsync(body)
+      const detail = await save.mutateAsync({ body, fileHash: base.fileHash })
       load(detail)
       toast.success("Brand saved")
     } catch (err) {
@@ -140,20 +148,7 @@ export function BrandEditor({ brand, parent, fontWeights, builtinFonts, seriesId
     <>
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <form id={FORM_ID} onSubmit={(e) => void onSubmit(e)} noValidate aria-label={`Brand ${id}`} className="flex min-w-0 flex-col gap-4">
-          {failure ? (
-            <Alert variant="destructive">
-              <TriangleAlertIcon />
-              <AlertTitle>Not saved</AlertTitle>
-              <AlertDescription>
-                <p>{errorMessage(failure.error)}</p>
-                {failure.unplaced.length ? (
-                  <ul className="list-inside list-disc">
-                    {failure.unplaced.map((u) => <li key={u.text}>{u.text}</li>)}
-                  </ul>
-                ) : null}
-              </AlertDescription>
-            </Alert>
-          ) : null}
+          <SaveFailureAlert failure={failure} onReload={reload} />
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList className="h-auto w-full flex-wrap justify-start">
               {BRAND_TABS.map((t) => (

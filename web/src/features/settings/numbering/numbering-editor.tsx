@@ -1,15 +1,14 @@
 import * as React from "react"
-import { TriangleAlertIcon } from "lucide-react"
 import { useForm, useFormState, useWatch, type Control, type FieldPath } from "react-hook-form"
 import { toast } from "sonner"
-import { useSaveSeries } from "@/api/settings"
+import { useReloadSeriesFile, useSaveSeries } from "@/api/settings"
 import type { SeriesEntry } from "@/api/types"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { errorMessage } from "@/lib/api"
 import { RowsEditor } from "../rows-editor"
 import { SaveBar } from "../save-bar"
+import { SaveFailureAlert, type SaveFailure } from "../save-failure"
 import { Section } from "../section"
-import { applyServerErrors, type UnplacedError } from "../server-errors"
+import { applyServerErrors } from "../server-errors"
 import { UnsavedChangesGuard } from "../unsaved-guard"
 import { BLANK_SERIES, toSeriesFormValues, toSeriesList, type SeriesFormValues } from "./series-form"
 
@@ -20,18 +19,31 @@ export type Usage = Record<string, string[]> | "unavailable" | null
 
 interface NumberingEditorProps {
   series: SeriesEntry[]
+  /** series.json's file hash as loaded: sent with the save, so a file changed elsewhere is never overwritten. */
+  fileHash: string | null
   usage: Usage
   /** `meta.seriesScopes`. */
   scopes: string[]
 }
 
 /** series.json as rows (id, pattern, scope, start, shared counter), saved whole with `PUT /api/series`. */
-export function NumberingEditor({ series, usage, scopes }: NumberingEditorProps) {
-  const [stored, setStored] = React.useState(series)
+export function NumberingEditor({ series, fileHash, usage, scopes }: NumberingEditorProps) {
+  // The stored list and its hash the form was last loaded from (a save sends the hash back as If-Match).
+  const [stored, setStored] = React.useState({ series, fileHash })
   const form = useForm<SeriesFormValues>({ defaultValues: toSeriesFormValues(series) })
   const { isDirty } = useFormState({ control: form.control })
   const save = useSaveSeries()
-  const [failure, setFailure] = React.useState<{ error: unknown; unplaced: UnplacedError[] } | null>(null)
+  const reloadFile = useReloadSeriesFile()
+  const [failure, setFailure] = React.useState<SaveFailure | null>(null)
+
+  const load = (next: { series: SeriesEntry[]; fileHash: string | null }) => {
+    setStored(next)
+    form.reset(toSeriesFormValues(next.series))
+  }
+  const reload = async () => {
+    load(await reloadFile())
+    setFailure(null)
+  }
 
   const rows = useWatch({ control: form.control, name: "series" })
   const ids = [...new Set(rows.map((r) => r.id.trim()).filter(Boolean))]
@@ -40,16 +52,14 @@ export function NumberingEditor({ series, usage, scopes }: NumberingEditorProps)
     e.preventDefault()
     form.clearErrors()
     setFailure(null)
-    const { body, problems, fieldFor } = toSeriesList(form.getValues(), stored)
+    const { body, problems, fieldFor } = toSeriesList(form.getValues(), stored.series)
     if (problems.length) {
       for (const p of problems) form.setError(p.field as FieldPath<SeriesFormValues>, { type: "client", message: p.message })
       toast.error("Not saved", { description: "Fix the marked fields." })
       return
     }
     try {
-      const saved = await save.mutateAsync(body)
-      setStored(saved)
-      form.reset(toSeriesFormValues(saved))
+      load(await save.mutateAsync({ series: body, fileHash: stored.fileHash }))
       toast.success("Series saved")
     } catch (err) {
       const { unplaced } = applyServerErrors(err, form.setError, fieldFor, "series.json")
@@ -61,20 +71,7 @@ export function NumberingEditor({ series, usage, scopes }: NumberingEditorProps)
   return (
     <>
       <form id={FORM_ID} onSubmit={(e) => void onSubmit(e)} noValidate aria-label="Numbering series" className="flex flex-col gap-4">
-        {failure ? (
-          <Alert variant="destructive">
-            <TriangleAlertIcon />
-            <AlertTitle>Not saved</AlertTitle>
-            <AlertDescription>
-              <p>{errorMessage(failure.error)}</p>
-              {failure.unplaced.length ? (
-                <ul className="list-inside list-disc">
-                  {failure.unplaced.map((u) => <li key={u.text}>{u.text}</li>)}
-                </ul>
-              ) : null}
-            </AlertDescription>
-          </Alert>
-        ) : null}
+        <SaveFailureAlert failure={failure} onReload={reload} />
         <Section
           title="Series"
           description={(
