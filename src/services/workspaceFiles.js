@@ -332,6 +332,9 @@ export function parseAssetKey(key) {
 
 const assetInvalid = (message, details = {}) => new DossierError('ASSET_INVALID', message, details);
 
+/** The first non-blank line of a decoder's error text, trimmed (libvips reports several lines). */
+const firstLine = (err) => String(err?.message ?? err).split('\n').map((l) => l.trim()).find(Boolean) ?? 'unknown error';
+
 /** Detect and fully decode a PNG or JPEG; returns its extension. */
 async function checkImage(buffer) {
   const png = buffer.length > 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
@@ -342,7 +345,7 @@ async function checkImage(buffer) {
     if (meta.format !== (png ? 'png' : 'jpeg')) throw new Error(`decoded as ${meta.format}`);
     await sharp(buffer, { failOn: 'error' }).stats();
   } catch (err) {
-    throw assetInvalid(`The image could not be decoded (${err.message})`);
+    throw assetInvalid('The file is not a valid PNG or JPEG image.', { reason: firstLine(err) });
   }
   return png ? 'png' : 'jpg';
 }
@@ -358,7 +361,7 @@ function checkFont(buffer) {
     doc.registerFont('Check', buffer);
     doc.font('Check');
   } catch (err) {
-    throw assetInvalid(`The font could not be read (${err.message})`);
+    throw assetInvalid('The file is not a valid TrueType or OpenType font.', { reason: firstLine(err) });
   }
   return otf ? 'otf' : 'ttf';
 }

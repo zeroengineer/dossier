@@ -267,9 +267,9 @@ describe('brand assets', () => {
     const before = readFileSync(brandFile());
     const cases = [
       ['logo', { filename: 'logo.png', mime: 'image/png', buffer: Buffer.from('this is not an image at all') }, /PNG or JPEG/],
-      ['logo', { filename: 'logo.png', mime: 'image/png', buffer: Buffer.concat([(await png(10, 10)).subarray(0, 40)]) }, /could not be decoded/],
+      ['logo', { filename: 'logo.png', mime: 'image/png', buffer: Buffer.concat([(await png(10, 10)).subarray(0, 40)]) }, /^The file is not a valid PNG or JPEG image\.$/],
       ['font:bold', { filename: 'f.ttf', mime: 'font/ttf', buffer: Buffer.from('not a font file') }, /TrueType/],
-      ['font:bold', { filename: 'f.ttf', mime: 'font/ttf', buffer: Buffer.concat([Buffer.from([0, 1, 0, 0]), Buffer.alloc(64)]) }, /could not be read/],
+      ['font:bold', { filename: 'f.ttf', mime: 'font/ttf', buffer: Buffer.concat([Buffer.from([0, 1, 0, 0]), Buffer.alloc(64)]) }, /^The file is not a valid TrueType or OpenType font\.$/],
       ['signature:nobody', { filename: 's.png', mime: 'image/png', buffer: await png(10, 10) }, /no signatory "nobody"/],
       ['nope', { filename: 's.png', mime: 'image/png', buffer: await png(10, 10) }, /Unknown asset key/],
     ];
@@ -279,6 +279,16 @@ describe('brand assets', () => {
       assert.match(r.json().message, re, key);
     }
     assert.equal((await upload('/api/brands/acme/assets/logo', {}, cases[0][1])).json().code, 'ASSET_INVALID');
+    // A corrupt PNG and a broken font: one clean line of message, the decoder's detail as one trimmed line in details.reason.
+    for (const [key, file] of [cases[1], cases[3]]) {
+      const r = (await upload(`/api/brands/acme/assets/${encodeURIComponent(key)}`, {}, file)).json();
+      assert.equal(r.code, 'ASSET_INVALID', key);
+      assert.doesNotMatch(r.message, /\n/, `${key}: one-line message`);
+      assert.equal(typeof r.details.reason, 'string', key);
+      assert.ok(r.details.reason.length > 0, key);
+      assert.doesNotMatch(r.details.reason, /\n/, `${key}: one-line reason`);
+      assert.equal(r.details.reason, r.details.reason.trim(), key);
+    }
     const none = await upload('/api/brands/acme/assets/logo', { note: 'no file part' }, null);
     assert.equal(none.statusCode, 400);
     assert.equal(none.json().code, 'INVALID_INPUT');
