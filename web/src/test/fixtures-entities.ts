@@ -70,7 +70,7 @@ export const summaryOf = (e: EntityDetail): EntitySummary => ({
 
 export const entitySummaries: EntitySummary[] = entityDetails.map(summaryOf)
 
-/** Documents naming Acme Events (the company): one fewer than its documentCount (one is above the clearance). */
+/** Documents naming Acme Events (the company). */
 export const acmeDocuments: DocumentSummary[] = [
   {
     id: "DOC-000001",

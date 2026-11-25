@@ -63,18 +63,20 @@ describe("Entity page", () => {
     expect(within(row).getByText("since: 2025-01-01")).toBeInTheDocument()
   })
 
-  it("lists the documents that refer to the entity and notes the ones it cannot show", async () => {
+  it("lists the documents that refer to the entity, with no note about documents above the clearance", async () => {
+    // documentCount (3) is more than the documents listed (2): the server counts only what the user may see, so the
+    // page no longer derives an "above your clearance" note from the difference.
     renderRoute(<EntityPage />, "/entities/1", { route: "/entities/:id" })
     const docs = within(await screen.findByText("Documents", { selector: "[data-slot=card-title]" }).then((h) => h.closest<HTMLElement>("[data-slot=card]")!))
     expect(await docs.findByRole("link", { name: "Event services invoice" })).toHaveAttribute("href", "/documents/DOC-000001")
     expect(docs.getByRole("link", { name: "Venue confirmation letter" })).toBeInTheDocument()
-    expect(docs.getByText("1 more document refers to this entity above your clearance.")).toBeInTheDocument()
+    expect(docs.queryByText(/above your clearance/)).not.toBeInTheDocument()
     expect(docs.queryByText(/Showing the latest/)).not.toBeInTheDocument()
     expect(documentQueries.some((p) => p.get("entityId") === "1" && p.get("limit") === "100")).toBe(true)
   })
 
-  it("says how many visible documents are past the first page, apart from those above the clearance", async () => {
-    // 152 visible documents, 2 returned: none above the clearance (documentCount 3 is below the visible total).
+  it("says how many visible documents are past the first page", async () => {
+    // 152 visible documents, 2 returned.
     server.use(http.get("*/api/documents", () => HttpResponse.json({ documents: acmeDocuments, total: 152 })))
     renderRoute(<EntityPage />, "/entities/1", { route: "/entities/:id" })
     expect(await screen.findByText(/Showing the latest 2 of 152 documents\. 150 more are not listed here\./)).toBeInTheDocument()

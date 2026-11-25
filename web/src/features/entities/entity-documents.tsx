@@ -53,9 +53,8 @@ export function EntityDocuments({ entity }: { entity: EntityDetail }) {
   const navigate = useNavigate()
   const { data, isPending, isError, error, refetch } = useEntityDocuments(entity.id)
   const documents = data?.documents ?? []
-  // `total` counts what the user may see; documentCount counts everything (clearance is not applied to it).
+  // `total` counts the documents the user may see; the list shows the first page of them.
   const pastLimit = data ? Math.max(0, data.total - documents.length) : 0
-  const aboveClearance = data ? Math.max(0, entity.documentCount - data.total) : 0
 
   return (
     <Card>
@@ -83,12 +82,6 @@ export function EntityDocuments({ entity }: { entity: EntityDetail }) {
           <p className="text-sm text-muted-foreground">
             Showing the latest {documents.length} of {data?.total} documents. {pastLimit} more {pastLimit === 1 ? "is" : "are"} not
             listed here.
-          </p>
-        ) : null}
-        {aboveClearance > 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {aboveClearance} more {aboveClearance === 1 ? "document refers" : "documents refer"} to this entity above your
-            clearance.
           </p>
         ) : null}
       </CardContent>

@@ -1,4 +1,5 @@
 import { normaliseName } from '../domain/canonical.js';
+import { accessibleLevels } from '../domain/sensitivity.js';
 import { DossierError } from '../errors.js';
 import { nowIso } from '../db/index.js';
 import { reindexEntityDocuments } from './searchIndex.js';
@@ -123,11 +124,13 @@ function relationsOf(ctx, id) {
 
 /**
  * Number of documents referencing each entity: as party, business line, engagement, issuing entity or any
- * document–entity role, each document counted once per entity (not filtered by clearance). One grouped query for
- * every id, so a list of 500 entities costs one statement; `getEntity().documentCount` uses the same query.
+ * document–entity role, each document counted once per entity. Only documents within the acting user's clearance
+ * count (`sensitivity IN accessibleLevels(ctx.user.clearance)`, the rule every document read uses), so a count never
+ * reveals documents the caller cannot see. One grouped query for every id, so a list of 500 entities costs one
+ * statement; `getEntity().documentCount` uses the same query.
  * @param {object} ctx
  * @param {number[]} ids
- * @returns {Map<number, number>} entity id → count; ids without documents map to 0
+ * @returns {Map<number, number>} entity id → count; ids without visible documents map to 0
  */
 export function entityDocumentCounts(ctx, ids) {
   const counts = new Map(ids.map((id) => [id, 0]));
@@ -139,8 +142,9 @@ export function entityDocumentCounts(ctx, ids) {
     + 'UNION SELECT business_line_id, id FROM documents WHERE business_line_id IN (SELECT id FROM ids) '
     + 'UNION SELECT engagement_id, id FROM documents WHERE engagement_id IN (SELECT id FROM ids) '
     + 'UNION SELECT issuing_entity_id, id FROM documents WHERE issuing_entity_id IN (SELECT id FROM ids)) '
-    + 'SELECT entity_id, count(*) AS n FROM refs GROUP BY entity_id',
-  ).all({ ids: JSON.stringify(ids) });
+    + 'SELECT r.entity_id, count(*) AS n FROM refs r JOIN documents d ON d.id = r.document_id '
+    + 'WHERE d.sensitivity IN (SELECT value FROM json_each(:levels)) GROUP BY r.entity_id',
+  ).all({ ids: JSON.stringify(ids), levels: JSON.stringify(accessibleLevels(ctx.user.clearance)) });
   for (const r of rows) counts.set(r.entity_id, r.n);
   return counts;
 }

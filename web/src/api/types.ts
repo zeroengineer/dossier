@@ -524,7 +524,7 @@ export interface EntitySummary {
   aliases: string[]
   /** With `q`: the alias that matched when the name itself did not match exactly. */
   matched: string | null
-  /** Documents referencing the entity in any role (not filtered by clearance). */
+  /** Documents within the caller's clearance referencing the entity in any role. */
   documentCount: number
 }
 
@@ -553,6 +553,7 @@ export interface EntityDetail {
   attrs: Record<string, unknown>
   aliases: string[]
   relations: EntityRelationView[]
+  /** Documents within the caller's clearance referencing the entity in any role. */
   documentCount: number
   createdAt: string
   updatedAt: string

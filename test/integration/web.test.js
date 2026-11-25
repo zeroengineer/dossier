@@ -360,13 +360,18 @@ describe('access control', () => {
     assert.deepEqual(all.json().documents.map((d) => d.id).sort(), [asParty.id, asIssuer.id, linked.id].sort());
     assert.equal(all.json().total, 3);
     const listed = (await api('GET', `/api/entities?kind=vendor&q=${encodeURIComponent('Example Stage Rentals')}`)).json().entities;
-    assert.equal(listed[0].documentCount, 3, 'the list count covers every reference');
+    assert.equal(listed[0].documentCount, 3, 'the list count covers every reference within the clearance');
     assert.equal((await api('GET', `/api/entities/${vendor.id}`)).json().documentCount, 3);
 
     const intern = await internApp.inject({ url: `/api/documents?entityId=${vendor.id}` });
     assert.equal(intern.statusCode, 200);
     assert.deepEqual(intern.json().documents.map((d) => d.id).sort(), [asParty.id, asIssuer.id].sort(), 'the Confidential one is excluded');
     assert.equal(intern.json().total, 2);
+
+    // Entity document counts follow the same clearance rule: the Internal user's counts leave out the Confidential one.
+    const internList = (await internApp.inject({ url: `/api/entities?kind=vendor&q=${encodeURIComponent('Example Stage Rentals')}` })).json().entities;
+    assert.equal(internList[0].documentCount, 2, 'GET /api/entities counts only visible documents');
+    assert.equal((await internApp.inject({ url: `/api/entities/${vendor.id}` })).json().documentCount, 2, 'GET /api/entities/:id too');
 
     const bad = await api('GET', '/api/documents?entityId=abc');
     assert.equal(bad.statusCode, 400);
