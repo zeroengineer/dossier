@@ -142,13 +142,13 @@ Phase 2 turned the working app into a product. The plain server-rendered pages w
 | Item | State |
 |---|---|
 | Features from the plan | F02 to F24 built and reviewed, plus a `sharp` security upgrade and a final fix wave |
-| Tests | 1,021 passing (`npm test`): 603 API and service tests, 418 web app tests (1,002 before the final fix wave) |
+| Tests | 1,032 passing (`npm test`): 603 API and service tests, 429 web app tests; plus 72 Playwright end-to-end tests at desktop and phone size (`npm run test:e2e`, 6 skipped by design) |
 | Web app TypeScript | `npm run typecheck` clean (strict, `noUncheckedIndexedAccess`) |
 | Organisation-data guard | 0 hits across the shipped tree, which now also covers `web/`, `CHANGELOG.md` and the Docker files |
 | Production build | `npm run build`: no chunk over 500 kB; charts load only with the dashboard |
 | Dependency audit | 0 runtime vulnerabilities (`npm audit --omit=dev`); 4 moderate ones in development-only tools |
 | Old UI | removed; every removed route is listed in `CHANGELOG.md` |
-| Branch | `main`; tag `v1.0.0` follows the final whole-branch review |
+| Branch | `main`, pushed; tagged `v1.0.0` after the final whole-branch review, its fix wave and F25 |
 
 ### How the work was run
 
@@ -200,7 +200,7 @@ Commit IDs are on `main`. Most features have a `docs:` commit with their changel
 | — | `sharp` 0.35.5 security upgrade | 58abfbd, 0468021 | verified by the coordinator (see rulings) |
 | F24 | Release preparation: changelog, versions, docs | 63b11fc, c8d4a5c | final whole-branch review |
 | — | Final fix wave: optimistic concurrency for settings saves, clearance-filtered entity counts, eight minor fixes | branch `fix/final-wave` | fixes for the final review's findings |
-| F25 | Visual polish: floating navigation, layout rhythm, view transitions, tab state in the URL, alignment fixes, Playwright e2e | 6ce890d, 412bb20, cbae482, 82e5ee9, 8776194, 6571eab (branch `feat/f25-polish`, rebased on e454f87) | 2 fix rounds: the sidebar rail still covered 2 px of the page when collapsed, hidden preview and viewer frames reloaded in the background; the content fade replayed after each view transition, entities with `?kind=` stayed loading when `/api/meta` failed |
+| F25 | Visual polish: floating navigation, layout rhythm, view transitions, tab state in the URL, alignment fixes, Playwright e2e | 6ce890d, 412bb20, cbae482, 82e5ee9, 8776194, 6571eab (fast-forwarded onto main from e454f87) | 2 fix rounds: the sidebar rail still covered 2 px of the page when collapsed, hidden preview and viewer frames reloaded in the background; the content fade replayed after each view transition, entities with `?kind=` stayed loading when `/api/meta` failed |
 
 ### Rulings made during the build
 
@@ -233,6 +233,7 @@ Phase 1's two rules (no browser tools; nothing written outside the repo) held ex
 - **A stale server served a deleted bundle.** A running server kept an `index.html` whose bundle had been rebuilt away, so the app loaded blank. It was restarted, and the fix wave made the server re-read `index.html` when it changes.
 - **The F03 agent tried one redirect outside the repo.** It was refused and nothing was written.
 - **Chrome rewrote one file under `~/Library` during F25's first Playwright runs.** About 25 seconds into each browser session, Chrome rewrote its RLZ store, `~/Library/Application Support/Google/RLZ/RlzStore.plist`: an existing 294-byte file, same content, nothing deleted. A 90-second idle check confirmed the runs caused it. Chrome writes it regardless of `--user-data-dir`, and `HOME` did not redirect it; setting `CFFIXED_USER_HOME` to the run's temporary folder did, and the file's modification time stayed unchanged across every later run. This is the likely cause of the unconfirmed `~/Library` change during the logo task (F19, F20) too, since that renderer also ran Chrome.
+- **Later rewrites of the same file came from another program.** The RLZ store was rewritten again at 12:34 and 12:45 while a Chrome started by the Playwright MCP tool (profile under `~/Library/Caches/ms-playwright-mcp/`) was running; it was not started by this build, and F25's redirected runs left the file alone.
 - **F25 deleted two temporary folders, both its own:** an empty `dossier-e2e-*` folder left by an interrupted run and a `dossier-explore.*` workspace copy, both in `$TMPDIR`. Other `dossier-*` folders there were left alone.
 - **The fix-wave agent wrote one log file to the system temp folder** (`$TMPDIR/npmci.log`, an `npm ci` log) instead of its own `mktemp -d` folder. It deleted the file straight after reading it; the controller confirmed it was gone.
 
