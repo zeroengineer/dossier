@@ -58,10 +58,19 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ### Changed
 
+- The web app (`web/dist`) is served at `/` and at every client route; the former page paths now open the web app.
+- Every error and unmatched route answers JSON `{ code, message, details }`, also for browsers.
+- `/api` matching is case-insensitive and also catches `//api`, `/api;x` and a bare `/api`; percent-encoded file and `/api` paths never fall back to the web app. Folder URLs of the build and fonts, and wrong-case or non-canonical static paths, answer 404; `index.html` requested by name is `no-store`.
+- `GET /api/meta` `hierarchy.topLevel` reports the workspace's own folder names.
+- urlencoded request bodies are no longer parsed; API routes answer 415 for them.
 - `npm test` runs both suites: `npm run test:api` then `npm run test:web`. The root `package.json` declares the `web`
   workspace; one lockfile covers both.
 - Unknown page paths outside the server-rendered pages now load the web app instead of the HTML 404 page; misses under
   `/search`, `/upload`, `/generate`, `/templates`, `/entities` and `/settings`, file paths and JSON requests still 404.
+
+### Removed
+
+- **BREAKING:** the server-rendered UI: HTML pages, form posts, `src/web/views/*`, `src/web/html.js`, `src/web/settingsForms.js`, `src/web/public/*`, the urlencoded body parser and `PAGE_CSP` (one policy, `SPA_CSP`, covers every HTML reply). Removed routes: `GET /` (vault page), `GET /documents/:id`, `POST /documents/:id/status`, `POST /documents/:id/links`, `POST /documents/:id/links/delete`, `POST /documents/:id/metadata`, `GET /upload`, `POST /upload`, `GET /search`, `GET /templates`, `GET /generate`, `GET /generate/:id`, `POST /generate/:id`, `POST /generate/:id/preview`, `GET /entities`, `POST /entities`, `GET /entities/:id`, `POST /entities/:id`, `POST /entities/:id/relations`, `GET /settings`, `GET /settings/brands`, `POST /settings/brands`, `GET /settings/brands/:id`, `POST /settings/brands/:id`, `POST /settings/brands/:id/assets`, `GET /settings/brands/:id/brand.json` (use `GET /api/brands/:id/file`), `GET /settings/brands/:id/preview.pdf` (use `GET /api/brands/:id/preview.pdf`), `GET /settings/series`, `POST /settings/series`, `GET /settings/workspace`, `POST /settings/workspace`, `GET /static/*`.
 
 ## [0.1.0] - 2026-11-24
 
