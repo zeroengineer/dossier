@@ -6,6 +6,7 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ### Added
 
+- Responsive and accessibility pass: skip link, mobile Sheet sidebar that closes on navigation, stacked Vault panes and full-height form dialogs on small screens, reduced-motion support, a text alternative for the dashboard chart, entity-kind icons and readable relation labels in search; axe checks (vitest-axe) on the shell, every page and the mobile sidebar; a router smoke test over every top-level path.
 - Docker: multi-stage `Dockerfile` (node:22-bookworm-slim, non-root, healthcheck), `docker-compose.yml` (loopback-only port, no extra capabilities) with a `./workspace` volume that is initialised from the example workspace when empty, `.dockerignore`, and `docs/WEB.md` (web app architecture, development, build, Docker).
 - Settings: Numbering page (edit series rows with usage, row-level errors) and Workspace page (name, default brand, locale, folder hierarchy and routing, users with clearance). Lowering your own clearance asks for confirmation; renaming a top-level folder updates routing values that used its old name.
 - Generate: live draft preview (PDF/HTML/Markdown tabs, debounced, missing and invalid fields marked on the form without flicker, empty-placeholder warnings), Generate with a toast and a jump to the new document, and Regenerate from a document's current input with the STATUS_LOCKED choice between superseding and forcing (with a version note).
@@ -58,6 +59,7 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ### Changed
 
+- Vendor code is split into ui, forms, table-core and dates chunks; no chunk exceeds 500 kB and charts still load only with the dashboard. The invoiced KPI shows −100% when nothing was invoiced this period.
 - The web app (`web/dist`) is served at `/` and at every client route; the former page paths now open the web app.
 - Every error and unmatched route answers JSON `{ code, message, details }`, also for browsers.
 - `/api` matching is case-insensitive and also catches `//api`, `/api;x` and a bare `/api`; percent-encoded file and `/api` paths never fall back to the web app. Folder URLs of the build and fonts, and wrong-case or non-canonical static paths, answer 404; `index.html` requested by name is `no-store`.
