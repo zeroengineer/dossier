@@ -200,7 +200,7 @@ Commit IDs are on `main`. Most features have a `docs:` commit with their changel
 | — | `sharp` 0.35.5 security upgrade | 58abfbd, 0468021 | verified by the coordinator (see rulings) |
 | F24 | Release preparation: changelog, versions, docs | 63b11fc, c8d4a5c | final whole-branch review |
 | — | Final fix wave: optimistic concurrency for settings saves, clearance-filtered entity counts, eight minor fixes | branch `fix/final-wave` | fixes for the final review's findings |
-| F25 | Visual polish: floating navigation, layout rhythm, view transitions, tab state in the URL, alignment fixes, Playwright e2e | 6ce890d, 412bb20, cbae482, 82e5ee9, 8776194 (branch `feat/f25-polish`, rebased on e454f87) | 1 fix round: the sidebar rail still covered 2 px of the page when collapsed, hidden preview and viewer frames reloaded in the background |
+| F25 | Visual polish: floating navigation, layout rhythm, view transitions, tab state in the URL, alignment fixes, Playwright e2e | 6ce890d, 412bb20, cbae482, 82e5ee9, 8776194, 6571eab (branch `feat/f25-polish`, rebased on e454f87) | 2 fix rounds: the sidebar rail still covered 2 px of the page when collapsed, hidden preview and viewer frames reloaded in the background; the content fade replayed after each view transition, entities with `?kind=` stayed loading when `/api/meta` failed |
 
 ### Rulings made during the build
 
