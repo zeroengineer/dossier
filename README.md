@@ -209,25 +209,31 @@ The import only reads the source files; it never changes, moves or deletes them.
 - Grouped by its folders: the top-level folder gives the group (company, people, clients, vendors…), the folders
   between it and the leaf become entities (created when missing; `Name (CODE)` adds an alias).
 - Typed, first match wins: the Templates or References folder; a type name in the file name ("Invoice", "MoU"); a
-  type keyword in the file name, matched as whole words ("pan", "aadhaar", "moa", "gst", "cancelled cheque",
-  "playbook"…, so "company" never means PAN); a type phrase in the first 3000 characters of the text ("Permanent
-  Account Number", "Form GST REG-06"…); the series of a parsed number; the leaf folder's type when the leaf holds
-  exactly one; otherwise "Other". Add your own keywords and types under `import.typeKeywords` in workspace.json
-  ([docs/WORKSPACE.md](docs/WORKSPACE.md#import-type-keywords)).
-- Dated, first match wins: a labelled date in the text ("Date:", "Dated", "Date of Issue", "Issued on", "Invoice
-  Date", "Date of Incorporation", "w.e.f."); the first plausible date in the text (not for identity documents, whose
-  other dates are birth or expiry dates); an ISO date in the file name; the file's modification time. Numeric dates
-  are read day first (05/03/2025 is 5 March); dates before 1990 or more than a year ahead are ignored. The version
-  note says where the date came from ("date from text", "date from file name", "date from file time").
+  type keyword in the file name, matched as whole words ("pan", "aadhaar", "moa", "gstin", "cancelled cheque",
+  "playbook"…, so "company" never means PAN and "Pan India" neither; a bare "gst" only in a short name without
+  digits or filing words); a type phrase in the first 3000 characters of the text ("Permanent Account Number", "Form
+  GST REG-06"…); the series of a parsed number; the leaf folder's type when the leaf holds exactly one; otherwise
+  "Other". The folder limits the matches: Template and Reference come only from their folders; in a leaf folder a
+  name or keyword whose type belongs in another top-level folder is ignored, and a text phrase counts only when its
+  type fits the leaf (or the leaf has no types). Add your own keywords and types under `import.typeKeywords` in
+  workspace.json ([docs/WORKSPACE.md](docs/WORKSPACE.md#import-type-keywords)).
+- Dated, first match wins, each source recorded: `text-labelled`, a labelled date in the text (specific labels such
+  as "Invoice Date", "Date of Issue", "Issued on", "Date of Incorporation" or "Date of Registration" before a bare
+  "Date", "Dated" or "w.e.f."; never birth, expiry, validity, due or renewal dates); `text-first`, the first
+  plausible date in the text (not for identity documents); `filename`, an ISO date in the file name; `mtime`, the
+  file's modification time. Numeric dates are read day first (05/03/2025 is 5 March); dates before 1990 or more than
+  a year ahead are ignored. The version note says where the date came from ("date from labelled text", "date from
+  first date in text", "date from file name", "date from file time").
 - Numbers are parsed from the file name or text with every series pattern; counters move past them; repeats are
-  reported as conflicts.
+  reported as conflicts. A file-time date never sets a counter's year.
 - Sensitivity: people and identity-document folders, and identity types (PAN, Aadhaar, Voter ID, Passport), are
   Confidential, the rest Internal; files above the importing user's clearance are skipped.
 
 With `--index`, a CSV (`original_path,vault_path,vault_folder,md5,size_bytes,note`) lists the files; paths outside the
-CSV's folder are refused. The summary lists counts, where the dates came from (`Dates: from text N, from file name N,
-from file time N, none N`), new entities, documents by type, numbers, conflicts, skipped files and warnings. `--list`
-adds one line per document (`type | date | date source | sensitivity | path`); `--json` gives all of it as JSON.
+CSV's folder are refused. The summary lists counts, where the dates came from (`Dates: from labelled text N, from first
+date in text N, from file name N, from file time N, none N`), new entities, documents by type, numbers, conflicts,
+skipped files and warnings. `--list` adds one line per document (`type | date | date source | sensitivity | path`,
+the source being `text-labelled`, `text-first`, `filename` or `mtime`); `--json` gives all of it as JSON.
 
 ## Docker
 

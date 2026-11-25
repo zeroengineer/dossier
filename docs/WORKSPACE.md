@@ -96,10 +96,13 @@ more). Add your own under `import.typeKeywords`:
 - `names`: words or phrases matched as whole words in the file name, case and punctuation ignored, with an optional
   plural "s" (`"pan"` matches `pan_card.pdf` and `Pan-2026.pdf`, never `company.pdf`). A phrase also matches written
   as one word (`"pan card"` matches `pancard.pdf`).
-- `text`: phrases matched as whole words in the text; when several types' phrases appear, the one found first wins.
+- `text`: phrases matched as whole words in the text; the first phrase whose type the folder accepts wins. In a leaf
+  folder that has types (say "Invoices and Receipts"), a phrase counts only for one of them, so route a new type into
+  the leaf it belongs to. Pick phrases a document of that kind has in its heading, not ones other documents quote.
 - Lists for a built-in type are added to its built-in keywords; a new type name adds a type. Give a new type a
   `hierarchy.routing` entry to file it in a folder; without one it goes to the party's `Other` folder.
-- Every keyword needs a letter or digit; unknown fields are rejected.
+- Every keyword needs a letter or digit, type names must not be blank, and unknown fields (in `import` too) are
+  rejected.
 
 ## brands/&lt;id&gt;/brand.json
 
