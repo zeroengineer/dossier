@@ -145,9 +145,90 @@
   }
 }
 
+/* Hides a scroll container's scrollbar (it still scrolls by touch, wheel and keyboard): tab lists that overflow. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/*
+ * Motion: short (150-250 ms) and ease-out.
+ *
+ * Route changes run as view transitions (React Router `viewTransition`, see lib/view-transitions.ts). Only the main
+ * area animates: the root snapshot (sidebar included) swaps at once, the floating header is its own group so the old
+ * page never paints over it, and the page fades out and fades in with a small rise.
+ */
+#main-content {
+  view-transition-name: page;
+}
+[data-slot="app-header"] {
+  view-transition-name: app-header;
+}
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-group(app-header),
+::view-transition-old(app-header),
+::view-transition-new(app-header) {
+  animation: none;
+}
+::view-transition-group(page) {
+  animation-duration: 200ms;
+  animation-timing-function: ease-out;
+}
+::view-transition-old(page) {
+  animation: 150ms ease-out both dossier-fade-out;
+}
+::view-transition-new(page) {
+  animation: 200ms ease-out both dossier-rise-in;
+}
+
+@keyframes dossier-fade-in {
+  from { opacity: 0; }
+}
+@keyframes dossier-fade-out {
+  to { opacity: 0; }
+}
+@keyframes dossier-rise-in {
+  from { opacity: 0; translate: 0 0.375rem; }
+}
+
+/* A tab panel fades in when it becomes the active one (no movement, so the layout does not jump). */
+[data-slot="tabs-content"][data-state="active"] {
+  animation: dossier-fade-in 200ms ease-out;
+}
+/* A page's content fades in when it replaces the loading skeleton (and on first load). */
+#main-content > :not([aria-busy="true"]) {
+  animation: dossier-fade-in 200ms ease-out;
+}
+/* Table rows fade in when they replace skeleton rows or a new page of rows arrives. */
+[data-slot="table-body"] > [data-slot="table-row"] {
+  animation: dossier-fade-in 150ms ease-out;
+}
+
+/*
+ * The floating sidebar's collapse and expand: width eases out, and the labels fade as the rail narrows instead of
+ * being cut off mid-word.
+ */
+[data-slot="sidebar-gap"],
+[data-slot="sidebar-container"] {
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+[data-slot="sidebar-menu-button"] > span,
+[data-slot="sidebar-menu-button"] > [data-slot="kbd"] {
+  transition: opacity 200ms ease-out;
+}
+[data-collapsible="icon"] [data-slot="sidebar-menu-button"] > span,
+[data-collapsible="icon"] [data-slot="sidebar-menu-button"] > [data-slot="kbd"] {
+  opacity: 0;
+}
+
 /*
  * Reduced motion: when the system asks for it, entrance animations (dialogs, sheets, popovers, toasts), the sidebar
- * slide and other transitions finish at once. Unlayered, so it beats the utilities that set durations.
+ * slide, view transitions and other transitions finish at once. Unlayered, so it beats the utilities that set
+ * durations. (lib/view-transitions.ts also stops asking for view transitions then.)
  */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -157,5 +238,10 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

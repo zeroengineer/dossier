@@ -3,6 +3,7 @@ import { Navigate, createBrowserRouter, type RouteObject } from "react-router"
 import { AppShell } from "@/components/app-shell"
 import type { RouteHandle } from "@/components/breadcrumbs"
 import { RootError, RouteError } from "@/components/route-error"
+import { withViewTransitions } from "@/lib/view-transitions"
 
 const Dashboard = lazy(() => import("@/pages/dashboard"))
 const Vault = lazy(() => import("@/pages/vault"))
@@ -87,4 +88,5 @@ export const routes: RouteObject[] = [
   },
 ]
 
-export const createRouter = () => createBrowserRouter(routes)
+/** The browser router; page changes run as view transitions (see `lib/view-transitions.ts`). */
+export const createRouter = () => withViewTransitions(createBrowserRouter(routes))

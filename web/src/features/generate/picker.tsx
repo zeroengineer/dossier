@@ -86,7 +86,7 @@ export function TemplatePicker() {
 
 function TemplateCard({ template: t }: { template: TemplateSummary }) {
   return (
-    <Card className="relative flex-1 transition-colors hover:bg-accent/50 has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50">
+    <Card className="relative flex-1 transition-[background-color,box-shadow,translate] duration-200 ease-out hover:-translate-y-0.5 hover:bg-accent/50 hover:shadow-lg active:translate-y-0 has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50">
       <CardHeader>
         <CardTitle>
           <Link to={generatePath(t.id)} className="outline-none after:absolute after:inset-0">
