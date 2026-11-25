@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { request } from "@/lib/api"
 import { keys } from "@/lib/keys"
 import type { DocumentList, EntityDetail, EntityInput, EntityList, EntityRelation } from "./types"
+import { treeKeys } from "./vault"
 
 /** Largest `limit` `GET /api/entities` accepts; the entities page loads the whole list (client-side table). */
 export const ENTITY_LIST_LIMIT = 500
@@ -21,6 +22,10 @@ export const entityKeys = {
   documents: (id: number) => keys.documents.list({ entityId: id, limit: ENTITY_DOCUMENTS_LIMIT }),
 }
 
+/**
+ * `GET /api/entities`: the one fetcher for entity lists (the entities page, the party pickers and the generate form's
+ * entity fields). `kind` narrows to one kind, `q` matches names and aliases, `limit` is 1..ENTITY_LIST_LIMIT.
+ */
 export const fetchEntities = (params: EntityListParams, signal?: AbortSignal) =>
   request<EntityList>("/api/entities", { query: { kind: params.kind, q: params.q, limit: params.limit }, signal })
 
@@ -37,9 +42,22 @@ export function useEntities(params: EntityListParams, { enabled = true }: { enab
 export const fetchEntity = (id: string, signal?: AbortSignal) =>
   request<EntityDetail>(`/api/entities/${encodeURIComponent(id)}`, { signal })
 
-/** One entity with aliases, attributes, relations in both directions and its document count. */
+/**
+ * One entity with aliases, attributes, relations in both directions and its document count. The detail key always
+ * holds an `EntityDetail` (`useParty` reads the same key and fetcher).
+ */
 export function useEntity(id: string) {
   return useQuery({ queryKey: entityKeys.detail(id), queryFn: ({ signal }) => fetchEntity(id, signal), enabled: id !== "" })
+}
+
+/** The entity behind a `partyId`, to label the active party filter or picker (the `useEntity` query, cached longer). */
+export function useParty(id: number | undefined) {
+  return useQuery({
+    queryKey: entityKeys.detail(String(id)),
+    queryFn: ({ signal }) => fetchEntity(String(id), signal),
+    enabled: id !== undefined,
+    staleTime: 60_000,
+  })
 }
 
 /**
@@ -56,8 +74,9 @@ export function useEntityDocuments(id: number | undefined) {
 }
 
 /**
- * Create (no `id`) or update an entity. Errors are shown in the form, not toasted. A rename changes the party names
- * documents show, so document queries are refreshed too.
+ * Create (no `id`) or update an entity. Errors are shown in the form, not toasted. A rename or a new alias changes the
+ * party names documents show, search results (entity hits and the documents indexed with the party's names) and the
+ * vault tree's folders named after the party, so document, search and tree queries are refreshed too.
  */
 export function useSaveEntity() {
   const queryClient = useQueryClient()
@@ -69,6 +88,8 @@ export function useSaveEntity() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: keys.entities.all }),
         queryClient.invalidateQueries({ queryKey: keys.documents.all }),
+        queryClient.invalidateQueries({ queryKey: ["search"] }),
+        queryClient.invalidateQueries({ queryKey: treeKeys.all }),
       ])
     },
   })

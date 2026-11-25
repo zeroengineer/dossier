@@ -1,25 +1,18 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ApiError, request } from "@/lib/api"
 import { keys } from "@/lib/keys"
-import type { ApiErrorBody, EntityMatchList, GenerateRequest, GenerateResult } from "./types"
+import { ENTITY_LIST_LIMIT, fetchEntities } from "./entities"
+import type { ApiErrorBody, GenerateRequest, GenerateResult } from "./types"
 import { treeKeys } from "./vault"
 
-/** The most entities the API returns in one list (src/services/entities.js MAX_LIMIT). */
-const ENTITY_OPTIONS_LIMIT = 500
-
-export const fetchEntityOptions = (kind: string, signal?: AbortSignal) => {
-  const q = new URLSearchParams({ kind, limit: String(ENTITY_OPTIONS_LIMIT) })
-  return request<EntityMatchList>(`/api/entities?${q}`, { signal })
-}
-
 /**
- * Every entity of `kind`, for an entity field's combobox. Keyed under `entities` so creating or editing an entity
- * (prefix invalidation of `keys.entities.all`) refreshes the options.
+ * Every entity of `kind` (up to the API's ENTITY_LIST_LIMIT), for an entity field's combobox. Keyed under `entities`
+ * so creating or editing an entity (prefix invalidation of `keys.entities.all`) refreshes the options.
  */
 export function useEntityOptions(kind: string) {
   return useQuery({
-    queryKey: keys.entities.list({ kind, limit: ENTITY_OPTIONS_LIMIT, for: "generate" }),
-    queryFn: ({ signal }) => fetchEntityOptions(kind, signal),
+    queryKey: keys.entities.list({ kind, limit: ENTITY_LIST_LIMIT, for: "generate" }),
+    queryFn: ({ signal }) => fetchEntities({ kind, limit: ENTITY_LIST_LIMIT }, signal),
     staleTime: 60_000,
   })
 }

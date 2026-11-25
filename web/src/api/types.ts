@@ -402,17 +402,7 @@ export interface SearchResult {
   entities: SearchEntity[]
 }
 
-// upload
-
-/** One numbering series of `GET /api/series` (the workspace's series.json as stored). */
-export interface UploadSeries {
-  id: string
-  pattern: string
-  scope: string
-  start?: number
-  /** Another series whose counter this one shares. */
-  counter?: string
-}
+// upload (the series picker uses `SeriesEntry`, below)
 
 /** `POST /api/upload` → 201 (src/services/upload.js uploadFile). */
 export interface UploadResult {

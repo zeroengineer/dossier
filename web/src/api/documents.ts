@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { request } from "@/lib/api"
 import { keys } from "@/lib/keys"
+import { fetchEntities } from "./entities"
 import type { DocumentList, DocumentListParams, DocumentPartyOption } from "./types"
 
 export const fetchDocuments = (params: DocumentListParams, signal?: AbortSignal) =>
@@ -17,26 +18,13 @@ export function useDocuments(params: DocumentListParams) {
 
 const PARTY_OPTION_LIMIT = 20
 
-export const fetchPartyOptions = async (q: string, signal?: AbortSignal) =>
-  (await request<{ entities: DocumentPartyOption[] }>("/api/entities", { query: { q, limit: PARTY_OPTION_LIMIT }, signal })).entities
-
-/** Entities whose name or alias matches `q`, for the party filter. */
+/** Entities whose name or alias matches `q`, for the party filter and picker. */
 export function usePartyOptions(q: string, enabled = true) {
   return useQuery({
     queryKey: ["entities", "party-options", q] as const,
-    queryFn: ({ signal }) => fetchPartyOptions(q, signal),
+    queryFn: async ({ signal }): Promise<DocumentPartyOption[]> => (await fetchEntities({ q, limit: PARTY_OPTION_LIMIT }, signal)).entities,
     enabled,
     placeholderData: keepPreviousData,
     staleTime: 30_000,
-  })
-}
-
-/** The entity behind a `partyId` URL parameter, to label the active party filter. */
-export function useParty(id: number | undefined) {
-  return useQuery({
-    queryKey: keys.entities.detail(String(id)),
-    queryFn: ({ signal }) => request<DocumentPartyOption>(`/api/entities/${id}`, { signal }),
-    enabled: id !== undefined,
-    staleTime: 60_000,
   })
 }

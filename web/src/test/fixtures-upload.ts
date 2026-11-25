@@ -1,9 +1,9 @@
-import type { UploadResult, UploadSeries } from "@/api/types"
+import type { SeriesEntry, UploadResult } from "@/api/types"
 import { invoiceDoc, uploadedDoc } from "./fixtures-document"
 
 // Example workspace data only (Acme Events, ACM- numbers).
 
-export const uploadSeries: UploadSeries[] = [
+export const uploadSeries: SeriesEntry[] = [
   { id: "invoice-main", pattern: "ACM-{YYYY}-{####}", scope: "brand+year", start: 1 },
   { id: "debit-note", pattern: "ACM-DN-{YYYY}-{####}", scope: "brand+year", counter: "invoice-main" },
 ]

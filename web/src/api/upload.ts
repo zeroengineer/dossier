@@ -2,11 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { request } from "@/lib/api"
 import { keys } from "@/lib/keys"
 import { treeKeys } from "./vault"
-import { useSeries } from "./settings"
 import type { UploadResult } from "./types"
-
-/** The workspace's numbering series (series.json), for the upload form's series Select: the canonical series query. */
-export const useUploadSeries = () => useSeries()
 
 /** `POST /api/upload` with a ready multipart body (`file` plus metadata text fields). */
 export const uploadFile = (body: FormData) => request<UploadResult>("/api/upload", { formData: body })

@@ -1,6 +1,7 @@
 import * as React from "react"
 import { CheckIcon, ChevronsUpDownIcon } from "lucide-react"
-import { useParty, usePartyOptions } from "@/api/documents"
+import { usePartyOptions } from "@/api/documents"
+import { useParty } from "@/api/entities"
 import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"

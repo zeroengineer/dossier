@@ -19,7 +19,7 @@ interface Captured {
 function setup({ answer }: { answer?: () => Response } = {}) {
   const uploads: Captured[] = []
   server.use(
-    http.get("*/api/series", () => HttpResponse.json({ series: uploadSeries })),
+    http.get("*/api/series", () => HttpResponse.json({ series: uploadSeries, fileHash: null })),
     http.get("*/api/entities", ({ request }) => {
       const q = (new URL(request.url).searchParams.get("q") ?? "").toLowerCase()
       return HttpResponse.json({ entities: [acmeEvents, alexExample].filter((e) => e.name.toLowerCase().includes(q)) })

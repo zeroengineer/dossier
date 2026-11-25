@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { AlertCircleIcon, UploadIcon } from "lucide-react"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import type { Me, Meta } from "@/api/types"
-import { useUploadSeries } from "@/api/upload"
+import { useSeries } from "@/api/settings"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -42,7 +42,7 @@ function defaultsFor(meta: Meta, me: Me): NewDocumentValues {
 export function NewDocumentForm({ meta, me }: { meta: Meta; me: Me }) {
   const maxBytes = meta.limits.uploadMaxBytes
   const { file, chooseFile, submit, pending, fileError, submitError } = useUploadSubmit({ mode: "document", maxBytes })
-  const series = useUploadSeries()
+  const series = useSeries()
   const levels = levelsWithin(meta.sensitivityLevels, me.user.clearance)
   const form = useForm<NewDocumentValues>({ resolver: zodResolver(newDocumentSchema), defaultValues: defaultsFor(meta, me) })
   const partyId = useWatch({ control: form.control, name: "partyId" })
