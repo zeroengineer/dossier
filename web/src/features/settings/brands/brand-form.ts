@@ -1,5 +1,5 @@
 // The brand editor's form model and its conversion to and from brand.json. Ported from the server-rendered settings
-// forms (src/web/settingsForms.js applyBrandSection) so a save writes the same file:
+// forms (applyBrandSection, removed in v1.0) so a save writes the same file:
 // - Top-level keys the form does not edit (layoutProfiles, templateParams, unknown keys) and unknown sub-keys of the
 //   edited objects (e.g. `letterhead.x`, `tax.x`) are kept, in their order; the Advanced tab edits the top-level ones as
 //   JSON. Rows of lists and maps are rebuilt from their columns, so unknown keys inside a row (a registration, a
@@ -404,7 +404,7 @@ export const TAB_OF_FIELD: Record<string, string> = {
   advanced: "advanced",
 }
 
-/** The new brand.json of the create dialog (port of settingsForms newBrandBody): an inheriting brand writes only what was filled in. */
+/** The new brand.json of the create dialog (port of the removed server form's newBrandBody): an inheriting brand writes only what was filled in. */
 export interface NewBrandValues {
   id: string
   inheritsFrom: string

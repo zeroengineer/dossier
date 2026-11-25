@@ -1,4 +1,5 @@
-// HTTP entry: wires the web UI and JSON API (src/web) onto Fastify. No business logic here: routes call services.
+// HTTP entry: wires the JSON API, file routes and the built web app (src/web) onto Fastify. No business logic here:
+// routes call services.
 import { realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -9,10 +10,7 @@ import { loadConfig } from './config.js';
 import { DossierError } from './errors.js';
 import { openContext } from './context.js';
 import { FONTS_DIR, REPO_ROOT } from './paths.js';
-import {
-  crossSiteReason, errorReply, hostAllowed, parseUrlEncoded, sendPage, shellOf, wantsJson,
-} from './web/http.js';
-import { errorPage } from './web/views/error.js';
+import { crossSiteReason, errorReply, hostAllowed } from './web/http.js';
 import assetRoutes from './web/routes/assets.js';
 import vaultRoutes from './web/routes/vault.js';
 import documentRoutes from './web/routes/documents.js';
@@ -27,10 +25,6 @@ import { SPA_CSP, spaRoutes } from './web/spa.js';
 
 /** Host names accepted when the server listens on a loopback address. */
 export const LOOPBACK_HOSTS = Object.freeze(['localhost', '127.0.0.1', '[::1]']);
-
-/** Content-Security-Policy of the server-rendered pages (until the web app replaces them). */
-export const PAGE_CSP = "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-src 'self'; "
-  + "object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'self'";
 
 export { SPA_CSP };
 
@@ -49,20 +43,13 @@ export const SPA_DIR = join(REPO_ROOT, 'web', 'dist');
 export function buildServer(ctx, { allowedHosts = LOOPBACK_HOSTS, logger = false, fileSizeLimit = 50 * 1024 * 1024, spaDir = SPA_DIR } = {}) {
   const app = Fastify({ logger });
 
-  app.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string' }, (req, body, done) => {
-    try {
-      done(null, parseUrlEncoded(body));
-    } catch (err) {
-      err.statusCode = 400;
-      done(err);
-    }
-  });
   app.register(fastifyMultipart, { limits: { fileSize: fileSizeLimit, files: 1, fields: 100 }, throwFileSizeLimit: true });
-  // Shipped fonts and the app's CSS/JS keep their names across releases, so browsers revalidate them
-  // (`public, max-age=0`; the plugin's ETag / Last-Modified give a 304) instead of caching them for good.
-  const statics = { decorateReply: false, index: false, list: false, maxAge: 0 };
-  app.register(fastifyStatic, { root: FONTS_DIR, prefix: '/assets/fonts/', ...statics });
-  app.register(fastifyStatic, { root: join(REPO_ROOT, 'src', 'web', 'public'), prefix: '/static/', ...statics });
+  // Shipped fonts keep their names across releases, so browsers revalidate them (`public, max-age=0`; the plugin's
+  // ETag / Last-Modified give a 304) instead of caching them for good.
+  app.register(fastifyStatic, {
+    root: FONTS_DIR, prefix: '/assets/fonts/', decorateReply: false, index: false, list: false, maxAge: 0,
+    allowedPath: (pathName) => !pathName.endsWith('/'), // a folder URL is a 404, not the plugin's 403
+  });
 
   // Host check (DNS rebinding) and same-origin check for state-changing requests (CSRF); see crossSiteReason.
   app.addHook('onRequest', async (req, reply) => {
@@ -75,35 +62,33 @@ export function buildServer(ctx, { allowedHosts = LOOPBACK_HOSTS, logger = false
   });
 
   app.addHook('onSend', async (req, reply, payload) => {
-    // Pages, API JSON, redirects and errors are never stored; file routes set their own Cache-Control.
+    // index.html, API JSON and errors are never stored; file routes set their own Cache-Control.
     if (!reply.hasHeader('cache-control')) reply.header('Cache-Control', 'no-store');
     reply.header('X-Content-Type-Options', 'nosniff');
     reply.header('Referrer-Policy', 'same-origin');
     const type = String(reply.getHeader('content-type') ?? '');
     if (type.startsWith('text/html') && !reply.getHeader('content-security-policy')) {
-      reply.header('Content-Security-Policy', PAGE_CSP);
+      reply.header('Content-Security-Policy', SPA_CSP);
       reply.header('X-Frame-Options', 'SAMEORIGIN');
     }
     return payload;
   });
 
+  // Errors are always JSON `{ code, message, details }` (the web app renders them; there are no server pages).
   app.setErrorHandler((err, req, reply) => {
     const out = errorReply(err);
     if (out.status >= 500) req.log.error(err);
-    if (wantsJson(req)) return reply.code(out.status).send(out.body);
-    return sendPage(reply, errorPage(out, shellOf(ctx)), out.status);
+    return reply.code(out.status).type('application/json; charset=utf-8').send(out.body);
   });
 
-  const notFound = (req, reply) => {
-    const out = { status: 404, body: { code: 'NOT_FOUND', message: `No route ${req.method} ${req.url.split('?')[0]}`, details: {} } };
-    if (wantsJson(req)) return reply.code(404).send(out.body);
-    return sendPage(reply, errorPage(out, shellOf(ctx)), 404);
-  };
+  const notFound = (req, reply) => reply.code(404).type('application/json; charset=utf-8')
+    .send({ code: 'NOT_FOUND', message: `No route ${req.method} ${req.url.split('?')[0]}`, details: {} });
 
   for (const routes of [assetRoutes, vaultRoutes, documentRoutes, uploadRoutes, searchRoutes, templateRoutes, entityRoutes, settingsRoutes, metaRoutes, dashboardRoutes]) {
     app.register(routes, { ctx, fileSizeLimit });
   }
-  // Last: the web app's static files and its index.html for unmatched GET/HEAD page routes (other misses: notFound).
+  // Last: the web app's static files and its index.html for unmatched GET/HEAD client routes, `/` included (other
+  // misses: notFound).
   spaRoutes(app, { dir: spaDir, notFound });
   return app;
 }

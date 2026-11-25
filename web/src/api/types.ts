@@ -701,11 +701,6 @@ export interface BrandAssetUpload {
   brand: BrandDetail
 }
 
-/** `GET /api/series`, as far as the brand editor reads it (the series ids for the series map). */
-export interface SeriesIdList {
-  series: Array<{ id: string }>
-}
-
 // generate preview
 
 /** `POST /api/templates/:id/generate` body (src/web/routes/templates.js; src/services/generator.js generateDocument). */

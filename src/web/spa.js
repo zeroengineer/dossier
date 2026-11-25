@@ -2,36 +2,46 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import fastifyStatic from '@fastify/static';
-import { CACHE_PUBLIC_IMMUTABLE, wantsJson } from './http.js';
+import { API_PATH, CACHE_PUBLIC_IMMUTABLE, wantsJson } from './http.js';
 
-/** Content-Security-Policy of the web app's HTML (Radix and Recharts set inline styles; Vite emits no inline scripts). */
+/**
+ * Content-Security-Policy of every HTML reply (the web app's index.html and the not-built page). Radix and Recharts
+ * set inline styles; Vite emits no inline scripts.
+ */
 export const SPA_CSP = "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; "
   + "font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'self'";
 
-/** Paths that name files (bundle, backend files, renditions); a miss there is a real 404, never the web app. */
-const FILE_NAMESPACE = /^\/(?:(?:app|assets|blobs|previews|brand|static)\/|documents\/[^/]+\/renditions(?:\/|$)|favicon\.ico$)/;
+/**
+ * Paths that name files (bundle, backend files, renditions); a miss there is a real 404, never the web app. `/static/`
+ * stays listed so links to the removed server-rendered UI's CSS/JS get a 404 rather than the app.
+ */
+const FILE_NAMESPACE = /^\/(?:(?:app|assets|blobs|previews|brand|static)(?:\/|$)|documents\/[^/]+\/renditions(?:\/|$)|favicon\.ico$)/i;
 
 /** A last path segment that names a file (`/workspace.json`, `/robots.txt`): a miss is a 404, not a client route. */
 const FILE_EXTENSION = /\.(?:json|m?js|css|map|txt|xml|ico|png|jpe?g|gif|svg|webp|avif|pdf|html?|md|ttf|otf|woff2?|webmanifest|db|sqlite)$/i;
 
-/**
- * Interim (until F21): the server-rendered pages own these paths, so a miss under them keeps the old 404 page.
- * F21 deletes the old pages and this list.
- */
-const OLD_UI = /^\/(?:search|upload|generate|templates|entities|settings)(?:\/|$)/;
-
 const NOT_BUILT = '<!doctype html><title>Dossier</title><p>The web app is not built: run <code>npm run build</code> and restart the server.</p>\n';
 
+/** A path that must never get index.html: `/api` (any case), a file namespace, or a file name. */
+const notAppPath = (path) => API_PATH.test(path) || FILE_NAMESPACE.test(path) || FILE_EXTENSION.test(path);
+
 /**
- * True when an unmatched request should get the web app's index.html: GET/HEAD, not `/api/*`, not JSON-accepting, not
- * under a file namespace, not a file name, and (interim) not under a path the old pages own.
+ * True when an unmatched request should get the web app's index.html: GET/HEAD, not JSON-accepting, and neither the
+ * raw nor the percent-decoded path is under `/api`, a file namespace or a file name (`/%61pp/x.js` is `/app/x.js` to
+ * the router and the static files). A path that does not decode is not an app route.
  * @param {import('fastify').FastifyRequest} req
  */
 export function isSpaRequest(req) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return false;
   if (wantsJson(req)) return false;
-  const path = req.url.split('?')[0];
-  return !FILE_NAMESPACE.test(path) && !FILE_EXTENSION.test(path) && !OLD_UI.test(path);
+  const raw = req.url.split('?')[0];
+  let decoded;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch {
+    return false;
+  }
+  return !notAppPath(raw) && !notAppPath(decoded);
 }
 
 const htmlHeaders = (reply) => reply.type('text/html; charset=utf-8')
@@ -62,6 +72,9 @@ export function spaRoutes(app, { dir, notFound }) {
       decorateReply: false,
       index: false,
       list: false,
+      // A directory URL (`/`, `/app/`) is never a file: pass it to the not-found handler (the app for `/`, a 404 under
+      // a file namespace) instead of the plugin's 403.
+      allowedPath: (pathName) => !pathName.endsWith('/'),
       cacheControl: false,
       setHeaders: (reply, path) => {
         reply.header('Cache-Control', path.startsWith(appDir) ? CACHE_PUBLIC_IMMUTABLE : 'public, max-age=0');

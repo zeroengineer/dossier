@@ -1,7 +1,7 @@
 import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { join } from 'node:path';
 import { tmpDir } from '../helpers/tmp.js';
+import { fakeSpaDir } from '../helpers/spa.js';
 import { exampleSeries, writeWorkspace } from '../helpers/workspace.js';
 import { openContext } from '../../src/context.js';
 import { buildServer } from '../../src/server.js';
@@ -31,8 +31,9 @@ before(() => {
   mk('inv3', { type: 'Invoice', title: 'Invoice three', docDate: '2026-03-10', partyId: vendor.id, status: 'Sent' });
   mk('quote', { type: 'Quotation', title: 'Quote', docDate: '2026-02-20', partyId: client.id });
   mk('secret', { type: 'Invoice', title: 'Board invoice', docDate: '2026-02-15', partyId: client.id, sensitivity: 'Confidential' });
-  adminApp = buildServer(admin, { spaDir: join(tmp.dir, 'no-dist') });
-  internApp = buildServer(intern, { spaDir: join(tmp.dir, 'no-dist') });
+  const spaDir = fakeSpaDir(tmp.dir, 'web-dist');
+  adminApp = buildServer(admin, { spaDir });
+  internApp = buildServer(intern, { spaDir });
 });
 
 after(async () => {

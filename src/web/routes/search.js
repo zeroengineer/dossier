@@ -1,7 +1,4 @@
 import { search } from '../../services/search.js';
-import { isDossierError } from '../../errors.js';
-import { searchPage } from '../views/search.js';
-import { errorReply, sendPage, shellOf } from '../http.js';
 
 const list = (v) => (v === undefined || v === '' ? undefined : String(v).split(',').map((s) => s.trim()).filter(Boolean));
 
@@ -24,22 +21,10 @@ export function searchOptions(query) {
 }
 
 /**
- * `/search?q=` page and `GET /api/search`.
+ * `GET /api/search`.
  * @param {import('fastify').FastifyInstance} app
  * @param {{ ctx: object }} opts
  */
 export default async function searchRoutes(app, { ctx }) {
-  app.get('/search', (req, reply) => {
-    const opts = searchOptions(req.query);
-    if (!opts.q.trim()) return sendPage(reply, searchPage({ shell: shellOf(ctx), q: '', result: null }));
-    try {
-      return sendPage(reply, searchPage({ shell: shellOf(ctx), q: opts.q, result: search(ctx, opts) }));
-    } catch (err) {
-      if (!isDossierError(err)) throw err;
-      const { status, body } = errorReply(err);
-      return sendPage(reply, searchPage({ shell: shellOf(ctx), q: opts.q, result: null, error: body }), status);
-    }
-  });
-
   app.get('/api/search', (req) => search(ctx, searchOptions(req.query)));
 }

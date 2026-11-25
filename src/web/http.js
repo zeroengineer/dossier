@@ -1,4 +1,4 @@
-// HTTP plumbing shared by the routes: error code -> status, form bodies, same-origin checks, file replies.
+// HTTP plumbing shared by the routes: error code -> status, same-origin checks, file replies, multipart bodies.
 import { isDossierError } from '../errors.js';
 
 const STATUS = {
@@ -37,54 +37,10 @@ export function errorReply(err) {
   if (isDossierError(err)) return { status: statusFor(err.code), body: err.toJSON() };
   const sc = Number(err?.statusCode);
   if (sc >= 400 && sc < 500) {
-    const code = sc === 413 ? 'PAYLOAD_TOO_LARGE' : sc === 404 ? 'NOT_FOUND' : sc === 415 ? 'UNSUPPORTED_MEDIA_TYPE' : 'INVALID_INPUT';
+    const code = sc === 413 ? 'PAYLOAD_TOO_LARGE' : sc === 404 ? 'NOT_FOUND' : sc === 403 ? 'FORBIDDEN' : sc === 415 ? 'UNSUPPORTED_MEDIA_TYPE' : 'INVALID_INPUT';
     return { status: sc, body: { code, message: String(err.message ?? 'Bad request'), details: {} } };
   }
   return { status: 500, body: { code: 'INTERNAL', message: 'Internal server error', details: {} } };
-}
-
-const FORBIDDEN_SEGMENTS = new Set(['__proto__', 'constructor', 'prototype']);
-
-/**
- * Turn flat form keys into nested objects: `billTo.name` -> `{ billTo: { name } }`, `items.0.amount` ->
- * `{ items: [{ amount }] }`. Prototype-reaching segments are dropped. Array holes are removed.
- * @param {Record<string, string>} flat
- * @returns {Record<string, unknown>}
- */
-export function nestForm(flat) {
-  const out = {};
-  for (const [key, value] of Object.entries(flat)) {
-    const segs = key.split('.');
-    if (segs.some((s) => s === '' || FORBIDDEN_SEGMENTS.has(s))) continue;
-    let node = out;
-    for (let i = 0; i < segs.length; i++) {
-      const s = segs[i];
-      const last = i === segs.length - 1;
-      if (last) {
-        if (node[s] === undefined || typeof node[s] !== 'object') node[s] = value;
-        break;
-      }
-      if (node[s] === undefined || typeof node[s] !== 'object' || node[s] === null) node[s] = /^\d+$/.test(segs[i + 1]) ? [] : {};
-      node = node[s];
-    }
-  }
-  const compact = (v) => {
-    if (Array.isArray(v)) return v.filter((x) => x !== undefined).map(compact);
-    if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, compact(x)]));
-    return v;
-  };
-  return compact(out);
-}
-
-/**
- * Parse an `application/x-www-form-urlencoded` body into a flat object; a repeated key keeps the last value.
- * @param {string} body
- * @returns {Record<string, string>}
- */
-export function parseUrlEncoded(body) {
-  const out = Object.create(null);
-  for (const [k, v] of new URLSearchParams(body)) out[k] = v;
-  return { ...out };
 }
 
 const isLoopbackName = (h) => ['localhost', '127.0.0.1', '[::1]', '::1'].includes(h);
@@ -194,8 +150,11 @@ export function sendFile(reply, { buffer, filename, mime }, { download = false, 
   return reply.send(buffer);
 }
 
-/** True when the client asked for JSON (API routes, or `Accept: application/json`). */
-export const wantsJson = (req) => req.url.startsWith('/api/') || /application\/json/.test(String(req.headers.accept ?? ''));
+/** `/api` and everything under it, in any letter case (`/API/x`, a bare `/api`). */
+export const API_PATH = /^\/api(?:\/|$)/i;
+
+/** True when the client asked for JSON (an `/api` path, or `Accept: application/json`). */
+export const wantsJson = (req) => API_PATH.test(req.url.split('?')[0]) || /application\/json/.test(String(req.headers.accept ?? ''));
 
 /**
  * Read a multipart request: the first file part (bytes, name, mime) and every text field (flat).
@@ -216,22 +175,3 @@ export async function readMultipart(req, opts) {
   }
   return { file, fields };
 }
-
-/**
- * Send a rendered page.
- * @param {import('fastify').FastifyReply} reply
- * @param {{ toString(): string }} body
- * @param {number} [status]
- */
-export function sendPage(reply, body, status = 200) {
-  return reply.code(status).type('text/html; charset=utf-8').send(String(body));
-}
-
-/** Layout extras for every page: the acting user and the workspace name. */
-export const shellOf = (ctx) => ({ user: ctx.user, workspace: ctx.ws.config.name });
-
-/** Redirect after a successful form post (303: the browser follows with GET). */
-export const seeOther = (reply, url) => reply.code(303).header('Location', url).send();
-
-/** A body field as a trimmed string ('' when absent). */
-export const field = (body, key) => (body && typeof body[key] === 'string' ? body[key].trim() : '');

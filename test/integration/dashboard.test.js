@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { tmpDir } from '../helpers/tmp.js';
+import { fakeSpaDir } from '../helpers/spa.js';
 import { exampleSeries, minimalBrand, writeWorkspace } from '../helpers/workspace.js';
 import { openContext } from '../../src/context.js';
 import { buildServer } from '../../src/server.js';
@@ -74,8 +75,9 @@ before(() => {
   // The oldest document was edited last.
   admin.db.prepare('UPDATE documents SET updated_at = ? WHERE id = ?').run('2999-01-01T00:00:00.000Z', ids.old);
 
-  adminApp = buildServer(admin);
-  internApp = buildServer(intern);
+  const spaDir = fakeSpaDir(tmp.dir, 'web-dist');
+  adminApp = buildServer(admin, { spaDir });
+  internApp = buildServer(intern, { spaDir });
 });
 
 after(async () => {

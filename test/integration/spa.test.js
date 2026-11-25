@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { tmpDir } from '../helpers/tmp.js';
 import { initWorkspace } from '../../src/workspace/index.js';
 import { openContext } from '../../src/context.js';
-import { buildServer, PAGE_CSP, SPA_CSP } from '../../src/server.js';
+import { buildServer, SPA_CSP } from '../../src/server.js';
 
 const INDEX = '<!doctype html><html><head><title>Dossier</title></head><body><div id="root"></div></body></html>';
 let tmp; let ctx; let app; let bare;
@@ -24,6 +24,7 @@ before(async () => {
   writeFileSync(join(dist, 'brand', 'icon-192.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
   writeFileSync(join(dist, 'brand', 'favicon.svg'), '<svg xmlns="http://www.w3.org/2000/svg"/>');
   writeFileSync(join(dist, 'site.webmanifest'), '{"name":"Dossier"}');
+  writeFileSync(join(tmp.dir, 'outside.txt'), 'OUTSIDE THE BUILD');
   app = buildServer(ctx, { spaDir: dist });
   bare = buildServer(ctx, { spaDir: join(tmp.dir, 'no-dist') });
 });
@@ -36,10 +37,9 @@ after(async () => {
 });
 
 describe('SPA serving', () => {
-  test('SPA_CSP pins the page policy for the web app', () => {
+  test('SPA_CSP pins the one HTML policy', () => {
     assert.equal(SPA_CSP, "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; "
       + "font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'self'");
-    assert.notEqual(PAGE_CSP, SPA_CSP);
   });
 
   test('unmatched client routes fall back to index.html with SPA_CSP', async () => {
@@ -58,18 +58,41 @@ describe('SPA serving', () => {
     assert.equal(head.body, '');
   });
 
-  test('old pages keep their routes and their CSP until the switch-over', async () => {
-    const home = await app.inject({ url: '/' });
-    assert.equal(home.statusCode, 200);
-    assert.notEqual(home.body, INDEX);
-    assert.equal(home.headers['content-security-policy'], PAGE_CSP);
-    const search = await app.inject({ url: '/search' });
-    assert.equal(search.statusCode, 200);
-    assert.notEqual(search.body, INDEX);
-    for (const url of ['/settings/nowhere', '/entities/x/y/z', '/search/x']) {
+  test('the web app owns / and the paths the removed server-rendered pages used', async () => {
+    for (const url of ['/', '/?node=01', '/search', '/search/x', '/upload', '/generate/invoice', '/templates', '/entities/x/y/z', '/settings/nowhere']) {
+      const r = await app.inject({ url });
+      assert.equal(r.statusCode, 200, url);
+      assert.equal(r.body, INDEX, url);
+      assert.equal(r.headers['content-security-policy'], SPA_CSP, url);
+    }
+    const head = await app.inject({ method: 'HEAD', url: '/' });
+    assert.equal(head.statusCode, 200);
+    assert.equal(head.body, '');
+  });
+
+  test('a directory of the build is a 404, never a 403 or the web app', async () => {
+    for (const url of ['/app/', '/brand/', '/app', '/brand', '/assets/fonts/', '/assets/fonts/Manrope/']) {
       const r = await app.inject({ url });
       assert.equal(r.statusCode, 404, url);
-      assert.equal(r.headers['content-security-policy'], PAGE_CSP, url);
+      assert.equal(r.json().code, 'NOT_FOUND', url);
+    }
+  });
+
+  test('percent-encoded paths: file namespaces stay files, /api stays JSON, `..` never leaves the build', async () => {
+    const js = await app.inject({ url: '/%61pp/x.js' });
+    assert.equal(js.statusCode, 200);
+    assert.match(js.headers['content-type'], /javascript/);
+    for (const url of ['/%61pp/missing.js', '/%62rand/missing.png', '/%61pi/nope', '/%41PI/nope', '/documents/DOC-1/%72enditions']) {
+      const r = await app.inject({ url });
+      assert.ok(r.statusCode >= 400 && r.statusCode < 500, `${url}: ${r.statusCode}`);
+      assert.notEqual(r.body, INDEX, url);
+    }
+    for (const url of ['/%2e%2e/outside.txt', '/app/%2e%2e/%2e%2e/outside.txt', '/app/..%2f..%2foutside.txt', '/%2e%2e%2foutside.txt',
+      '/app/%252e%252e/%252e%252e/outside.txt', '/brand/..%5c..%5coutside.txt']) {
+      const r = await app.inject({ url });
+      assert.ok(r.statusCode >= 400 && r.statusCode < 500, `${url}: ${r.statusCode}`);
+      assert.doesNotMatch(r.body, /OUTSIDE THE BUILD/, url);
+      assert.notEqual(r.body, INDEX, url);
     }
   });
 
@@ -133,6 +156,6 @@ describe('SPA serving', () => {
     assert.equal(api.statusCode, 404);
     assert.equal(api.json().code, 'NOT_FOUND');
     assert.equal((await bare.inject({ url: '/favicon.ico' })).statusCode, 404);
-    assert.equal((await bare.inject({ url: '/' })).statusCode, 200);
+    assert.equal((await bare.inject({ url: '/' })).statusCode, 503);
   });
 });

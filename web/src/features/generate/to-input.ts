@@ -44,7 +44,7 @@ function setPath(obj: Record<string, unknown>, path: string, value: unknown) {
 const blank = (v: unknown) => v === undefined || v === null || (typeof v === "string" && v.trim() === "")
 
 /**
- * What a list-or-object textarea holds, read the way the server's `formToInput` reads it: blank is no value, text
+ * What a list-or-object textarea holds, read the way the removed server form's `formToInput` read it: blank is no value, text
  * starting with `[` or `{` is JSON, other text is one list entry per line (lists only; an object must be JSON).
  */
 export function parseStructured(
@@ -74,8 +74,8 @@ function prune(v: unknown): unknown {
 }
 
 /**
- * Turn generate form values into `input` for `/api/templates/:id/{preview,generate}`: a port of the server's
- * `formToInput` (src/web/routes/templates.js). List rows with every cell blank are dropped (an empty list is left out);
+ * Turn generate form values into `input` for `/api/templates/:id/{preview,generate}`: a port of the removed
+ * server-rendered form's `formToInput`. List rows with every cell blank are dropped (an empty list is left out);
  * a list without row columns and an object field are a textarea holding JSON, or (lists) one entry per line. Blank
  * scalars stay `''` (the server treats them as not provided and applies sources and defaults).
  *

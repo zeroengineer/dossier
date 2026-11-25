@@ -14,7 +14,7 @@ const field = (over: Partial<TemplateField> & Pick<TemplateField, "name">): Temp
   ...over,
 })
 
-// Same cases as the server's formToInput (src/web/routes/templates.js), with the values already nested by name.
+// Same cases as the removed server form's formToInput, with the values already nested by name.
 describe("toInput", () => {
   it("keeps dotted names nested and blank scalars as '' (the server applies sources and defaults)", () => {
     const fields = [field({ name: "billTo.name" }), field({ name: "billTo.gstin" }), field({ name: "date", type: "date" })]

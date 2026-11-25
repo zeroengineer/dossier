@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpDir } from '../helpers/tmp.js';
+import { fakeSpaDir } from '../helpers/spa.js';
 import { initWorkspace } from '../../src/workspace/index.js';
 import { openContext } from '../../src/context.js';
 import { buildServer } from '../../src/server.js';
@@ -24,8 +25,9 @@ before(() => {
   writeFileSync(wsFile, JSON.stringify(ws, null, 2));
   ctx = openContext({ home, user: 'demo', env: {} });
   internCtx = openContext({ home, user: 'intern', env: {} });
-  app = buildServer(ctx, { fileSizeLimit: 1234 });
-  internApp = buildServer(internCtx);
+  const spaDir = fakeSpaDir(tmp.dir);
+  app = buildServer(ctx, { fileSizeLimit: 1234, spaDir });
+  internApp = buildServer(internCtx, { spaDir });
 });
 
 after(async () => {
@@ -93,5 +95,30 @@ describe('GET /api/meta', () => {
   test('default upload limit is reported', async () => {
     const m = (await internApp.inject({ url: '/api/meta' })).json();
     assert.equal(m.limits.uploadMaxBytes, 50 * 1024 * 1024);
+  });
+});
+
+describe('GET /api/meta hierarchy names', () => {
+  test('reflects the workspace\'s own hierarchy.topLevel names', async () => {
+    const t = tmpDir();
+    const home = join(t.dir, 'ws');
+    initWorkspace(home);
+    const wsFile = join(home, 'workspace.json');
+    const ws = JSON.parse(readFileSync(wsFile, 'utf8'));
+    const renamed = TOP_LEVEL.map((n, i) => (i === 0 ? '00 Our Company' : n));
+    ws.hierarchy = { ...ws.hierarchy, topLevel: renamed };
+    writeFileSync(wsFile, JSON.stringify(ws, null, 2));
+    const c = openContext({ home, user: 'demo', env: {} });
+    const a = buildServer(c, { spaDir: fakeSpaDir(t.dir) });
+    try {
+      const m = (await a.inject({ url: '/api/meta' })).json();
+      assert.deepEqual(m.hierarchy.topLevel, renamed);
+      assert.notDeepEqual(m.hierarchy.topLevel, TOP_LEVEL);
+      assert.equal(m.hierarchy.topKeys.length, renamed.length);
+    } finally {
+      await a.close();
+      c.close();
+      t.cleanup();
+    }
   });
 });

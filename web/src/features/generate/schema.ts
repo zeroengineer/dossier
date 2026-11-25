@@ -2,7 +2,7 @@ import { z } from "zod"
 import type { TemplateField, TemplateMetaField } from "@/api/types"
 import { type FormValues, getPath, isObj, parseStructured } from "./to-input"
 
-/** How a field is edited. Mirrors the old server-rendered form (src/web/views/generate.js fieldInput). */
+/** How a field is edited. Mirrors the removed server-rendered generate form (fieldInput). */
 export type FieldKind =
   | "entity" // combobox over /api/entities?kind=
   | "enum" // select over `choices`

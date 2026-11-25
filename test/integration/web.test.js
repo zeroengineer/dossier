@@ -3,19 +3,20 @@ import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpDir } from '../helpers/tmp.js';
+import { FAKE_INDEX, fakeSpaDir } from '../helpers/spa.js';
 import { makePdf } from '../helpers/pdf.js';
 import { fixtureInput } from '../helpers/templateRender.js';
 import { initWorkspace } from '../../src/workspace/index.js';
 import { openContext } from '../../src/context.js';
-import { seedEntities, getEntity } from '../../src/services/entities.js';
+import { seedEntities } from '../../src/services/entities.js';
 import { createDocument, addVersion } from '../../src/services/documents.js';
-import { buildServer } from '../../src/server.js';
+import { buildServer, SPA_CSP } from '../../src/server.js';
 
 const ORIGIN = 'http://localhost:80';
-let tmp; let ctx; let app; let internCtx; let internApp;
+let tmp; let ctx; let app; let internCtx; let internApp; let bare;
 let pdfBytes; let secret; // a Confidential document the Internal user may not read
 
-/** urlencoded form post from this site. */
+/** urlencoded form post from this site (what the removed server-rendered pages sent). */
 const post = (url, fields, headers = {}) => app.inject({
   method: 'POST', url, headers: { origin: ORIGIN, 'content-type': 'application/x-www-form-urlencoded', ...headers },
   payload: new URLSearchParams(fields).toString(),
@@ -53,9 +54,10 @@ before(async () => {
   ctx = openContext({ home, user: 'demo', env: {} });
   seedEntities(ctx);
   internCtx = openContext({ home, user: 'intern', env: {} });
-  // No built web app here: unmatched page routes answer 503 (see spa.test.js for the built case).
-  app = buildServer(ctx, { spaDir: join(tmp.dir, 'no-dist') });
-  internApp = buildServer(internCtx, { spaDir: join(tmp.dir, 'no-dist') });
+  const spaDir = fakeSpaDir(tmp.dir);
+  app = buildServer(ctx, { spaDir });
+  internApp = buildServer(internCtx, { spaDir });
+  bare = buildServer(ctx, { spaDir: join(tmp.dir, 'no-dist') }); // the web app not built
 
   pdfBytes = await makePdf(['Confidential board minutes about the sample merger']);
   secret = createDocument(ctx, { type: 'Board Resolution', title: 'Secret minutes', sensitivity: 'Confidential' });
@@ -65,60 +67,71 @@ before(async () => {
 after(async () => {
   await app?.close();
   await internApp?.close();
+  await bare?.close();
   ctx?.close();
   internCtx?.close();
   tmp?.cleanup();
 });
 
-describe('pages', () => {
-  test('every page answers 200 with its content', async () => {
-    const client = getEntity(ctx, 'Demo Retail LLP', { kind: 'client' });
-    const pages = [
-      ['/', /Vault/],
-      ['/?node=01', /Secret minutes|01 Company/],
-      [`/documents/${secret.id}`, /Secret minutes/],
-      ['/upload', /New version of an existing document/],
-      ['/search', /<form method="get" action="\/search"/],
-      ['/search?q=minutes', /Secret minutes/],
-      ['/generate', /Invoice/],
-      ['/generate/invoice', /Items/],
-      ['/templates', /debit-note/],
-      ['/entities', /Demo Retail LLP/],
-      [`/entities/${client.id}`, /belongs_to_business_line/],
-      ['/settings', /Acme Events Private Limited/],
-    ];
-    for (const [url, re] of pages) {
+describe('web app', () => {
+  test('/ and every client route answer the web app with SPA_CSP; HTML is never stored', async () => {
+    for (const url of ['/', '/?node=01', '/dashboard', `/documents/${'DOC-000001'}`, '/documents/DOC-999999', '/search?q=minutes',
+      '/upload', '/generate', '/generate/invoice', '/templates', '/entities', '/entities/1', '/settings', '/settings/brands/acme',
+      '/settings/numbering', '/vault/01%20Company']) {
       const r = await app.inject({ url });
-      assert.equal(r.statusCode, 200, `${url}: ${r.body.slice(0, 300)}`);
-      assert.match(r.headers['content-type'], /^text\/html/);
-      assert.match(r.body, re, url);
-      assert.match(r.headers['content-security-policy'], /default-src 'self'/);
+      assert.equal(r.statusCode, 200, url);
+      assert.match(r.headers['content-type'], /^text\/html/, url);
+      assert.equal(r.body, FAKE_INDEX, url);
+      assert.equal(r.headers['content-security-policy'], SPA_CSP, url);
+      assert.equal(r.headers['x-frame-options'], 'SAMEORIGIN', url);
+      assert.equal(r.headers['cache-control'], 'no-store', url);
     }
   });
 
-  test('unknown old pages and documents render a 404 page; API answers JSON; other paths go to the web app', async () => {
-    const page = await app.inject({ url: '/documents/DOC-999999' });
-    assert.equal(page.statusCode, 404);
-    assert.match(page.body, /DOCUMENT_NOT_FOUND/);
-    const route = await app.inject({ url: '/settings/nowhere' });
-    assert.equal(route.statusCode, 404);
-    assert.match(route.headers['content-type'], /text\/html/);
-    // Other unmatched page paths are web-app routes (503 here because the web app is not built).
-    assert.equal((await app.inject({ url: '/nowhere' })).statusCode, 503);
-    const json = await app.inject({ url: '/api/nowhere' });
-    assert.equal(json.statusCode, 404);
-    assert.equal(json.json().code, 'NOT_FOUND');
+  test('unknown /api paths, in any letter case and without a slash, answer JSON 404', async () => {
+    for (const url of ['/api/nope', '/api', '/api/', '/API/me', '/Api/tree', '/%61pi/nope']) {
+      const r = await app.inject({ url });
+      assert.equal(r.statusCode, 404, url);
+      assert.match(r.headers['content-type'], /^application\/json/, url);
+      assert.equal(r.json().code, 'NOT_FOUND', url);
+    }
   });
 
-  test('interpolated data is escaped in pages', async () => {
-    const created = await api('POST', '/api/entities', { kind: 'person', name: '<script>alert(1)</script> Doe' });
-    assert.equal(created.statusCode, 201);
-    const r = await app.inject({ url: `/entities/${created.json().id}` });
-    assert.equal(r.statusCode, 200);
-    assert.doesNotMatch(r.body, /<script>alert/);
-    assert.match(r.body, /&lt;script&gt;alert\(1\)&lt;\/script&gt; Doe/);
-    const list = await app.inject({ url: '/entities?q=%3Cscript%3E' });
-    assert.doesNotMatch(list.body, /<script>alert/);
+  test('the removed server-rendered UI: form posts and old files are JSON 404s', async () => {
+    for (const url of [
+      '/documents/DOC-000001/status', '/documents/DOC-000001/metadata', '/documents/DOC-000001/links', '/documents/DOC-000001/links/delete',
+      '/entities', '/entities/1', '/entities/1/relations', '/generate/invoice', '/generate/invoice/preview', '/upload',
+      '/settings/brands', '/settings/brands/acme', '/settings/brands/acme/assets', '/settings/series', '/settings/workspace',
+    ]) {
+      const r = await post(url, { title: 'x' });
+      assert.equal(r.statusCode, 404, url);
+      assert.equal(r.json().code, 'NOT_FOUND', url);
+    }
+    for (const url of ['/settings/brands/acme/brand.json', '/settings/brands/acme/preview.pdf', '/static/app.css', '/static/app.js', '/static/']) {
+      const r = await app.inject({ url });
+      assert.equal(r.statusCode, 404, url);
+      assert.equal(r.json().code, 'NOT_FOUND', url);
+    }
+  });
+
+  test('errors are always JSON, even for a browser asking for HTML', async () => {
+    const r = await app.inject({ url: '/api/documents/DOC-999999', headers: { accept: 'text/html' } });
+    assert.equal(r.statusCode, 404);
+    assert.match(r.headers['content-type'], /^application\/json/);
+    assert.equal(r.json().code, 'DOCUMENT_NOT_FOUND');
+    const blob = await app.inject({ url: `/blobs/${'0'.repeat(64)}/x.pdf`, headers: { accept: 'text/html' } });
+    assert.equal(blob.statusCode, 404);
+    assert.match(blob.headers['content-type'], /^application\/json/);
+  });
+
+  test('a missing build answers client routes with 503 and the API as usual', async () => {
+    const r = await bare.inject({ url: '/' });
+    assert.equal(r.statusCode, 503);
+    assert.match(r.headers['content-type'], /^text\/html/);
+    assert.match(r.body, /npm run build/);
+    assert.equal(r.headers['content-security-policy'], SPA_CSP);
+    assert.equal((await bare.inject({ url: '/api/tree' })).statusCode, 200);
+    assert.equal((await bare.inject({ url: '/api/nope' })).json().code, 'NOT_FOUND');
   });
 });
 
@@ -242,8 +255,6 @@ describe('JSON API', () => {
       assert.equal(r.json().code, 'INVALID_INPUT');
       assert.match(r.json().message, /docDate must be a date YYYY-MM-DD/);
     }
-    const form = await post(`/documents/${d.id}/metadata`, { title: 'Date check', docDate: '2026-13-45' });
-    assert.equal(form.statusCode, 400);
   });
 });
 
@@ -266,119 +277,35 @@ describe('upload', () => {
     const s = await api('GET', '/api/search?q=warehouse');
     assert.ok(s.json().hits.some((h) => h.document.id === doc.id));
   });
-
-  test('the upload form redirects to the new document; refused files re-render the form', async () => {
-    const body = multipart({ type: 'Letter', title: 'Welcome note', partyId: '' }, { filename: 'welcome.md', mime: 'text/markdown', buffer: Buffer.from('# Welcome\n\nHello there.\n') });
-    const r = await app.inject({ method: 'POST', url: '/upload', ...body, headers: { ...body.headers, origin: ORIGIN } });
-    assert.equal(r.statusCode, 303);
-    assert.match(r.headers.location, /^\/documents\/DOC-\d{6}\?uploaded=1$/);
-    const page = await app.inject({ url: r.headers.location });
-    assert.match(page.body, /Welcome note/);
-    assert.match(page.body, /File uploaded/);
-
-    const bad = multipart({ type: 'Letter' }, { filename: 'server.pem', mime: 'text/plain', buffer: Buffer.from('-----BEGIN PRIVATE KEY-----') });
-    const refused = await app.inject({ method: 'POST', url: '/upload', ...bad, headers: { ...bad.headers, origin: ORIGIN } });
-    assert.equal(refused.statusCode, 400);
-    assert.match(refused.body, /SECRET_REJECTED/);
-    assert.match(refused.body, /New version of an existing document/);
-  });
 });
 
-describe('generate in the browser', () => {
-  test('preview then generate an invoice from the form, then regenerate with force', async () => {
-    const fields = {
-      $brand: 'acme', client: 'Example Institute of Sample Studies', date: '2026-07-14', 'billTo.name': '', 'billTo.address': '',
-      'items.0.description': 'Platform services', 'items.0.hsn': '', 'items.0.amount': '12,500.00',
-      'items.1.description': '', 'items.1.hsn': '', 'items.1.amount': '', // an untouched row is dropped
-      taxMode: '', bankAccount: '', rowHeight: '', descriptionWeight: '', seal: '',
+describe('generate through the API', () => {
+  test('generate an invoice, read its renditions, then regenerate a locked document only with force', async () => {
+    const input = {
+      client: 'Example Institute of Sample Studies', date: '2026-07-14',
+      items: [{ description: 'Platform services', amount: '12,500.00' }],
     };
-    const preview = await post('/generate/invoice', { ...fields, $action: 'preview' });
-    assert.equal(preview.statusCode, 200, preview.body.slice(0, 500));
-    const src = preview.body.match(/<iframe class="pdf" id="preview-frame" title="Draft preview" src="([^"]+)"/)?.[1];
-    assert.match(src, /^\/previews\/[0-9a-f]{64}\/preview\.pdf$/);
-    const file = await app.inject({ url: src });
-    assert.equal(file.statusCode, 200);
-    assert.equal(file.headers['content-type'], 'application/pdf');
-    assert.equal(file.rawPayload.subarray(0, 4).toString(), '%PDF');
-
-    const viaJs = await post('/generate/invoice/preview', fields, { accept: 'application/json' });
-    assert.equal(viaJs.json().ok, true);
-    assert.deepEqual(viaJs.json().warnings, []);
-
-    const missing = await post('/generate/invoice', { ...fields, 'items.0.description': '', 'items.0.amount': '', $action: 'generate' });
-    assert.equal(missing.statusCode, 400);
-    assert.match(missing.body, /Required fields are empty/);
-    assert.match(missing.body, /Items <code>items<\/code>/);
-
-    const gen = await post('/generate/invoice', { ...fields, $action: 'generate' });
-    assert.equal(gen.statusCode, 303, gen.body.slice(0, 500));
-    const [, id] = gen.headers.location.match(/^\/documents\/(DOC-\d+)\?generated=1$/);
-    const page = await app.inject({ url: gen.headers.location });
-    assert.match(page.body, /Document generated\./);
-    assert.match(page.body, /ACM-2026-\d{4}/);
-    assert.match(page.body, /Regenerate as a new version/);
+    const gen = await api('POST', '/api/templates/invoice/generate', { input, brandId: 'acme' });
+    assert.equal(gen.statusCode, 201, gen.body);
+    const id = gen.json().documentId;
+    assert.match(gen.json().number, /^ACM-2026-\d{4}$/);
     const pdf = await app.inject({ url: `/documents/${id}/renditions/pdf` });
+    assert.equal(pdf.statusCode, 200);
     assert.equal(pdf.headers['content-type'], 'application/pdf');
+    assert.equal(pdf.rawPayload.subarray(0, 4).toString(), '%PDF');
     const html = await app.inject({ url: `/documents/${id}/renditions/html?version=1&download=1` });
     assert.equal(html.headers['content-security-policy'], 'sandbox');
     assert.match(html.headers['content-disposition'], /^attachment;/);
 
-    // Sent documents are locked: the form says so, and only "force" regenerates.
-    assert.equal((await post(`/documents/${id}/status`, { status: 'Sent' })).statusCode, 303);
-    const form = await app.inject({ url: `/generate/invoice?documentId=${id}` });
-    assert.match(form.body, /name="\$force"/);
-    assert.match(form.body, /Platform services/, 'the form is prefilled from the current version');
-    const locked = await post('/generate/invoice', { ...fields, $documentId: id, $action: 'generate' });
+    assert.equal((await api('POST', `/api/documents/${id}/status`, { status: 'Sent' })).statusCode, 200);
+    const locked = await api('POST', '/api/templates/invoice/generate', { input, documentId: id });
     assert.equal(locked.statusCode, 409);
-    assert.match(locked.body, /STATUS_LOCKED/);
-    const forced = await post('/generate/invoice', { ...fields, $documentId: id, $force: 'true', $note: 'fixed amount', $action: 'generate' });
-    assert.equal(forced.statusCode, 303);
+    assert.equal(locked.json().code, 'STATUS_LOCKED');
+    const forced = await api('POST', '/api/templates/invoice/generate', { input, documentId: id, force: true, note: 'fixed amount' });
+    assert.equal(forced.statusCode, 201, forced.body);
     const doc = (await api('GET', `/api/documents/${id}`)).json();
     assert.equal(doc.currentVersion, 2);
     assert.equal(doc.status, 'Draft');
-  });
-
-  test('placeholder warnings reach the document page after a form generate', async () => {
-    const gen = await post('/generate/mou', { ...fixtureInput('mou'), $action: 'generate' });
-    assert.equal(gen.statusCode, 303, gen.body.slice(0, 500));
-    assert.match(gen.headers.location, /warn=partnerOffice/);
-    const page = await app.inject({ url: gen.headers.location });
-    assert.match(page.body, /some placeholders printed empty/);
-    assert.match(page.body, /partnerOffice/);
-  });
-
-  test('document page forms: status, link, unlink and metadata', async () => {
-    const a = createDocument(ctx, { type: 'Invoice', title: 'Form invoice' });
-    const b = createDocument(ctx, { type: 'Receipt', title: 'Form receipt' });
-    assert.equal((await post(`/documents/${b.id}/links`, { type: 'pays', toId: a.id })).statusCode, 303);
-    let page = await app.inject({ url: `/documents/${b.id}` });
-    assert.match(page.body, /this pays →/);
-    assert.equal((await post(`/documents/${b.id}/links/delete`, { fromId: b.id, toId: a.id, type: 'pays' })).statusCode, 303);
-    page = await app.inject({ url: `/documents/${b.id}` });
-    assert.match(page.body, /No related documents/);
-    assert.equal((await post(`/documents/${a.id}/metadata`, { title: 'Renamed invoice', docNumber: '', docDate: '2026-05-01', dueDate: '', sensitivity: 'Internal' })).statusCode, 303);
-    assert.equal((await api('GET', `/api/documents/${a.id}`)).json().title, 'Renamed invoice');
-    const bad = await post(`/documents/${a.id}/status`, { status: 'Nonsense' });
-    assert.equal(bad.statusCode, 400);
-  });
-
-  test('entity forms create, edit and relate', async () => {
-    const c = await post('/entities', { kind: 'client', name: 'Form Client Ltd', aliases: 'FCL, Form Client', brand: '', attrs: '{"code":"FCL"}' });
-    assert.equal(c.statusCode, 303);
-    const id = c.headers.location.match(/\/entities\/(\d+)/)[1];
-    const e = await post(`/entities/${id}`, { name: 'Form Client Limited', aliases: '', brand: '', attrs: '' });
-    assert.equal(e.statusCode, 303);
-    const r = await post(`/entities/${id}/relations`, { role: 'belongs_to_business_line', to: 'Events' });
-    assert.equal(r.statusCode, 303);
-    const page = await app.inject({ url: `/entities/${id}` });
-    assert.match(page.body, /Form Client Limited/);
-    assert.match(page.body, /FCL/);
-    assert.match(page.body, /belongs_to_business_line/);
-    const dup = await post('/entities', { kind: 'client', name: 'Other', aliases: 'FCL' });
-    assert.equal(dup.statusCode, 409);
-    assert.match(dup.body, /ENTITY_DUPLICATE/);
-    const badJson = await post(`/entities/${id}`, { name: 'Form Client Limited', attrs: '{nope' });
-    assert.equal(badJson.statusCode, 400);
   });
 });
 
@@ -414,14 +341,15 @@ describe('access control', () => {
   test('renditions and blobs above the user clearance are 403', async () => {
     const sha = (await api('GET', `/api/documents/${secret.id}`)).json().renditions[0].sha256;
     assert.equal((await app.inject({ url: `/blobs/${sha}/minutes.pdf` })).statusCode, 200);
-    for (const url of [`/blobs/${sha}/minutes.pdf`, `/documents/${secret.id}/renditions/pdf`, `/api/documents/${secret.id}`, `/documents/${secret.id}`]) {
+    for (const url of [`/blobs/${sha}/minutes.pdf`, `/documents/${secret.id}/renditions/pdf`, `/api/documents/${secret.id}`]) {
       const r = await internApp.inject({ url });
       assert.equal(r.statusCode, 403, url);
       assert.doesNotMatch(r.body, /PDF-/);
     }
     assert.equal((await internApp.inject({ url: `/api/documents/${secret.id}` })).json().code, 'FORBIDDEN');
-    const tree = await internApp.inject({ url: '/' });
-    assert.doesNotMatch(tree.body, /Secret minutes/);
+    const tree = await internApp.inject({ url: '/api/tree?node=01' });
+    assert.ok(!tree.body.includes(secret.id), 'the Confidential document is left out of the tree');
+    assert.ok((await app.inject({ url: '/api/tree?node=01' })).body.includes(secret.id));
   });
 
   test('unknown or malformed blobs, previews and assets are not served', async () => {
@@ -451,18 +379,19 @@ describe('access control', () => {
   });
 
   test('state-changing requests need a same-origin Origin/Referer (or a JSON body)', async () => {
-    const target = `/documents/${secret.id}/metadata`;
-    const foreign = await post(target, { title: 'pwned' }, { origin: 'http://evil.example' });
+    const target = `/api/documents/${secret.id}/metadata`;
+    const json = (headers) => app.inject({ method: 'POST', url: target, headers: { 'content-type': 'application/json', ...headers }, payload: JSON.stringify({ title: 'pwned' }) });
+    const foreign = await json({ origin: 'http://evil.example' });
     assert.equal(foreign.statusCode, 403);
     assert.equal(foreign.json().code, 'CSRF_REJECTED');
     const noOrigin = await app.inject({ method: 'POST', url: target, headers: { 'content-type': 'application/x-www-form-urlencoded' }, payload: 'title=pwned' });
     assert.equal(noOrigin.statusCode, 403);
-    const nullOrigin = await post(target, { title: 'pwned' }, { origin: 'null' });
-    assert.equal(nullOrigin.statusCode, 403);
-    const badReferer = await app.inject({ method: 'POST', url: target, headers: { referer: 'http://evil.example/page', 'content-type': 'application/x-www-form-urlencoded' }, payload: 'title=pwned' });
-    assert.equal(badReferer.statusCode, 403);
-    const goodReferer = await app.inject({ method: 'POST', url: target, headers: { referer: 'http://localhost/documents', 'content-type': 'application/x-www-form-urlencoded' }, payload: 'title=Secret%20minutes' });
-    assert.equal(goodReferer.statusCode, 303);
+    assert.equal((await json({ origin: 'null' })).statusCode, 403);
+    assert.equal((await json({ referer: 'http://evil.example/page' })).statusCode, 403);
+    const goodReferer = await app.inject({ method: 'POST', url: target, headers: { referer: 'http://localhost/documents', 'content-type': 'application/json' }, payload: JSON.stringify({ title: 'Secret minutes' }) });
+    assert.equal(goodReferer.statusCode, 200);
+    const sameOriginForm = await post(target, { title: 'pwned' });
+    assert.equal(sameOriginForm.statusCode, 415, 'form bodies are no longer parsed');
     const multi = multipart({ type: 'Letter' }, { filename: 'a.txt', mime: 'text/plain', buffer: Buffer.from('hello') });
     assert.equal((await app.inject({ method: 'POST', url: '/api/upload', ...multi })).statusCode, 403, 'multipart without Origin or X-Dossier-Client');
     assert.equal((await api('GET', `/api/documents/${secret.id}`)).json().title, 'Secret minutes');

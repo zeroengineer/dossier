@@ -9,7 +9,7 @@ import {
   CLEARANCES, DOCUMENT_ENTITY_ROLES, DOCUMENT_RELATION_TYPES, ENTITY_KINDS, ENTITY_RELATION_ROLES, FIELD_TYPES, PARTY_TYPES,
   TEMPLATE_CATEGORIES,
 } from '../../domain/enums.js';
-import { DEFAULT_LEAF, DEFAULT_ROUTES, TOP_KEYS, TOP_LEAVES, TOP_LEVEL } from '../../domain/routing.js';
+import { DEFAULT_LEAF, DEFAULT_ROUTES, TOP_KEYS, TOP_LEAVES, routingConfig } from '../../domain/routing.js';
 import { FONT_WEIGHTS, SERIES_SCOPES } from '../../workspace/schemas.js';
 import { ASSET_MAX_BYTES, builtinFonts } from '../../services/workspaceFiles.js';
 
@@ -47,7 +47,8 @@ export default async function metaRoutes(app, { ctx, fileSizeLimit }) {
     fontWeights: FONT_WEIGHTS,
     builtinFonts: builtinFonts(),
     documentTypes: Object.keys(DEFAULT_ROUTES),
-    hierarchy: { topLevel: TOP_LEVEL, topKeys: TOP_KEYS, leaves: TOP_LEAVES, defaultLeaf: DEFAULT_LEAF },
+    // The workspace's own folder names (hierarchy.topLevel) when it renames them, else the defaults.
+    hierarchy: { topLevel: routingConfig(ctx.ws.config.hierarchy).topLevel, topKeys: TOP_KEYS, leaves: TOP_LEAVES, defaultLeaf: DEFAULT_LEAF },
     templateCategories: TEMPLATE_CATEGORIES,
     fieldTypes: FIELD_TYPES,
     limits: { assetMaxBytes: ASSET_MAX_BYTES, uploadMaxBytes: fileSizeLimit },

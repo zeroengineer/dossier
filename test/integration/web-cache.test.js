@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { tmpDir } from '../helpers/tmp.js';
+import { fakeSpaDir } from '../helpers/spa.js';
 import { makePdf } from '../helpers/pdf.js';
 import { initWorkspace } from '../../src/workspace/index.js';
 import { openContext } from '../../src/context.js';
@@ -39,8 +40,9 @@ before(async () => {
   seedEntities(ctx);
   upsertEntity(ctx, { kind: 'person', name: 'Jordan Example' });
   internCtx = openContext({ home, user: 'intern', env: {} });
-  app = buildServer(ctx);
-  internApp = buildServer(internCtx);
+  const spaDir = fakeSpaDir(tmp.dir);
+  app = buildServer(ctx, { spaDir });
+  internApp = buildServer(internCtx, { spaDir });
 
   const pdf = await makePdf(['Confidential board minutes about the sample merger']);
   sha = createHash('sha256').update(pdf).digest('hex');
@@ -138,13 +140,13 @@ test('brand assets: ETag of the file; immutable only when ?v= names its hash', a
   assert.equal(font.statusCode, 200);
   assert.match(font.headers.etag, /^"[0-9a-f]{64}"$/);
 
-  // The settings page links the logo with its content hash.
-  const page = await get('/settings/brands/acme');
-  assert.ok(page.body.includes(`/assets/brands/acme/logo?v=${hash.slice(0, 12)}`));
+  // The brand asset API hands the web app the logo URL pinned with its content hash.
+  const assets = (await get('/api/brands/acme/assets')).json().assets;
+  assert.equal(assets.find((a) => a.key === 'assets.logo').url, `/assets/brands/acme/logo?v=${hash.slice(0, 12)}`);
 });
 
-test('shipped fonts and app files revalidate (public, max-age=0) and answer 304', async () => {
-  for (const url of ['/assets/fonts/Manrope/Manrope-Regular.ttf', '/static/app.css']) {
+test('shipped fonts and web app files revalidate (public, max-age=0) and answer 304', async () => {
+  for (const url of ['/assets/fonts/Manrope/Manrope-Regular.ttf', '/favicon.ico']) {
     const res = await get(url);
     assert.equal(res.statusCode, 200, url);
     assert.equal(res.headers['cache-control'], 'public, max-age=0', url);
