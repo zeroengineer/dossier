@@ -256,6 +256,7 @@ These minor findings were parked during reviews. None blocks use.
 - **F25 e2e:** `screens.spec.ts` waits a fixed 400 ms for entrance fades before each screenshot (parked; screenshots are for looking at, not assertions).
 - **Logo kit:** `export_kit.sh` gives an unclear message when the logo skill is missing; no check that the favicon master and its public copy match.
 - **Docker:** the Node base image is not pinned to a minor version; the healthcheck accepts any reply below 500.
+- **Import dates (import accuracy):** finance documents (Bank Statement, Tax Return, Ledger) whose `doc_date` is only an imported file's modification time are filed under a financial-year folder; they should go under "Undated". The tree reads `doc_date` only, so this needs the date source on the document row (or a join to the version's `input_json.import.date_source`).
 - **Development dependencies:** 4 moderate audit findings in development-only tools (`minimatch` through `@ts-morph` and others); none ships in the runtime image.
 
 ## Where to look next

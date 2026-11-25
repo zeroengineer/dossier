@@ -154,6 +154,20 @@ test('guarded keywords: "pan" before "india", a bare "gst" in a filing, no bare 
   assert.equal(gst('gst invoice'), false);
   assert.equal(gst('gst of the example org group'), false, 'more than three other words');
   assert.equal(nameHasKeyword(wordsOf('GST certificate 2025'), 'gst certificate'), true);
+  // Certificate words allow longer names and digits; company suffixes and "copy" do not count as words.
+  assert.equal(gst('Example Org Private Limited GST'), true);
+  assert.equal(gst('GST Example Org Pvt Ltd copy'), true);
+  assert.equal(gst('GST cert v2'), true);
+  assert.equal(gst('the example org group gst registration 2025'), true);
+  // Filing words, months and quarters always block it, also for the longer GST keywords.
+  for (const n of ['GST Annual', 'GST Assessment Order', 'GST notice', 'GST ledger', 'GST payment', 'gst mar', 'GST September', 'gst q3', 'GST certificate statement']) {
+    assert.equal(gst(n), false, n);
+  }
+  assert.equal(nameHasKeyword(wordsOf('GST registration annual return'), 'gst registration'), false);
+  assert.equal(nameHasKeyword(wordsOf('Udyam filing'), 'udyam'), false);
+  assert.equal(nameHasKeyword(wordsOf('Udyam certificate'), 'udyam'), true);
+  assert.equal(nameHasKeyword(wordsOf('MSME payment report'), 'msme'), false);
+  assert.equal(nameHasKeyword(wordsOf('Example Org MSME'), 'msme'), true);
   const all = (n) => [...typeKeywordTable().values()].filter((k) => k.names.some((w) => nameHasKeyword(wordsOf(n), w))).map((k) => k.type);
   assert.deepEqual(all('epic campaign'), []);
   assert.deepEqual(all('epic card'), ['Voter ID']);

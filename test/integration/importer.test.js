@@ -684,3 +684,39 @@ test('generic words in file names do not override folders (I-2)', () => setupFil
   assert.equal(typeOf(s, 'settlement - Casey.pdf'), 'Final Settlement <- keyword', 'the Exit leaf type that contains the word');
   assert.equal(typeOf(s, 'gst certificate copy.pdf'), 'Other <- none', 'a company type in a person\'s leaf folder');
 }));
+
+// ---------- import accuracy, fix round 2: fixed routes must end in the file's leaf; GST/Udyam guards ----------
+
+test('a fixed-route type from the file name must end in the leaf folder it was found in (round 2)', () => setupFiles({
+  '01 Company/Compliance and Tax/GST.pdf': 'Compliance copy 1',
+  '01 Company/Compliance and Tax/GST Annual.pdf': 'Compliance copy 2',
+  '01 Company/Compliance and Tax/GST Assessment Order.pdf': 'Compliance copy 3',
+  '01 Company/Compliance and Tax/Udyam filing.pdf': 'Compliance copy 4',
+  '01 Company/Compliance and Tax/MSME payment report.pdf': 'Compliance copy 5',
+  '01 Company/Legal and Registration/GST.pdf': 'Registration copy 1',
+  '01 Company/Legal and Registration/Example Org Private Limited GST.pdf': 'Registration copy 2',
+  '01 Company/Legal and Registration/GST Example Org Pvt Ltd copy.pdf': 'Registration copy 3',
+  '01 Company/Legal and Registration/GST cert v2.pdf': 'Registration copy 4',
+  '01 Company/Legal and Registration/Example Org GST Registration Certificate.pdf': 'Registration copy 5',
+  '01 Company/Legal and Registration/Udyam Registration Certificate.pdf': 'Registration copy 6',
+  '01 Company/Legal and Registration/GST return March.pdf': 'Registration copy 7',
+  // A "Company - <name>" top-level folder names no leaf: its files are judged by their own folders.
+  '01 Company - Example Org/Banking and Payment Gateway/cancelled check.pdf': 'Named folder copy 1',
+  '01 Company - Example Org/Compliance and Tax/GST.pdf': 'Named folder copy 2',
+}, async ({ ctx, vault }) => {
+  const s = await importFolder(ctx, { folder: vault, dryRun: true });
+  const cmp = '01 Company/Compliance and Tax/';
+  for (const n of ['GST.pdf', 'GST Annual.pdf', 'GST Assessment Order.pdf', 'Udyam filing.pdf', 'MSME payment report.pdf']) {
+    assert.equal(typeOf(s, `${cmp}${n}`), 'Other <- none', n);
+  }
+  const lr = '01 Company/Legal and Registration/';
+  assert.equal(typeOf(s, `${lr}GST.pdf`), 'GST Certificate <- keyword');
+  assert.equal(typeOf(s, `${lr}Example Org Private Limited GST.pdf`), 'GST Certificate <- keyword');
+  assert.equal(typeOf(s, `${lr}GST Example Org Pvt Ltd copy.pdf`), 'GST Certificate <- keyword');
+  assert.equal(typeOf(s, `${lr}GST cert v2.pdf`), 'GST Certificate <- keyword');
+  assert.equal(typeOf(s, `${lr}Example Org GST Registration Certificate.pdf`), 'GST Certificate <- keyword', 'more specific than Registration Certificate');
+  assert.equal(typeOf(s, `${lr}Udyam Registration Certificate.pdf`), 'Udyam Certificate <- keyword');
+  assert.equal(typeOf(s, `${lr}GST return March.pdf`), 'Other <- none');
+  assert.equal(typeOf(s, 'Example Org/Banking and Payment Gateway/cancelled check.pdf'), 'Cancelled Cheque <- keyword');
+  assert.equal(typeOf(s, 'Example Org/Compliance and Tax/GST.pdf'), 'Other <- none');
+}));

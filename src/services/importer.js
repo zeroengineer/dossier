@@ -585,16 +585,19 @@ function slotTypes(env, slot) {
 /**
  * Split a file's folder path into slot, party, business line, engagement, leaf and sensitivity.
  * @returns {{ slot: string|null, party: { kind: string, name: string }|null, businessLine: string|null,
- *   engagement: string|null, leaf: string|null, leafTypes: string[], leafOwn: string[], sensitivity: string,
- *   identity: boolean }} `leafOwn`: the leaf's own types (routed to it by name), a subset of `leafTypes`
+ *   engagement: string|null, leaf: string|null, leafTypes: string[], leafOwn: string[], leafKnown: boolean,
+ *   sensitivity: string, identity: boolean }} `leafOwn`: the leaf's own types (routed to it by name), a subset of
+ *   `leafTypes`; `leafKnown`: `leaf` is a leaf folder (a routing leaf, a type's name or "Other")
  */
 function classify(env, rel) {
   const dirs = rel.split('/').slice(0, -1);
   const identity = dirs.some((d) => env.identityRe.test(d));
   const top = dirs.length ? matchTop(env, dirs[0]) : null;
   const slot = top?.slot ?? null;
-  const out = { slot, party: null, businessLine: null, engagement: null, leaf: top?.leaf ?? null, leafTypes: [], leafOwn: [], identity };
-  if (top?.leaf) ({ types: out.leafTypes, own: out.leafOwn } = leafTypes(env, slot, top.leaf));
+  const out = { slot, party: null, businessLine: null, engagement: null, leaf: top?.leaf ?? null, leafTypes: [], leafOwn: [], leafKnown: false, identity };
+  // A "<slot> - <name>" top-level folder names a leaf only when <name> is one ("Vendors - Invoices Received", not
+  // "Company - <company name>").
+  if (top?.leaf) ({ types: out.leafTypes, own: out.leafOwn, leaf: out.leafKnown } = leafTypes(env, slot, top.leaf));
   let level = slot === 'people' ? env.sensitivity.people : env.sensitivity.default;
   if (identity) level = higher(level, env.sensitivity.identity);
   out.sensitivity = level;
@@ -605,6 +608,7 @@ function classify(env, rel) {
   const leafAt = segs.findIndex((s) => leafTypes(env, slot, s).leaf);
   if (leafAt >= 0) {
     out.leaf = segs[leafAt];
+    out.leafKnown = true;
     ({ types: out.leafTypes, own: out.leafOwn } = leafTypes(env, slot, segs[leafAt]));
   }
   const pre = leafAt >= 0 ? segs.slice(0, leafAt) : segs;
@@ -671,7 +675,7 @@ function chooseType(env, c, filename, found, text) {
   // The name as written, without an index's "[from …]" note.
   const words = wordsOf(filename.replace(/\.[^.]+$/, '').replace(/\s*\[from [^\]]*\]\s*$/i, ''));
   const seriesTypes = found ? env.typesBySeries.get(found.series) ?? [] : [];
-  const usable = (t) => !FOLDER_TYPES.has(routeKey(t)) && (!c.leaf || staysIn(env, t, c.slot));
+  const usable = (t) => !FOLDER_TYPES.has(routeKey(t)) && (!c.leafKnown || staysIn(env, t, c));
 
   const fromName = (candidates, hints, from) => {
     if (!candidates.length) return null;
@@ -681,12 +685,19 @@ function chooseType(env, c, filename, found, text) {
   };
 
   const names = [...env.typeNames.values()].filter((t) => usable(t) && hasKeyword(words, t));
-  const named = fromName(names, names, 'name');
-  if (named) return named;
-
   const keyed = [...env.keywords.values()]
     .map((k) => ({ type: displayType(env, routeKey(k.type)), hits: k.names.filter((n) => nameHasKeyword(words, n)) }))
     .filter((k) => k.hits.length && usable(k.type));
+
+  const named = fromName(names, names, 'name');
+  if (named) {
+    // A keyword type filed in the same place as the named type is the more specific one ("GST Registration
+    // Certificate" is a GST Certificate, not the generic Registration Certificate).
+    const sameRoute = named.from === 'name'
+      && keyed.find((k) => !names.includes(k.type) && sameRouteAs(env, k.type, named.type));
+    return sameRoute ? { type: sameRoute.type, from: 'keyword' } : named;
+  }
+
   const byKeyword = fromName(keyed.map((k) => k.type), keyed.flatMap((k) => k.hits), 'keyword');
   if (byKeyword) return byKeyword;
 
@@ -707,10 +718,24 @@ function chooseType(env, c, filename, found, text) {
   return { type: DEFAULT_LEAF, from: 'none' };
 }
 
-/** True when a type's route keeps it in top-level slot `slot` (party routes follow the party, so they stay). */
-function staysIn(env, type, slot) {
+/**
+ * True when a type found in a file name may be used for a file in leaf folder `c.leaf`: party routes follow the party
+ * (they stay), a fixed route must lead to the same top-level folder and the same leaf (after LEAF_MAP).
+ */
+function staysIn(env, type, c) {
   const route = routeFor(type, env.cfg);
-  return route.top === null || route.top === slot;
+  if (route.top === null) return true;
+  if (route.top !== c.slot) return false;
+  // A fixed route must also end in this leaf folder ("GST" in Compliance and Tax is not filed as a certificate).
+  const leaf = route.override ? route.leaf : leafIn(route.top, route.leaf);
+  return key(leaf ?? '') === key(c.leaf);
+}
+
+/** True when two known types are filed in the same top-level folder and leaf. */
+function sameRouteAs(env, a, b) {
+  const ra = routeFor(a, env.cfg);
+  const rb = routeFor(b, env.cfg);
+  return ra.known && rb.known && ra.top === rb.top && ra.leaf === rb.leaf;
 }
 
 /**

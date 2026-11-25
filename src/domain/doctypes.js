@@ -45,24 +45,45 @@ export const BUILTIN_TYPE_KEYWORDS = Object.freeze({
 /** Types that are identity documents: imported Confidential at least, like files in an identity folder. */
 export const IDENTITY_TYPES = Object.freeze(['PAN Card', 'Aadhaar Card', 'Voter ID', 'Passport']);
 
-/** Words that, next to a bare "gst", say the file is a filing or a bill rather than the registration certificate. */
-const GST_FILING_WORDS = new Set(['return', 'returns', 'filing', 'filings', 'gstr', 'invoice', 'invoices', 'bill', 'bills',
-  'payment', 'payments', 'challan', 'challans', 'report', 'reports', 'summary', 'ledger', 'statement', 'statements',
-  'reconciliation', 'notice', 'reply', 'refund', 'computation', 'working', 'workings']);
+const MONTH_WORDS = ['jan', 'january', 'feb', 'february', 'mar', 'march', 'apr', 'april', 'may', 'jun', 'june', 'jul', 'july',
+  'aug', 'august', 'sep', 'sept', 'september', 'oct', 'october', 'nov', 'november', 'dec', 'december'];
+
+/** Words that say a file is a filing, a bill or an order rather than a registration certificate. */
+const FILING_WORDS = new Set(['return', 'returns', 'filing', 'filings', 'gstr', 'invoice', 'invoices', 'bill', 'bills',
+  'payment', 'payments', 'challan', 'challans', 'statement', 'statements', 'annual', 'order', 'orders', 'assessment',
+  'assessments', 'notice', 'notices', 'ledger', 'ledgers', 'report', 'reports', 'summary', 'reconciliation', 'reply',
+  'refund', 'computation', ...MONTH_WORDS]);
+const isFilingWord = (w) => FILING_WORDS.has(w) || /^q[1-4]$/.test(w);
+
+/** Words that, with "gst", always mean the registration certificate. */
+const GST_CERT_WORDS = new Set(['cert', 'certificate', 'reg', 'registration', 'gstin']);
+
+/** Company-name suffixes and copy markers that do not count as words of a short name. */
+const NAME_FILLER = new Set(['private', 'pvt', 'limited', 'ltd', 'llp', 'inc', 'co', 'copy', 'the']);
+
+const nameWords = (words) => words.trim().split(' ').filter(Boolean);
+const noFiling = (words) => !nameWords(words).some(isFilingWord);
 
 /**
- * Extra conditions on a few short built-in keywords that are also ordinary words (normalised keyword -> test on the
- * file name's words). A bare "gst" names the certificate only in a short name (at most three words besides it) with
- * no digits and no filing words ("acme_gst.pdf", "Example Org GST.pdf", not "GST return Q1.pdf" or "gst-2025-03.pdf");
- * longer evidence ("gstin", "gst certificate", "gst registration", "reg 06") always counts. "pan" never counts when
- * followed by "india" ("Pan India rollout").
+ * Extra conditions on built-in keywords that are also ordinary words (normalised keyword -> test on the file name's
+ * words).
+ * - "gst": never with a filing word (return, invoice, challan, statement, payment, filing, annual, order,
+ *   assessment, notice, ledger, a month, q1-q4…). With a certificate word (cert, certificate, reg, registration,
+ *   gstin) it always counts. Otherwise only in a short name: at most three other words besides company suffixes
+ *   ("Private Limited", "Pvt Ltd", "LLP") and "copy", and no digits ("Example Org GST.pdf", not "gst-2025-03.pdf").
+ * - "udyam", "msme": never with a filing word ("MSME payment report", "Udyam filing").
+ * - "pan": not when followed by "india" ("Pan India rollout").
  */
 const KEYWORD_GUARDS = Object.freeze({
   gst: (words) => {
-    const list = words.trim().split(' ').filter(Boolean);
-    const others = list.filter((w) => w !== 'gst');
-    return others.length <= 3 && !list.some((w) => /\d/.test(w) || GST_FILING_WORDS.has(w));
+    const list = nameWords(words);
+    if (list.some(isFilingWord)) return false;
+    if (list.some((w) => GST_CERT_WORDS.has(w))) return true;
+    const others = list.filter((w) => w !== 'gst' && !NAME_FILLER.has(w));
+    return others.length <= 3 && !list.some((w) => /\d/.test(w));
   },
+  udyam: noFiling,
+  msme: noFiling,
   pan: (words) => / pans? (?!india )/.test(words),
 });
 
@@ -74,7 +95,9 @@ const KEYWORD_GUARDS = Object.freeze({
  */
 export function nameHasKeyword(words, keyword) {
   if (!hasKeyword(words, keyword)) return false;
-  const guard = KEYWORD_GUARDS[wordsOf(keyword).trim()];
+  const k = wordsOf(keyword).trim();
+  // Every GST keyword ("gstin", "gst certificate"…) shares the "gst" guard: a filing word blocks it.
+  const guard = KEYWORD_GUARDS[k] ?? (/^gst/.test(k) ? KEYWORD_GUARDS.gst : null);
   return guard ? guard(words) : true;
 }
 
