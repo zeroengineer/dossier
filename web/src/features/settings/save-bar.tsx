@@ -15,7 +15,7 @@ interface SaveBarProps {
 }
 
 /**
- * Sticky bar at the bottom of a settings form: the unsaved-changes state, Discard and the submit button. Render it as
+ * Floating sticky bar at the bottom of a settings form: the unsaved-changes state, Discard and the submit button. Render it as
  * the last child of the page (or of the form) so it sticks to the bottom of the scrolling content.
  */
 export function SaveBar({ dirty, saving, onDiscard, form, saveLabel = "Save changes", className }: SaveBarProps) {
@@ -24,7 +24,7 @@ export function SaveBar({ dirty, saving, onDiscard, form, saveLabel = "Save chan
       role="region"
       aria-label="Save changes"
       className={cn(
-        "sticky bottom-0 z-10 -mx-4 flex items-center justify-between gap-3 border-t bg-background/90 px-4 py-3 backdrop-blur md:-mx-6 md:px-6",
+        "sticky bottom-2 z-10 flex items-center justify-between gap-3 rounded-xl border bg-background/80 py-2 pr-2 pl-4 shadow-lg backdrop-blur-md",
         className,
       )}
     >

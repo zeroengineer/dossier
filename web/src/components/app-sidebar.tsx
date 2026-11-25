@@ -124,7 +124,13 @@ export function AppSidebar() {
   }, [key, setOpenMobile])
 
   return (
-    <Sidebar collapsible="icon" role="complementary" aria-label="Sidebar">
+    <Sidebar
+      variant="floating"
+      collapsible="icon"
+      role="complementary"
+      aria-label="Sidebar"
+      className="*:data-[slot=sidebar-inner]:rounded-xl *:data-[slot=sidebar-inner]:shadow-lg"
+    >
       <SidebarHeader className="gap-3">
         <Link to="/" className="flex items-center gap-1.5 px-1 pt-1 text-sidebar-foreground group-data-[collapsible=icon]:px-0" aria-label="Dossier home">
           <LogoMark />
@@ -161,10 +167,14 @@ export function AppSidebar() {
         ))}
         <SystemGroup pathname={pathname} hash={hash} />
         </nav>
+        {/* At the end of the scrolling content (pushed to the bottom when there is room), so on short windows it
+            scrolls away instead of covering the Settings items. */}
+        <div className="mt-auto p-2 group-data-[collapsible=icon]:hidden">
+          <WhatsNewCard />
+        </div>
       </SidebarContent>
 
       <SidebarFooter className="gap-3">
-        <WhatsNewCard />
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Help and docs">

@@ -46,5 +46,7 @@ Element.prototype.getBoundingClientRect = function boundingClientRect(this: Elem
 }
 
 Element.prototype.scrollIntoView ??= function scrollIntoView() {}
+// jsdom has window.scrollTo but only logs "not implemented"; React Router's ScrollRestoration calls it.
+window.scrollTo = () => {}
 Element.prototype.hasPointerCapture ??= () => false
 Element.prototype.releasePointerCapture ??= () => {}

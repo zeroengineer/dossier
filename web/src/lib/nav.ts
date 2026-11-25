@@ -50,13 +50,13 @@ export const DOCS_ICON = BookTextIcon
 export const SETTINGS_ICON = SettingsIcon
 
 /**
- * Whether `item` is the current page. `/` matches only itself; other paths match themselves and their children;
+ * Whether `item` is the current page. `/` matches only itself and its `/dashboard` alias; other paths match themselves and their children;
  * items with a hash match only that hash, and a path item does not match while a sibling's hash is active.
  */
 export function isActive(item: Pick<NavItem, "to">, pathname: string, hash: string): boolean {
   const [path = "", itemHash] = item.to.split("#")
   if (itemHash !== undefined) return pathname === path && hash === `#${itemHash}`
-  if (path === "/") return pathname === "/"
+  if (path === "/") return pathname === "/" || pathname === "/dashboard"
   const matches = pathname === path || pathname.startsWith(`${path}/`)
   if (!matches) return false
   const hashSibling = SETTINGS_ITEMS.some((s) => s.to.startsWith(`${path}#`) && hash === `#${s.to.split("#")[1]}`)

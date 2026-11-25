@@ -8,7 +8,7 @@ import {
 const HIGHLIGHTS = [
   { title: "A new interface", text: "A dark, keyboard-friendly app with a sidebar, breadcrumbs and a command palette (⌘K)." },
   { title: "Same vault, same rules", text: "Numbering, statuses and clearance stay in the server; the app reads them from the API." },
-  { title: "More to come", text: "Dashboard, documents table, generator with live preview and settings editors land page by page." },
+  { title: "Every page, one app", text: "Dashboard, vault, documents, entities, the generator with live preview, upload and the settings editors." },
 ]
 
 /** Sidebar footer card announcing the new interface, with the details in a dialog. Hidden in the icon rail. */
@@ -20,7 +20,7 @@ export function WhatsNewCard() {
           <SparklesIcon className="size-4 text-primary" />
           What's new
         </CardTitle>
-        <CardDescription>Dossier has a new app interface. Pages are switching over one by one.</CardDescription>
+        <CardDescription>Dossier 1.0 has a new app interface for every page.</CardDescription>
       </CardHeader>
       <CardFooter>
         <Dialog>

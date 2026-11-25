@@ -177,7 +177,7 @@ export function WorkspaceEditor({
           </div>
         </Section>
 
-        <div id="users" className="scroll-mt-4">
+        <div id="users" className="scroll-mt-20">
           <Section
             title="Users"
             description={`Users not listed get Confidential. You cannot give anyone a clearance above your own${myClearance ? ` (${myClearance})` : ""}, or change or remove a user above it.`}

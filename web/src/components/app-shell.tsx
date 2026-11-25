@@ -1,6 +1,6 @@
-import { Suspense, type MouseEvent } from "react"
+import { Suspense, useEffect, useState, type MouseEvent } from "react"
 import { SearchIcon } from "lucide-react"
-import { Outlet } from "react-router"
+import { Outlet, ScrollRestoration } from "react-router"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 import { CommandPaletteProvider, modKey, useCommandPalette } from "@/components/command-palette"
@@ -36,8 +36,24 @@ function skipToMain(event: MouseEvent<HTMLAnchorElement>) {
   main.scrollIntoView({ block: "start" })
 }
 
-/** Sidebar + sticky header (trigger, breadcrumbs, ⌘K) around the routed page. */
+/** True once the window has scrolled, so the floating header can lift off the content under it. */
+function useScrolled(threshold = 4): boolean {
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > threshold)
+    update()
+    window.addEventListener("scroll", update, { passive: true })
+    return () => window.removeEventListener("scroll", update)
+  }, [threshold])
+  return scrolled
+}
+
+/**
+ * Floating sidebar + floating sticky header (trigger, breadcrumbs, ⌘K) around the routed page. The header and the page
+ * share the sidebar's 0.5rem inset from the window edges, so their top and bottom edges line up with the sidebar's.
+ */
 export function AppShell() {
+  const scrolled = useScrolled()
   return (
     <CommandPaletteProvider>
       <a
@@ -49,16 +65,26 @@ export function AppShell() {
       </a>
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset>
-          <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
-            <div className="min-w-0 flex-1">
-              <Breadcrumbs />
+        <SidebarInset className="min-w-0">
+          <header
+            data-slot="app-header"
+            data-scrolled={scrolled || undefined}
+            className="group/header sticky top-0 z-20 shrink-0 px-3 pt-3 md:px-2 md:pt-2"
+          >
+            <div className="flex h-12 items-center gap-2 rounded-xl border bg-background/70 px-2 backdrop-blur-md transition-shadow duration-200 ease-out group-data-scrolled/header:bg-background/80 group-data-scrolled/header:shadow-md">
+              <SidebarTrigger />
+              <Separator orientation="vertical" className="mr-1 data-vertical:h-4 data-vertical:self-center" />
+              <div className="min-w-0 flex-1">
+                <Breadcrumbs />
+              </div>
+              <PaletteButton />
             </div>
-            <PaletteButton />
           </header>
-          <div id={MAIN_ID} tabIndex={-1} className="flex min-w-0 flex-1 flex-col gap-6 p-4 outline-none md:p-6">
+          <div
+            id={MAIN_ID}
+            tabIndex={-1}
+            className="flex min-w-0 flex-1 flex-col gap-6 px-3 pt-6 pb-6 outline-none md:px-2 md:pb-2"
+          >
             <Suspense fallback={<PageSkeleton />}>
               <Outlet />
             </Suspense>
@@ -66,6 +92,8 @@ export function AppShell() {
         </SidebarInset>
       </SidebarProvider>
       <Toaster position="bottom-right" />
+      {/* A new page starts at the top (or at its #anchor); back and forward restore where you were. */}
+      <ScrollRestoration />
     </CommandPaletteProvider>
   )
 }

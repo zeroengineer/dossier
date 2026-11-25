@@ -42,7 +42,7 @@ export function DocumentMetadata({ doc }: { doc: DocumentDetail }) {
         </CardAction>
       </CardHeader>
       <CardContent>
-        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2" aria-label="Document details">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-4" aria-label="Document details">
           <Row label="Type">{doc.type}</Row>
           <Row label="Number">
             {doc.docNumber ? (

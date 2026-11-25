@@ -31,16 +31,17 @@ export function Breadcrumbs() {
   const crumbs = useCrumbs()
   if (!crumbs.length) return null
   return (
-    <Breadcrumb>
-      <BreadcrumbList>
+    <Breadcrumb className="min-w-0">
+      <BreadcrumbList className="flex-nowrap">
         {crumbs.map((crumb, i) => {
           const last = i === crumbs.length - 1
           return (
             <Fragment key={crumb.id}>
-              {i > 0 ? <BreadcrumbSeparator className={i < crumbs.length - 1 ? "hidden md:block" : undefined} /> : null}
-              <BreadcrumbItem className={last ? undefined : "hidden md:inline-flex"}>
+              {/* Phones show only the current page, so no separator leads up to it there. */}
+              {i > 0 ? <BreadcrumbSeparator className="hidden md:block" /> : null}
+              <BreadcrumbItem className={last ? "min-w-0" : "hidden shrink-0 md:inline-flex"}>
                 {last ? (
-                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                  <BreadcrumbPage className="block truncate" title={crumb.label}>{crumb.label}</BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink asChild>
                     <Link to={crumb.to}>{crumb.label}</Link>

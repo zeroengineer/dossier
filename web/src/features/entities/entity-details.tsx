@@ -10,7 +10,7 @@ const NONE = <span className="text-muted-foreground">—</span>
 
 function Row({ label, children, wide = false }: { label: string; children: React.ReactNode; wide?: boolean }) {
   return (
-    <div className={wide ? "flex flex-col gap-0.5 sm:col-span-2" : "flex flex-col gap-0.5"}>
+    <div className={wide ? "col-span-2 flex flex-col gap-0.5" : "flex flex-col gap-0.5"}>
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="min-w-0 break-words">{children}</dd>
     </div>
@@ -29,7 +29,7 @@ export function EntityDetails({ entity }: { entity: EntityDetail }) {
         <CardTitle>Details</CardTitle>
       </CardHeader>
       <CardContent>
-        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2" aria-label="Entity details">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-4" aria-label="Entity details">
           <Row label="Id"><span className="tabular-nums">{entity.id}</span></Row>
           <Row label="Kind">{kindLabel(entity.kind)}</Row>
           <Row label="Aliases" wide>

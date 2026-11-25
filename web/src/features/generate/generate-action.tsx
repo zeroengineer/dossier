@@ -108,75 +108,79 @@ interface GenerateActionBarProps {
 export function GenerateActionBar({ action, onGenerateNew }: GenerateActionBarProps) {
   const { regenerate, problems, locked, force, setForce, note, setNote, pending } = action
   const docName = regenerate ? (regenerate.docNumber ?? regenerate.id) : ""
+  // A fragment: the action row must be a child of the form itself to stick while the whole form scrolls (a sticky box
+  // never leaves its parent).
   return (
-    <div className="flex flex-col gap-4 border-t pt-6">
-      {problems.length ? (
-        <Alert variant="destructive">
-          <CircleAlertIcon />
-          <AlertTitle>
-            {problems.length === 1 ? "1 field needs attention" : `${problems.length} fields need attention`}
-          </AlertTitle>
-          <AlertDescription>
-            <ul className="flex flex-col gap-0.5">
-              {problems.map((p) => (
-                <li key={`${p.path}:${p.message}`}>{`${p.label}: ${p.message}`}</li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
-      ) : null}
+    <>
+      <div className="flex flex-col gap-4 border-t pt-6">
+        {problems.length ? (
+          <Alert variant="destructive">
+            <CircleAlertIcon />
+            <AlertTitle>
+              {problems.length === 1 ? "1 field needs attention" : `${problems.length} fields need attention`}
+            </AlertTitle>
+            <AlertDescription>
+              <ul className="flex flex-col gap-0.5">
+                {problems.map((p) => (
+                  <li key={`${p.path}:${p.message}`}>{`${p.label}: ${p.message}`}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
-      {regenerate ? (
-        <Field>
-          <FieldLabel htmlFor="generate-note">Version note</FieldLabel>
-          <Textarea
-            id="generate-note"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="What changed in this version (optional)"
-            rows={2}
-          />
-        </Field>
-      ) : null}
+        {regenerate ? (
+          <Field>
+            <FieldLabel htmlFor="generate-note">Version note</FieldLabel>
+            <Textarea
+              id="generate-note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="What changed in this version (optional)"
+              rows={2}
+            />
+          </Field>
+        ) : null}
 
-      {regenerate && locked ? (
-        <Alert>
-          <LockIcon />
-          <AlertTitle>
-            {docName} is {locked.status}
-          </AlertTitle>
-          <AlertDescription className="flex flex-col gap-3">
-            <p>
-              A {locked.status} document cannot simply be regenerated. You can keep {docName} as it is and generate a new
-              document from this input, then mark it as superseding {docName} on the new document's page. Or you can
-              regenerate {docName} anyway: it keeps its number and gets a new version, and its status may change.
-            </p>
-            <Field orientation="horizontal">
-              <Checkbox id="generate-force" checked={force} onCheckedChange={(v) => setForce(v === true)} />
-              <FieldContent>
-                <FieldLabel htmlFor="generate-force">Regenerate anyway</FieldLabel>
-                <FieldDescription>Adds a new version to {docName} although it is {locked.status}.</FieldDescription>
-              </FieldContent>
-            </Field>
-            {onGenerateNew ? (
-              <div>
-                <Button type="button" variant="outline" size="sm" onClick={onGenerateNew}>
-                  <FilePlusIcon data-icon="inline-start" />
-                  Generate a new document instead
-                </Button>
-              </div>
-            ) : null}
-          </AlertDescription>
-        </Alert>
-      ) : null}
+        {regenerate && locked ? (
+          <Alert>
+            <LockIcon />
+            <AlertTitle>
+              {docName} is {locked.status}
+            </AlertTitle>
+            <AlertDescription className="flex flex-col gap-3">
+              <p>
+                A {locked.status} document cannot simply be regenerated. You can keep {docName} as it is and generate a new
+                document from this input, then mark it as superseding {docName} on the new document's page. Or you can
+                regenerate {docName} anyway: it keeps its number and gets a new version, and its status may change.
+              </p>
+              <Field orientation="horizontal">
+                <Checkbox id="generate-force" checked={force} onCheckedChange={(v) => setForce(v === true)} />
+                <FieldContent>
+                  <FieldLabel htmlFor="generate-force">Regenerate anyway</FieldLabel>
+                  <FieldDescription>Adds a new version to {docName} although it is {locked.status}.</FieldDescription>
+                </FieldContent>
+              </Field>
+              {onGenerateNew ? (
+                <div>
+                  <Button type="button" variant="outline" size="sm" onClick={onGenerateNew}>
+                    <FilePlusIcon data-icon="inline-start" />
+                    Generate a new document instead
+                  </Button>
+                </div>
+              ) : null}
+            </AlertDescription>
+          </Alert>
+        ) : null}
+      </div>
 
-      {/* Kept in view at the bottom of a long form. */}
-      <div className="sticky bottom-0 flex justify-end bg-card py-3">
+      {/* Kept in view at the bottom of a long form, floating over the fields that scroll under it. */}
+      <div className="sticky bottom-2 z-10 flex justify-end rounded-xl border bg-card/80 p-2 shadow-lg backdrop-blur-md">
         <Button type="submit" disabled={pending || Boolean(regenerate && locked && !force)}>
           {pending ? <Spinner data-icon="inline-start" /> : regenerate ? <RefreshCwIcon data-icon="inline-start" /> : <FilePlusIcon data-icon="inline-start" />}
           {regenerate ? "Regenerate" : "Generate"}
         </Button>
       </div>
-    </div>
+    </>
   )
 }
