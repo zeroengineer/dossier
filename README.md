@@ -33,6 +33,7 @@ grouping of amounts in words and the web UI's `en-IN` money grouping are fixed i
 ```sh
 npm install
 npm test
+npm run build                                # build the web app into web/dist
 
 node bin/dossier.js init ./workspace        # copy the example workspace and load its seed entities
 export DOSSIER_HOME=$PWD/workspace
@@ -275,7 +276,6 @@ npm run visual -- --update  # rewrite the baselines (always from the example wor
 bin/dossier.js, bin/dossier-mcp.js   entry points
 src/cli.js                           command table
 src/server.js, src/web/              Fastify server: JSON API, file routes, serves the web app (web/dist)
-web/                                 the web app (React, Vite, TypeScript)
 src/mcp.js                           MCP server (stdio)
 src/context.js                       openContext({ home, user }) -> { config, ws, db, repo, user }
 src/workspace/                       workspace loader and schema validation
@@ -286,7 +286,7 @@ src/services/                        documents, upload, search, entities, hierar
 src/render/                          PDF primitives and frames (pdfkit), blocks, HTML and Markdown renderers
 src/templates/<id>/                  built-in templates (template.json + index.js / body.md)
 src/cache/                           in-memory memo and disk render cache
-web/                                 the new web app (React, Vite, TypeScript; npm workspace @dossier/web), built to web/dist
+web/                                 the web app (React, Vite, TypeScript; npm workspace @dossier/web), built to web/dist
 workspace.example/                   the fake example workspace
 ```
 
@@ -322,8 +322,10 @@ design and data model; `docs/DECISIONS.md` records the decisions and their reaso
 
 ## Status and limitations
 
-Version 0.1. The vault, the generator with all seventeen templates, the web UI and settings, the MCP server, the caches
-and the importer are complete and covered by tests. Known limitations:
+Version 1.0. The vault, the generator with all seventeen templates, the web app (dashboard, vault, documents,
+search, generate with live preview, upload, entities, templates and settings), the MCP server, the caches, the
+importer and the Docker image are complete and covered by tests. `CHANGELOG.md` lists what changed in each version.
+Known limitations:
 
 - Single workspace and single acting user per process; no login or per-user sessions.
 - The HTML rendition is a web rendition with the same fonts and metrics, not a line-for-line facsimile of the PDF.

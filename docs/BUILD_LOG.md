@@ -4,13 +4,17 @@ This is the record of how Dossier was built: what was done, in what order, how e
 
 Organisation-specific details are deliberately left out. The app was built to replace a private set of hand-written PDF scripts, and everything specific to that organisation lives in a private workspace outside this repository.
 
+The log covers two phases. Phase 1 (version 0.1.0) built the vault, generator, MCP server and a server-rendered UI; it is described from "Outcome" to "Open items". Phase 2 (version 1.0.0) replaced the UI with a React web app; it has its own section, "Phase 2: product UI", near the end.
+
 ## Outcome
+
+Phase 1 (0.1.0). The phase 2 outcome is in its own section.
 
 | Item | State |
 |---|---|
 | Features from the plan | 24 of 24 built, each reviewed |
 | Built-in templates | 17 |
-| Tests | 569 passing (`npm test`) |
+| Tests | 569 passing (`npm test`) at 0.1.0; 1,002 at 1.0.0 |
 | Organisation-data guard | 0 hits across the shipped tree |
 | Fidelity against the legacy PDFs | 16 of 16 comparable templates within 0.5 pt on every fixed label and image |
 | Branch | `main`, pushed; history rewritten once (see below) |
@@ -129,9 +133,123 @@ These were logged during reviews and left for later. None blocks use.
 - **Layouts not rebuilt:** older proposal and report layouts and two group-entity designs.
 - **Small polish items** are listed in `docs/DECISIONS.md` where a decision was recorded.
 
+## Phase 2: product UI
+
+Phase 2 turned the working app into a product. The plain server-rendered pages were replaced by a React web app with a dark theme, a sidebar, a dashboard, data tables and a command palette, and the project got a logo. The backend's business rules did not change. The result is version 1.0.0. The work ran on 24 and 25 November 2026.
+
+### Outcome
+
+| Item | State |
+|---|---|
+| Features from the plan | F02 to F24 built and reviewed, plus a `sharp` security upgrade |
+| Tests | 1,002 passing (`npm test`): 597 API and service tests, 405 web app tests |
+| Web app TypeScript | `npm run typecheck` clean (strict, `noUncheckedIndexedAccess`) |
+| Organisation-data guard | 0 hits across the shipped tree, which now also covers `web/`, `CHANGELOG.md` and the Docker files |
+| Production build | `npm run build`: no chunk over 500 kB; charts load only with the dashboard |
+| Dependency audit | 0 runtime vulnerabilities (`npm audit --omit=dev`); 4 moderate ones in development-only tools |
+| Old UI | removed; every removed route is listed in `CHANGELOG.md` |
+| Branch | `main`; tag `v1.0.0` follows the final whole-branch review |
+
+### How the work was run
+
+1. **Grilling.** The owner and the coordinator settled the decisions in two rounds of questions before any planning. The decisions covered the stack, deleting the old UI, a single user with no login, the navigation, the dashboard's contents, the visual system, the logo process, each screen, the process and the testing approach.
+2. **Plan.** A written plan covered the repo layout, backend changes, theme tokens, every screen and a task list (F00 to F24). The owner approved it before any code was written.
+3. **Subagent-driven build.** As in phase 1, each feature went to a separate implementer agent (Claude Opus 5.5) with a written brief. A fresh reviewer agent then checked it against the spec and for code quality.
+   - Critical and Important findings went back to the implementer, followed by a scoped re-review.
+   - Minor findings were parked and routed to a later feature or listed below.
+   - A ledger recorded every dispatch, review, ruling and incident.
+4. **Parallel worktrees.** After F04 the owner asked for independent tasks to run in parallel.
+   - A preparation commit first added every shared component and dependency, so feature agents never had to touch `package.json`, the lockfile, `CHANGELOG.md`, `docs/DECISIONS.md` or the README.
+   - Features then ran in three batches, each agent in its own git worktree and branch.
+   - The coordinator cherry-picked each reviewed branch onto `main` one at a time. It then added that feature's changelog and decision entries in a separate `docs:` commit.
+   - The remaining features (F21 to F24) ran after the batches, with some overlap.
+5. **Checks with the owner.** The owner picked the logo direction from three concepts (F19). They also checked the finished pages in a browser before the old UI was removed (F21). Work paused twice at the owner's request and resumed from the ledger.
+6. **Final review.** A whole-branch review follows this release preparation. The `v1.0.0` tag is placed after it.
+
+### Features in build order
+
+Commit IDs are on `main`. Most features have a `docs:` commit with their changelog and decisions, listed last in the row.
+
+| # | Feature | Commits | Review rounds |
+|---|---|---|---|
+| F00 | Vendor the shadcn agent skill | 06d7351 | done by the coordinator |
+| F01 | Prepare the branch: changelog, `test:api`, guard paths | 4fffecd | done by the coordinator |
+| F02 | Serve the web app, CSP, `GET /api/me`, `GET /api/meta` | 8dc0b10 | clean; minors carried to F21 |
+| F03 | Web scaffold, theme, fonts, app shell, build wiring | 0d75ea1, 78646b8 | 1 fix round: field error details, project links from `package.json` |
+| F04 | Dashboard API | 2bcf6c1, 2b86912 | approved; 1 follow-up round: one warning per brand, canonical `days` |
+| — | Shared components, libraries and data table for parallel work | 8d553fa, 5512045, cfaf373 | 1 fix round: page reset, explicit server mode, shared confirm dialog |
+| F19 | Logo concepts (owner checkpoint) | a9d7520, e76c63b | owner picked concept A |
+| F08 | Document page (read) | b32f0d4, 63d35a5 | no fix round recorded |
+| F16 | Settings API additions | 4a37828, c693bdf, 831c4ec | 1 fix round: asset routes for every slot, effective asset paths |
+| F11 | Templates page | c475ce9, aca70ca, 31d1580 | clean |
+| F06 | Vault tree | 7be4023, 38600c0, b503d08 | clean |
+| F05 | Dashboard page | 7d94399, c8d721d | 1 fix round: warnings as alerts, weekly buckets |
+| F07 | Documents table | 5294590, b6e90bd, a39663d | 1 fix round: page past the end, status validation |
+| F09 | Document actions | 895a626, 5408524, ae078a0 | 1 fix round: confirm every status change, refresh the tree |
+| F10 | Search and live command palette | dc69b84, d2b32be, 6dcc6fe, 03fc256 | 1 fix round: Enter opened a stale result |
+| F14 | Upload | 5124384, 3124379, e4743ad | approved; 1 polish round |
+| F12 | Generate: picker and dynamic form | 3945385, e812b52, 35d0ee8 | 1 fix round: row error paths, stale choices after a brand switch |
+| F15 | Entities | 152d9cf, 8aa4c8b, e78ca73 | approved; 1 polish round: grouped counts, `entityId` tests |
+| F17 | Settings: brands | dba5d30, dc7d575, 6d673b5 | 1 fix round: first save of the root brand failed, an upload was undone by the next save, New brand could overwrite |
+| F20 | Logo kit and favicon | 828f970, 57bb777 | clean |
+| F13 | Generate: live preview, generate, regenerate | 9e02eac, ea2fe81, 3658a2c, 5de1663 | 2 fix rounds: preview problems flickered while typing, stale answers marked fields |
+| F18 | Settings: numbering, workspace, users | 99614f2, 42b54f5, 7bc3033 | 1 fix round: lowering your own clearance, top-level folder renames |
+| F23 | Docker image and compose file | fc3de2f, 2d39759 | clean; a hardening commit followed |
+| F21 | Remove the old UI | 5caf983, 2a76af0, a476a1e, 42d9445 | approved; 1 polish round: stricter `/api` and file-path matching |
+| F22 | Responsive and accessibility pass, chunk split, test flakes | c61594f, 4541803, 36fce1a, 03087db, 0e95fb2 | 1 fix round: skip link changed the URL, commits that did not typecheck alone |
+| — | `sharp` 0.35.5 security upgrade | 58abfbd, 0468021 | verified by the coordinator (see rulings) |
+| F24 | Release preparation: changelog, versions, docs | this release | final whole-branch review |
+
+### Rulings made during the build
+
+These decisions were taken without asking the owner, except where noted. Each one notes what it costs if it was wrong.
+
+1. **The npm workspace and `test:web` were added in F03, not F01**, because `web/` did not exist yet and `npm ci` had to keep working. No cost.
+2. **The old UI kept `/` and its paths until F21**, and the web app was served only for unmatched paths meanwhile, so `main` never had a half-working UI. Until F21 the web app was reachable only on new paths such as `/vault` and `/dashboard`.
+3. **Work went straight to `main`** (owner's decision), with no pull request at the end. The tag `v1.0.0` follows the final review. There is no PR record; `CHANGELOG.md` and this log carry the history.
+4. **The product's repository URL may appear in the app**, because it is the product's public home, not organisation data. It is read from `package.json` `homepage` and `repository`, so a fork must edit `package.json`.
+5. **Dashboard series counters are not filtered by clearance.** Sequence values are workspace configuration, and generate previews already show the next numbers. A low-clearance user can infer that numbers were issued.
+6. **For parallel work, a preparation commit added every shared component and dependency up front.** Feature agents never edited `package.json`, the lockfile, `CHANGELOG.md`, `docs/DECISIONS.md` or the README; the coordinator wrote those entries at merge. No cost seen.
+7. **Agent worktrees (`.claude/worktrees/`) are git-ignored.** No cost.
+8. **F12 reused F06's jsdom stub for resizable panels byte for byte**, to avoid two diverging stubs in the test setup. If wrong, one merge conflict.
+9. **Testing Library's async timeout was raised to 5 s and Vitest's test timeout to 15 s**, because the first lazy page in a file timed out under full parallel runs. Failures are reported more slowly.
+10. **Pushes are gated on the test exit code** after one push went out before the tests had finished (see incidents). No cost.
+11. **The `sharp` upgrade was verified by the coordinator instead of a reviewer agent.** It changed only the lockfile, and the outputs were byte-identical. The coordinator ran `npm ci`, the runtime audit (0), both test suites, samples and the visual checks (41 of 41), and loaded `sharp` in the Docker image. If this was wrong, the final review re-checks it.
+
+### Incidents
+
+Phase 1's two rules held throughout: no browser tools, and nothing written, moved or deleted outside the repo. The only exception was the logo renderer's command-line headless Chrome in F19 and F20.
+
+- **A worktree was created outside the repo.** A typo by the coordinator created a git worktree in the folder next to the repo. It was clean and was removed with `git worktree remove` within a minute. Nothing else was touched.
+- **A temporary file was written outside the repo.** The F21 agent wrote a temporary file under `/tmp` (outside its allowed temporary folders) and deleted it afterwards; it was checked to be gone.
+- **The logo renderer may have touched the owner's Chrome profile.** The logo task's renderer runs headless Chrome from the command line. Files in the owner's normal Chrome profile and updater folders changed during that window, but those change during normal use too. Whether the renderer caused it is unconfirmed.
+- **Pushes failed and were retried.** GitHub answered one push with a server error (500), and a DNS outage blocked another. Both succeeded on retry.
+- **One push went out before the tests had finished.** Nothing was broken: the suite passed on the next run apart from one known flaky test. Pushes have been gated on the test exit code since (ruling 10).
+- **Some web tests were flaky under heavy load:** the app-shell flyout, a documents-table cell and the entities tabs. F22 fixed them by rendering pages directly instead of the whole app.
+
+### Open items
+
+These minor findings were parked during reviews. None blocks use.
+
+- **Web client:** the API client types a non-JSON success reply as JSON; a few upstream command-palette quirks.
+- **Dashboard:** the recent-documents list runs about 20 small queries; the number-conflict message can hint that a hidden document exists; the chart chunk is not prefetched; the INR fallback in money formatting.
+- **Vault:** expanding a folder downloads its whole subtree again (a backend `depth=1` option would fix it); a brief double mount on mobile; a fixed minimum height; no tests for tree or right-pane server errors.
+- **Documents and document page:** the party-kind filter list; a refetch while a date range is half filled; the count and list queries run outside one transaction; a mouse-wheel scroll check in a picker; aligning the add-link search with the main search; a sensitivity `FORBIDDEN` error is not shown on its field; the old status flashes while a dialog closes.
+- **Search:** the palette unmounts before its close animation ends; one arrow-key test does not tell the two choices apart.
+- **Templates page:** the version, numbering and sensitivity columns cannot be sorted; rows contain duplicate links.
+- **Generate:** a three-way switch for optional booleans; the entity combobox has a result cap and no free text; a field mark is lost when its list row moves after a removal.
+- **Upload:** a 413 reply is shown as a network error; unknown clearance levels are not handled specially.
+- **Entities:** no index on `issuing_entity_id`; entity search is not designed for more than 500 entities; punctuation is not folded in matching; the breadcrumb shows the id, not the name.
+- **Settings:** saving a brand trims, lowercases and rewrites blank lines in some fields; renaming a series can leave extra keys.
+- **Logo kit:** `export_kit.sh` gives an unclear message when the logo skill is missing; no check that the favicon master and its public copy match.
+- **Docker:** the Node base image is not pinned to a minor version; the healthcheck accepts any reply below 500.
+- **Development dependencies:** 4 moderate audit findings in development-only tools (`minimatch` through `@ts-morph` and others); none ships in the runtime image.
+
 ## Where to look next
 
-- `README.md`: setup, running, testing, customising, MCP and import.
-- `docs/PLAN.md`: architecture and data model.
+- `README.md`: setup, running, testing, customising, MCP, import and Docker.
+- `CHANGELOG.md`: what changed in each version.
+- `docs/WEB.md`: the web app's architecture, development, build and Docker.
+- `docs/PLAN.md`: architecture and data model (phase 1), with a pointer to phase 2.
 - `docs/DECISIONS.md`: every small decision, with reasons.
 - `docs/WORKSPACE.md`, `docs/TEMPLATES.md`, `docs/MCP.md`: reference guides.

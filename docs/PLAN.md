@@ -1,6 +1,6 @@
 # PLAN: Dossier
 
-> Vision and build plan written before implementation; the shipped behaviour is described in README.md and docs/*.md (where they differ, those win). Organisation-specific names are replaced by neutral labels; the unredacted copy lives in the private workspace (`dossier-workspace/docs/PLAN.full.md`), never committed.
+> Phase 1 vision and build plan written before implementation (phase 2, the web app, is summarised at the end and described in docs/WEB.md); the shipped behaviour is described in README.md and docs/*.md (where they differ, those win). Organisation-specific names are replaced by neutral labels; the unredacted copy lives in the private workspace (`dossier-workspace/docs/PLAN.full.md`), never committed.
 
 ## B0. Public-app principle: code is generic, everything organisation-specific is data
 
@@ -282,3 +282,12 @@ Location: `<current folder>/dossier-workspace/` (outside the repo, so moving `do
 - Implementation agents: Opus 5.5 (`model: "opus"`), one B11 feature each (B16).
 - Commit style: `feat(scope): …` with a body (what, why, how tested); attribution line from the session reminder.
 - Never touch anything outside `dossier/`.
+
+## Phase 2: product UI (1.0.0)
+
+Everything above is the phase 1 (0.1.0) plan, kept as history. Phase 2 replaced the server-rendered web UI described in B1 (`src/web/` pages, "No bundler") with a React web app in `web/` (Vite, TypeScript, Tailwind v4, shadcn), served by the same Fastify server from `web/dist` and talking only to `/api/*` and the file URLs. The vault, generator, numbering, MCP server and every business rule stayed as planned here; the server gained `GET /api/me`, `GET /api/meta`, `GET /api/dashboard` and a few settings endpoints. Phase 2 also added a logo kit and a Docker image.
+
+- `docs/WEB.md`: the web app's architecture, source layout, development, build and Docker.
+- `CHANGELOG.md` (1.0.0): what was added, changed and removed, including every removed HTML route.
+- `docs/BUILD_LOG.md` ("Phase 2: product UI"): how it was built: features, reviews, rulings and incidents.
+- `docs/DECISIONS.md` ("phase 2: product UI"): the decisions and their reasons.
