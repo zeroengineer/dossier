@@ -82,8 +82,35 @@ npm run build               # builds web/dist
 node scripts/org-data-guard.js
 ```
 
-Frontend tests use Vitest, Testing Library and MSW (`web/src/test/handlers/<area>.ts`); there are no browser
-end-to-end tests.
+Frontend tests use Vitest, Testing Library and MSW (`web/src/test/handlers/<area>.ts`).
+
+### End-to-end tests (Playwright)
+
+`web/e2e/` holds browser tests run with `@playwright/test` against the built app. They are not part of `npm test`
+(they need a build and Google Chrome):
+
+```sh
+npm run build
+npm run test:e2e                          # every spec, desktop (1440x900) and mobile (390x844)
+npm run test:e2e -- --project=desktop     # one viewport; any Playwright CLI option passes through
+SCREENS_TAG=before npm run test:e2e -- screens.spec.ts   # full-page screenshots of every page
+```
+
+- **Browser.** The installed Google Chrome (`channel: "chrome"`). The suite never downloads browsers; do not run
+  `npx playwright install`.
+- **Server and data.** `e2e/global-setup.ts` makes a temporary folder (`dossier-e2e-*` under the OS temp directory),
+  copies the example workspace into it with `dossier init`, starts `node src/server.js` on a free loopback port (never
+  4400) and generates three example invoices through the API. Teardown stops the server and removes that folder. Your
+  own workspace and server are never touched.
+- **Where files go.** Results, traces, the HTML report and screenshots go to `web/e2e/.output/` (git-ignored):
+  `test-results/`, `playwright-report/`, `screens/<SCREENS_TAG or latest>/`. Chrome's throw-away profile and its
+  per-user state live in the run's temporary folder (`TMPDIR`, `HOME` and `CFFIXED_USER_HOME` point there for the
+  browser), not in your home folder.
+- **What they cover.** The shell at both sizes (floating sidebar and header geometry, icon-rail collapse, the mobile
+  sheet, no sideways scrolling), every top-level page reached from the sidebar as a view transition with nothing
+  overlapping, tab switching by mouse and keyboard with URL restore (document viewer `?view=`, entities `?kind=`,
+  brand editor `?tab=`), generating an invoice, alignment checks (toolbar controls, numeric columns, badges, viewer
+  frames, empty states) and reduced motion.
 
 ## Build
 

@@ -29,3 +29,6 @@ test/.tmp/
 .superpowers/
 .DS_Store
 *.log
+
+# Playwright end-to-end output (results, traces, report, screenshots)
+web/e2e/.output/

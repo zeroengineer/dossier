@@ -27,6 +27,7 @@
     "test": "npm run test:api && npm run test:web",
     "test:api": "node --no-warnings=ExperimentalWarning --test --test-concurrency=1 \"test/**/*.test.js\"",
     "test:web": "npm run test -w web",
+    "test:e2e": "npm run test:e2e -w web --",
     "typecheck": "npm run typecheck -w web",
     "test:unit": "node --no-warnings=ExperimentalWarning --test \"test/unit/**/*.test.js\"",
     "test:integration": "node --no-warnings=ExperimentalWarning --test --test-concurrency=1 \"test/integration/**/*.test.js\"",
