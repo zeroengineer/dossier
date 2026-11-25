@@ -17,11 +17,11 @@ dossier-workspace
 .docker-test-workspace
 
 # Secrets
-.env
-.env.*
-*.pem
-*.key
-*.p12
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+**/*.p12
 
 # Generated output (web/dist is rebuilt inside the image)
 web/dist

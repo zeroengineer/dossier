@@ -334,6 +334,7 @@ and the importer are complete and covered by tests. Known limitations:
 - `docs/WORKSPACE.md`: creating and customising a workspace (brands, assets, series, seeds, settings).
 - `docs/TEMPLATES.md`: the template authoring guide and the built-in templates.
 - `docs/MCP.md`: the MCP server: setup, tools, resources and security.
+- `docs/WEB.md`: the web app: architecture, development, build and Docker.
 - `docs/PLAN.md`: architecture, data model, rules, caches, testing and build order.
 - `docs/DECISIONS.md`: decisions and their reasons.
 - `docs/BUILD_LOG.md`: how the app was built: features, reviews, rulings, incidents and open items.

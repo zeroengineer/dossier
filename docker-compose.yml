@@ -16,3 +16,7 @@ services:
       # An empty folder is filled from the shipped example on first start; an existing workspace is used as it is.
       - ${DOSSIER_WORKSPACE:-./workspace}:/workspace
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL

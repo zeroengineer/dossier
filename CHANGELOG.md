@@ -6,6 +6,7 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ### Added
 
+- Docker: multi-stage `Dockerfile` (node:22-bookworm-slim, non-root, healthcheck), `docker-compose.yml` (loopback-only port, no extra capabilities) with a `./workspace` volume that is initialised from the example workspace when empty, `.dockerignore`, and `docs/WEB.md` (web app architecture, development, build, Docker).
 - Settings: Numbering page (edit series rows with usage, row-level errors) and Workspace page (name, default brand, locale, folder hierarchy and routing, users with clearance). Lowering your own clearance asks for confirmation; renaming a top-level folder updates routing values that used its old name.
 - Generate: live draft preview (PDF/HTML/Markdown tabs, debounced, missing and invalid fields marked on the form without flicker, empty-placeholder warnings), Generate with a toast and a jump to the new document, and Regenerate from a document's current input with the STATUS_LOCKED choice between superseding and forcing (with a version note).
 - Dossier logo kit (Bound D): mark, 16 px cut, wordmark and lockups in `web/brand-src/kit`; favicon, app and PWA icons in `web/public/brand`, `favicon.ico` and `site.webmanifest`; the sidebar shows the new mark and wordmark.

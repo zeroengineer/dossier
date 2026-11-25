@@ -11,6 +11,7 @@ if [ "${1:-}" = "dossier" ] && [ "${2:-}" = "init" ]; then
 elif [ ! -e "$home/workspace.json" ] && [ "${DOSSIER_AUTO_INIT:-1}" = "1" ]; then
   if [ -n "$(ls -A "$home" 2>/dev/null)" ]; then
     echo "dossier: $home has no workspace.json but is not empty; leaving it as it is" >&2
+    echo "         (remove stray files such as .DS_Store, or run: docker compose run --rm dossier dossier init)" >&2
   elif [ -d "$home" ] && [ ! -w "$home" ]; then
     echo "dossier: $home is not writable by uid $(id -u); make the mounted folder writable by that user" >&2
     echo "         (for example: mkdir -p workspace && sudo chown $(id -u):$(id -g) workspace)" >&2
