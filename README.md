@@ -212,6 +212,19 @@ With `--index`, a CSV (`original_path,vault_path,vault_folder,md5,size_bytes,not
 CSV's folder are refused. The summary lists counts, new entities, documents by type, numbers, conflicts, skipped files
 and warnings (`--json` for JSON).
 
+## Docker
+
+```sh
+docker compose up --build        # builds the image and serves http://localhost:4400
+```
+
+The image (`node:22-bookworm-slim`, multi-stage) builds the web app and runs the server as an unprivileged user.
+`./workspace` is mounted as the workspace: an empty folder is filled from the example workspace on the first start,
+an existing workspace is used as it is (`DOSSIER_WORKSPACE=/path/to/workspace docker compose up` points at another
+folder). Compose sets `DOSSIER_ALLOWED_HOSTS=localhost`, which the container needs because it listens on `0.0.0.0`,
+and publishes the port on `127.0.0.1` only, since there is no login. Run CLI commands with
+`docker compose run --rm dossier dossier <command>`. Details, settings and Linux permissions: [docs/WEB.md](docs/WEB.md#docker).
+
 ## Testing
 
 ```sh

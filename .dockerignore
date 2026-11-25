@@ -1,0 +1,38 @@
+# Keep the build context small and free of private data. The image is built from a clean checkout plus `npm ci`.
+**/node_modules
+**/.DS_Store
+*.log
+.git
+.claude
+.superpowers
+.task-report.md
+
+# Private workspaces and runtime data never go into the image (mount them as a volume instead).
+workspace
+workspace.example/data
+data
+*.sqlite
+*.sqlite-*
+dossier-workspace
+.docker-test-workspace
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+
+# Generated output (web/dist is rebuilt inside the image)
+web/dist
+web/coverage
+web/brand-src/renders
+coverage
+samples-out
+
+# Not needed to build or run the server
+test
+docs
+Dockerfile
+docker-compose.yml
+.dockerignore

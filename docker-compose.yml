@@ -1,0 +1,18 @@
+# Dossier in a container: `docker compose up --build`, then open http://localhost:4400
+# The vault has no login, so the port is published on the host's loopback address only. To serve other machines, put
+# an authenticating reverse proxy in front and set DOSSIER_ALLOWED_HOSTS to the host names it serves.
+services:
+  dossier:
+    build: .
+    ports:
+      - "127.0.0.1:${DOSSIER_PORT:-4400}:4400"
+    environment:
+      DOSSIER_HOME: /workspace
+      # Host names the server answers (comma separated); required because the container listens on 0.0.0.0.
+      DOSSIER_ALLOWED_HOSTS: ${DOSSIER_ALLOWED_HOSTS:-localhost}
+      # The acting user (clearance from workspace.json "users"); the example workspace defines "demo".
+      DOSSIER_USER: ${DOSSIER_USER:-demo}
+    volumes:
+      # An empty folder is filled from the shipped example on first start; an existing workspace is used as it is.
+      - ${DOSSIER_WORKSPACE:-./workspace}:/workspace
+    restart: unless-stopped
