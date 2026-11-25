@@ -79,6 +79,13 @@ describe("Entities page", () => {
     await waitFor(() => expect(router.state.location.pathname).toBe("/entities/4"))
   })
 
+  it("still loads the list (All) for a ?kind= when the kinds cannot be loaded", async () => {
+    server.use(http.get("*/api/meta", () => HttpResponse.json({ code: "INTERNAL", message: "boom", details: {} }, { status: 500 })))
+    renderRoute(<EntitiesPage />, "/entities?kind=client", { route: "/entities" })
+    expect(await screen.findByText("Example Supplies")).toBeInTheDocument()
+    expect(screen.getByRole("tab", { name: "All" })).toHaveAttribute("aria-selected", "true")
+  })
+
   it("falls back to the All tab for an unknown kind", async () => {
     renderRoute(<EntitiesPage />, "/entities?kind=planet", { route: "/entities" })
     expect(await screen.findByText("Example Supplies")).toBeInTheDocument()

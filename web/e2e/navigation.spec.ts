@@ -4,13 +4,15 @@ import { PAGES, box, isMobile, openNav, pageHeading, settled } from "./helpers"
 /** Counts `document.startViewTransition` calls, so a test can tell a page change ran as a view transition. */
 async function countViewTransitions(page: Page) {
   await page.addInitScript(() => {
-    const w = window as unknown as { __viewTransitions: number }
+    const w = window as unknown as { __viewTransitions: number; __lastViewTransition?: ViewTransition }
     w.__viewTransitions = 0
     const start = document.startViewTransition?.bind(document)
     if (!start) return
     document.startViewTransition = ((arg: Parameters<typeof start>[0]) => {
       w.__viewTransitions += 1
-      return start(arg)
+      const vt = start(arg)
+      w.__lastViewTransition = vt
+      return vt
     }) as typeof document.startViewTransition
   })
 }
@@ -68,6 +70,41 @@ test("every top-level page opens from the sidebar with a view transition", async
       }).toPass()
     }
     await expectNoOverlap(page)
+  }
+})
+
+test("the page does not fade in a second time once the view transition has finished", async ({ page }) => {
+  test.skip(isMobile(page), "checked at desktop size")
+  await countViewTransitions(page)
+  // Load each page once first: a page whose code or data arrives after the transition legitimately fades in when it
+  // replaces its skeleton, which is not what this test is about.
+  await page.goto("/documents")
+  await settled(page)
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" })
+  for (const name of ["Entities", "Templates", "Dashboard", "Documents"]) {
+    await sidebar.getByRole("link", { name, exact: true }).click()
+    await settled(page)
+  }
+  for (const name of ["Entities", "Templates", "Dashboard"]) {
+    const before = await transitions(page)
+    await page.getByRole("complementary", { name: "Sidebar" }).getByRole("link", { name, exact: true }).click()
+    await expect.poll(() => transitions(page)).toBe(before + 1)
+    // Sampled right after `finished` and over the following 200 ms (one content fade), when a restarted fade would run.
+    const running = await page.evaluate(async () => {
+      const w = window as unknown as { __lastViewTransition?: ViewTransition }
+      await w.__lastViewTransition?.finished
+      const samples: number[] = []
+      for (let i = 0; i < 5; i++) {
+        const count = [...document.querySelectorAll("#main-content > *")]
+          .flatMap((el) => el.getAnimations())
+          .filter((a) => a.playState === "running").length
+        samples.push(count)
+        await new Promise((r) => setTimeout(r, 50))
+      }
+      return samples
+    })
+    expect(running, `animations on the page root after navigating to ${name}`).toEqual([0, 0, 0, 0, 0])
+    await settled(page)
   }
 })
 

@@ -198,14 +198,23 @@
 [data-slot="tabs-content"][data-state="active"] {
   animation: dossier-fade-in 200ms ease-out;
 }
-/* A page's content fades in when it replaces the loading skeleton (and on first load). */
+/*
+ * A page's content fades in when it replaces the loading skeleton (and on first load). A transition from a
+ * @starting-style, not an animation: it runs only when the element is inserted, so switching it off during a route's
+ * view transition (which already fades the page in as a whole) cannot make it play again when the transition ends, as
+ * switching an animation's name back would.
+ */
 #main-content > :not([aria-busy="true"]) {
-  animation: dossier-fade-in 200ms ease-out;
+  transition: opacity 200ms ease-out;
 }
-/* During a route's view transition the page already fades in as a whole: no second fade inside it. (A separate rule,
-   so a browser without :active-view-transition drops only this one.) */
+@starting-style {
+  #main-content > :not([aria-busy="true"]) {
+    opacity: 0;
+  }
+}
+/* A separate rule, so a browser without :active-view-transition drops only this one. */
 :root:active-view-transition #main-content > * {
-  animation: none;
+  transition: none;
 }
 /* Table rows fade in when they replace skeleton rows or a new page of rows arrives. */
 [data-slot="table-body"] > [data-slot="table-row"] {

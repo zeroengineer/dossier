@@ -18,14 +18,14 @@ const ALL = "all"
 export default function EntitiesPage() {
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
-  const { data: meta } = useMeta()
+  const { data: meta, isError: metaFailed } = useMeta()
   const requested = params.get("kind") ?? ""
   // Only a known kind filters: an unknown ?kind= (an old link, a typo) shows All, and until the kinds have loaded the
-  // list waits rather than sending a request the server may refuse.
+  // list waits rather than sending a request the server may refuse. If the kinds cannot be loaded, it shows All.
   const kind = meta?.entityKinds.includes(requested) ? requested : ""
   const { data, isPending, isError, error, refetch, isPlaceholderData } = useEntities(
     { kind: kind || undefined, limit: ENTITY_LIST_LIMIT },
-    { enabled: !requested || meta !== undefined },
+    { enabled: !requested || meta !== undefined || metaFailed },
   )
   const [creating, setCreating] = React.useState(false)
 
