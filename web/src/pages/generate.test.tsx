@@ -1,10 +1,11 @@
 import { screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
-import { beforeAll, beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it } from "vitest"
 import type { EntityMatch, TemplateDetail } from "@/api/types"
 import { fieldKind } from "@/features/generate/schema"
 import { builtinTemplateDetails, builtinTemplateList } from "@/test/fixtures-generate"
-import { renderApp } from "@/test/render"
+import GeneratePage from "@/pages/generate"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 
 const entity = (id: number, kind: string, name: string): EntityMatch => ({
@@ -35,10 +36,6 @@ function detail(id: string): TemplateDetail {
   return d
 }
 
-// Load the lazy route once up front, so the first test's findBy* does not wait on the import (slow on a busy machine).
-beforeAll(async () => {
-  await import("@/pages/generate")
-})
 
 beforeEach(() => {
   server.use(
@@ -55,7 +52,7 @@ describe("Generate picker", () => {
   })
 
   it("shows a card per template grouped by category, linking to its form", async () => {
-    const { user, router } = renderApp("/generate")
+    const { user, router } = renderRoute(<GeneratePage />, "/generate", { route: "/generate/:templateId?" })
     expect(await screen.findByRole("heading", { name: "Generate" })).toBeInTheDocument()
     const invoices = await screen.findByRole("region", { name: "Invoice" })
     expect(within(invoices).getByRole("link", { name: "Invoice" })).toHaveAttribute("href", "/generate/invoice")
@@ -76,7 +73,7 @@ describe("Generate picker", () => {
   })
 
   it("filters the cards by search and says when nothing matches", async () => {
-    const { user } = renderApp("/generate")
+    const { user } = renderRoute(<GeneratePage />, "/generate", { route: "/generate/:templateId?" })
     const search = await screen.findByRole("searchbox", { name: "Search templates" })
     await screen.findByRole("link", { name: "Invoice" })
     await user.type(search, "receipt")
@@ -89,7 +86,7 @@ describe("Generate picker", () => {
 
   it("shows an empty state without templates", async () => {
     server.use(http.get("*/api/templates", () => HttpResponse.json({ templates: [], errors: [] })))
-    renderApp("/generate")
+    renderRoute(<GeneratePage />, "/generate", { route: "/generate/:templateId?" })
     expect(await screen.findByText("No templates")).toBeInTheDocument()
   })
 })
@@ -97,7 +94,7 @@ describe("Generate picker", () => {
 describe("Generate form", () => {
   it.each(Object.keys(builtinTemplateDetails))("renders every field of the built-in template %s", async (id) => {
     const t = detail(id)
-    renderApp(`/generate/${id}`)
+    renderRoute(<GeneratePage />, `/generate/${id}`, { route: "/generate/:templateId?" })
     expect(await screen.findByRole("heading", { level: 1, name: t.meta.title })).toBeInTheDocument()
     const form = within(screen.getByRole("form", { name: `${t.meta.title} fields` }))
     for (const f of t.fields) {
@@ -122,7 +119,7 @@ describe("Generate form", () => {
         return HttpResponse.json(detail("invoice"))
       }),
     )
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const brand = await screen.findByRole("combobox", { name: "Brand" })
     expect(brand).toHaveTextContent("Acme Studio LLP")
     expect(brands).toEqual(["acme-studio"])
@@ -134,7 +131,7 @@ describe("Generate form", () => {
   })
 
   it("keeps typed values when the brand changes", async () => {
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const bank = await screen.findByLabelText(label("Bank account"))
     await user.type(bank, "1")
     await user.click(screen.getByRole("combobox", { name: "Brand" }))
@@ -144,7 +141,7 @@ describe("Generate form", () => {
   })
 
   it("adds and removes list rows", async () => {
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const items = await screen.findByRole("table", { name: label("Items") })
     expect(within(items).getAllByRole("row")).toHaveLength(2) // header + one blank row
     await user.type(within(items).getByRole("textbox", { name: "Items row 1 description" }), "Stage")
@@ -157,7 +154,7 @@ describe("Generate form", () => {
   })
 
   it("marks a required field the user left empty", async () => {
-    const { user } = renderApp("/generate/offer-letter")
+    const { user } = renderRoute(<GeneratePage />, "/generate/offer-letter", { route: "/generate/:templateId?" })
     const joining = await screen.findByLabelText(label("Joining date"))
     await user.click(joining)
     await user.tab()
@@ -166,7 +163,7 @@ describe("Generate form", () => {
   })
 
   it("flags invalid JSON in a list or object field", async () => {
-    const { user } = renderApp("/generate/mou")
+    const { user } = renderRoute(<GeneratePage />, "/generate/mou", { route: "/generate/:templateId?" })
     const signatory = await screen.findByLabelText(label("Partner signatory"))
     await user.click(signatory)
     await user.paste("{ name")
@@ -175,13 +172,13 @@ describe("Generate form", () => {
   })
 
   it("starts switches at the template default", async () => {
-    renderApp("/generate/offer-letter")
+    renderRoute(<GeneratePage />, "/generate/offer-letter", { route: "/generate/:templateId?" })
     expect(await screen.findByRole("switch", { name: label("Company seal") })).toBeChecked()
     expect(screen.getByRole("switch", { name: label("Probation applies") })).toBeChecked()
   })
 
   it("offers the entities of the field's kind", async () => {
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const client = await screen.findByRole("combobox", { name: label("Client") })
     await user.click(client)
     expect(await screen.findByRole("option", { name: "Demo Retail LLP" })).toBeInTheDocument()
@@ -191,7 +188,7 @@ describe("Generate form", () => {
   })
 
   it("offers the enum choices with the template default first", async () => {
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const tax = await screen.findByRole("combobox", { name: label("Tax") })
     await user.click(tax)
     const options = (await screen.findAllByRole("option")).map((o) => o.textContent)
@@ -212,7 +209,7 @@ describe("Generate form", () => {
         HttpResponse.json(new URL(request.url).searchParams.get("brandId") === "acme-studio" ? studio : invoice),
       ),
     )
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const tax = await screen.findByRole("combobox", { name: label("Tax") })
     await user.click(tax)
     await user.click(await screen.findByRole("option", { name: "igst" }))
@@ -227,7 +224,7 @@ describe("Generate form", () => {
   })
 
   it("keeps a choice the new brand also offers", async () => {
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const tax = await screen.findByRole("combobox", { name: label("Tax") })
     await user.click(tax)
     await user.click(await screen.findByRole("option", { name: "none" }))
@@ -239,7 +236,7 @@ describe("Generate form", () => {
   })
 
   it("says when the template does not exist", async () => {
-    renderApp("/generate/no-such-template")
+    renderRoute(<GeneratePage />, "/generate/no-such-template", { route: "/generate/:templateId?" })
     expect(await screen.findByText("Template not found")).toBeInTheDocument()
   })
 })

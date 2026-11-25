@@ -3,7 +3,8 @@ import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
 import type { SeriesEntry } from "@/api/types"
 import { seriesFile } from "@/test/fixtures-settings"
-import { renderApp } from "@/test/render"
+import NumberingSettingsPage from "@/pages/settings-numbering"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 
 function capturePuts() {
@@ -22,7 +23,7 @@ const invalid = (errors: Array<{ file: string; path: string; message: string }>)
   HttpResponse.json({ code: "WORKSPACE_INVALID", message: "series.json: invalid", details: { file: "series.json", errors } }, { status: 400 })
 
 async function openPage() {
-  const app = renderApp("/settings/numbering")
+  const app = renderRoute(<NumberingSettingsPage />, "/settings/numbering", { route: "/settings/numbering" })
   await screen.findByRole("form", { name: "Numbering series" })
   return app
 }
@@ -110,7 +111,7 @@ describe("Numbering settings", () => {
 
   it("shows an error state when the series cannot be loaded", async () => {
     server.use(http.get("*/api/series", () => HttpResponse.json({ code: "INTERNAL", message: "boom", details: {} }, { status: 500 })))
-    renderApp("/settings/numbering")
+    renderRoute(<NumberingSettingsPage />, "/settings/numbering", { route: "/settings/numbering" })
     expect(await screen.findByText("Could not load the numbering series")).toBeInTheDocument()
   })
 })

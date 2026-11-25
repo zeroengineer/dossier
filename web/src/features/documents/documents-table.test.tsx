@@ -3,7 +3,8 @@ import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
 import { acmeEvents, alexExample } from "@/test/fixtures-documents"
 import { handlers as documentHandlers } from "@/test/handlers/documents"
-import { renderApp } from "@/test/render"
+import DocumentsPage from "@/pages/documents"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 
 /** Records every `GET /api/documents` query string, then answers with the default fixture handler. */
@@ -37,15 +38,13 @@ const bodyRows = () => {
   const table = screen.getByRole("table")
   return within(table).getAllByRole("row").slice(1)
 }
-/** Waits for a body cell; generous timeout because the first test also loads the lazy page chunk. */
-const findCell = (name: string) => screen.findByRole("cell", { name }, { timeout: 10_000 })
+const findCell = (name: string) => screen.findByRole("cell", { name })
 const search = (router: { state: { location: { search: string } } }) => new URLSearchParams(router.state.location.search)
 
-// Generous timeouts: these render the whole app shell, which is slow when the full suite runs in parallel.
-describe("Documents table", { timeout: 20_000 }, () => {
+describe("Documents table", () => {
   it("shows number (with conflict badge), title, type, party, status, date and amount", async () => {
     const seen = recordListRequests()
-    renderApp("/documents")
+    renderRoute(<DocumentsPage />, "/documents", { route: "/documents" })
     expect(await findCell("Stage invoice")).toBeInTheDocument()
     for (const name of ["Number", "Title", "Type", "Party", "Status", "Date", "Amount"]) {
       expect(screen.getByRole("columnheader", { name })).toBeInTheDocument()
@@ -72,7 +71,7 @@ describe("Documents table", { timeout: 20_000 }, () => {
   it("sends the URL filters and page to the API and labels the active party", async () => {
     const seen = recordListRequests()
     partyHandlers()
-    renderApp(`/documents?type=Invoice&status=Sent&partyId=${acmeEvents.id}&from=2025-01-01&to=2026-12-31&page=2&size=10`)
+    renderRoute(<DocumentsPage />, `/documents?type=Invoice&status=Sent&partyId=${acmeEvents.id}&from=2025-01-01&to=2026-12-31&page=2&size=10`, { route: "/documents" })
     expect(await findCell("Invoice 13")).toBeInTheDocument()
     const q = seen.at(-1)!
     expect(Object.fromEntries(q)).toEqual({
@@ -92,7 +91,7 @@ describe("Documents table", { timeout: 20_000 }, () => {
 
   it("puts a chosen status in the URL, back on page 1, and refetches", async () => {
     const seen = recordListRequests()
-    const { user, router } = renderApp("/documents?page=2")
+    const { user, router } = renderRoute(<DocumentsPage />, "/documents?page=2", { route: "/documents" })
     await findCell("Invoice 23")
     await user.click(screen.getByRole("button", { name: "Status" }))
     await user.click(await screen.findByRole("option", { name: /Draft/ }))
@@ -108,7 +107,7 @@ describe("Documents table", { timeout: 20_000 }, () => {
   it("filters by party from the searchable list", async () => {
     recordListRequests()
     partyHandlers()
-    const { user, router } = renderApp("/documents")
+    const { user, router } = renderRoute(<DocumentsPage />, "/documents", { route: "/documents" })
     await findCell("Stage invoice")
     await user.click(screen.getByRole("button", { name: "Party" }))
     await user.type(await screen.findByPlaceholderText("Search parties…"), "alex")
@@ -120,7 +119,7 @@ describe("Documents table", { timeout: 20_000 }, () => {
 
   it("pages with the pagination buttons through the URL", async () => {
     const seen = recordListRequests()
-    const { user, router } = renderApp("/documents")
+    const { user, router } = renderRoute(<DocumentsPage />, "/documents", { route: "/documents" })
     await findCell("Stage invoice")
     await user.click(screen.getByRole("button", { name: "Next page" }))
     await waitFor(() => expect(search(router).get("page")).toBe("2"))
@@ -130,7 +129,7 @@ describe("Documents table", { timeout: 20_000 }, () => {
 
   it("resets every filter", async () => {
     recordListRequests()
-    const { user, router } = renderApp("/documents?status=Paid&type=Quotation")
+    const { user, router } = renderRoute(<DocumentsPage />, "/documents?status=Paid&type=Quotation", { route: "/documents" })
     await findCell("Catering quotation")
     await user.click(screen.getByRole("button", { name: "Reset" }))
     await waitFor(() => expect(router.state.location.search).toBe(""))
@@ -139,7 +138,7 @@ describe("Documents table", { timeout: 20_000 }, () => {
 
   it("hides a column from the View menu and remembers it", async () => {
     recordListRequests()
-    const { user, unmount } = renderApp("/documents")
+    const { user, unmount } = renderRoute(<DocumentsPage />, "/documents", { route: "/documents" })
     await findCell("Stage invoice")
     await user.click(screen.getByRole("button", { name: "View" }))
     await user.click(await screen.findByRole("menuitemcheckbox", { name: "Party" }))
@@ -147,7 +146,7 @@ describe("Documents table", { timeout: 20_000 }, () => {
     expect(screen.queryByRole("columnheader", { name: "Party" })).not.toBeInTheDocument()
     expect(JSON.parse(window.localStorage.getItem("dossier.documents.columns") ?? "{}")).toEqual({ party: false })
     unmount()
-    renderApp("/documents")
+    renderRoute(<DocumentsPage />, "/documents", { route: "/documents" })
     await findCell("Stage invoice")
     expect(screen.queryByRole("columnheader", { name: "Party" })).not.toBeInTheDocument()
     expect(screen.getByRole("columnheader", { name: "Amount" })).toBeInTheDocument()
@@ -155,7 +154,7 @@ describe("Documents table", { timeout: 20_000 }, () => {
 
   it("opens a document when its row is clicked", async () => {
     recordListRequests()
-    const { user, router } = renderApp("/documents")
+    const { user, router } = renderRoute(<DocumentsPage />, "/documents", { route: "/documents" })
     await findCell("Stage invoice")
     expect(screen.getByRole("link", { name: "Stage invoice" })).toHaveAttribute("href", "/documents/DOC-000001")
     await user.click(within(bodyRows()[0]!).getByText("Invoice"))
@@ -164,14 +163,14 @@ describe("Documents table", { timeout: 20_000 }, () => {
 
   it("says when no document matches the filters", async () => {
     recordListRequests()
-    renderApp("/documents?type=Receipt")
+    renderRoute(<DocumentsPage />, "/documents?type=Receipt", { route: "/documents" })
     expect(await screen.findByText("No documents match these filters.")).toBeInTheDocument()
     expect(screen.getByText("0 rows")).toBeInTheDocument()
   })
 
   it("moves a page past the end to the last page", async () => {
     const seen = recordListRequests()
-    const { router } = renderApp("/documents?page=99&status=Sent")
+    const { router } = renderRoute(<DocumentsPage />, "/documents?page=99&status=Sent", { route: "/documents" })
     await waitFor(() => expect(search(router).get("page")).toBe("3"))
     expect(search(router).get("status")).toBe("Sent")
     expect(await findCell("Invoice 43")).toBeInTheDocument()
@@ -186,8 +185,8 @@ describe("Documents table", { timeout: 20_000 }, () => {
         HttpResponse.json({ code: "INVALID_INPUT", message: "type must be a non-empty string", details: {} }, { status: 400 }),
       ),
     )
-    renderApp("/documents?type=Invoice")
-    const alert = await screen.findByRole("alert", {}, { timeout: 10_000 })
+    renderRoute(<DocumentsPage />, "/documents?type=Invoice", { route: "/documents" })
+    const alert = await screen.findByRole("alert")
     expect(within(alert).getByText("INVALID_INPUT: type must be a non-empty string")).toBeInTheDocument()
     expect(within(alert).getByRole("button", { name: "Retry" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Reset" })).toBeInTheDocument()

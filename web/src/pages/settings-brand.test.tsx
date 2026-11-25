@@ -3,7 +3,8 @@ import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
 import type { BrandDetail, BrandFile } from "@/api/types"
 import { acmeFile, brandDetails } from "@/test/fixtures-brands"
-import { renderApp } from "@/test/render"
+import BrandSettingsPage from "@/pages/settings-brand"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 
 /** Capture PUT /api/brands/:id bodies; the reply (and later GETs) echo the body as the new file. */
@@ -33,7 +34,7 @@ const invalid = (errors: Array<{ file?: string; path: string; message: string }>
   )
 
 async function openEditor(path = "/settings/brands/acme") {
-  const app = renderApp(path)
+  const app = renderRoute(<BrandSettingsPage />, path, { route: "/settings/brands/:id" })
   await screen.findByRole("form", { name: /^Brand / })
   return app
 }

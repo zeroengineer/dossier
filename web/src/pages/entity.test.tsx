@@ -1,8 +1,9 @@
 import { screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { acmeDocuments } from "@/test/fixtures-entities"
-import { renderApp } from "@/test/render"
+import EntityPage from "@/pages/entity"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 
 let documentQueries: URLSearchParams[] = []
@@ -19,10 +20,6 @@ beforeEach(() => {
       return HttpResponse.json({ documents, total: documents.length })
     }),
   )
-})
-// The page is a lazy route chunk: load it once up front so the first test does not race its cold import.
-beforeAll(async () => {
-  await import("@/pages/entity")
 })
 afterEach(() => server.events.removeAllListeners())
 
@@ -42,7 +39,7 @@ function capturePost(path: string) {
 
 describe("Entity page", () => {
   it("shows the entity's details, aliases, brand and attributes", async () => {
-    renderApp("/entities/1")
+    renderRoute(<EntityPage />, "/entities/1", { route: "/entities/:id" })
     expect(await screen.findByRole("heading", { name: "Acme Events Private Limited" })).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Company" })).toHaveAttribute("href", "/entities?kind=company")
     expect(screen.getByText("Also known as Acme Events")).toBeInTheDocument()
@@ -56,7 +53,7 @@ describe("Entity page", () => {
   })
 
   it("lists relations in both directions with links to the related entity", async () => {
-    renderApp("/entities/1")
+    renderRoute(<EntityPage />, "/entities/1", { route: "/entities/:id" })
     await screen.findByRole("heading", { name: "Acme Events Private Limited" })
     const relations = card("Relations")
     const row = relations.getAllByRole("row")[1]!
@@ -67,7 +64,7 @@ describe("Entity page", () => {
   })
 
   it("lists the documents that refer to the entity and notes the ones it cannot show", async () => {
-    renderApp("/entities/1")
+    renderRoute(<EntityPage />, "/entities/1", { route: "/entities/:id" })
     const docs = within(await screen.findByText("Documents", { selector: "[data-slot=card-title]" }).then((h) => h.closest<HTMLElement>("[data-slot=card]")!))
     expect(await docs.findByRole("link", { name: "Event services invoice" })).toHaveAttribute("href", "/documents/DOC-000001")
     expect(docs.getByRole("link", { name: "Venue confirmation letter" })).toBeInTheDocument()
@@ -79,20 +76,20 @@ describe("Entity page", () => {
   it("says how many visible documents are past the first page, apart from those above the clearance", async () => {
     // 152 visible documents, 2 returned: none above the clearance (documentCount 3 is below the visible total).
     server.use(http.get("*/api/documents", () => HttpResponse.json({ documents: acmeDocuments, total: 152 })))
-    renderApp("/entities/1")
+    renderRoute(<EntityPage />, "/entities/1", { route: "/entities/:id" })
     expect(await screen.findByText(/Showing the latest 2 of 152 documents\. 150 more are not listed here\./)).toBeInTheDocument()
     expect(screen.queryByText(/above your clearance/)).not.toBeInTheDocument()
   })
 
   it("says so when there are no relations or documents", async () => {
-    renderApp("/entities/4")
+    renderRoute(<EntityPage />, "/entities/4", { route: "/entities/:id" })
     await screen.findByRole("heading", { name: "Example Supplies" })
     expect(card("Relations").getByText("No relations yet.")).toBeInTheDocument()
     expect(await screen.findByText("No documents you can see refer to this entity.")).toBeInTheDocument()
   })
 
   it("shows a not-found state for an unknown id", async () => {
-    renderApp("/entities/404")
+    renderRoute(<EntityPage />, "/entities/404", { route: "/entities/:id" })
     expect(await screen.findByRole("heading", { name: "Entity not found" })).toBeInTheDocument()
     expect(screen.getByText(/ENTITY_NOT_FOUND/)).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "All entities" })).toHaveAttribute("href", "/entities")
@@ -102,7 +99,7 @@ describe("Entity page", () => {
 describe("Edit entity dialog", () => {
   it("is prefilled, keeps existing aliases, and sends new aliases, removed attribute keys as null and a cleared brand", async () => {
     const bodies = capturePost("/api/entities")
-    const { user } = renderApp("/entities/1")
+    const { user } = renderRoute(<EntityPage />, "/entities/1", { route: "/entities/:id" })
     await screen.findByRole("heading", { name: "Acme Events Private Limited" })
     await user.click(screen.getByRole("button", { name: "Edit" }))
     const d = within(await screen.findByRole("dialog", { name: "Edit Acme Events Private Limited" }))
@@ -132,7 +129,7 @@ describe("Edit entity dialog", () => {
         HttpResponse.json({ code: "INVALID_INPUT", message: 'name "!!" has no letters or digits', details: { name: "!!" } }, { status: 400 }),
       ),
     )
-    const { user } = renderApp("/entities/2")
+    const { user } = renderRoute(<EntityPage />, "/entities/2", { route: "/entities/:id" })
     await screen.findByRole("heading", { name: "Alex Example" })
     await user.click(screen.getByRole("button", { name: "Edit" }))
     const dialog = await screen.findByRole("dialog", { name: "Edit Alex Example" })
@@ -148,7 +145,7 @@ describe("Edit entity dialog", () => {
 describe("Add relation dialog", () => {
   it("relates the entity to one picked by searching, with a role from meta", async () => {
     const bodies = capturePost("/api/entities/2/relations")
-    const { user } = renderApp("/entities/2")
+    const { user } = renderRoute(<EntityPage />, "/entities/2", { route: "/entities/:id" })
     await screen.findByRole("heading", { name: "Alex Example" })
     await user.click(screen.getByRole("button", { name: "Add relation" }))
     const dialog = await screen.findByRole("dialog", { name: "Add relation" })
@@ -184,7 +181,7 @@ describe("Add relation dialog", () => {
         HttpResponse.json({ code: "INVALID_INPUT", message: "An entity cannot be related to itself", details: {} }, { status: 400 }),
       ),
     )
-    const { user } = renderApp("/entities/2")
+    const { user } = renderRoute(<EntityPage />, "/entities/2", { route: "/entities/:id" })
     await screen.findByRole("heading", { name: "Alex Example" })
     await user.click(screen.getByRole("button", { name: "Add relation" }))
     const dialog = await screen.findByRole("dialog", { name: "Add relation" })

@@ -2,12 +2,13 @@ import { screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
 import type { BrandFile } from "@/api/types"
-import { renderApp } from "@/test/render"
+import BrandsSettingsPage from "@/pages/settings-brands"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 
 describe("Brands settings page", () => {
   it("lists the brands with their parent, preview and download links", async () => {
-    renderApp("/settings/brands")
+    renderRoute(<BrandsSettingsPage />, "/settings/brands", { route: "/settings/brands" })
     expect(await screen.findByRole("heading", { name: "Brands" })).toBeInTheDocument()
     const table = screen.getByRole("table")
     expect(await within(table).findByRole("link", { name: "acme-studio" })).toHaveAttribute("href", "/settings/brands/acme-studio")
@@ -27,7 +28,7 @@ describe("Brands settings page", () => {
         return HttpResponse.json({ id: body.id, file: body, resolved: {}, configHash: "x" }, { status: 201 })
       }),
     )
-    const { user, router } = renderApp("/settings/brands")
+    const { user, router } = renderRoute(<BrandsSettingsPage />, "/settings/brands", { route: "/settings/brands" })
     await user.click(await screen.findByRole("button", { name: "New brand" }))
     const dialog = await screen.findByRole("dialog", { name: "New brand" })
     await user.type(within(dialog).getByLabelText("Id"), "acme-north")
@@ -39,7 +40,7 @@ describe("Brands settings page", () => {
   })
 
   it("refuses an id that is taken or malformed before saving", async () => {
-    const { user } = renderApp("/settings/brands")
+    const { user } = renderRoute(<BrandsSettingsPage />, "/settings/brands", { route: "/settings/brands" })
     await screen.findByRole("link", { name: "acme-studio" })
     await user.click(screen.getByRole("button", { name: "New brand" }))
     const dialog = await screen.findByRole("dialog", { name: "New brand" })
@@ -71,7 +72,7 @@ describe("Brands settings page", () => {
         ),
       ),
     )
-    const { user } = renderApp("/settings/brands")
+    const { user } = renderRoute(<BrandsSettingsPage />, "/settings/brands", { route: "/settings/brands" })
     await user.click(await screen.findByRole("button", { name: "New brand" }))
     const dialog = await screen.findByRole("dialog", { name: "New brand" })
     await user.type(within(dialog).getByLabelText("Id"), "acme-two")
@@ -87,7 +88,7 @@ describe("Brands settings page", () => {
         HttpResponse.json({ code: "BRAND_DUPLICATE", message: 'Brand "acme-two" already exists', details: { brandId: "acme-two" } }, { status: 409 }),
       ),
     )
-    const { user } = renderApp("/settings/brands")
+    const { user } = renderRoute(<BrandsSettingsPage />, "/settings/brands", { route: "/settings/brands" })
     await screen.findByRole("link", { name: "acme-studio" })
     await user.click(screen.getByRole("button", { name: "New brand" }))
     const dialog = await screen.findByRole("dialog", { name: "New brand" })

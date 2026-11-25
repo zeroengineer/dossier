@@ -1,7 +1,8 @@
 import { screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
-import { renderApp } from "@/test/render"
+import TemplatesPage from "@/pages/templates"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 import { templateList } from "@/test/fixtures-templates"
 
@@ -32,7 +33,7 @@ const rowOf = (rows: HTMLElement[], title: string) => {
 
 describe("Templates page", () => {
   it("lists templates with category, type, version, numbering, renditions, sensitivity and source", async () => {
-    renderApp("/templates")
+    renderRoute(<TemplatesPage />, "/templates", { route: "/templates" })
     expect(await screen.findByRole("heading", { name: "Templates" })).toBeInTheDocument()
     const rows = await bodyRows()
     expect(rows).toHaveLength(3)
@@ -60,14 +61,14 @@ describe("Templates page", () => {
   })
 
   it("groups rows by category by default", async () => {
-    renderApp("/templates")
+    renderRoute(<TemplatesPage />, "/templates", { route: "/templates" })
     const rows = await bodyRows()
     const titles = rows.map(titleOf)
     expect(titles).toEqual(["Invoice", "Offer letter", "Event brief"])
   })
 
   it("shows template load errors with id and message", async () => {
-    renderApp("/templates")
+    renderRoute(<TemplatesPage />, "/templates", { route: "/templates" })
     const alert = await screen.findByText("1 template failed to load")
     const box = alert.closest<HTMLElement>("[data-slot=alert]")!
     const items = within(box).getAllByTestId("template-error")
@@ -79,13 +80,13 @@ describe("Templates page", () => {
 
   it("shows no errors alert when every template loads", async () => {
     server.use(http.get("*/api/templates", () => HttpResponse.json({ ...templateList, errors: [] })))
-    renderApp("/templates")
+    renderRoute(<TemplatesPage />, "/templates", { route: "/templates" })
     await bodyRows()
     expect(screen.queryByText(/failed to load/)).not.toBeInTheDocument()
   })
 
   it("filters by category and by source", async () => {
-    const { user } = renderApp("/templates")
+    const { user } = renderRoute(<TemplatesPage />, "/templates", { route: "/templates" })
     await bodyRows()
     await user.click(filterButton("Category"))
     await user.click(await screen.findByRole("option", { name: /Letter/ }))
@@ -101,7 +102,7 @@ describe("Templates page", () => {
   })
 
   it("links Generate to /generate/:id and navigates there on row click", async () => {
-    const { user, router } = renderApp("/templates")
+    const { user, router } = renderRoute(<TemplatesPage />, "/templates", { route: "/templates" })
     await bodyRows()
     expect(screen.getByRole("link", { name: "Generate Invoice" })).toHaveAttribute("href", "/generate/invoice")
     expect(screen.getByRole("link", { name: "Invoice" })).toHaveAttribute("href", "/generate/invoice")
@@ -111,7 +112,7 @@ describe("Templates page", () => {
 
   it("shows an empty state when there are no templates", async () => {
     server.use(http.get("*/api/templates", () => HttpResponse.json({ templates: [], errors: [] })))
-    renderApp("/templates")
+    renderRoute(<TemplatesPage />, "/templates", { route: "/templates" })
     expect(await screen.findByText("No templates")).toBeInTheDocument()
   })
 
@@ -121,7 +122,7 @@ describe("Templates page", () => {
         HttpResponse.json({ code: "INTERNAL", message: "Something broke", details: {} }, { status: 500 }),
       ),
     )
-    renderApp("/templates")
+    renderRoute(<TemplatesPage />, "/templates", { route: "/templates" })
     expect(await screen.findByText("Could not load templates")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument()
   })

@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import { renderApp } from "@/test/render"
+import VaultPage from "@/pages/vault"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 
 /** `node` params of every `/api/tree` request made during the test. */
@@ -18,14 +19,14 @@ afterEach(() => {
   server.events.removeListener("request:start", onRequest)
 })
 
-/** Wait for the lazily loaded page (the first import can be slow under test). */
-const ready = () => screen.findByRole("navigation", { name: "Folders" }, { timeout: 5000 })
+/** Wait for the tree to load. */
+const ready = () => screen.findByRole("navigation", { name: "Folders" })
 const folders = () => within(screen.getByRole("navigation", { name: "Folders" }))
 const folderLink = (name: string) => folders().getByRole("link", { name: new RegExp(`^${name}`) })
 
 describe("Vault page", () => {
   it("lists the top-level folders and asks to choose one", async () => {
-    renderApp("/vault")
+    renderRoute(<VaultPage />, "/vault", { route: "/vault/*" })
     await ready()
     expect(await folders().findByRole("link", { name: /^01 Company/ })).toBeInTheDocument()
     expect(folderLink("03 Clients")).toHaveAttribute("href", "/vault/03")
@@ -34,7 +35,7 @@ describe("Vault page", () => {
   })
 
   it("loads a folder's subfolders lazily when it is expanded", async () => {
-    const { user } = renderApp("/vault")
+    const { user } = renderRoute(<VaultPage />, "/vault", { route: "/vault/*" })
     await ready()
     await folders().findByRole("link", { name: /^03 Clients/ })
     expect(folders().queryByRole("link", { name: /^Events Line/ })).not.toBeInTheDocument()
@@ -49,7 +50,7 @@ describe("Vault page", () => {
   })
 
   it("deep-links to a folder: ancestors expanded, breadcrumb, documents table, row opens the document", async () => {
-    const { user, router } = renderApp("/vault/03/events/example-client/invoices-and-receipts")
+    const { user, router } = renderRoute(<VaultPage />, "/vault/03/events/example-client/invoices-and-receipts", { route: "/vault/*" })
     await ready()
 
     expect(await screen.findByRole("heading", { level: 2, name: "Invoices and Receipts" })).toBeInTheDocument()
@@ -73,7 +74,7 @@ describe("Vault page", () => {
   })
 
   it("selects a folder from the tree and updates the right pane", async () => {
-    const { user, router } = renderApp("/vault/03/events/example-client/invoices-and-receipts")
+    const { user, router } = renderRoute(<VaultPage />, "/vault/03/events/example-client/invoices-and-receipts", { route: "/vault/*" })
     await ready()
     await user.click(await folders().findByRole("link", { name: /^Proposals and Pricing/ }))
     expect(router.state.location.pathname).toBe("/vault/03/events/example-client/proposals-and-pricing")
@@ -83,14 +84,14 @@ describe("Vault page", () => {
   })
 
   it("shows an empty state for a folder without documents", async () => {
-    renderApp("/vault/01/legal-and-registration")
+    renderRoute(<VaultPage />, "/vault/01/legal-and-registration", { route: "/vault/*" })
     await ready()
     expect(await screen.findByText("This folder is empty")).toBeInTheDocument()
     expect(screen.queryByRole("table")).not.toBeInTheDocument()
   })
 
   it("offers the subfolders of an empty folder that has some", async () => {
-    renderApp("/vault/01")
+    renderRoute(<VaultPage />, "/vault/01", { route: "/vault/*" })
     await ready()
     expect(await screen.findByText("This folder is empty")).toBeInTheDocument()
     const main = screen.getByText("This folder is empty").closest("[data-slot=empty]")
@@ -99,7 +100,7 @@ describe("Vault page", () => {
   })
 
   it("shows an error with a way back for an unknown folder", async () => {
-    renderApp("/vault/03/nope")
+    renderRoute(<VaultPage />, "/vault/03/nope", { route: "/vault/*" })
     await ready()
     expect(await screen.findByText("Folder not found")).toBeInTheDocument()
     expect(screen.getByText(/NODE_NOT_FOUND/)).toBeInTheDocument()

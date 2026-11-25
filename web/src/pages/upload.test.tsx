@@ -5,7 +5,8 @@ import { keys } from "@/lib/keys"
 import { meta } from "@/test/fixtures"
 import { acmeEvents, alexExample } from "@/test/fixtures-documents"
 import { newDocumentResult, uploadSeries } from "@/test/fixtures-upload"
-import { renderApp } from "@/test/render"
+import UploadPage from "@/pages/upload"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 
 interface Captured {
@@ -43,9 +44,9 @@ function setup({ answer }: { answer?: () => Response } = {}) {
 }
 
 const pdf = () => new File(["%PDF-1.7 example"], "stage-invoice.pdf", { type: "application/pdf" })
-const findForm = (name: string) => screen.findByRole("form", { name }, { timeout: 10_000 })
+const findForm = (name: string) => screen.findByRole("form", { name })
 
-type User = ReturnType<typeof renderApp>["user"]
+type User = ReturnType<typeof renderRoute>["user"]
 
 async function chooseOption(user: User, label: string | RegExp, option: string | RegExp) {
   await user.click(screen.getByLabelText(label))
@@ -57,10 +58,10 @@ async function pickType(user: User, type: string) {
   await user.click(await screen.findByRole("option", { name: type }))
 }
 
-describe("Upload page", { timeout: 20_000 }, () => {
+describe("Upload page", () => {
   it("uploads a new document as multipart with the metadata, then opens it and refreshes lists", async () => {
     const uploads = setup()
-    const { user, router, queryClient } = renderApp("/upload")
+    const { user, router, queryClient } = renderRoute(<UploadPage />, "/upload", { route: "/upload" })
     const invalidate = vi.spyOn(queryClient, "invalidateQueries")
     await findForm("Upload a new document")
 
@@ -111,7 +112,7 @@ describe("Upload page", { timeout: 20_000 }, () => {
 
   it("requires a file and a type before sending anything", async () => {
     const uploads = setup()
-    const { user } = renderApp("/upload")
+    const { user } = renderRoute(<UploadPage />, "/upload", { route: "/upload" })
     await findForm("Upload a new document")
     await user.click(screen.getByRole("button", { name: "Upload" }))
     expect(await screen.findByText("Choose a document type")).toBeInTheDocument()
@@ -124,7 +125,7 @@ describe("Upload page", { timeout: 20_000 }, () => {
 
   it("lets the user type a document type that is not listed", async () => {
     const uploads = setup()
-    const { user, router } = renderApp("/upload")
+    const { user, router } = renderRoute(<UploadPage />, "/upload", { route: "/upload" })
     await findForm("Upload a new document")
     await user.upload(screen.getByLabelText("File"), pdf())
     await user.click(screen.getByRole("combobox", { name: "Type" }))
@@ -137,7 +138,7 @@ describe("Upload page", { timeout: 20_000 }, () => {
 
   it("offers sensitivity levels only up to the user's clearance", async () => {
     setup()
-    const { user } = renderApp("/upload")
+    const { user } = renderRoute(<UploadPage />, "/upload", { route: "/upload" })
     await findForm("Upload a new document")
     expect(screen.getByLabelText("Sensitivity")).toHaveTextContent("Internal")
     await user.click(screen.getByLabelText("Sensitivity"))
@@ -152,7 +153,7 @@ describe("Upload page", { timeout: 20_000 }, () => {
         { status: 201 },
       ),
     })
-    const { user, router } = renderApp("/upload")
+    const { user, router } = renderRoute(<UploadPage />, "/upload", { route: "/upload" })
     await findForm("Upload a new document")
     await user.upload(screen.getByLabelText("File"), pdf())
     await pickType(user, "invoice")
@@ -165,7 +166,7 @@ describe("Upload page", { timeout: 20_000 }, () => {
 
   it("explains the size limit when the server answers 413", async () => {
     setup({ answer: () => HttpResponse.json({ code: "PAYLOAD_TOO_LARGE", message: "request file too large", details: {} }, { status: 413 }) })
-    const { user, router } = renderApp("/upload")
+    const { user, router } = renderRoute(<UploadPage />, "/upload", { route: "/upload" })
     await findForm("Upload a new document")
     await user.upload(screen.getByLabelText("File"), pdf())
     await pickType(user, "invoice")
@@ -178,7 +179,7 @@ describe("Upload page", { timeout: 20_000 }, () => {
   it("refuses a file over the limit as soon as it is chosen, and does not upload it", async () => {
     const uploads = setup()
     server.use(http.get("*/api/meta", () => HttpResponse.json({ ...meta, limits: { ...meta.limits, uploadMaxBytes: 4 } })))
-    const { user } = renderApp("/upload")
+    const { user } = renderRoute(<UploadPage />, "/upload", { route: "/upload" })
     await findForm("Upload a new document")
     await user.upload(screen.getByLabelText("File"), pdf())
     expect(screen.getByText("The file is larger than the 1 KB upload limit. Choose a smaller file.")).toBeInTheDocument()
@@ -195,7 +196,7 @@ describe("Upload page", { timeout: 20_000 }, () => {
         { status: 400 },
       ),
     })
-    const { user } = renderApp("/upload")
+    const { user } = renderRoute(<UploadPage />, "/upload", { route: "/upload" })
     await findForm("Upload a new document")
     await user.upload(screen.getByLabelText("File"), pdf())
     await pickType(user, "invoice")
@@ -210,7 +211,7 @@ describe("Upload page", { timeout: 20_000 }, () => {
 
   it("uploads a new version with a note and make-current flag only", async () => {
     const uploads = setup()
-    const { user, router } = renderApp("/upload?documentId=DOC-000001")
+    const { user, router } = renderRoute(<UploadPage />, "/upload?documentId=DOC-000001", { route: "/upload" })
     await findForm("Upload a new version")
     expect(screen.getByRole("heading", { name: "Upload new version" })).toBeInTheDocument()
     const target = await screen.findByTestId("upload-target")
@@ -230,7 +231,7 @@ describe("Upload page", { timeout: 20_000 }, () => {
 
   it("shows when the target document of a new version cannot be loaded", async () => {
     setup()
-    renderApp("/upload?documentId=DOC-404404")
+    renderRoute(<UploadPage />, "/upload?documentId=DOC-404404", { route: "/upload" })
     await findForm("Upload a new version")
     expect(await screen.findByText(/DOCUMENT_NOT_FOUND/)).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Upload version" })).toBeDisabled()

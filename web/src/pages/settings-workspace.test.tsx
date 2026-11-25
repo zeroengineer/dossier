@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, it } from "vitest"
 import type { WorkspaceFile } from "@/api/types"
 import { meta } from "@/test/fixtures"
 import { defaultTopLevel, topKeys, workspaceFile } from "@/test/fixtures-settings"
-import { renderApp } from "@/test/render"
+import WorkspaceSettingsPage from "@/pages/settings-workspace"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 
 function capturePuts() {
@@ -23,7 +24,7 @@ const invalid = (errors: Array<{ file: string; path: string; message: string }>)
   HttpResponse.json({ code: "WORKSPACE_INVALID", message: "workspace.json: invalid", details: { file: "workspace.json", errors } }, { status: 400 })
 
 async function openPage(path = "/settings/workspace") {
-  const app = renderApp(path)
+  const app = renderRoute(<WorkspaceSettingsPage />, path, { route: "/settings/workspace" })
   await screen.findByRole("form", { name: "Workspace settings" })
   return app
 }

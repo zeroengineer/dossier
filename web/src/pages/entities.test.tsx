@@ -1,14 +1,11 @@
 import { screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
-import { afterEach, beforeAll, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import type { EntityInput } from "@/api/types"
-import { renderApp } from "@/test/render"
+import EntitiesPage from "@/pages/entities"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 
-// The page is a lazy route chunk: load it once up front so the first test does not race its cold import.
-beforeAll(async () => {
-  await import("@/pages/entities")
-})
 afterEach(() => server.events.removeAllListeners())
 
 /** Body rows of the entities table (the header row excluded). */
@@ -30,7 +27,7 @@ function recordListRequests() {
 
 describe("Entities page", () => {
   it("lists every entity with name link, aliases, kind and document count, with a tab per kind from meta", async () => {
-    renderApp("/entities")
+    renderRoute(<EntitiesPage />, "/entities", { route: "/entities" })
     expect(await screen.findByRole("heading", { name: "Entities" })).toBeInTheDocument()
     await loaded()
 
@@ -49,7 +46,7 @@ describe("Entities page", () => {
 
   it("switches kind with the tabs, keeps it in the URL and asks the API for that kind", async () => {
     const seen = recordListRequests()
-    const { user, router } = renderApp("/entities")
+    const { user, router } = renderRoute(<EntitiesPage />, "/entities", { route: "/entities" })
     await loaded()
 
     await user.click(screen.getByRole("tab", { name: "Client" }))
@@ -62,13 +59,13 @@ describe("Entities page", () => {
   })
 
   it("opens on the tab of ?kind= and shows an empty state for a kind with no entities", async () => {
-    renderApp("/entities?kind=product")
+    renderRoute(<EntitiesPage />, "/entities?kind=product", { route: "/entities" })
     expect(await screen.findByText("No product entities")).toBeInTheDocument()
     expect(screen.getByRole("tab", { name: "Product" })).toHaveAttribute("aria-selected", "true")
   })
 
   it("searches names and aliases", async () => {
-    const { user } = renderApp("/entities")
+    const { user } = renderRoute(<EntitiesPage />, "/entities", { route: "/entities" })
     await loaded()
     await user.type(screen.getByPlaceholderText("Search names and aliases…"), "acc")
     await waitFor(() => expect(bodyRows()).toHaveLength(1))
@@ -76,14 +73,14 @@ describe("Entities page", () => {
   })
 
   it("opens an entity from its row", async () => {
-    const { user, router } = renderApp("/entities")
+    const { user, router } = renderRoute(<EntitiesPage />, "/entities", { route: "/entities" })
     await loaded()
     await user.click(screen.getByText("Example Supplies").closest("tr")!)
     await waitFor(() => expect(router.state.location.pathname).toBe("/entities/4"))
   })
 
   it("shows the API error for an unknown kind", async () => {
-    renderApp("/entities?kind=planet")
+    renderRoute(<EntitiesPage />, "/entities?kind=planet", { route: "/entities" })
     expect(await screen.findByText("Could not load entities")).toBeInTheDocument()
     expect(screen.getByText(/INVALID_INPUT: Unknown entity kind "planet"/)).toBeInTheDocument()
   })
@@ -95,7 +92,7 @@ describe("New entity dialog", () => {
     server.events.on("request:start", async ({ request }) => {
       if (request.method === "POST" && new URL(request.url).pathname === "/api/entities") body = (await request.clone().json()) as EntityInput
     })
-    const { user, router } = renderApp("/entities?kind=vendor")
+    const { user, router } = renderRoute(<EntitiesPage />, "/entities?kind=vendor", { route: "/entities" })
     await screen.findByRole("link", { name: "Example Supplies" })
 
     await user.click(screen.getByRole("button", { name: "New entity" }))
@@ -127,7 +124,7 @@ describe("New entity dialog", () => {
   })
 
   it("requires a kind and a name", async () => {
-    const { user } = renderApp("/entities")
+    const { user } = renderRoute(<EntitiesPage />, "/entities", { route: "/entities" })
     await loaded()
     await user.click(screen.getByRole("button", { name: "New entity" }))
     const d = within(await screen.findByRole("dialog", { name: "New entity" }))
@@ -144,7 +141,7 @@ describe("New entity dialog", () => {
         return HttpResponse.json({ id: 98, kind: "company", name: "Acme Studio LLP", key: "acme studio llp", brand: "acme-studio", attrs: {}, aliases: [], relations: [], documentCount: 0, createdAt: "2026-04-03T09:00:00.000Z", updatedAt: "2026-04-03T09:00:00.000Z" }, { status: 201 })
       }),
     )
-    const { user, router } = renderApp("/entities")
+    const { user, router } = renderRoute(<EntitiesPage />, "/entities", { route: "/entities" })
     await loaded()
     await user.click(screen.getByRole("button", { name: "New entity" }))
     const d = within(await screen.findByRole("dialog", { name: "New entity" }))
@@ -159,7 +156,7 @@ describe("New entity dialog", () => {
   })
 
   it("shows a duplicate name error with a link to the existing entity and stays open", async () => {
-    const { user } = renderApp("/entities?kind=client")
+    const { user } = renderRoute(<EntitiesPage />, "/entities?kind=client", { route: "/entities" })
     await screen.findByRole("link", { name: "Acme Client Co" })
     await user.click(screen.getByRole("button", { name: "New entity" }))
     const dialog = await screen.findByRole("dialog", { name: "New entity" })

@@ -1,10 +1,11 @@
 import { screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { DocumentDetail, GenerateRequest, GenerateResult } from "@/api/types"
 import { invoiceDoc } from "@/test/fixtures-document"
 import { PREVIEW_TOKEN } from "@/test/handlers/generate"
-import { renderApp } from "@/test/render"
+import GeneratePage from "@/pages/generate"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -78,9 +79,6 @@ const sentInvoice: DocumentDetail = {
   ],
 }
 
-beforeAll(async () => {
-  await import("@/pages/generate")
-})
 
 beforeEach(() => {
   const client = { id: 4, kind: "client", name: "Demo Retail LLP", brand: null, aliases: [], matched: null }
@@ -92,7 +90,7 @@ beforeEach(() => {
 })
 
 /** Fill what the form itself requires (Client, one item) so Generate reaches the server. */
-async function fillRequired(user: ReturnType<typeof renderApp>["user"]) {
+async function fillRequired(user: ReturnType<typeof renderRoute>["user"]) {
   await user.click(await screen.findByRole("combobox", { name: label("Client") }))
   await user.click(await screen.findByRole("option", { name: "Demo Retail LLP" }))
   await user.type(screen.getByRole("textbox", { name: "Items row 1 description" }), "Stage")
@@ -101,7 +99,7 @@ async function fillRequired(user: ReturnType<typeof renderApp>["user"]) {
 describe("Generate preview", () => {
   it("previews the form on load and shows the draft's files", async () => {
     const bodies = capturePreviews()
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const pdf = await screen.findByTitle("PDF preview of Invoice")
     expect(pdf.tagName).toBe("IFRAME")
     expect(pdf).toHaveAttribute("src", `/previews/${PREVIEW_TOKEN}/preview.pdf?v=${PREVIEW_TOKEN}`)
@@ -122,7 +120,7 @@ describe("Generate preview", () => {
 
   it("asks again after typing stops, once, with the latest input", async () => {
     const bodies = capturePreviews()
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const bank = await screen.findByLabelText(label("Bank account"))
     await waitFor(() => expect(bodies).toHaveLength(1))
     await user.type(bank, "Example Bank")
@@ -142,7 +140,7 @@ describe("Generate preview", () => {
         return HttpResponse.json({ ok: true, token: PREVIEW_TOKEN, renditions: [], warnings: [] })
       }),
     )
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const bank = await screen.findByLabelText(label("Bank account"))
     await waitFor(() => expect(signals).toHaveLength(1))
     await user.type(bank, "X")
@@ -153,7 +151,7 @@ describe("Generate preview", () => {
 
   it("does not ask while a list or object field holds invalid JSON", async () => {
     const bodies = capturePreviews()
-    const { user } = renderApp("/generate/receipt")
+    const { user } = renderRoute(<GeneratePage />, "/generate/receipt", { route: "/generate/:templateId?" })
     const refs = await screen.findByLabelText(label("Documents paid"))
     await waitFor(() => expect(bodies).toHaveLength(1))
     await user.click(refs)
@@ -175,7 +173,7 @@ describe("Generate preview", () => {
         { status: 400 },
       ),
     )
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const items = await screen.findByRole("table", { name: label("Items") })
     await user.click(screen.getByRole("button", { name: "Add row" }))
     await user.type(within(items).getByRole("textbox", { name: "Items row 2 amount" }), "lots")
@@ -197,7 +195,7 @@ describe("Generate preview", () => {
         { status: 400 },
       )
     })
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const items = await screen.findByRole("table", { name: label("Items") })
     await user.type(within(items).getByRole("textbox", { name: "Items row 1 amount" }), "lots")
     const amount = within(items).getByRole("textbox", { name: "Items row 1 amount" })
@@ -221,7 +219,7 @@ describe("Generate preview", () => {
       if (bodies.length > 1) await new Promise((r) => setTimeout(r, 2000))
       return HttpResponse.json({ ok: false, missing: [{ name: "client", label: "Client", type: "entity" }], errors: [] }, { status: 400 })
     })
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     expect(await screen.findByText("Fill in to preview", {}, { timeout: 3000 })).toBeInTheDocument()
     const client = screen.getByRole("combobox", { name: label("Client") })
     expect(client).not.toHaveAttribute("aria-invalid", "true")
@@ -245,7 +243,7 @@ describe("Generate preview", () => {
       const errors = Array.isArray(items) && items.length === 3 ? [{ name: "items.1.amount", message: "not a money amount" }] : []
       return HttpResponse.json({ ok: false, missing: [], errors }, { status: 400 })
     })
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const items = await screen.findByRole("table", { name: label("Items") })
     await user.click(screen.getByRole("button", { name: "Add row" }))
     await user.click(screen.getByRole("button", { name: "Add row" }))
@@ -277,7 +275,7 @@ describe("Generate preview", () => {
         warnings: [{ code: "PLACEHOLDER_EMPTY", name: "bankAccount", message: "Bank account prints empty" }],
       }),
     )
-    renderApp("/generate/invoice")
+    renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const title = await screen.findByText("Printed empty")
     expect(title.closest("[role=alert]")).toHaveTextContent("Bank account prints empty")
   })
@@ -286,7 +284,7 @@ describe("Generate preview", () => {
     capturePreviews(() =>
       HttpResponse.json({ code: "RENDER_FAILED", message: "Chrome crashed", details: {} }, { status: 500 }),
     )
-    renderApp("/generate/invoice")
+    renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     expect(await screen.findByText("Could not render the preview")).toBeInTheDocument()
     expect(screen.getByText("RENDER_FAILED: Chrome crashed")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument()
@@ -297,7 +295,7 @@ describe("Generate", () => {
   it("generates, toasts the number, refreshes document views and opens the document", async () => {
     capturePreviews()
     const bodies = captureGenerate(() => HttpResponse.json(generated(), { status: 201 }))
-    const { user, router, queryClient } = renderApp("/generate/invoice")
+    const { user, router, queryClient } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const invalidate = vi.spyOn(queryClient, "invalidateQueries")
     const bank = await screen.findByLabelText(label("Bank account"))
     await user.type(bank, "Example Bank")
@@ -332,7 +330,7 @@ describe("Generate", () => {
         { status: 400 },
       ),
     )
-    const { user, router } = renderApp("/generate/invoice")
+    const { user, router } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     const items = await screen.findByRole("table", { name: label("Items") })
     await fillRequired(user)
     await user.type(within(items).getByRole("textbox", { name: "Items row 1 amount" }), "lots")
@@ -350,7 +348,7 @@ describe("Generate", () => {
     captureGenerate(() =>
       HttpResponse.json({ code: "NUMBER_CONTENDED", message: "Another process kept taking the next number", details: {} }, { status: 409 }),
     )
-    const { user } = renderApp("/generate/invoice")
+    const { user } = renderRoute(<GeneratePage />, "/generate/invoice", { route: "/generate/:templateId?" })
     await fillRequired(user)
     await user.click(screen.getByRole("button", { name: "Generate" }))
     expect(await screen.findByText("NUMBER_CONTENDED: Another process kept taking the next number")).toBeInTheDocument()
@@ -377,7 +375,7 @@ describe("Regenerate", () => {
         return undefined
       }),
     )
-    renderApp(`/generate/invoice?documentId=${sentInvoice.id}`)
+    renderRoute(<GeneratePage />, `/generate/invoice?documentId=${sentInvoice.id}`, { route: "/generate/:templateId?" })
     expect(await screen.findByLabelText(label("Bank account"))).toHaveValue("Example Bank 0001")
     expect(screen.getByRole("textbox", { name: "Items row 1 description" })).toHaveValue("Stage design")
     expect(screen.getByText(/^Regenerating ACM-2026-0010/)).toBeInTheDocument()
@@ -403,7 +401,7 @@ describe("Regenerate", () => {
             { status: 409 },
           ),
     )
-    const { user, router } = renderApp(`/generate/invoice?documentId=${sentInvoice.id}`)
+    const { user, router } = renderRoute(<GeneratePage />, `/generate/invoice?documentId=${sentInvoice.id}`, { route: "/generate/:templateId?" })
     await screen.findByLabelText(label("Bank account"))
     await user.type(screen.getByLabelText("Version note"), "Corrected the bank account")
     await user.click(screen.getByRole("button", { name: "Regenerate" }))
@@ -437,7 +435,7 @@ describe("Regenerate", () => {
           )
         : HttpResponse.json(generated({ documentId: "DOC-000011", number: "ACM-2026-0011" }), { status: 201 }),
     )
-    const { user, router } = renderApp(`/generate/invoice?documentId=${sentInvoice.id}`)
+    const { user, router } = renderRoute(<GeneratePage />, `/generate/invoice?documentId=${sentInvoice.id}`, { route: "/generate/:templateId?" })
     await screen.findByLabelText(label("Bank account"))
     await user.click(screen.getByRole("button", { name: "Regenerate" }))
     await user.click(await screen.findByRole("button", { name: "Generate a new document instead" }))
@@ -453,7 +451,7 @@ describe("Regenerate", () => {
 
   it("refuses a document generated from another template", async () => {
     server.use(http.get("*/api/documents/:id", () => HttpResponse.json({ ...sentInvoice, template: { id: "receipt", version: 1 } })))
-    renderApp(`/generate/invoice?documentId=${sentInvoice.id}`)
+    renderRoute(<GeneratePage />, `/generate/invoice?documentId=${sentInvoice.id}`, { route: "/generate/:templateId?" })
     expect(await screen.findByText("Cannot regenerate with this template")).toBeInTheDocument()
   })
 })
