@@ -100,6 +100,10 @@ routes. See `docs/WEB.md` for the web app and `docs/BUILD_LOG.md` for how it was
   port, no extra capabilities) with a `./workspace` volume that is initialised from the example workspace when empty,
   `.dockerignore`, and `docs/WEB.md` (web app architecture, development, build, Docker).
 - Vendored shadcn agent skill (`.claude/skills/shadcn`) for work on the web UI.
+- Playwright end-to-end suite in `web/e2e/` (`npm run test:e2e`; not part of `npm test`): runs the installed Google
+  Chrome at desktop (1440x900) and mobile (390x844) sizes against its own server on a temporary copy of the example
+  workspace, covering the shell, navigation, tabs, generating a document, alignment and reduced motion. See
+  `docs/WEB.md`.
 
 ### Changed
 
@@ -120,6 +124,18 @@ routes. See `docs/WEB.md` for the web app and `docs/BUILD_LOG.md` for how it was
   send the hash and, on a conflict, offer to reload instead of overwriting.
 - `ASSET_INVALID` for a corrupt image or font has a one-line message; the decoder's detail is in `details.reason`.
 - `buildServer` takes an optional `now` clock for the dashboard's "today" (tests pin it).
+- Floating navigation: the sidebar floats inset from the window edges (rounded, drop shadow, icon rail and mobile sheet
+  kept) and the sticky header floats with it (blur, a shadow once content scrolls under it). The settings save bar and
+  the Generate action row float the same way and stay in view.
+- Motion: page changes animate the main area as short view transitions (150-250 ms, ease-out); tab panels, loaded
+  pages and table rows fade in; the sidebar collapse eases and its labels fade. Everything is off under
+  `prefers-reduced-motion`.
+- Tabs: the document viewer's tab is kept in `?view=`; an unknown Entities `?kind=` falls back to All; long tab lists
+  (brand editor sections, entity kinds, settings navigation) scroll sideways instead of wrapping; viewer and preview
+  frames are not reloaded when switching tabs, and the mobile Generate Form/Preview tabs keep both panes.
+- Layout: one spacing rhythm across pages (recorded in `web/CONVENTIONS.md`); toolbar controls share one height;
+  numeric columns and their headers are right-aligned; long titles truncate with a tooltip; details lists use two
+  columns on phones.
 
 ### Fixed
 
@@ -132,6 +148,12 @@ routes. See `docs/WEB.md` for the web app and `docs/BUILD_LOG.md` for how it was
   the vault tree.
 - The INR / `en-IN` fallback used before the workspace locale loads is defined once (`DEFAULT_LOCALE`).
 - The dashboard tests no longer depend on the run not crossing midnight.
+- The Generate form and preview panes on desktop scroll on their own again (the page grew instead), and the Generate
+  button stays in view.
+- The sidebar's resize rail no longer covers the left edge of the page; the What's new card no longer covers Settings
+  items on short windows.
+- The brand editor's section tabs no longer overflow onto the form; the vault's empty state is centred; phones no
+  longer show a stray breadcrumb separator; a dashboard warning's "Fix" link has its space back.
 
 ### Removed
 
