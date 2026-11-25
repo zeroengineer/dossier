@@ -160,10 +160,17 @@ test('guarded keywords: "pan" before "india", a bare "gst" in a filing, no bare 
   assert.equal(gst('GST cert v2'), true);
   assert.equal(gst('the example org group gst registration 2025'), true);
   // Filing words, months and quarters always block it, also for the longer GST keywords.
-  for (const n of ['GST Annual', 'GST Assessment Order', 'GST notice', 'GST ledger', 'GST payment', 'gst mar', 'GST September', 'gst q3', 'GST certificate statement']) {
+  for (const n of ['GST Annual', 'GST Assessment Order', 'GST notice', 'GST ledger', 'GST payment', 'gst mar', 'GST September', 'gst q3', 'GST certificate statement', 'GST order']) {
     assert.equal(gst(n), false, n);
   }
   assert.equal(nameHasKeyword(wordsOf('GST registration annual return'), 'gst registration'), false);
+  // Certificate words outweigh months, quarters and "order"; real filing words still block.
+  assert.equal(gst('GST Registration Certificate June 2023'), true);
+  assert.equal(gst('GST order of registration'), true);
+  assert.equal(gst('GST cert q2'), true);
+  assert.equal(gst('GST certificate annual'), false);
+  assert.equal(gst('GST order'), false);
+  assert.equal(gst('Example Org Events and Media GST'), false, 'a long bare name stays unrecognised');
   assert.equal(nameHasKeyword(wordsOf('Udyam filing'), 'udyam'), false);
   assert.equal(nameHasKeyword(wordsOf('Udyam certificate'), 'udyam'), true);
   assert.equal(nameHasKeyword(wordsOf('MSME payment report'), 'msme'), false);

@@ -50,10 +50,13 @@ const MONTH_WORDS = ['jan', 'january', 'feb', 'february', 'mar', 'march', 'apr',
 
 /** Words that say a file is a filing, a bill or an order rather than a registration certificate. */
 const FILING_WORDS = new Set(['return', 'returns', 'filing', 'filings', 'gstr', 'invoice', 'invoices', 'bill', 'bills',
-  'payment', 'payments', 'challan', 'challans', 'statement', 'statements', 'annual', 'order', 'orders', 'assessment',
-  'assessments', 'notice', 'notices', 'ledger', 'ledgers', 'report', 'reports', 'summary', 'reconciliation', 'reply',
-  'refund', 'computation', ...MONTH_WORDS]);
-const isFilingWord = (w) => FILING_WORDS.has(w) || /^q[1-4]$/.test(w);
+  'payment', 'payments', 'challan', 'challans', 'statement', 'statements', 'annual', 'assessment', 'assessments',
+  'notice', 'notices', 'ledger', 'ledgers', 'report', 'reports', 'summary', 'reconciliation', 'reply', 'refund',
+  'computation']);
+/** Filing hints that a certificate word outweighs ("GST Registration Certificate June 2023", "GST order of registration"). */
+const WEAK_FILING_WORDS = new Set(['order', 'orders', ...MONTH_WORDS]);
+const isWeakFilingWord = (w) => WEAK_FILING_WORDS.has(w) || /^q[1-4]$/.test(w);
+const isFilingWord = (w) => FILING_WORDS.has(w) || isWeakFilingWord(w);
 
 /** Words that, with "gst", always mean the registration certificate. */
 const GST_CERT_WORDS = new Set(['cert', 'certificate', 'reg', 'registration', 'gstin']);
@@ -67,9 +70,9 @@ const noFiling = (words) => !nameWords(words).some(isFilingWord);
 /**
  * Extra conditions on built-in keywords that are also ordinary words (normalised keyword -> test on the file name's
  * words).
- * - "gst": never with a filing word (return, invoice, challan, statement, payment, filing, annual, order,
- *   assessment, notice, ledger, a month, q1-q4…). With a certificate word (cert, certificate, reg, registration,
- *   gstin) it always counts. Otherwise only in a short name: at most three other words besides company suffixes
+ * - "gst": never with a filing word (return, invoice, challan, statement, payment, filing, annual, assessment,
+ *   notice, ledger…). With a certificate word (cert, certificate, reg, registration, gstin) it counts, also next to a
+ *   month, a quarter or "order". Otherwise never with those either, and only in a short name: at most three other words besides company suffixes
  *   ("Private Limited", "Pvt Ltd", "LLP") and "copy", and no digits ("Example Org GST.pdf", not "gst-2025-03.pdf").
  * - "udyam", "msme": never with a filing word ("MSME payment report", "Udyam filing").
  * - "pan": not when followed by "india" ("Pan India rollout").
@@ -77,8 +80,9 @@ const noFiling = (words) => !nameWords(words).some(isFilingWord);
 const KEYWORD_GUARDS = Object.freeze({
   gst: (words) => {
     const list = nameWords(words);
-    if (list.some(isFilingWord)) return false;
+    if (list.some((w) => FILING_WORDS.has(w))) return false;
     if (list.some((w) => GST_CERT_WORDS.has(w))) return true;
+    if (list.some(isWeakFilingWord)) return false;
     const others = list.filter((w) => w !== 'gst' && !NAME_FILLER.has(w));
     return others.length <= 3 && !list.some((w) => /\d/.test(w));
   },

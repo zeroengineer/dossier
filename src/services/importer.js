@@ -679,6 +679,9 @@ function chooseType(env, c, filename, found, text) {
 
   const fromName = (candidates, hints, from) => {
     if (!candidates.length) return null;
+    // The number's series confirms exactly one candidate: it knows better than the other words.
+    const confirmed = candidates.filter((t) => seriesTypes.includes(t));
+    if (confirmed.length === 1) return { type: confirmed[0], from };
     const series = seriesTypes.find((s) => !candidates.includes(s) && candidates.some((t) => hasKeyword(wordsOf(s), t)));
     if (series) return { type: series, from: 'series' };
     return { type: pickType(candidates, scopes, hints), from };
@@ -693,11 +696,17 @@ function chooseType(env, c, filename, found, text) {
   if (named) {
     // A keyword type filed in the same place as the named type is the more specific one ("GST Registration
     // Certificate" is a GST Certificate, not the generic Registration Certificate).
+    // Not when the number's series has types and does not confirm the keyword type ("Quotation <number> price list").
     const sameRoute = named.from === 'name'
-      && keyed.find((k) => !names.includes(k.type) && sameRouteAs(env, k.type, named.type));
+      && keyed.find((k) => !names.includes(k.type) && sameRouteAs(env, k.type, named.type)
+        && (!seriesTypes.length || seriesTypes.includes(k.type)));
     return sameRoute ? { type: sameRoute.type, from: 'keyword' } : named;
   }
 
+  // A generic keyword does not beat the number's series: when the series has a type that fits the folder and none
+  // of the keyword types is the series', the series decides ("<quotation number> price list" is not a Pricing sheet).
+  const seriesFit = scopes.flat().find((t) => seriesTypes.includes(t));
+  if (keyed.length && seriesFit && !keyed.some((k) => seriesTypes.includes(k.type))) return { type: seriesFit, from: 'series' };
   const byKeyword = fromName(keyed.map((k) => k.type), keyed.flatMap((k) => k.hits), 'keyword');
   if (byKeyword) return byKeyword;
 

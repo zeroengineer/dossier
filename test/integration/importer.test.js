@@ -720,3 +720,25 @@ test('a fixed-route type from the file name must end in the leaf folder it was f
   assert.equal(typeOf(s, 'Example Org/Banking and Payment Gateway/cancelled check.pdf'), 'Cancelled Cheque <- keyword');
   assert.equal(typeOf(s, 'Example Org/Compliance and Tax/GST.pdf'), 'Other <- none');
 }));
+
+// ---------- import accuracy, fix round 3: the number's series beats generic keywords ----------
+
+test('a parsed number\'s series is not overridden by a generic keyword (round 3)', () => setupFiles({
+  '03 Clients/Events/Example Client/Proposals and Pricing/Quotation ACM-Q-FW-2026-03 price list.pdf': 'Quotation copy',
+  '03 Clients/Events/Example Client/Proposals and Pricing/ACM-Q-FW-2026-04 price list.pdf': 'Price list copy',
+  '03 Clients/Events/Example Client/Proposals and Pricing/price list.pdf': 'Unnumbered price list',
+  '01 Company/Legal and Registration/GST Registration Certificate June 2023.pdf': 'Certificate copy A',
+  '01 Company/Legal and Registration/GST order of registration.pdf': 'Certificate copy B',
+}, async ({ ctx, vault }) => {
+  const s = await importFolder(ctx, { folder: vault, dryRun: true });
+  // The type name stays: the quotation series does not confirm "Pricing", so no same-route swap.
+  assert.equal(typeOf(s, 'Quotation ACM-Q-FW-2026-03 price list.pdf'), 'Quotation <- name');
+  // The keyword alone loses to the series' type in this folder (the example quotation series numbers proposals).
+  assert.equal(typeOf(s, 'ACM-Q-FW-2026-04 price list.pdf'), 'Proposal <- series');
+  assert.equal(docByPath(s, 'ACM-Q-FW-2026-04 price list.pdf').series, 'quotation');
+  // Without a number the keyword decides.
+  assert.equal(typeOf(s, 'Proposals and Pricing/price list.pdf'), 'Pricing <- keyword');
+  // Certificate words outweigh a month and "order".
+  assert.equal(typeOf(s, 'GST Registration Certificate June 2023.pdf'), 'GST Certificate <- keyword');
+  assert.equal(typeOf(s, 'GST order of registration.pdf'), 'GST Certificate <- keyword');
+}));
