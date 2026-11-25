@@ -47,13 +47,13 @@ generate. The document is filed under `03 Clients/…` in the vault tree with it
 `npm run samples` generates one document per template from fake data into `samples-out/` without touching your
 workspace, which is a quick way to see every layout.
 
-### The new web app (in progress)
+### The web app
 
-A React app in `web/` (Vite, TypeScript, Tailwind v4, shadcn) is replacing the server-rendered pages one page at a time.
-The server serves its build from `web/dist` on the same port: build it once with `npm run build` (after `npm install`),
-then `npm start` serves it at paths the old pages do not own, such as http://127.0.0.1:4400/vault. Until the old UI is
-removed, `/` and the old pages' paths (`/search`, `/upload`, `/generate`, `/templates`, `/entities`, `/settings`,
-`/documents/:id`) still show the server-rendered pages. Without a build those web-app paths answer 503 with a hint.
+The UI is a React app in `web/` (Vite, TypeScript, Tailwind v4, shadcn) that talks to the server only through `/api/*`
+and the file URLs (renditions, previews, brand assets, blobs). The server serves its build from `web/dist` on the same
+port: build it once with `npm run build` (after `npm install`), then `npm start` serves the app at `/` and every client
+route (`/vault`, `/documents/:id`, `/generate`, `/settings/brands`…). Without a build those paths answer 503 with a
+hint; the API keeps working. Unknown `/api` paths and every error answer JSON `{ code, message, details }`.
 
 For development run two terminals:
 
@@ -150,10 +150,11 @@ refused with `SERIES_UNKNOWN`.
 
 ## Using the vault
 
-- **Web UI** (`dossier serve`): the vault tree, document pages (metadata, versions, renditions, related entities and
+- **Web app** (`dossier serve`, after `npm run build`): a dashboard, the vault tree, document pages (metadata, versions, renditions, related entities and
   documents, status, links, new versions), upload, search, generate (a form built from the template's fields, a draft
   preview, generate or regenerate), templates, entities (create, edit, aliases, relations) and settings (brands with
-  asset uploads and a live letterhead preview, number series, the workspace and its users).
+  asset uploads and a live letterhead preview, number series, the workspace and its users), with a command palette
+  (Ctrl+K / ⌘K).
 - **JSON API**: the same services under `/api/…` (`/api/tree`, `/api/documents[/:id]`, `/api/search?q=`,
   `/api/templates/:id/resolve|preview|generate`, `/api/entities`, `/api/brands`, `/api/series`, `/api/workspace`,
   `/api/upload`, `/api/me`, `/api/meta`, `/api/dashboard?days=7|30|90`…). Errors are `{ code, message, details }`: `*_NOT_FOUND` 404, `FORBIDDEN` 403, duplicates, locked or
@@ -273,7 +274,8 @@ npm run visual -- --update  # rewrite the baselines (always from the example wor
 ```text
 bin/dossier.js, bin/dossier-mcp.js   entry points
 src/cli.js                           command table
-src/server.js, src/web/              Fastify server: routes, server-rendered views, JSON API
+src/server.js, src/web/              Fastify server: JSON API, file routes, serves the web app (web/dist)
+web/                                 the web app (React, Vite, TypeScript)
 src/mcp.js                           MCP server (stdio)
 src/context.js                       openContext({ home, user }) -> { config, ws, db, repo, user }
 src/workspace/                       workspace loader and schema validation
