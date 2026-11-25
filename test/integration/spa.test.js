@@ -1,6 +1,6 @@
 import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpDir } from '../helpers/tmp.js';
 import { initWorkspace } from '../../src/workspace/index.js';
@@ -168,5 +168,35 @@ describe('SPA serving', () => {
     assert.equal(api.json().code, 'NOT_FOUND');
     assert.equal((await bare.inject({ url: '/favicon.ico' })).statusCode, 404);
     assert.equal((await bare.inject({ url: '/' })).statusCode, 503);
+  });
+
+  test('a rebuild under a running server serves the new index.html (re-read when its mtime or size changes)', async () => {
+    const dist = join(tmp.dir, 'rebuilt');
+    mkdirSync(dist, { recursive: true });
+    const file = join(dist, 'index.html');
+    const v1 = '<!doctype html><script type="module" src="/app/index-aaaa.js"></script>';
+    writeFileSync(file, v1);
+    const server = buildServer(ctx, { spaDir: dist });
+    try {
+      assert.equal((await server.inject({ url: '/dashboard' })).body, v1);
+      // Same size, different bytes and mtime: still noticed.
+      const v2 = v1.replace('aaaa', 'bbbb');
+      writeFileSync(file, v2);
+      utimesSync(file, new Date(Date.now() + 5000), new Date(Date.now() + 5000));
+      assert.equal((await server.inject({ url: '/dashboard' })).body, v2);
+      // Different size, written within the same mtime tick: noticed by size.
+      const st = statSync(file);
+      const v3 = v2.replace('index-bbbb', 'index-cccccc');
+      writeFileSync(file, v3);
+      utimesSync(file, st.atime, st.mtime);
+      assert.equal((await server.inject({ url: '/' })).body, v3);
+      // Removed mid-rebuild: the not-built page, then the new index once it is back.
+      rmSync(file);
+      assert.equal((await server.inject({ url: '/dashboard' })).statusCode, 503);
+      writeFileSync(file, v1);
+      assert.equal((await server.inject({ url: '/dashboard' })).body, v1);
+    } finally {
+      await server.close();
+    }
   });
 });

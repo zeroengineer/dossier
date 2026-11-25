@@ -1,5 +1,5 @@
 // Serving the built web app (web/dist): static files, and index.html as the fallback for client-side routes.
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import fastifyStatic from '@fastify/static';
 import { API_PATH, CACHE_PUBLIC_IMMUTABLE, wantsJson } from './http.js';
@@ -58,10 +58,23 @@ const htmlHeaders = (reply) => reply.type('text/html; charset=utf-8')
 export function spaRoutes(app, { dir, notFound }) {
   const indexFile = join(dir, 'index.html');
   const appDir = join(dir, 'app') + sep;
+  // index.html is cached with its mtime and size and read again when either changes (one statSync per fallback
+  // request), so a rebuild under a running server serves the new index, never one whose bundle is gone.
   let index = null;
   const readIndex = () => {
-    if (index === null && existsSync(indexFile)) index = readFileSync(indexFile);
-    return index;
+    const st = statSync(indexFile, { throwIfNoEntry: false });
+    if (!st) {
+      index = null;
+      return null;
+    }
+    if (index === null || index.mtimeMs !== st.mtimeMs || index.size !== st.size) {
+      try {
+        index = { mtimeMs: st.mtimeMs, size: st.size, body: readFileSync(indexFile) };
+      } catch {
+        index = null; // removed between the stat and the read (a rebuild in progress)
+      }
+    }
+    return index?.body ?? null;
   };
   readIndex();
 

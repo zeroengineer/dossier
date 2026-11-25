@@ -90,8 +90,9 @@ end-to-end tests.
 `npm run build` runs `tsc -b && vite build` in `web/` and writes `web/dist/index.html` plus the hashed bundle under
 `web/dist/app/` (Vite `build.assetsDir = 'app'`, so it never collides with the backend's `/assets/*`). Vendor code is
 split into long-lived `react`, `ui` and `charts` chunks; the chart chunk loads only with the dashboard's charts.
-`npm start` then serves the build; rebuild after frontend changes (a running server picks up a new `index.html` only
-after a restart).
+`npm start` then serves the build; rebuild after frontend changes. A running server re-reads `index.html` whenever its
+modification time or size changes, so a rebuild shows on the next page load without a restart. One case still needs a
+restart: a server started before `web/dist` existed at all does not serve the bundle files until it is restarted.
 
 ## Docker
 
