@@ -2,7 +2,8 @@ import { screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
 import { emptySearchResult, searchResult } from "@/test/fixtures-search"
-import { renderApp } from "@/test/render"
+import SearchPage from "@/pages/search"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 
 /** Record every `/api/search` request URL while answering with `body`. */
@@ -22,7 +23,7 @@ const section = (name: string) => screen.getByRole("region", { name: new RegExp(
 describe("SearchPage", () => {
   it("asks for a query and does not search without one", async () => {
     const urls = recordSearches()
-    renderApp("/search")
+    renderRoute(<SearchPage />, "/search", { route: "/search" })
     expect(await screen.findByText("Search your workspace")).toBeInTheDocument()
     expect(screen.getByRole("searchbox", { name: "Search query" })).toHaveValue("")
     expect(urls).toHaveLength(0)
@@ -30,7 +31,7 @@ describe("SearchPage", () => {
 
   it("renders the Matched, Related and Entities sections for ?q=", async () => {
     const urls = recordSearches()
-    renderApp("/search?q=acme")
+    renderRoute(<SearchPage />, "/search?q=acme", { route: "/search" })
     await screen.findByRole("heading", { level: 2, name: "Matched" })
     expect(urls[0]?.searchParams.get("q")).toBe("acme")
     expect(screen.getByRole("searchbox", { name: "Search query" })).toHaveValue("acme")
@@ -44,7 +45,7 @@ describe("SearchPage", () => {
 
     const related = section("Related")
     expect(within(related).getByRole("link", { name: /Event services quote/ })).toHaveAttribute("href", "/documents/DOC-000002")
-    expect(within(related).getByText("Via quote_for · DOC-000001")).toBeInTheDocument()
+    expect(within(related).getByText("Via quote for · DOC-000001")).toBeInTheDocument()
     expect(within(related).getByText("Via party of Acme Client Co")).toBeInTheDocument()
 
     const entities = section("Entities")
@@ -54,7 +55,7 @@ describe("SearchPage", () => {
 
   it("puts a submitted query in the URL", async () => {
     recordSearches()
-    const { user, router } = renderApp("/search")
+    const { user, router } = renderRoute(<SearchPage />, "/search", { route: "/search" })
     const box = await screen.findByRole("searchbox", { name: "Search query" })
     await user.type(box, "  venue {Enter}")
     await waitFor(() => expect(router.state.location.search).toBe("?q=venue"))
@@ -63,7 +64,7 @@ describe("SearchPage", () => {
 
   it("shows an empty state when nothing matches", async () => {
     recordSearches(emptySearchResult)
-    renderApp("/search?q=nothing")
+    renderRoute(<SearchPage />, "/search?q=nothing", { route: "/search" })
     expect(await screen.findByText("No results for “nothing”")).toBeInTheDocument()
     expect(screen.queryByRole("region", { name: /^Matched/ })).not.toBeInTheDocument()
   })
@@ -78,7 +79,7 @@ describe("SearchPage", () => {
         return HttpResponse.json(searchResult)
       }),
     )
-    const { user } = renderApp("/search?q=nothing")
+    const { user } = renderRoute(<SearchPage />, "/search?q=nothing", { route: "/search" })
     expect(await screen.findByText("No results for “nothing”")).toBeInTheDocument()
     const box = screen.getByRole("searchbox", { name: "Search query" })
     await user.clear(box)
@@ -99,7 +100,7 @@ describe("SearchPage", () => {
           : HttpResponse.json(searchResult)
       }),
     )
-    const { user } = renderApp("/search?q=acme")
+    const { user } = renderRoute(<SearchPage />, "/search?q=acme", { route: "/search" })
     const alert = await screen.findByRole("alert")
     expect(within(alert).getByText(/INVALID_INPUT: limit must be/)).toBeInTheDocument()
     await user.click(within(alert).getByRole("button", { name: "Retry" }))

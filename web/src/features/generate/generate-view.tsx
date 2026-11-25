@@ -211,7 +211,7 @@ function GenerateWorkspace({
           </TabsContent>
         </Tabs>
       ) : (
-        <ResizablePanelGroup className="h-[calc(100svh-12rem)] min-h-[32rem] rounded-lg border bg-card shadow-md">
+        <ResizablePanelGroup className="h-[calc(100svh-12rem)] min-h-128 rounded-lg border bg-card shadow-md">
           <ResizablePanel defaultSize="55" minSize="30">
             <div className="h-full overflow-y-auto p-6">{formPane}</div>
           </ResizablePanel>

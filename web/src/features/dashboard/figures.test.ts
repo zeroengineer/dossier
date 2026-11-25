@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { chartPoints, deltaOf, headlineInvoiced, parseDays } from "./figures"
+import { chartPoints, deltaOf, headlineInvoiced, parseDays, summarizePoints } from "./figures"
 
 describe("parseDays", () => {
   it("accepts 7, 30 and 90 and falls back to 30", () => {
@@ -50,5 +50,21 @@ describe("chartPoints", () => {
     expect(points[1]).toEqual({ date: "d6", end: "d12", count: 7 })
     expect(points.at(-1)).toEqual({ date: "d83", end: "d89", count: 7 })
     expect(points.reduce((s, p) => s + p.count, 0)).toBe(90)
+  })
+})
+
+describe("summarizePoints", () => {
+  it("totals the points and picks the first busiest one", () => {
+    const points = [
+      { date: "d1", end: "d1", count: 1 },
+      { date: "d2", end: "d2", count: 3 },
+      { date: "d3", end: "d3", count: 3 },
+    ]
+    expect(summarizePoints(points)).toEqual({ total: 7, peak: points[1] })
+  })
+
+  it("has no peak when nothing happened", () => {
+    expect(summarizePoints([{ date: "d1", end: "d1", count: 0 }])).toEqual({ total: 0, peak: null })
+    expect(summarizePoints([])).toEqual({ total: 0, peak: null })
   })
 })

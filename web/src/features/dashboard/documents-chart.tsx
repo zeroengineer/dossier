@@ -1,9 +1,11 @@
-// Loaded lazily (React.lazy in the dashboard page) so Recharts lives in its own `charts` chunk.
+// Loaded lazily (React.lazy in the dashboard page) so Recharts lives in its own `charts` chunk. The page renders the
+// chart's text alternative (ChartSummary) itself, so screen readers get the figures even before this chunk loads.
 import { useId } from "react"
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { useMe } from "@/api/me"
 import type { DashboardDays } from "@/api/types"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import { formatDate, parseDate } from "@/lib/format"
 import type { ChartPoint } from "./figures"
 
@@ -13,6 +15,7 @@ const config = {
 
 export default function DocumentsChart({ points, days }: { points: ChartPoint[]; days: DashboardDays }) {
   const { data: me } = useMe()
+  const reducedMotion = useReducedMotion()
   const fillId = `fill-documents-${useId().replace(/:/g, "")}`
   const numberLocale = me?.workspace.locale.numberLocale || "en-IN"
   const tick = (value: string) => {
@@ -53,7 +56,14 @@ export default function DocumentsChart({ points, days }: { points: ChartPoint[];
             />
           }
         />
-        <Area dataKey="count" type="monotone" fill={`url(#${fillId})`} stroke="var(--color-count)" strokeWidth={2} />
+        <Area
+          dataKey="count"
+          type="monotone"
+          fill={`url(#${fillId})`}
+          stroke="var(--color-count)"
+          strokeWidth={2}
+          isAnimationActive={!reducedMotion}
+        />
       </AreaChart>
     </ChartContainer>
   )

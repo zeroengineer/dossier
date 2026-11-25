@@ -1,14 +1,15 @@
 import { screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
-import { renderApp } from "@/test/render"
+import DocumentPage from "@/pages/document"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
 
 const viewer = async () => within(await screen.findByTestId("document-viewer"))
 
 describe("Document page", () => {
   it("shows the title, number, status and sensitivity in the header, with the action bar", async () => {
-    renderApp("/documents/DOC-000001")
+    renderRoute(<DocumentPage />, "/documents/DOC-000001", { route: "/documents/:id" })
     expect(await screen.findByRole("heading", { level: 1, name: "Event services invoice" })).toBeInTheDocument()
     expect(screen.getByText("DOC-000001 · invoice")).toBeInTheDocument()
     const header = screen.getByRole("heading", { level: 1 }).parentElement as HTMLElement
@@ -22,7 +23,7 @@ describe("Document page", () => {
   })
 
   it("previews the current version's PDF in an iframe and offers its other renditions as tabs", async () => {
-    renderApp("/documents/DOC-000001")
+    renderRoute(<DocumentPage />, "/documents/DOC-000001", { route: "/documents/:id" })
     const v = await viewer()
     expect(v.getByText("Version 2 (current)")).toBeInTheDocument()
     expect(v.getByRole("tab", { name: "PDF" })).toHaveAttribute("aria-selected", "true")
@@ -36,16 +37,18 @@ describe("Document page", () => {
   })
 
   it("fetches the Markdown rendition as text into a preformatted block", async () => {
-    const { user } = renderApp("/documents/DOC-000001")
+    const { user } = renderRoute(<DocumentPage />, "/documents/DOC-000001", { route: "/documents/:id" })
     const v = await viewer()
     await user.click(v.getByRole("tab", { name: "Markdown" }))
-    const pre = await v.findByLabelText("Markdown of Event services invoice")
+    const pre = await v.findByRole("region", { name: "Markdown of Event services invoice" })
     expect(pre.tagName).toBe("PRE")
+    // A scrollable region: keyboard users can focus it to scroll.
+    expect(pre).toHaveAttribute("tabindex", "0")
     await waitFor(() => expect(pre).toHaveTextContent("Version 2 of ACM-2026-0007."))
   })
 
   it("drives the viewer from the versions table and shows HTML in a sandboxed iframe", async () => {
-    const { user, router } = renderApp("/documents/DOC-000001")
+    const { user, router } = renderRoute(<DocumentPage />, "/documents/DOC-000001", { route: "/documents/:id" })
     await viewer()
     await user.click(screen.getByRole("button", { name: "Show version 1" }))
     await waitFor(() => expect(router.state.location.search).toBe("?version=1"))
@@ -63,7 +66,7 @@ describe("Document page", () => {
   })
 
   it("opens the version named in ?version= and fetches its Markdown", async () => {
-    const { user } = renderApp("/documents/DOC-000001?version=1")
+    const { user } = renderRoute(<DocumentPage />, "/documents/DOC-000001?version=1", { route: "/documents/:id" })
     const v = await viewer()
     expect(v.getByText("Version 1")).toBeInTheDocument()
     await user.click(v.getByRole("tab", { name: "Markdown" }))
@@ -71,7 +74,7 @@ describe("Document page", () => {
   })
 
   it("lists metadata, linked entities and relations in both directions with links", async () => {
-    renderApp("/documents/DOC-000001")
+    renderRoute(<DocumentPage />, "/documents/DOC-000001", { route: "/documents/:id" })
     const details = await screen.findByLabelText("Document details")
     expect(within(details).getByText("acme-invoice v3")).toBeInTheDocument()
     expect(within(details).getByRole("link", { name: "Events" })).toHaveAttribute("href", "/entities/5")
@@ -79,6 +82,7 @@ describe("Document page", () => {
     const entities = screen.getByRole("list", { name: "Linked entities" })
     expect(within(entities).getByRole("link", { name: "Alex Example" })).toHaveAttribute("href", "/entities/7")
     expect(within(entities).getByText("signatory")).toBeInTheDocument()
+    expect(within(entities).getByText("Person")).toBeInTheDocument()
 
     const relations = screen.getByRole("list", { name: "Relations" })
     expect(within(relations).getByRole("link", { name: "Event services proposal" })).toHaveAttribute("href", "/documents/DOC-000004")
@@ -89,7 +93,7 @@ describe("Document page", () => {
   })
 
   it("shows an empty state when the document has no renditions", async () => {
-    renderApp("/documents/DOC-000003")
+    renderRoute(<DocumentPage />, "/documents/DOC-000003", { route: "/documents/:id" })
     const v = await viewer()
     expect(v.getByText("No renditions")).toBeInTheDocument()
     expect(v.queryByRole("tab")).not.toBeInTheDocument()
@@ -98,7 +102,7 @@ describe("Document page", () => {
   })
 
   it("offers a download for an uploaded file that cannot be shown inline", async () => {
-    renderApp("/documents/DOC-000006")
+    renderRoute(<DocumentPage />, "/documents/DOC-000006", { route: "/documents/:id" })
     const v = await viewer()
     expect(v.getByRole("tab", { name: "Original" })).toBeInTheDocument()
     expect(v.getByText("No inline preview")).toBeInTheDocument()
@@ -106,7 +110,7 @@ describe("Document page", () => {
   })
 
   it("explains a 403 without offering a retry", async () => {
-    renderApp("/documents/DOC-000002")
+    renderRoute(<DocumentPage />, "/documents/DOC-000002", { route: "/documents/:id" })
     const alert = await screen.findByRole("alert")
     expect(within(alert).getByText("You do not have access to this document")).toBeInTheDocument()
     expect(within(alert).getByText(/FORBIDDEN/)).toBeInTheDocument()
@@ -115,7 +119,7 @@ describe("Document page", () => {
   })
 
   it("shows not found for an unknown document", async () => {
-    renderApp("/documents/DOC-999999")
+    renderRoute(<DocumentPage />, "/documents/DOC-999999", { route: "/documents/:id" })
     const alert = await screen.findByRole("alert")
     expect(within(alert).getByText("Document not found")).toBeInTheDocument()
     expect(within(alert).getByText(/DOCUMENT_NOT_FOUND/)).toBeInTheDocument()
@@ -129,7 +133,7 @@ describe("Document page", () => {
         return HttpResponse.json({ code: "INTERNAL", message: "Boom", details: {} }, { status: 500 })
       }),
     )
-    const { user } = renderApp("/documents/DOC-000001")
+    const { user } = renderRoute(<DocumentPage />, "/documents/DOC-000001", { route: "/documents/:id" })
     const alert = await screen.findByRole("alert")
     expect(within(alert).getByText("Could not load the document")).toBeInTheDocument()
     await user.click(within(alert).getByRole("button", { name: "Retry" }))

@@ -78,7 +78,8 @@ export function KpiCards({ data }: { data: DashboardSummary }) {
   const headline = headlineInvoiced(kpis.invoiced, workspaceCurrency)
   const currency = headline?.currency ?? workspaceCurrency ?? "INR"
   const prevSame = previous.invoiced.find((i) => i.currency === currency)
-  const invoicedDelta = headline && prevSame ? deltaOf(headline.amountMinor, prevSame.amountMinor) : null
+  // Nothing invoiced this period but something last period is a real 100% drop: compare from zero.
+  const invoicedDelta = prevSame ? deltaOf(headline?.amountMinor ?? 0, prevSame.amountMinor) : null
   const others = kpis.invoiced.filter((i) => i !== headline)
 
   return (

@@ -276,8 +276,10 @@ function MarkdownPreview({ src, label, enabled }: { src: string; label: string; 
   if (query.data === undefined) return <Skeleton className="min-h-96 flex-1" />
   return (
     <pre
+      role="region"
       aria-label={label}
-      className="min-h-96 flex-1 overflow-auto rounded-md border bg-muted/40 p-4 font-mono text-sm leading-relaxed whitespace-pre-wrap break-words"
+      tabIndex={0}
+      className="min-h-96 flex-1 overflow-auto rounded-md border bg-muted/40 p-4 font-mono text-sm leading-relaxed whitespace-pre-wrap break-words outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
     >
       {query.data}
     </pre>

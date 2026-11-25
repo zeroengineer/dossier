@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
 import { ApiError } from "@/lib/api"
+import { FULL_HEIGHT_BELOW_SM } from "@/lib/dialog"
 import { toastError } from "@/lib/query-client"
 
 const optionalDate = z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD")])
@@ -117,7 +118,7 @@ export function EditMetadataDialog({ doc }: { doc: DocumentDetail }) {
           Edit
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className={FULL_HEIGHT_BELOW_SM}>
         <DialogHeader>
           <DialogTitle>Edit details</DialogTitle>
           <DialogDescription>Change the title, number, dates or sensitivity of {doc.id}.</DialogDescription>

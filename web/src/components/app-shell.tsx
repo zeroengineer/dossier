@@ -26,6 +26,12 @@ function PaletteButton() {
 export function AppShell() {
   return (
     <CommandPaletteProvider>
+      <a
+        href="#main-content"
+        className="sr-only rounded-md bg-background px-3 py-2 text-sm font-medium shadow-md focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+      >
+        Skip to main content
+      </a>
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
@@ -37,7 +43,7 @@ export function AppShell() {
             </div>
             <PaletteButton />
           </header>
-          <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+          <div id="main-content" tabIndex={-1} className="flex min-w-0 flex-1 flex-col gap-6 p-4 outline-none md:p-6">
             <Suspense fallback={<PageSkeleton />}>
               <Outlet />
             </Suspense>

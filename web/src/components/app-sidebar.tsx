@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { ChevronRightIcon, SearchIcon } from "lucide-react"
 import { Link, useLocation } from "react-router"
 import { BrandSwitcher } from "@/components/brand-switcher"
@@ -86,7 +87,7 @@ function SystemGroup({ pathname, hash }: { pathname: string; hash: string }) {
                   <SidebarMenuButton tooltip="Settings" isActive={inSettings}>
                     <SettingsIcon />
                     <span>Settings</span>
-                    <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    <ChevronRightIcon className="ml-auto duration-200 group-data-[state=open]/collapsible:rotate-90 motion-safe:transition-transform" />
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
@@ -113,10 +114,14 @@ function SystemGroup({ pathname, hash }: { pathname: string; hash: string }) {
 
 export function AppSidebar() {
   const { pathname, hash } = useLocation()
+  const { setOpenMobile } = useSidebar()
   const DocsIcon = DOCS_ICON
 
+  // On phones the sidebar is a Sheet over the page: close it once a link has taken the user somewhere.
+  useEffect(() => setOpenMobile(false), [pathname, hash, setOpenMobile])
+
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" role="complementary" aria-label="Sidebar">
       <SidebarHeader className="gap-3">
         <Link to="/" className="flex items-center gap-1.5 px-1 pt-1 text-sidebar-foreground group-data-[collapsible=icon]:px-0" aria-label="Dossier home">
           <LogoMark />

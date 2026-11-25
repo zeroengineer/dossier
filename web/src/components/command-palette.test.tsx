@@ -58,7 +58,13 @@ describe("CommandPalette", () => {
     expect(venue.querySelector("mark")).toHaveTextContent("Acme")
     expect(group(dialog, "Entities").getByRole("option", { name: /Alex Example/ })).toBeInTheDocument()
     // Server results are not filtered away by the palette's own matching.
-    expect(group(dialog, "Entities").getByRole("option", { name: /Acme Client Co/ })).toBeInTheDocument()
+    const client = group(dialog, "Entities").getByRole("option", { name: /Acme Client Co/ })
+    // Each entity shows its kind as a label and an icon of that kind.
+    expect(client).toHaveTextContent("Client")
+    expect(client.querySelector("svg.lucide-handshake")).not.toBeNull()
+    const person = group(dialog, "Entities").getByRole("option", { name: /Alex Example/ })
+    expect(person).toHaveTextContent("Person · alias “Acme contact”")
+    expect(person.querySelector("svg.lucide-user")).not.toBeNull()
   })
 
   it("opens the first document on Enter", async () => {

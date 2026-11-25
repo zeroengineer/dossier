@@ -115,8 +115,10 @@ function MarkdownView({ docId, versionNo, label }: { docId: string; versionNo: n
   if (query.isError) return <ErrorState error={query.error} title="Could not load the Markdown" onRetry={() => void query.refetch()} />
   return (
     <pre
+      role="region"
       aria-label={label}
-      className="max-h-[75vh] min-h-96 overflow-auto rounded-md border bg-muted/40 p-4 font-mono text-sm leading-relaxed whitespace-pre-wrap break-words"
+      tabIndex={0}
+      className="max-h-[75vh] min-h-96 overflow-auto rounded-md border bg-muted/40 p-4 font-mono text-sm leading-relaxed whitespace-pre-wrap break-words outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
     >
       {query.data}
     </pre>

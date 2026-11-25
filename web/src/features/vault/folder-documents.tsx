@@ -56,7 +56,7 @@ const columns: ColumnDef<TreeDocument>[] = [
     accessorKey: "docDate",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Date" />,
     cell: ({ row }) => <DateText value={row.original.docDate} />,
-    meta: { label: "Date", className: "hidden sm:table-cell" },
+    meta: { label: "Date", className: "hidden md:table-cell" },
   },
 ]
 

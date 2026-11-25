@@ -55,3 +55,14 @@ export function chartPoints(timeline: Array<{ date: string; count: number }>, da
   }
   return out
 }
+
+/** Total and busiest bucket of the chart, for its text alternative. `peak` is null when there were no documents. */
+export function summarizePoints(points: ChartPoint[]): { total: number; peak: ChartPoint | null } {
+  let total = 0
+  let peak: ChartPoint | null = null
+  for (const p of points) {
+    total += p.count
+    if (p.count > 0 && (!peak || p.count > peak.count)) peak = p
+  }
+  return { total, peak }
+}

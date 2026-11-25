@@ -17,6 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { ApiError } from "@/lib/api"
+import { FULL_HEIGHT_BELOW_SM } from "@/lib/dialog"
+import { cn } from "@/lib/utils"
 import { AliasInput } from "./alias-input"
 import { entityFormSchema, formValues, NO_BRAND, toEntityInput, type EntityFormValues } from "./entity-form"
 import { entityPath, kindLabel } from "./labels"
@@ -88,7 +90,7 @@ export function EntityFormDialog({ open, onOpenChange, entity = null, defaultKin
 
   return (
     <Dialog open={open} onOpenChange={(next) => (save.isPending ? undefined : onOpenChange(next))}>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
+      <DialogContent className={cn(FULL_HEIGHT_BELOW_SM, "sm:max-w-lg")}>
         <DialogHeader>
           <DialogTitle>{editing ? `Edit ${entity.name}` : "New entity"}</DialogTitle>
           <DialogDescription>

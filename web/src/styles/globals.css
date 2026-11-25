@@ -144,3 +144,18 @@
     @apply bg-background text-foreground;
   }
 }
+
+/*
+ * Reduced motion: when the system asks for it, entrance animations (dialogs, sheets, popovers, toasts), the sidebar
+ * slide and other transitions finish at once. Unlayered, so it beats the utilities that set durations.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

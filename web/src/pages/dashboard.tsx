@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react"
+import { lazy, Suspense, useEffect } from "react"
 import { FilePlus2Icon, FilesIcon } from "lucide-react"
 import { Link, useSearchParams } from "react-router"
 import { useDashboard } from "@/api/dashboard"
@@ -11,15 +11,17 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { chartPoints, DEFAULT_DAYS, parseDays } from "@/features/dashboard/figures"
+import { chartPoints, DEFAULT_DAYS, parseDays, summarizePoints, type ChartPoint } from "@/features/dashboard/figures"
 import { KpiCards, KpiCardsSkeleton } from "@/features/dashboard/kpi-cards"
 import { RecentDocuments } from "@/features/dashboard/recent-documents"
 import { SeriesCounters } from "@/features/dashboard/series-counters"
 import { WarningsCard } from "@/features/dashboard/warnings-card"
 import { formatDate } from "@/lib/format"
 
-// Recharts is only needed here: load it as its own chunk after the page shell.
-const DocumentsChart = lazy(() => import("@/features/dashboard/documents-chart"))
+// Recharts is only needed here: its own chunk, fetched when the page mounts (in parallel with the dashboard data)
+// rather than once the data has arrived and the chart first renders.
+const loadChart = () => import("@/features/dashboard/documents-chart")
+const DocumentsChart = lazy(loadChart)
 
 function RangeToggle({ days, onChange }: { days: DashboardDays; onChange: (days: DashboardDays) => void }) {
   return (
@@ -41,10 +43,45 @@ function RangeToggle({ days, onChange }: { days: DashboardDays; onChange: (days:
   )
 }
 
+/** The chart as text for screen readers: a one-line summary and a table of every point (visually hidden). */
+function ChartSummary({ points, weekly }: { points: ChartPoint[]; weekly: boolean }) {
+  const { data: me } = useMe()
+  const locale = me?.workspace.locale
+  const num = (n: number) => n.toLocaleString(locale?.numberLocale || "en-IN")
+  const { total, peak } = summarizePoints(points)
+  const bucket = (p: ChartPoint) => (weekly ? `Week of ${formatDate(p.date, "medium", locale)}` : formatDate(p.date, "medium", locale))
+  return (
+    <div className="sr-only" data-testid="documents-chart-summary">
+      <p>
+        {num(total)} {total === 1 ? "document" : "documents"} in this range.
+        {peak ? ` Busiest ${weekly ? "week" : "day"}: ${bucket(peak)}, with ${num(peak.count)}.` : ""}
+      </p>
+      <table>
+        <caption>Documents per {weekly ? "week" : "day"}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{weekly ? "Week" : "Day"}</th>
+            <th scope="col">Documents</th>
+          </tr>
+        </thead>
+        <tbody>
+          {points.map((p) => (
+            <tr key={p.date}>
+              <th scope="row">{bucket(p)}</th>
+              <td>{num(p.count)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function ChartCard({ data }: { data: DashboardSummary }) {
   const { data: me } = useMe()
   const locale = me?.workspace.locale
   const { range } = data
+  const points = chartPoints(data.timeline, range.days)
   return (
     <Card>
       <CardHeader>
@@ -55,8 +92,9 @@ function ChartCard({ data }: { data: DashboardSummary }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <ChartSummary points={points} weekly={range.days === 90} />
         <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-          <DocumentsChart points={chartPoints(data.timeline, range.days)} days={range.days} />
+          <DocumentsChart points={points} days={range.days} />
         </Suspense>
       </CardContent>
     </Card>
@@ -81,6 +119,9 @@ export default function DashboardPage() {
   const [params, setParams] = useSearchParams()
   const days = parseDays(params.get("days"))
   const { data, error, isPending, isPlaceholderData, refetch } = useDashboard(days)
+  useEffect(() => {
+    void loadChart()
+  }, [])
 
   const setDays = (next: DashboardDays) =>
     setParams(

@@ -6,20 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Spinner } from "@/components/ui/spinner"
+import { useDebounced } from "@/hooks/use-debounced"
 import { cn } from "@/lib/utils"
 import { kindLabel } from "./labels"
 
 const SEARCH_LIMIT = 20
 const DEBOUNCE_MS = 200
-
-function useDebounced<T>(value: T, ms: number): T {
-  const [debounced, setDebounced] = React.useState(value)
-  React.useEffect(() => {
-    const t = window.setTimeout(() => setDebounced(value), ms)
-    return () => window.clearTimeout(t)
-  }, [value, ms])
-  return debounced
-}
 
 interface EntityPickerProps {
   id?: string

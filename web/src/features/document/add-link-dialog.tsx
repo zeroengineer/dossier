@@ -21,6 +21,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/c
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
+import { DEBOUNCE_MS, useDebounced } from "@/hooks/use-debounced"
 import { cn } from "@/lib/utils"
 
 /** `based_on` → `based on`. */
@@ -31,16 +32,6 @@ export const relationLabel = (type: string) => type.replaceAll("_", " ")
  * (`template:<id>@<version>`), which the generator records, so the picker leaves it out.
  */
 export const linkableTypes = (types: string[]) => types.filter((t) => t !== "generated_from")
-
-/** `value` once it has stopped changing for `ms`. */
-function useDebounced<T>(value: T, ms: number): T {
-  const [debounced, setDebounced] = React.useState(value)
-  React.useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), ms)
-    return () => clearTimeout(timer)
-  }, [value, ms])
-  return debounced
-}
 
 interface DocumentPickerProps {
   id: string
@@ -55,7 +46,7 @@ interface DocumentPickerProps {
 export function DocumentPicker({ id, excludeId, value, onChange, invalid }: DocumentPickerProps) {
   const [open, setOpen] = React.useState(false)
   const [q, setQ] = React.useState("")
-  const debounced = useDebounced(q, 250)
+  const debounced = useDebounced(q, DEBOUNCE_MS)
   const search = useLinkSearch(debounced)
   const hits = (search.data?.hits ?? []).map((h) => h.document).filter((d) => d.id !== excludeId)
   const typing = q.trim() !== "" && (q !== debounced || search.isFetching)

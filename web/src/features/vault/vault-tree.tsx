@@ -123,7 +123,7 @@ function FolderItem({ node, depth }: { node: TreeNode; depth: number }) {
           {hasChildren ? (
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="icon-xs" aria-label={`${open ? "Collapse" : "Expand"} ${node.name}`}>
-                <ChevronRightIcon className={cn("transition-transform", open && "rotate-90")} />
+                <ChevronRightIcon className={cn("motion-safe:transition-transform", open && "rotate-90")} />
               </Button>
             </CollapsibleTrigger>
           ) : (

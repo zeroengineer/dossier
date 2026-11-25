@@ -1,7 +1,7 @@
 import * as React from "react"
 import { useNavigate } from "react-router"
 import { defaultFilter } from "cmdk"
-import { Building2Icon, FilePlus2Icon, FileTextIcon, SearchIcon } from "lucide-react"
+import { FilePlus2Icon, FileTextIcon, SearchIcon } from "lucide-react"
 import { useSearch } from "@/api/search"
 import { useTemplates } from "@/api/templates"
 import type { SearchEntity, SearchHit } from "@/api/types"
@@ -10,9 +10,11 @@ import {
   Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator,
 } from "@/components/ui/command"
 import { Spinner } from "@/components/ui/spinner"
+import { kindIcon } from "@/features/entities/kind-icon"
+import { kindLabel } from "@/features/entities/labels"
 import { Highlighted } from "@/features/search/highlight"
 import { documentPath, entityPath, generatePath, searchPath } from "@/features/search/paths"
-import { useDebouncedValue } from "@/features/search/use-debounced-value"
+import { useDebounced } from "@/hooks/use-debounced"
 import { NAV_GROUPS, SEARCH_ITEM, SETTINGS_ITEMS, type NavItem } from "@/lib/nav"
 
 /** Live results wait this long after the last keystroke before calling `/api/search`. */
@@ -104,13 +106,15 @@ function DocumentResult({ hit, disabled, onSelect }: { hit: SearchHit; disabled:
 }
 
 function EntityResult({ entity, disabled, onSelect }: { entity: SearchEntity; disabled: boolean; onSelect: (to: string) => void }) {
+  const Icon = kindIcon(entity.kind)
+  const kind = kindLabel(entity.kind)
   return (
     <CommandItem value={entityValue(entity.id)} disabled={disabled} onSelect={() => onSelect(entityPath(entity.id))}>
-      <Building2Icon />
+      <Icon />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="truncate">{entity.name}</span>
         <span className="truncate text-xs text-muted-foreground">
-          {entity.matched ? `${entity.kind} · alias “${entity.matched}”` : entity.kind}
+          {entity.matched ? `${kind} · alias “${entity.matched}”` : kind}
         </span>
       </div>
     </CommandItem>
@@ -126,7 +130,7 @@ function PaletteBody({ onNavigate }: { onNavigate: (to: string) => void }) {
   const [input, setInput] = React.useState("")
   const [selected, setSelected] = React.useState("")
   const query = input.trim()
-  const debounced = useDebouncedValue(query, SEARCH_DEBOUNCE_MS)
+  const debounced = useDebounced(query, SEARCH_DEBOUNCE_MS)
   const search = useSearch(debounced, { limit: SEARCH_LIMIT })
   const templates = useTemplates()
 

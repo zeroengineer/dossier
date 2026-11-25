@@ -1,12 +1,14 @@
 import type * as React from "react"
 import { Link } from "react-router"
-import { Building2Icon, FileTextIcon, LinkIcon } from "lucide-react"
+import { FileTextIcon, LinkIcon } from "lucide-react"
 import type { DocumentSummary, SearchEntity, SearchHit, SearchMatch, SearchRelated, SearchResult } from "@/api/types"
 import { DateText } from "@/components/date-text"
 import { StatusBadge } from "@/components/status-badge"
 import { Badge } from "@/components/ui/badge"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Skeleton } from "@/components/ui/skeleton"
+import { kindIcon } from "@/features/entities/kind-icon"
+import { kindLabel, roleLabel } from "@/features/entities/labels"
 import { Highlighted } from "./highlight"
 import { documentPath, entityPath } from "./paths"
 
@@ -77,9 +79,9 @@ function HitItem({ hit }: { hit: SearchHit }) {
 export function viaText(via: SearchRelated["via"], entities: SearchEntity[]): string {
   if (via.kind === "entity") {
     const entity = entities.find((e) => e.id === via.from)
-    return `${via.relation} of ${entity ? entity.name : `entity ${via.from}`}`
+    return `${roleLabel(via.relation)} of ${entity ? entity.name : `entity ${via.from}`}`
   }
-  return `${via.relation} · ${via.from}`
+  return `${roleLabel(via.relation)} · ${via.from}`
 }
 
 function RelatedItem({ related, entities }: { related: SearchRelated; entities: SearchEntity[] }) {
@@ -98,22 +100,23 @@ function RelatedItem({ related, entities }: { related: SearchRelated; entities: 
 
 function EntityItem({ entity }: { entity: SearchEntity }) {
   const others = entity.aliases.filter((a) => a !== entity.matched)
+  const Icon = kindIcon(entity.kind)
   return (
     <Item variant="outline" size="sm" asChild>
       <Link to={entityPath(entity.id)}>
         <ItemMedia variant="icon">
-          <Building2Icon />
+          <Icon />
         </ItemMedia>
         <ItemContent className="min-w-0">
           <ItemTitle className="min-w-0">
             <span className="truncate">{entity.name}</span>
           </ItemTitle>
           <ItemDescription>
-            {entity.matched ? <>Matched alias “{entity.matched}”</> : others.length ? <>Also {others.join(", ")}</> : entity.kind}
+            {entity.matched ? <>Matched alias “{entity.matched}”</> : others.length ? <>Also {others.join(", ")}</> : kindLabel(entity.kind)}
           </ItemDescription>
         </ItemContent>
         <ItemActions>
-          <Badge variant="outline">{entity.kind}</Badge>
+          <Badge variant="outline">{kindLabel(entity.kind)}</Badge>
         </ItemActions>
       </Link>
     </Item>
@@ -128,7 +131,9 @@ export function SearchResults({ result }: { result: SearchResult }) {
         <Section id="search-matched" title="Matched" count={result.hits.length}>
           <ItemGroup className="gap-2">
             {result.hits.map((hit) => (
-              <HitItem key={hit.document.id} hit={hit} />
+              <div role="listitem" key={hit.document.id}>
+                <HitItem hit={hit} />
+              </div>
             ))}
           </ItemGroup>
         </Section>
@@ -137,7 +142,9 @@ export function SearchResults({ result }: { result: SearchResult }) {
         <Section id="search-related" title="Related" count={result.related.length}>
           <ItemGroup className="gap-2">
             {result.related.map((r) => (
-              <RelatedItem key={r.document.id} related={r} entities={result.entities} />
+              <div role="listitem" key={r.document.id}>
+                <RelatedItem related={r} entities={result.entities} />
+              </div>
             ))}
           </ItemGroup>
         </Section>
@@ -146,7 +153,9 @@ export function SearchResults({ result }: { result: SearchResult }) {
         <Section id="search-entities" title="Entities" count={result.entities.length}>
           <ItemGroup className="gap-2">
             {result.entities.map((e) => (
-              <EntityItem key={e.id} entity={e} />
+              <div role="listitem" key={e.id}>
+                <EntityItem entity={e} />
+              </div>
             ))}
           </ItemGroup>
         </Section>

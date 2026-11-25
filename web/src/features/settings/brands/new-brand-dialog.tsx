@@ -13,6 +13,8 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { FieldGroup, FieldSeparator } from "@/components/ui/field"
 import { Spinner } from "@/components/ui/spinner"
 import { ApiError, errorMessage } from "@/lib/api"
+import { FULL_HEIGHT_BELOW_SM } from "@/lib/dialog"
+import { cn } from "@/lib/utils"
 import { SelectField, TextField } from "../form-fields"
 import { applyServerErrors, type UnplacedError } from "../server-errors"
 import { newBrandFieldFor, newBrandFile, type NewBrandValues } from "./brand-form"
@@ -86,7 +88,7 @@ export function NewBrandDialog({ brands }: { brands: BrandListItem[] }) {
           New brand
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className={cn(FULL_HEIGHT_BELOW_SM, "sm:max-w-lg")}>
         <DialogHeader>
           <DialogTitle>New brand</DialogTitle>
           <DialogDescription>Creates brands/&lt;id&gt;/brand.json. Everything else is edited on the brand's page.</DialogDescription>

@@ -51,13 +51,13 @@ export function DocumentVersions({ versions, selected, onSelect }: DocumentVersi
                           size="sm"
                           className="h-auto px-0"
                           aria-pressed={active}
-                          aria-label={`Show version ${v.versionNo}`}
                           onClick={(e) => {
                             e.stopPropagation()
                             onSelect(v.versionNo)
                           }}
                         >
-                          v{v.versionNo}
+                          <span className="sr-only">Show version {v.versionNo}</span>
+                          <span aria-hidden="true">v{v.versionNo}</span>
                         </Button>
                         {v.isCurrent ? <Badge variant="secondary">Current</Badge> : null}
                       </div>

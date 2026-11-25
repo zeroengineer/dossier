@@ -1,12 +1,10 @@
 import { screen, waitFor, within } from "@testing-library/react"
 import { delay, http, HttpResponse } from "msw"
 import { afterEach, describe, expect, it } from "vitest"
+import DashboardPage from "@/pages/dashboard"
 import { dashboardFixture } from "@/test/fixtures-dashboard"
-import { renderApp } from "@/test/render"
+import { renderRoute } from "@/test/render"
 import { server } from "@/test/server"
-
-/** The page and its chart are lazy chunks: allow for a cold module transform on the first render. */
-const LOAD = { timeout: 5000 }
 
 /** Record the `days` of every dashboard request. */
 function trackDays() {
@@ -18,13 +16,12 @@ function trackDays() {
   return seen
 }
 
-// Above LOAD so a slow first lazy render fails on the assertion, not the test timeout.
-describe("Dashboard page", { timeout: 15_000 }, () => {
+describe("Dashboard page", () => {
   afterEach(() => server.events.removeAllListeners())
 
   it("shows the KPI cards from /api/dashboard", async () => {
-    renderApp("/dashboard")
-    const documents = await screen.findByTestId("kpi-documents", undefined, LOAD)
+    renderRoute(<DashboardPage />, "/dashboard")
+    const documents = await screen.findByTestId("kpi-documents")
     expect(within(documents).getByText("3")).toBeInTheDocument()
     expect(within(screen.getByTestId("kpi-drafts")).getByText("4")).toBeInTheDocument()
     expect(within(screen.getByTestId("kpi-invoiced")).getByText("₹12,500.00")).toBeInTheDocument()
@@ -33,8 +30,8 @@ describe("Dashboard page", { timeout: 15_000 }, () => {
   })
 
   it("shows delta pills only from the previous period the API sends", async () => {
-    renderApp("/dashboard")
-    const documents = await screen.findByTestId("kpi-documents", undefined, LOAD)
+    renderRoute(<DashboardPage />, "/dashboard")
+    const documents = await screen.findByTestId("kpi-documents")
     const up = within(documents).getByText("vs the previous 30 days (2)").closest("[data-direction]")
     expect(up).toHaveTextContent("+50%")
     expect(up).toHaveAttribute("data-direction", "up")
@@ -52,21 +49,32 @@ describe("Dashboard page", { timeout: 15_000 }, () => {
         HttpResponse.json(dashboardFixture(30, { previous: { from: "2026-03-02", to: "2026-03-31", documents: 0, invoiced: [] } })),
       ),
     )
-    renderApp("/dashboard")
-    const documents = await screen.findByTestId("kpi-documents", undefined, LOAD)
+    renderRoute(<DashboardPage />, "/dashboard")
+    const documents = await screen.findByTestId("kpi-documents")
     expect(within(documents).queryByText(/%/)).toBeNull()
     expect(within(screen.getByTestId("kpi-invoiced")).queryByText(/%/)).toBeNull()
   })
 
+  it("shows a −100% pill when nothing was invoiced this period but something was in the previous one", async () => {
+    const base = dashboardFixture(30)
+    server.use(http.get("*/api/dashboard", () => HttpResponse.json({ ...base, kpis: { ...base.kpis, invoiced: [] } })))
+    renderRoute(<DashboardPage />, "/dashboard")
+    const invoiced = await screen.findByTestId("kpi-invoiced")
+    expect(within(invoiced).getByText("₹0.00")).toBeInTheDocument()
+    const down = within(invoiced).getByText("vs the previous 30 days (₹25,000.00)").closest("[data-direction]")
+    expect(down).toHaveTextContent("−100%")
+    expect(down).toHaveAttribute("data-direction", "down")
+  })
+
   it("renders on the index route too", async () => {
-    renderApp("/")
-    expect(await screen.findByTestId("kpi-documents", undefined, LOAD)).toBeInTheDocument()
+    renderRoute(<DashboardPage />, "/")
+    expect(await screen.findByTestId("kpi-documents")).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Dashboard" })).toBeInTheDocument()
   })
 
   it("lists recent documents with number, title link and status", async () => {
-    renderApp("/dashboard")
-    const link = await screen.findByRole("link", { name: "Invoice for stage design" }, LOAD)
+    renderRoute(<DashboardPage />, "/dashboard")
+    const link = await screen.findByRole("link", { name: "Invoice for stage design" })
     expect(link).toHaveAttribute("href", "/documents/DOC-000003")
     const row = link.closest("tr")
     expect(row).not.toBeNull()
@@ -76,8 +84,8 @@ describe("Dashboard page", { timeout: 15_000 }, () => {
   })
 
   it("shows series counters and warnings with links", async () => {
-    renderApp("/dashboard")
-    expect(await screen.findByText("acme:2026", undefined, LOAD)).toBeInTheDocument()
+    renderRoute(<DashboardPage />, "/dashboard")
+    expect(await screen.findByText("acme:2026")).toBeInTheDocument()
     const warnings = screen.getByRole("list", { name: "Warnings" })
     // Static list items: not announced as live alerts.
     expect(within(warnings).queryByRole("alert")).toBeNull()
@@ -86,15 +94,32 @@ describe("Dashboard page", { timeout: 15_000 }, () => {
   })
 
   it("renders the documents chart", async () => {
-    renderApp("/dashboard")
-    expect(await screen.findByText("Documents over time", undefined, LOAD)).toBeInTheDocument()
-    expect(await screen.findByTestId("documents-chart", undefined, LOAD)).toBeInTheDocument()
+    renderRoute(<DashboardPage />, "/dashboard")
+    expect(await screen.findByText("Documents over time")).toBeInTheDocument()
+    expect(await screen.findByTestId("documents-chart")).toBeInTheDocument()
+  })
+
+  it("gives the chart a text alternative: a summary and a table of every day", async () => {
+    renderRoute(<DashboardPage />, "/dashboard")
+    const summary = await screen.findByTestId("documents-chart-summary")
+    expect(summary).toHaveClass("sr-only")
+    expect(summary).toHaveTextContent("3 documents in this range. Busiest day: 28 Apr 2026, with 2.")
+    const table = within(summary).getByRole("table", { name: "Documents per day" })
+    expect(within(table).getAllByRole("row")).toHaveLength(31)
+    expect(within(table).getByRole("rowheader", { name: "28 Apr 2026" }).nextElementSibling).toHaveTextContent("2")
+  })
+
+  it("summarises the 90-day chart by week", async () => {
+    renderRoute(<DashboardPage />, "/dashboard?days=90")
+    const summary = await screen.findByTestId("documents-chart-summary")
+    expect(summary).toHaveTextContent(/Busiest week: Week of .+, with 2\./)
+    expect(within(summary).getByRole("table", { name: "Documents per week" })).toBeInTheDocument()
   })
 
   it("refetches when the range changes and keeps it in the URL", async () => {
     const seen = trackDays()
-    const { user, router } = renderApp("/dashboard")
-    await screen.findByTestId("kpi-documents", undefined, LOAD)
+    const { user, router } = renderRoute(<DashboardPage />, "/dashboard")
+    await screen.findByTestId("kpi-documents")
     expect(seen).toEqual(["30"])
     expect(screen.getByRole("radio", { name: "Last 30 days" })).toHaveAttribute("data-state", "on")
 
@@ -110,8 +135,8 @@ describe("Dashboard page", { timeout: 15_000 }, () => {
 
   it("reads the range from ?days=", async () => {
     const seen = trackDays()
-    renderApp("/dashboard?days=90")
-    await screen.findByTestId("kpi-documents", undefined, LOAD)
+    renderRoute(<DashboardPage />, "/dashboard?days=90")
+    await screen.findByTestId("kpi-documents")
     expect(seen).toEqual(["90"])
     expect(screen.getByRole("radio", { name: "Last 90 days" })).toHaveAttribute("data-state", "on")
   })
@@ -123,8 +148,8 @@ describe("Dashboard page", { timeout: 15_000 }, () => {
         return HttpResponse.json(dashboardFixture())
       }),
     )
-    renderApp("/dashboard")
-    expect(await screen.findByLabelText("Loading dashboard", undefined, LOAD)).toBeInTheDocument()
+    renderRoute(<DashboardPage />, "/dashboard")
+    expect(await screen.findByLabelText("Loading dashboard")).toBeInTheDocument()
   })
 
   it("shows an empty state when there are no documents", async () => {
@@ -142,8 +167,8 @@ describe("Dashboard page", { timeout: 15_000 }, () => {
         ),
       ),
     )
-    renderApp("/dashboard")
-    expect(await screen.findByText("No documents yet", undefined, LOAD)).toBeInTheDocument()
+    renderRoute(<DashboardPage />, "/dashboard")
+    expect(await screen.findByText("No documents yet")).toBeInTheDocument()
     const empty = screen.getByText("No documents yet").closest("[data-slot=empty]") as HTMLElement
     expect(within(empty).getByRole("link", { name: "Generate" })).toHaveAttribute("href", "/generate")
     expect(within(empty).getByRole("link", { name: "Upload" })).toHaveAttribute("href", "/upload")
@@ -158,8 +183,8 @@ describe("Dashboard page", { timeout: 15_000 }, () => {
         HttpResponse.json({ code: "INTERNAL", message: "Database unavailable", details: {} }, { status: 500 }),
       ),
     )
-    renderApp("/dashboard")
-    expect(await screen.findByText("The dashboard could not load", undefined, LOAD)).toBeInTheDocument()
+    renderRoute(<DashboardPage />, "/dashboard")
+    expect(await screen.findByText("The dashboard could not load")).toBeInTheDocument()
     expect(screen.getByText(/Database unavailable/)).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /Retry/ })).toBeInTheDocument()
   })
