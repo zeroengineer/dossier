@@ -4,6 +4,10 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ## [Unreleased]
 
+### Removed
+
+- The sidebar's "What's new" card and dialog.
+
 ## [1.0.0] - 2026-11-25
 
 The product UI release. A React web app in `web/` (Vite, TypeScript, Tailwind v4, shadcn; dark theme with one red

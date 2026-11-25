@@ -5,7 +5,6 @@ import { BrandSwitcher } from "@/components/brand-switcher"
 import { useCommandPalette, modKey } from "@/components/command-palette"
 import { LogoMark, LogoWordmark } from "@/components/logo"
 import { NavUser } from "@/components/nav-user"
-import { WhatsNewCard } from "@/components/whats-new"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger,
@@ -167,11 +166,6 @@ export function AppSidebar() {
         ))}
         <SystemGroup pathname={pathname} hash={hash} />
         </nav>
-        {/* At the end of the scrolling content (pushed to the bottom when there is room), so on short windows it
-            scrolls away instead of covering the Settings items. */}
-        <div className="mt-auto p-2 group-data-[collapsible=icon]:hidden">
-          <WhatsNewCard />
-        </div>
       </SidebarContent>
 
       <SidebarFooter className="gap-3">
