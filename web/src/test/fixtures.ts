@@ -20,7 +20,7 @@ export const me: Me = {
     { id: "acme", legalName: "Acme Events Private Limited", shortName: "Acme Events" },
     { id: "acme-studio", legalName: "Acme Studio LLP", shortName: "Acme Studio" },
   ],
-  version: "0.1.0",
+  version: "1.0.0",
 }
 
 export const meta: Meta = {

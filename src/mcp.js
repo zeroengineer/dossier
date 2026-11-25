@@ -23,7 +23,7 @@ import { blobPath } from './services/blobs.js';
 /** Default local user of the MCP process (DOSSIER_USER); an unlisted user gets the default clearance. */
 export const DEFAULT_MCP_USER = 'mcp';
 
-const VERSION = '0.1.0';
+const VERSION = '1.0.0';
 
 const orList = (xs) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} or ${xs.at(-1)}` : xs[0]);
 

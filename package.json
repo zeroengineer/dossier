@@ -1,6 +1,6 @@
 {
   "name": "dossier",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Document vault and template-driven document generator with an MCP server.",
   "type": "module",
   "license": "MIT",
