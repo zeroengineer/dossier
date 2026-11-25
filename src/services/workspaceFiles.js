@@ -102,9 +102,50 @@ export function writeFileAtomic(file, data) {
 
 /** Parsed JSON of a workspace file, or undefined when it does not exist. */
 function readRaw(ctx, rel) {
+  return readRawHashed(ctx, rel).body;
+}
+
+/**
+ * A workspace file as stored: its parsed JSON and `fileHash`, the sha256 (hex) of its bytes. Both are undefined/null
+ * when the file does not exist. `fileHash` is what an editor sends back to detect a change made elsewhere.
+ * @param {object} ctx
+ * @param {string} rel workspace-relative path
+ * @returns {{ body: unknown, fileHash: string|null }}
+ */
+function readRawHashed(ctx, rel) {
   const file = join(ctx.ws.home, rel);
-  if (!existsSync(file)) return undefined;
-  return JSON.parse(readFileSync(file, 'utf8'));
+  if (!existsSync(file)) return { body: undefined, fileHash: null };
+  const bytes = readFileSync(file);
+  return { body: JSON.parse(bytes.toString('utf8')), fileHash: sha256(bytes) };
+}
+
+/**
+ * sha256 (hex) of a workspace file's bytes, null when it does not exist.
+ * @param {object} ctx
+ * @param {string} rel
+ * @returns {string|null}
+ */
+export function fileHashOf(ctx, rel) {
+  const file = join(ctx.ws.home, rel);
+  return existsSync(file) ? sha256(readFileSync(file)) : null;
+}
+
+/**
+ * Normalise an expected file hash (an `If-Match` value: bare or quoted, optionally weak `W/`). Undefined, null, '' and
+ * `*` mean "no check".
+ * @param {unknown} v
+ * @returns {string|undefined}
+ */
+export function normaliseExpectedHash(v) {
+  if (v === undefined || v === null) return undefined;
+  const t = String(v).trim().replace(/^W\//, '').replace(/^"(.*)"$/, '$1').trim();
+  return t === '' || t === '*' ? undefined : t.toLowerCase();
+}
+
+/** CONFLICT (409) unless `expectedHash` is undefined or equals the stored file's hash (`currentHash`). */
+function assertUnchanged(rel, expectedHash, currentHash) {
+  if (expectedHash === undefined || expectedHash === currentHash) return;
+  throw new DossierError('CONFLICT', `${rel} changed elsewhere since it was loaded; reload it and apply your edits again`, { file: rel, currentHash });
 }
 
 /** An audit value: the body itself, or a truncated record when its JSON is longer than AUDIT_CAP. */
@@ -123,11 +164,13 @@ function capped(body) {
  * @param {string} rel workspace-relative path
  * @param {unknown} body parsed JSON
  * @param {{ check?: (candidate: object) => Array<{ file?: string, path: string, message: string }>,
- *   audits?: Array<[string, string, string, unknown, unknown]> }} [opts] audits: more audit rows for the same transaction
+ *   audits?: Array<[string, string, string, unknown, unknown]>, expectedHash?: string }} [opts] audits: more audit
+ *   rows for the same transaction; expectedHash: the `fileHash` the caller loaded (CONFLICT when the file changed)
  * @returns {object} the reloaded workspace
  */
-function commit(ctx, rel, body, { check, audits = [] } = {}) {
+function commit(ctx, rel, body, { check, audits = [], expectedHash } = {}) {
   const home = ctx.ws.home;
+  assertUnchanged(rel, expectedHash, fileHashOf(ctx, rel));
   let candidate;
   try {
     candidate = loadWorkspace(home, { files: new Map([[rel, body]]) });
@@ -175,7 +218,8 @@ function assertBrandId(id) {
  * brand it inherits from (or null), `resolved` the validated brand with inheritance and defaults applied.
  * @param {object} ctx
  * @param {string} id
- * @returns {{ id: string, file: object, parent: object|null, resolved: object, configHash: string }}
+ * `fileHash` is the sha256 (hex) of brand.json's bytes (configHash covers resolved values, not the stored file).
+ * @returns {{ id: string, file: object, parent: object|null, resolved: object, configHash: string, fileHash: string }}
  */
 export function getBrandFile(ctx, id) {
   if (!ctx.ws.brands.has(id)) throw new DossierError('BRAND_NOT_FOUND', `No brand "${id}" in the workspace`, { brandId: id });
@@ -189,11 +233,11 @@ export function getBrandFile(ctx, id) {
 }
 
 function brandFile(ctx, id) {
-  const file = readRaw(ctx, brandRel(id));
+  const { body: file, fileHash } = readRawHashed(ctx, brandRel(id));
   if (file === undefined) throw new DossierError('BRAND_NOT_FOUND', `No brand "${id}" in the workspace`, { brandId: id });
   const resolved = ctx.ws.brands.get(id);
   const parent = resolved.inheritsFrom ? ctx.ws.brands.get(resolved.inheritsFrom) ?? null : null;
-  return { id, file, parent, resolved, configHash: ctx.ws.brandHashes.get(id) };
+  return { id, file, parent, resolved, configHash: ctx.ws.brandHashes.get(id), fileHash };
 }
 
 /** True when `p` is a plain relative path that stays inside the brand folder. */
@@ -243,11 +287,13 @@ function pathErrors(rel, body, before, exists) {
  * @param {object} ctx
  * @param {string} id
  * @param {object} body the complete brand.json content (for a brand with `inheritsFrom`, only the overridden fields)
- * @param {{ create?: boolean, audits?: Array<[string, string, string, unknown, unknown]> }} [opts] create: refuse
- *   (BRAND_DUPLICATE) when the brand exists; audits: more audit rows written with the brand.json one
+ * @param {{ create?: boolean, audits?: Array<[string, string, string, unknown, unknown]>, expectedHash?: string }} [opts]
+ *   create: refuse (BRAND_DUPLICATE) when the brand exists; audits: more audit rows written with the brand.json one;
+ *   expectedHash: the `fileHash` the caller loaded, CONFLICT (409, `details.currentHash`) when brand.json changed since
+ *   (omitted: no check)
  * @returns {{ created: boolean } & ReturnType<typeof getBrandFile>}
  */
-export function writeBrand(ctx, id, body, { create = false, audits } = {}) {
+export function writeBrand(ctx, id, body, { create = false, audits, expectedHash } = {}) {
   assertBrandId(id);
   const rel = brandRel(id);
   if (!isPlainObject(body)) throw workspaceInvalid(rel, [{ path: '(root)', message: 'expected a JSON object' }]);
@@ -255,12 +301,13 @@ export function writeBrand(ctx, id, body, { create = false, audits } = {}) {
   if (body.id !== id) throw workspaceInvalid(rel, [{ path: 'id', message: `"${body.id}" must equal the brand id "${id}"` }]);
   const exists = existsSync(join(ctx.ws.home, rel));
   if (create && (exists || ctx.ws.brands.has(id))) throw new DossierError('BRAND_DUPLICATE', `Brand "${id}" already exists`, { brandId: id });
+  assertUnchanged(rel, expectedHash, fileHashOf(ctx, rel));
   const before = exists ? readRaw(ctx, rel) : undefined;
   // Changed paths must name an existing file in this brand's folder or a parent's (as brandAsset looks them up).
   const dirs = [join(ctx.ws.home, 'brands', id), ...(typeof body.inheritsFrom === 'string' ? ctx.ws.brandDirs.get(body.inheritsFrom) ?? [] : [])];
   const errors = pathErrors(rel, body, before, (p) => dirs.some((d) => existsSync(join(d, ...p.split('/')))));
   if (errors.length) throw workspaceInvalid(rel, errors);
-  commit(ctx, rel, body, { audits });
+  commit(ctx, rel, body, { audits, expectedHash });
   return { created: !exists, ...getBrandFile(ctx, id) };
 }
 
@@ -379,16 +426,28 @@ export function getSeriesFile(ctx) {
 }
 
 /**
+ * series.json as stored with its `fileHash` (sha256 hex of the bytes, null when the file does not exist).
+ * @param {object} ctx
+ * @returns {{ series: object[], fileHash: string|null }}
+ */
+export function getSeriesFileHashed(ctx) {
+  const { body, fileHash } = readRawHashed(ctx, 'series.json');
+  return { series: body ?? [], fileHash };
+}
+
+/**
  * Replace series.json. Besides the workspace checks (patterns, shared counters, brands' series maps), a change that
  * would break a template that loads today (its `numbering.series` gone) is refused.
  * @param {object} ctx
  * @param {unknown} list
+ * @param {{ expectedHash?: string }} [opts] the `fileHash` the caller loaded: CONFLICT (409) when series.json changed
  * @returns {object[]} the stored list
  */
-export function writeSeries(ctx, list) {
+export function writeSeries(ctx, list, { expectedHash } = {}) {
   if (!Array.isArray(list)) throw workspaceInvalid('series.json', [{ path: '(root)', message: 'expected a JSON array of series' }]);
   const broken = new Set(listTemplateErrors(ctx).map((e) => e.id));
   commit(ctx, 'series.json', list, {
+    expectedHash,
     check: (candidate) => listTemplateErrors({ ...ctx, ws: candidate })
       .filter((e) => !broken.has(e.id))
       .map((e) => ({ path: '(root)', message: `template "${e.id}" would no longer load: ${e.message}` })),
@@ -418,15 +477,26 @@ export function getWorkspaceFile(ctx) {
 }
 
 /**
+ * workspace.json as stored with its `fileHash` (sha256 hex of the bytes).
+ * @param {object} ctx
+ * @returns {{ workspace: object, fileHash: string|null }}
+ */
+export function getWorkspaceFileHashed(ctx) {
+  const { body, fileHash } = readRawHashed(ctx, 'workspace.json');
+  return { workspace: body, fileHash };
+}
+
+/**
  * Replace workspace.json. A user's clearance may not be raised above the acting user's own clearance.
  * @param {object} ctx
  * @param {unknown} body
+ * @param {{ expectedHash?: string }} [opts] the `fileHash` the caller loaded: CONFLICT (409) when workspace.json changed
  * @returns {object} the stored body
  */
-export function writeWorkspaceConfig(ctx, body) {
+export function writeWorkspaceConfig(ctx, body, { expectedHash } = {}) {
   const rel = 'workspace.json';
   if (!isPlainObject(body)) throw workspaceInvalid(rel, [{ path: '(root)', message: 'expected a JSON object' }]);
-  commit(ctx, rel, body, { check: (candidate) => clearanceErrors(ctx, candidate) });
+  commit(ctx, rel, body, { expectedHash, check: (candidate) => clearanceErrors(ctx, candidate) });
   return getWorkspaceFile(ctx);
 }
 

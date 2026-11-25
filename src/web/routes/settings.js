@@ -2,7 +2,8 @@
 // src/services/workspaceFiles.js.
 import { DossierError } from '../../errors.js';
 import {
-  ASSET_MAX_BYTES, getBrandFile, getSeriesFile, getWorkspaceFile, seriesUsage, storeBrandAsset, writeBrand, writeSeries, writeWorkspaceConfig,
+  ASSET_MAX_BYTES, getBrandFile, getSeriesFileHashed, getWorkspaceFileHashed, normaliseExpectedHash, seriesUsage, storeBrandAsset,
+  writeBrand, writeSeries, writeWorkspaceConfig,
 } from '../../services/workspaceFiles.js';
 import { renderBrandPreview } from '../../render/brandPreview.js';
 import { sep } from 'node:path';
@@ -96,6 +97,14 @@ function brandAssetList(ctx, brandId) {
 }
 
 /**
+ * The expected file hash of a whole-file save: the `If-Match` request header, bare or quoted (see DECISIONS, "Optimistic
+ * concurrency for settings saves"). Undefined when absent (no check, so the MCP and older clients keep working).
+ * @param {import('fastify').FastifyRequest} req
+ * @returns {string|undefined}
+ */
+const expectedHashOf = (req) => normaliseExpectedHash(req.headers['if-match']);
+
+/**
  * @param {import('fastify').FastifyInstance} app
  * @param {{ ctx: object }} opts
  */
@@ -112,7 +121,7 @@ export default async function settingsRoutes(app, { ctx }) {
     return sendFile(reply, { buffer, filename: `${id}-preview.pdf`, mime: 'application/pdf' });
   };
 
-  const brandJson = (b) => ({ id: b.id, file: b.file, resolved: b.resolved, configHash: b.configHash });
+  const brandJson = (b) => ({ id: b.id, file: b.file, fileHash: b.fileHash, resolved: b.resolved, configHash: b.configHash });
 
   app.get('/api/brands', () => ({ brands: brandList() }));
   // Create only: an existing id is BRAND_DUPLICATE (409), never overwritten (PUT replaces).
@@ -124,7 +133,7 @@ export default async function settingsRoutes(app, { ctx }) {
   });
   app.get('/api/brands/:id', (req) => brandJson(getBrandFile(ctx, req.params.id)));
   app.put('/api/brands/:id', (req, reply) => {
-    const r = writeBrand(ctx, req.params.id, req.body);
+    const r = writeBrand(ctx, req.params.id, req.body, { expectedHash: expectedHashOf(req) });
     return reply.code(r.created ? 201 : 200).send(brandJson(r));
   });
   app.get('/api/brands/:id/assets', (req) => {
@@ -139,19 +148,21 @@ export default async function settingsRoutes(app, { ctx }) {
     const { file } = await readAssetUpload(req);
     if (!file) throw new DossierError('INVALID_INPUT', 'A multipart "file" part is required');
     const r = await storeBrandAsset(ctx, id, key, file);
-    return { key: r.key, path: r.path, sha256: r.sha256, bytes: r.bytes, brand: brandJson(r) };
+    return { key: r.key, path: r.path, sha256: r.sha256, bytes: r.bytes, fileHash: r.fileHash, brand: brandJson(r) };
   });
 
-  app.get('/api/series', () => ({ series: getSeriesFile(ctx) }));
+  app.get('/api/series', () => getSeriesFileHashed(ctx));
   app.get('/api/series/usage', () => ({ usage: seriesUsage(ctx) }));
   app.put('/api/series', (req) => {
     const body = req.body;
-    return { series: writeSeries(ctx, Array.isArray(body) ? body : body?.series) };
+    writeSeries(ctx, Array.isArray(body) ? body : body?.series, { expectedHash: expectedHashOf(req) });
+    return getSeriesFileHashed(ctx);
   });
 
-  app.get('/api/workspace', () => ({ workspace: getWorkspaceFile(ctx) }));
+  app.get('/api/workspace', () => getWorkspaceFileHashed(ctx));
   app.put('/api/workspace', (req) => {
     const body = req.body;
-    return { workspace: writeWorkspaceConfig(ctx, body?.workspace ?? body) };
+    writeWorkspaceConfig(ctx, body?.workspace ?? body, { expectedHash: expectedHashOf(req) });
+    return getWorkspaceFileHashed(ctx);
   });
 }

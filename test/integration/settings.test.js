@@ -1,6 +1,7 @@
 import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { tmpDir } from '../helpers/tmp.js';
@@ -645,5 +646,68 @@ describe('settings API for the web app', () => {
       assert.equal(r.statusCode, 404, `${url}: ${r.body}`);
       assert.ok(r.json().code, url);
     }
+  });
+});
+
+describe('optimistic concurrency on whole-file saves (If-Match: <fileHash>)', () => {
+  const sha = (file) => createHash('sha256').update(readFileSync(file)).digest('hex');
+  const cases = [
+    {
+      name: 'brands/acme/brand.json',
+      file: () => brandFile('acme'),
+      get: async () => { const j = (await api('GET', '/api/brands/acme')).json(); return { body: j.file, fileHash: j.fileHash }; },
+      put: (body, headers) => api('PUT', '/api/brands/acme', body, headers),
+      edit: (body, n) => ({ ...body, shortName: `Acme ${n}` }),
+    },
+    {
+      name: 'series.json',
+      file: () => join(home, 'series.json'),
+      get: async () => { const j = (await api('GET', '/api/series')).json(); return { body: j.series, fileHash: j.fileHash }; },
+      put: (body, headers) => api('PUT', '/api/series', { series: body }, headers),
+      edit: (body, n) => body.map((s) => (s.id === 'report' ? { ...s, start: 200 + n } : s)),
+    },
+    {
+      name: 'workspace.json',
+      file: () => join(home, 'workspace.json'),
+      get: async () => { const j = (await api('GET', '/api/workspace')).json(); return { body: j.workspace, fileHash: j.fileHash }; },
+      put: (body, headers) => api('PUT', '/api/workspace', { workspace: body }, headers),
+      edit: (body, n) => ({ ...body, name: `Workspace ${n}` }),
+    },
+  ];
+
+  for (const c of cases) {
+    test(`${c.name}: GET returns the file hash; a second save from the same base is 409 CONFLICT and changes nothing`, async () => {
+      const base = await c.get();
+      assert.equal(base.fileHash, sha(c.file()), 'fileHash is the sha256 of the stored bytes');
+      const first = await c.put(c.edit(base.body, 1), { 'if-match': `"${base.fileHash}"` });
+      assert.equal(first.statusCode, 200, first.body.slice(0, 400));
+      const afterFirst = readFileSync(c.file());
+      assert.equal(first.json().fileHash, sha(c.file()), 'the response carries the new hash');
+      assert.notEqual(first.json().fileHash, base.fileHash);
+
+      const second = await c.put(c.edit(base.body, 2), { 'if-match': base.fileHash });
+      assert.equal(second.statusCode, 409, second.body.slice(0, 400));
+      assert.equal(second.json().code, 'CONFLICT');
+      assert.equal(second.json().details.currentHash, first.json().fileHash);
+      assert.deepEqual(readFileSync(c.file()), afterFirst, 'file unchanged by the refused save');
+
+      const current = await c.put(c.edit(base.body, 3), { 'if-match': first.json().fileHash });
+      assert.equal(current.statusCode, 200, 'a save with the current hash succeeds');
+
+      const blind = await c.put(c.edit(base.body, 4));
+      assert.equal(blind.statusCode, 200, 'a save without a hash is still accepted');
+      assert.equal(blind.json().fileHash, sha(c.file()));
+    });
+  }
+
+  test('an asset upload changes brand.json and returns the new fileHash', async () => {
+    const before = (await api('GET', '/api/brands/acme')).json().fileHash;
+    const r = await upload('/api/brands/acme/assets/logo', {}, { filename: 'l.png', mime: 'image/png', buffer: await png(31, 17) });
+    assert.equal(r.statusCode, 200, r.body.slice(0, 300));
+    assert.notEqual(r.json().fileHash, before);
+    assert.equal(r.json().fileHash, sha(brandFile('acme')));
+    assert.equal(r.json().brand.fileHash, r.json().fileHash);
+    const stale = await api('PUT', '/api/brands/acme', brandJson('acme'), { 'if-match': before });
+    assert.equal(stale.statusCode, 409, 'a save based on the pre-upload hash is refused');
   });
 });
