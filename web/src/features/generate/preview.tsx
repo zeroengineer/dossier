@@ -2,7 +2,7 @@ import * as React from "react"
 import { useWatch, type UseFormReturn } from "react-hook-form"
 import { CircleAlertIcon, ExternalLinkIcon, FileSearchIcon, TriangleAlertIcon } from "lucide-react"
 import { usePreview, usePreviewText, type PreviewOk, type PreviewResult } from "@/api/generate"
-import type { TemplateDetail } from "@/api/types"
+import type { TemplateDetail, TemplateField } from "@/api/types"
 import { EmptyState } from "@/components/empty-state"
 import { ErrorState } from "@/components/error-state"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -12,8 +12,8 @@ import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useDebounced } from "@/hooks/use-debounced"
 import { cn } from "@/lib/utils"
-import { labelOfPath, setFieldProblems, toFieldProblems, type FieldProblem } from "./problems"
-import { toInput, type FormValues, type RowIndex } from "./to-input"
+import { labelOfPath, SERVER_ERROR, setFieldProblems, toFieldProblems, type FieldProblem } from "./problems"
+import { getPath, toInput, type FormValues, type RowIndex } from "./to-input"
 
 /** How long the form must be still before a preview is asked for. */
 export const PREVIEW_DEBOUNCE_MS = 600
@@ -32,9 +32,26 @@ export interface GeneratePreviewProps {
 interface Settled {
   answer: PreviewResult
   rowIndex: RowIndex
+  /** `rowLayout` of the form when the answer settled. */
+  layout: string
 }
 
-const KIND_ORDER =["pdf", "html", "md"]
+/** The form's list rows as a comparable key: per list field, its row count and which rows were sent. */
+function rowLayout(fields: readonly TemplateField[], values: FormValues, rowIndex: RowIndex): string {
+  const out: Record<string, [number, number[]]> = {}
+  for (const f of fields) {
+    if (f.type !== "array" || !f.item) continue
+    const rows = getPath(values, f.name)
+    out[f.name] = [Array.isArray(rows) ? rows.length : 0, rowIndex[f.name] ?? []]
+  }
+  return JSON.stringify(out)
+}
+
+/** Whether a form path is inside a list row (`items.2.amount`). */
+const isRowPath = (fields: readonly TemplateField[], path: string) =>
+  fields.some((f) => f.type === "array" && f.item && path.startsWith(`${f.name}.`))
+
+const KIND_ORDER = ["pdf", "html", "md"]
 const KIND_LABEL: Record<string, string> = { pdf: "PDF", html: "HTML", md: "Markdown" }
 const FRAME = "h-full min-h-96 w-full flex-1 rounded-md border bg-background"
 
@@ -63,14 +80,26 @@ export function GeneratePreview({ template, form, brandId, isPlaceholderData }: 
   // stays visible (dimmed) while fields are missing or invalid.
   const [settled, setSettled] = React.useState<Settled | null>(null)
   const [lastOk, setLastOk] = React.useState<PreviewOk | null>(null)
-  const rowIndexRef = React.useRef(rowIndex)
-  rowIndexRef.current = rowIndex
+  const layout = React.useMemo(() => rowLayout(fields, values, rowIndex), [fields, values, rowIndex])
+  const answeredRef = React.useRef({ rowIndex, layout })
+  answeredRef.current = { rowIndex, layout }
   React.useEffect(() => {
     if (!current) return
-    setSettled({ answer: current, rowIndex: rowIndexRef.current })
+    setSettled({ answer: current, ...answeredRef.current })
     if (current.ok) setLastOk(current)
   }, [current])
 
+  // Another template or brand means other fields: the previous answer's problems no longer apply.
+  const fieldSet = React.useRef({ fields, brandId })
+  React.useEffect(() => {
+    if (fieldSet.current.fields === fields && fieldSet.current.brandId === brandId) return
+    fieldSet.current = { fields, brandId }
+    setSettled(null)
+  }, [fields, brandId])
+
+  // Fresh: the settled answer is for the input on screen. A stale one (an answer for an earlier input, kept while the
+  // next is pending) may still be shown, but its list-row problems only while the rows are laid out as it saw them.
+  const fresh = settled !== null && current === settled.answer
   const { submitCount } = form.formState
   const problems = React.useMemo<FieldProblem[]>(() => {
     const list: FieldProblem[] = inputErrors.map((e) => ({
@@ -80,19 +109,25 @@ export function GeneratePreview({ template, form, brandId, isPlaceholderData }: 
       missing: false,
     }))
     if (settled && !settled.answer.ok) {
-      // While the input on screen is the one answered, map rows with today's form (a blank row may have been removed).
-      list.push(...toFieldProblems(fields, settled.answer, current === settled.answer ? rowIndex : settled.rowIndex))
+      let answered = toFieldProblems(fields, settled.answer, fresh ? rowIndex : settled.rowIndex)
+      if (!fresh && settled.layout !== layout) answered = answered.filter((p) => !isRowPath(fields, p.path))
+      list.push(...answered)
     }
     return list
-  }, [current, fields, inputErrors, rowIndex, settled])
+  }, [fields, fresh, inputErrors, layout, rowIndex, settled])
 
   // Put the problems on the fields after every render. Reading `errors` re-renders this pane when a field's own
-  // validation (on blur or change) replaces a server error, which is then put back until the next answer settles.
-  // `setFieldProblems` is idempotent, so this does not loop.
+  // validation (on blur or change) replaces a server error, which is then put back while the answer is fresh.
+  // `setFieldProblems` is idempotent, so this does not loop. While the answer is stale nothing is added, moved or put
+  // back (the user may just have filled the field it lists, or moved its row); marks still present are kept.
   void form.formState.errors
   const marked = React.useRef<string[]>([])
   React.useEffect(() => {
-    marked.current = setFieldProblems(form, problems, marked.current, { missingOnlyIfTouched: submitCount === 0 })
+    if (fresh || !settled) {
+      marked.current = setFieldProblems(form, problems, marked.current, { missingOnlyIfTouched: submitCount === 0 })
+    } else {
+      marked.current = marked.current.filter((path) => form.getFieldState(path).error?.type === SERVER_ERROR)
+    }
   })
 
   const missing = problems.filter((p) => p.missing)

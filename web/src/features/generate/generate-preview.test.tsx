@@ -215,6 +215,59 @@ describe("Generate preview", () => {
     expect(bodies.length).toBeGreaterThan(settledCount)
   })
 
+  it("does not mark a field the user just filled from the answer still pending", async () => {
+    const bodies = capturePreviews(async () => {
+      // The first answer settles at once; later ones (after the Client is picked) take long.
+      if (bodies.length > 1) await new Promise((r) => setTimeout(r, 2000))
+      return HttpResponse.json({ ok: false, missing: [{ name: "client", label: "Client", type: "entity" }], errors: [] }, { status: 400 })
+    })
+    const { user } = renderApp("/generate/invoice")
+    expect(await screen.findByText("Fill in to preview", {}, { timeout: 3000 })).toBeInTheDocument()
+    const client = screen.getByRole("combobox", { name: label("Client") })
+    expect(client).not.toHaveAttribute("aria-invalid", "true")
+
+    await user.click(client)
+    await user.click(await screen.findByRole("option", { name: "Demo Retail LLP" }))
+    await waitFor(() => expect(client).toHaveValue("Demo Retail LLP"))
+    const deadline = Date.now() + 1500
+    while (Date.now() < deadline) {
+      expect(client).not.toHaveAttribute("aria-invalid", "true")
+      expect(screen.queryByText("is required")).not.toBeInTheDocument()
+      await new Promise((r) => setTimeout(r, 50))
+    }
+  })
+
+  it("does not mark a row at an out-of-date index after a row is removed", async () => {
+    const bodies = capturePreviews(async () => {
+      if (bodies.length > 1) await new Promise((r) => setTimeout(r, 2000))
+      const items = bodies.at(-1)?.input["items"]
+      // Flag the input's second row whenever there are three rows (the first settled answer).
+      const errors = Array.isArray(items) && items.length === 3 ? [{ name: "items.1.amount", message: "not a money amount" }] : []
+      return HttpResponse.json({ ok: false, missing: [], errors }, { status: 400 })
+    })
+    const { user } = renderApp("/generate/invoice")
+    const items = await screen.findByRole("table", { name: label("Items") })
+    await user.click(screen.getByRole("button", { name: "Add row" }))
+    await user.click(screen.getByRole("button", { name: "Add row" }))
+    await user.type(within(items).getByRole("textbox", { name: "Items row 1 amount" }), "100")
+    await user.type(within(items).getByRole("textbox", { name: "Items row 2 amount" }), "lots")
+    await user.type(within(items).getByRole("textbox", { name: "Items row 3 amount" }), "300")
+    await waitFor(
+      () => expect(within(items).getByRole("textbox", { name: "Items row 2 amount" })).toHaveAttribute("aria-invalid", "true"),
+      { timeout: 3000 },
+    )
+
+    // Remove row 1: the "300" row is now row 2, where the stale answer's `items.1` would land.
+    await user.click(within(items).getByRole("button", { name: "Remove Items row 1" }))
+    const moved = within(items).getByRole("textbox", { name: "Items row 2 amount" })
+    expect(moved).toHaveValue("300")
+    const deadline = Date.now() + 1500
+    while (Date.now() < deadline) {
+      expect(moved).not.toHaveAttribute("aria-invalid", "true")
+      await new Promise((r) => setTimeout(r, 50))
+    }
+  })
+
   it("lists placeholders that print empty", async () => {
     capturePreviews(() =>
       HttpResponse.json({
