@@ -6,6 +6,7 @@ All notable changes to Dossier are recorded here. The format follows [Keep a Cha
 
 ### Added
 
+- Settings: Numbering page (edit series rows with usage, row-level errors) and Workspace page (name, default brand, locale, folder hierarchy and routing, users with clearance). Lowering your own clearance asks for confirmation; renaming a top-level folder updates routing values that used its old name.
 - Generate: live draft preview (PDF/HTML/Markdown tabs, debounced, missing and invalid fields marked on the form without flicker, empty-placeholder warnings), Generate with a toast and a jump to the new document, and Regenerate from a document's current input with the STATUS_LOCKED choice between superseding and forcing (with a version note).
 - Dossier logo kit (Bound D): mark, 16 px cut, wordmark and lockups in `web/brand-src/kit`; favicon, app and PWA icons in `web/public/brand`, `favicon.ico` and `site.webmanifest`; the sidebar shows the new mark and wordmark.
 - Settings → Brands: brand list with a New brand dialog (create-only `POST /api/brands`, 409 `BRAND_DUPLICATE` for an existing id), and a brand editor that saves the whole brand.json as one form: tabs per section, server field errors on their fields, inherited values as placeholders, per-slot asset uploads with `?v=` previews, letterhead preview and brand.json download.
