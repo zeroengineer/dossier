@@ -14,7 +14,7 @@ Phase 1 (0.1.0). The phase 2 outcome is in its own section.
 |---|---|
 | Features from the plan | 24 of 24 built, each reviewed |
 | Built-in templates | 17 |
-| Tests | 569 passing (`npm test`) at 0.1.0; 1,002 at 1.0.0 |
+| Tests | 569 passing (`npm test`) at 0.1.0; 1,021 at 1.0.0 |
 | Organisation-data guard | 0 hits across the shipped tree |
 | Fidelity against the legacy PDFs | 16 of 16 comparable templates within 0.5 pt on every fixed label and image |
 | Branch | `main`, pushed; history rewritten once (see below) |
@@ -141,8 +141,8 @@ Phase 2 turned the working app into a product. The plain server-rendered pages w
 
 | Item | State |
 |---|---|
-| Features from the plan | F02 to F24 built and reviewed, plus a `sharp` security upgrade |
-| Tests | 1,002 passing (`npm test`): 597 API and service tests, 405 web app tests |
+| Features from the plan | F02 to F24 built and reviewed, plus a `sharp` security upgrade and a final fix wave |
+| Tests | 1,021 passing (`npm test`): 603 API and service tests, 418 web app tests (1,002 before the final fix wave) |
 | Web app TypeScript | `npm run typecheck` clean (strict, `noUncheckedIndexedAccess`) |
 | Organisation-data guard | 0 hits across the shipped tree, which now also covers `web/`, `CHANGELOG.md` and the Docker files |
 | Production build | `npm run build`: no chunk over 500 kB; charts load only with the dashboard |
@@ -164,7 +164,7 @@ Phase 2 turned the working app into a product. The plain server-rendered pages w
    - The coordinator cherry-picked each reviewed branch onto `main` one at a time. It then added that feature's changelog and decision entries in a separate `docs:` commit.
    - The remaining features (F21 to F24) ran after the batches, with some overlap.
 5. **Checks with the owner.** The owner picked the logo direction from three concepts (F19). They also checked the finished pages in a browser before the old UI was removed (F21). Work paused twice at the owner's request and resumed from the ledger.
-6. **Final review.** A whole-branch review follows this release preparation. The `v1.0.0` tag is placed after it.
+6. **Final review and fix wave.** A whole-branch review (9746d11..c8d4a5c) found no Critical issues, two Important ones (whole-file settings saves could silently undo changes made elsewhere, clearance downgrades included; entity document counts ignored clearance) and eight Minor ones. One fix wave fixed all of them, each with a test. The `v1.0.0` tag is placed after it.
 
 ### Features in build order
 
@@ -179,7 +179,7 @@ Commit IDs are on `main`. Most features have a `docs:` commit with their changel
 | F04 | Dashboard API | 2bcf6c1, 2b86912 | approved; 1 follow-up round: one warning per brand, canonical `days` |
 | — | Shared components, libraries and data table for parallel work | 8d553fa, 5512045, cfaf373 | 1 fix round: page reset, explicit server mode, shared confirm dialog |
 | F19 | Logo concepts (owner checkpoint) | a9d7520, e76c63b | owner picked concept A |
-| F08 | Document page (read) | b32f0d4, 63d35a5 | no fix round recorded |
+| F08 | Document page (read) | b32f0d4, 63d35a5 | Review: not recorded in the ledger; merged after the controller's checks. |
 | F16 | Settings API additions | 4a37828, c693bdf, 831c4ec | 1 fix round: asset routes for every slot, effective asset paths |
 | F11 | Templates page | c475ce9, aca70ca, 31d1580 | clean |
 | F06 | Vault tree | 7be4023, 38600c0, b503d08 | clean |
@@ -198,7 +198,8 @@ Commit IDs are on `main`. Most features have a `docs:` commit with their changel
 | F21 | Remove the old UI | 5caf983, 2a76af0, a476a1e, 42d9445 | approved; 1 polish round: stricter `/api` and file-path matching |
 | F22 | Responsive and accessibility pass, chunk split, test flakes | c61594f, 4541803, 36fce1a, 03087db, 0e95fb2 | 1 fix round: skip link changed the URL, commits that did not typecheck alone |
 | — | `sharp` 0.35.5 security upgrade | 58abfbd, 0468021 | verified by the coordinator (see rulings) |
-| F24 | Release preparation: changelog, versions, docs | this release | final whole-branch review |
+| F24 | Release preparation: changelog, versions, docs | 63b11fc, c8d4a5c | final whole-branch review |
+| — | Final fix wave: optimistic concurrency for settings saves, clearance-filtered entity counts, eight minor fixes | branch `fix/final-wave` | fixes for the final review's findings |
 
 ### Rulings made during the build
 
@@ -218,7 +219,7 @@ These decisions were taken without asking the owner, except where noted. Each on
 
 ### Incidents
 
-Phase 1's two rules held throughout: no browser tools, and nothing written, moved or deleted outside the repo. The only exception was the logo renderer's command-line headless Chrome in F19 and F20.
+Phase 1's two rules (no browser tools; nothing written outside the repo) held except where listed below. The logo renderer's command-line headless Chrome (F19, F20) was the one permitted exception, and the owner later allowed Playwright for F25.
 
 - **A worktree was created outside the repo.** A typo by the coordinator created a git worktree in the folder next to the repo. It was clean and was removed with `git worktree remove` within a minute. Nothing else was touched.
 - **A temporary file was written outside the repo.** The F21 agent wrote a temporary file under `/tmp` (outside its allowed temporary folders) and deleted it afterwards; it was checked to be gone.
@@ -226,13 +227,19 @@ Phase 1's two rules held throughout: no browser tools, and nothing written, move
 - **Pushes failed and were retried.** GitHub answered one push with a server error (500), and a DNS outage blocked another. Both succeeded on retry.
 - **One push went out before the tests had finished.** Nothing was broken: the suite passed on the next run apart from one known flaky test. Pushes have been gated on the test exit code since (ruling 10).
 - **Some web tests were flaky under heavy load:** the app-shell flyout, a documents-table cell and the entities tabs. F22 fixed them by rendering pages directly instead of the whole app.
+- **Two coordinator sessions worked on the same build at once.** After a restart, a forked coordinator session ran alongside the original, which was still running inside another editor. Both merged or prepared the same work, and each started its own F24 worktree. The fork stopped and removed its duplicate (it had no commits). Later the owner asked the fork to take over, and with the owner's approval it stopped the original session's process. The original had committed F24 seconds earlier; the fork re-ran every check on those commits before merging.
+- **An agent stopped mid-task.** The sharp upgrade agent died after installing but before committing. A new agent resumed it in the same worktree.
+- **A stale server served a deleted bundle.** A running server kept an `index.html` whose bundle had been rebuilt away, so the app loaded blank. It was restarted, and the fix wave made the server re-read `index.html` when it changes.
+- **The F03 agent tried one redirect outside the repo.** It was refused and nothing was written.
 
 ### Open items
 
 These minor findings were parked during reviews. None blocks use.
 
 - **Web client:** the API client types a non-JSON success reply as JSON; a few upstream command-palette quirks.
-- **Dashboard:** the recent-documents list runs about 20 small queries; the number-conflict message can hint that a hidden document exists; the chart chunk is not prefetched; the INR fallback in money formatting.
+- **Dashboard:** the recent-documents list runs about 20 small queries; the number-conflict message can hint that a hidden document exists; the chart chunk is not prefetched.
+- **Settings saves (fix wave):** `If-Match` is optional, so the MCP tools and scripts still save last-write-wins; a hand edit that keeps a file's bytes identical is (correctly) not a conflict. A conflict offers only Reload; there is no merge of the unsaved edits with the newer file.
+- **Web build serving (fix wave):** a rebuild that writes an `index.html` of the same size within the same millisecond as the old one is not noticed until the next change; a server started before `web/dist` existed still needs a restart to serve the bundle.
 - **Vault:** expanding a folder downloads its whole subtree again (a backend `depth=1` option would fix it); a brief double mount on mobile; a fixed minimum height; no tests for tree or right-pane server errors.
 - **Documents and document page:** the party-kind filter list; a refetch while a date range is half filled; the count and list queries run outside one transaction; a mouse-wheel scroll check in a picker; aligning the add-link search with the main search; a sensitivity `FORBIDDEN` error is not shown on its field; the old status flashes while a dialog closes.
 - **Search:** the palette unmounts before its close animation ends; one arrow-key test does not tell the two choices apart.

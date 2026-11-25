@@ -307,9 +307,12 @@ design and data model; `docs/DECISIONS.md` records the decisions and their reaso
   header, none of which a cross-site page can send without a CORS preflight.
 - **Clearance.** Sensitivity is `Public < Internal < Confidential < Restricted`. A user's clearance (`workspace.json`
   `users`, default `Confidential`) is checked on every read, list, search and write, in the web UI, the API and the MCP
-  tools; documents above it are left out of results, and opening one directly is `FORBIDDEN`. Restricted documents
-  appear only in `10 Restricted` and only for users cleared for Restricted. Clearance filters what the app returns; it
-  does not protect the workspace files from someone (or an agent) who can read the folder: see `docs/MCP.md`.
+  tools; documents above it are left out of results and of counts (dashboard figures, entity document counts), and
+  opening one directly is `FORBIDDEN`. The one exception is the dashboard's numbering-series counters: they are
+  workspace configuration and are shown to every user, so a low-clearance user can infer that numbers were issued.
+  Restricted documents appear only in `10 Restricted` and only for users cleared for Restricted. Clearance filters what
+  the app returns; it does not protect the workspace files from someone (or an agent) who can read the folder: see
+  `docs/MCP.md`.
 - **Files only through documents.** Stored bytes are served only through a document the user may read; non-PDF files
   carry `Content-Security-Policy: sandbox`, so an uploaded HTML or SVG file cannot script the app.
 - **Preview tokens.** Draft previews are written to `data/previews/<token>/` and served at `/previews/<token>/…`. The
